@@ -1,7 +1,7 @@
 # Framework Playwright cho SunTower
 
 ## 1. Muc tieu
-Day la framework kiem thu tu dong bang Playwright + TypeScript duoc tach rieng cho he thong SunTower. Framework duoc thiet ke de dung cho du an that te va trinh bay trong luan van tot nghiep, nen uu tien:
+Day la framework kiem thu tu dong bang Playwright + TypeScript duoc tach rieng cho he thong MoonNest. Framework duoc thiet ke de dung cho du an that te va trinh bay trong luan van tot nghiep, nen uu tien:
 - cau truc ro rang
 - tai su dung cao
 - de bao tri
