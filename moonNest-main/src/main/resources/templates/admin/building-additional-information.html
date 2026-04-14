@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Thông tin bổ sung</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css" rel="stylesheet" />
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f0f2f5;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            padding: 1.5rem;
+            margin-top: 70px;
+        }
+
+        /* ── Page header ── */
+        .page-header {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .page-header h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-header h2 i {
+            color: #3b82f6;
+            font-size: 1.2rem;
+        }
+
+        .building-name-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 20px;
+            padding: 0.25rem 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .btn-back {
+            background: #fff;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            background: #f3f4f6;
+            color: #111827;
+            border-color: #d1d5db;
+        }
+
+        /* ── Quick-nav anchor bar ── */
+        .section-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 1rem;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.18s;
+        }
+
+        .section-nav a:hover {
+            background: #f9fafb;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+
+        .section-nav a i {
+            font-size: 0.875rem;
+        }
+
+        .nav-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #9ca3af;
+        }
+
+        .nav-count::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .nav-count-legal::before {
+            background: #8b5cf6;
+        }
+
+        .nav-count-amenity::before {
+            background: #10b981;
+        }
+
+        .nav-count-planning::before {
+            background: #3b82f6;
+        }
+
+        .nav-count-supplier::before {
+            background: #f59e0b;
+        }
+
+        /* ── Section wrapper ── */
+        .section-block {
+            margin-bottom: 2rem;
+            scroll-margin-top: 80px;
+        }
+
+        /* ── Section header strip ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.875rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .section-title-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+
+        .icon-legal {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .icon-amenity {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .icon-planning {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .icon-supplier {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .section-count-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #9ca3af;
+        }
+
+        .section-count-chip::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .chip-legal::before {
+            background: #8b5cf6;
+        }
+
+        .chip-amenity::before {
+            background: #10b981;
+        }
+
+        .chip-planning::before {
+            background: #3b82f6;
+        }
+
+        .chip-supplier::before {
+            background: #f59e0b;
+        }
+
+        .btn-add {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.42rem 0.9rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-add:hover {
+            background: #2563eb;
+            color: white;
+        }
+
+        /* ── Table card ── */
+        .table-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        /* ── Modern table ── */
+        .modern-table {
+            margin: 0;
+        }
+
+        .modern-table thead th {
+            background: #f9fafb;
+            border: none;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.7rem 1rem;
+            font-size: 0.775rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        .modern-table tbody tr {
+            transition: background 0.12s;
+        }
+
+        .modern-table tbody tr:hover {
+            background: #fafbfc;
+        }
+
+        .modern-table tbody td {
+            padding: 0.72rem 1rem;
+            font-size: 0.875rem;
+            color: #374151;
+            vertical-align: middle;
+            border-color: #f3f4f6;
+        }
+
+        .modern-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ── Action buttons ── */
+        .action-buttons {
+            display: flex;
+            gap: 0.35rem;
+            align-items: center;
+        }
+
+        .btn-action {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: none;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+        }
+
+        .btn-action.btn-edit {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .btn-action.btn-edit:hover {
+            background: #fef3c7;
+            transform: translateY(-1px);
+        }
+
+        .btn-action.btn-delete {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .btn-action.btn-delete:hover {
+            background: #fee2e2;
+            transform: translateY(-1px);
+        }
+
+        .btn-action.btn-view {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .btn-action.btn-view:hover {
+            background: #dcfce7;
+            transform: translateY(-1px);
+        }
+
+        /* ── Type badges ── */
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.77rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-notary {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .badge-land {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-law {
+            background: #fce7f3;
+            color: #be185d;
+        }
+
+        .badge-tax {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-shopping {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge-park {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-hospital {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge-school {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-transport {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .badge-bank {
+            background: #fdf4ff;
+            color: #7e22ce;
+        }
+
+        .badge-gym {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .badge-other {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .badge-valid {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-expired {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge-electric {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge-water {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-cleaning {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-security {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .badge-elevator {
+            background: #f0f9ff;
+            color: #0369a1;
+        }
+
+        .badge-internet {
+            background: #fdf4ff;
+            color: #7e22ce;
+        }
+
+        /* ── Cell helpers ── */
+        .address-cell,
+        .note-cell {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        .note-cell {
+            color: #6b7280;
+            font-size: 0.8125rem;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            padding: 2.5rem 1rem;
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 0.6rem;
+            color: #d1d5db;
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        /* ── Divider between sections ── */
+        .section-divider {
+            border: none;
+            border-top: 2px dashed #e5e7eb;
+            margin: 0 0 2rem 0;
+        }
+
+        /* ══════════════════════════════════════
+           MODAL – căn giữa màn hình, không gradient
+        ══════════════════════════════════════ */
+        .modal-dialog {
+            display: flex;
+            align-items: center;
+            min-height: calc(100% - 3.5rem);
+        }
+
+        .modal-content {
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            width: 100%;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #f3f4f6;
+            padding: 1rem 1.25rem;
+            background: #fafbfc;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .modal-header .modal-title {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #f3f4f6;
+            padding: 0.75rem 1.25rem;
+            background: #fafbfc;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .modal-body {
+            padding: 1.25rem;
+            background: #fff;
+        }
+
+        .modal .form-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.3rem;
+        }
+
+        .modal .form-control,
+        .modal .form-select {
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            font-size: 0.875rem;
+            color: #374151;
+            padding: 0.45rem 0.75rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .modal .form-control:focus,
+        .modal .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 72px;
+        }
+
+        .btn-modal-cancel {
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            padding: 0.45rem 1rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-modal-cancel:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-modal-save {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.45rem 1rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: background 0.15s;
+        }
+
+        .btn-modal-save:hover {
+            background: #2563eb;
+        }
+
+        .btn-modal-save:disabled {
+            background: #93c5fd;
+            cursor: not-allowed;
+        }
+
+        /* ── Coord picker inside amenity modal ── */
+        .coord-picker-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+
+        .coord-picker-row .coord-inputs {
+            flex: 1;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .coord-picker-row .coord-inputs>div {
+            flex: 1;
+        }
+
+        .btn-open-map {
+            height: 36px;
+            padding: 0 0.875rem;
+            background: #f0f9ff;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+            border-radius: 7px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .btn-open-map:hover {
+            background: #e0f2fe;
+            border-color: #7dd3fc;
+        }
+
+        .coord-display-strip {
+            margin-top: 0.4rem;
+            font-size: 0.775rem;
+            color: #6b7280;
+            font-family: monospace;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .coord-display-strip i {
+            color: #3b82f6;
+            font-size: 0.75rem;
+        }
+
+        /* ── Planning image upload zone ── */
+        .planning-upload-zone {
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            background: #fafbfc;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .planning-upload-zone:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .planning-upload-zone.has-image {
+            border-color: #3b82f6;
+            background: #f8faff;
+            border-style: solid;
+        }
+
+        .planning-upload-zone.uploading {
+            border-color: #93c5fd;
+        }
+
+        /* ── Autocomplete dropdown ── */
+        .ac-item {
+            padding: 0.5rem 0.875rem;
+            font-size: 0.875rem;
+            color: #374151;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .ac-item:last-child {
+            border-bottom: none;
+        }
+
+        .ac-item:hover {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+        <div class="container-fluid">
+
+            <!-- ── Page Header ── -->
+            <div class="page-header">
+                <h2>
+                    <i class="bi bi-info-circle-fill"></i>
+                    Thông tin bổ sung
+                    <span class="building-name-badge">
+                        <i class="bi bi-buildings"></i>
+                        <span th:text="${building.name}">Tòa nhà</span>
+                    </span>
+                </h2>
+                <a th:href="@{/admin/building/list}" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
+
+            <!-- ── Quick-nav bar ── -->
+            <div class="section-nav">
+                <a href="#section-legal">
+                    <i class="bi bi-shield-check"></i> Pháp lý
+                    <span class="nav-count nav-count-legal" id="cnt-legal" th:text="${legalAuthorities.size()}">0</span>
+                </a>
+                <a href="#section-amenity">
+                    <i class="bi bi-geo-alt"></i> Tiện ích lân cận
+                    <span class="nav-count nav-count-amenity" id="cnt-amenity"
+                        th:text="${nearbyAmenities.size()}">0</span>
+                </a>
+                <a href="#section-planning">
+                    <i class="bi bi-map"></i> Bản đồ quy hoạch
+                    <span class="nav-count nav-count-planning" id="cnt-planning"
+                        th:text="${planningMaps.size()}">0</span>
+                </a>
+                <a href="#section-supplier">
+                    <i class="bi bi-truck"></i> Nhà cung cấp
+                    <span class="nav-count nav-count-supplier" id="cnt-supplier" th:text="${suppliers.size()}">0</span>
+                </a>
+            </div>
+
+            <!-- ══════════════ SECTION 1: LEGAL AUTHORITY ══════════════ -->
+            <div class="section-block" id="section-legal">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <span class="section-title-icon icon-legal"><i class="bi bi-shield-check"></i></span>
+                        Cơ quan pháp lý
+                        <span class="section-count-chip chip-legal" id="chip-legal"
+                            th:text="${legalAuthorities.size()}">0</span>
+                    </h5>
+                    <button class="btn-add" onclick="openModal('legal')">
+                        <i class="bi bi-plus-lg"></i> Thêm mới
+                    </button>
+                </div>
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table modern-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:48px">#</th>
+                                    <th>Tên cơ quan</th>
+                                    <th>Loại</th>
+                                    <th>Địa chỉ</th>
+                                    <th>Điện thoại</th>
+                                    <th>Email</th>
+                                    <th>Ghi chú</th>
+                                    <th style="width:90px">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-legal">
+                                <tr th:if="${legalAuthorities.empty}">
+                                    <td colspan="8">
+                                        <div class="empty-state">
+                                            <i class="bi bi-inbox"></i>
+                                            <p>Chưa có dữ liệu</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:each="item, idx : ${legalAuthorities}">
+                                    <td class="text-muted" th:text="${idx.count}">1</td>
+                                    <td><strong th:text="${item.authorityName}">-</strong></td>
+                                    <td>
+                                        <span class="type-badge" th:classappend="${item.authorityType == 'NOTARY'} ? 'badge-notary' :
+                                                    (${item.authorityType == 'LAND_REGISTRY'} ? 'badge-land' :
+                                                    (${item.authorityType == 'LAW_FIRM'} ? 'badge-law' : 'badge-tax'))"
+                                            th:text="${item.authorityType == 'NOTARY'} ? 'Công chứng' :
+                                             (${item.authorityType == 'LAND_REGISTRY'} ? 'Đăng ký đất' :
+                                             (${item.authorityType == 'LAW_FIRM'} ? 'Văn phòng luật' : 'Cục thuế'))">
+                                        </span>
+                                    </td>
+                                    <td><span class="address-cell" th:text="${item.address}">-</span></td>
+                                    <td th:text="${item.phone}">-</td>
+                                    <td th:text="${item.email}">-</td>
+                                    <td><span class="note-cell" th:text="${item.note}">-</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn-action btn-edit" title="Chỉnh sửa"
+                                                th:data-id="${item.id}" data-type="legal"
+                                                onclick="editItem(this.dataset.type, this.dataset.id)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn-action btn-delete" title="Xóa" th:data-id="${item.id}"
+                                                th:data-name="${item.authorityName}"
+                                                onclick="deleteItem('legal', this.dataset.id, this.dataset.name)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ══════════════ SECTION 2: NEARBY AMENITY ══════════════ -->
+            <div class="section-block" id="section-amenity">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <span class="section-title-icon icon-amenity"><i class="bi bi-geo-alt"></i></span>
+                        Tiện ích lân cận
+                        <span class="section-count-chip chip-amenity" id="chip-amenity"
+                            th:text="${nearbyAmenities.size()}">0</span>
+                    </h5>
+                    <button class="btn-add" onclick="openModal('amenity')">
+                        <i class="bi bi-plus-lg"></i> Thêm mới
+                    </button>
+                </div>
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table modern-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:48px">#</th>
+                                    <th>Tên tiện ích</th>
+                                    <th>Loại</th>
+                                    <th>Khoảng cách</th>
+                                    <th>Địa chỉ</th>
+                                    <th>Tọa độ</th>
+                                    <th style="width:90px">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-amenity">
+                                <tr th:if="${nearbyAmenities.empty}">
+                                    <td colspan="7">
+                                        <div class="empty-state">
+                                            <i class="bi bi-inbox"></i>
+                                            <p>Chưa có dữ liệu</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:each="item, idx : ${nearbyAmenities}">
+                                    <td class="text-muted" th:text="${idx.count}">1</td>
+                                    <td><strong th:text="${item.name}">-</strong></td>
+                                    <td>
+                                        <span class="type-badge"
+                                            th:classappend="${item.amenityType == 'SHOPPING'} ? 'badge-shopping' :
+                                                    (${item.amenityType == 'PARK'} ? 'badge-park' :
+                                                    (${item.amenityType == 'HOSPITAL'} ? 'badge-hospital' :
+                                                    (${item.amenityType == 'SCHOOL'} ? 'badge-school' :
+                                                    (${item.amenityType == 'BANK'} ? 'badge-bank' :
+                                                    (${item.amenityType == 'GYM'} ? 'badge-gym' :
+                                                    (${item.amenityType == 'TRANSPORT'} ? 'badge-transport' : 'badge-other'))))))" th:text="${item.amenityType == 'SHOPPING'} ? 'Mua sắm' :
+                                             (${item.amenityType == 'PARK'} ? 'Công viên' :
+                                             (${item.amenityType == 'HOSPITAL'} ? 'Bệnh viện' :
+                                             (${item.amenityType == 'SCHOOL'} ? 'Trường học' :
+                                             (${item.amenityType == 'RESTAURANT'} ? 'Nhà hàng' :
+                                             (${item.amenityType == 'BANK'} ? 'Ngân hàng' :
+                                             (${item.amenityType == 'GYM'} ? 'Gym' :
+                                             (${item.amenityType == 'TRANSPORT'} ? 'Giao thông' : 'Khác')))))))">
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${item.distanceMeter != null}"
+                                            th:text="${item.distanceMeter + ' m'}">-</span>
+                                        <span th:unless="${item.distanceMeter != null}" class="text-muted">-</span>
+                                    </td>
+                                    <td><span class="address-cell" th:text="${item.address}">-</span></td>
+                                    <td>
+                                        <span th:if="${item.latitude != null}" class="text-muted"
+                                            style="font-size:0.8rem"
+                                            th:text="${item.latitude + ', ' + item.longitude}">-</span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn-action btn-edit" title="Chỉnh sửa"
+                                                th:data-id="${item.id}" data-type="amenity"
+                                                onclick="editItem(this.dataset.type, this.dataset.id)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn-action btn-delete" title="Xóa" th:data-id="${item.id}"
+                                                th:data-name="${item.name}"
+                                                onclick="deleteItem('amenity', this.dataset.id, this.dataset.name)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ══════════════ SECTION 3: PLANNING MAP ══════════════ -->
+            <div class="section-block" id="section-planning">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <span class="section-title-icon icon-planning"><i class="bi bi-map"></i></span>
+                        Bản đồ quy hoạch
+                        <span class="section-count-chip chip-planning" id="chip-planning"
+                            th:text="${planningMaps.size()}">0</span>
+                    </h5>
+                    <button class="btn-add" onclick="openModal('planning')">
+                        <i class="bi bi-plus-lg"></i> Thêm mới
+                    </button>
+                </div>
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table modern-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:48px">#</th>
+                                    <th>Loại bản đồ</th>
+                                    <th>Cơ quan ban hành</th>
+                                    <th>Ngày ban hành</th>
+                                    <th>Ngày hết hạn</th>
+                                    <th>Trạng thái</th>
+                                    <th style="width:64px">Ảnh</th>
+                                    <th>Ghi chú</th>
+                                    <th style="width:90px">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-planning">
+                                <tr th:if="${planningMaps.empty}">
+                                    <td colspan="9">
+                                        <div class="empty-state">
+                                            <i class="bi bi-inbox"></i>
+                                            <p>Chưa có dữ liệu</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:each="item, idx : ${planningMaps}">
+                                    <td class="text-muted" th:text="${idx.count}">1</td>
+                                    <td><strong th:text="${item.mapType}">-</strong></td>
+                                    <td th:text="${item.issuedBy}">-</td>
+                                    <td th:text="${item.issuedDate}">-</td>
+                                    <td th:text="${item.expiredDate}">-</td>
+                                    <td>
+                                        <span class="type-badge"
+                                            th:classappend="${item.expiredDate != null and item.expiredDate.isBefore(#temporals.createNow().toLocalDate())} ? 'badge-expired' : 'badge-valid'"
+                                            th:text="${item.expiredDate != null and item.expiredDate.isBefore(#temporals.createNow().toLocalDate())} ? 'Hết hạn' : 'Còn hiệu lực'">
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a th:if="${item.imageUrl != null}"
+                                            th:href="${'/images/planning_map_img/' + (item.imageUrl.contains('/') ? item.imageUrl.substring(item.imageUrl.lastIndexOf('/')+1) : item.imageUrl)}"
+                                            target="_blank" title="Xem ảnh bản đồ">
+                                            <img th:src="${'/images/planning_map_img/' + (item.imageUrl.contains('/') ? item.imageUrl.substring(item.imageUrl.lastIndexOf('/')+1) : item.imageUrl)}"
+                                                alt="map"
+                                                style="width:48px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e5e7eb;display:block;"
+                                                onerror="this.style.display='none'">
+                                        </a>
+                                        <span th:unless="${item.imageUrl != null}" class="text-muted"
+                                            style="font-size:0.8rem;">-</span>
+                                    </td>
+                                    <td><span class="note-cell" th:text="${item.note}">-</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn-action btn-edit" title="Chỉnh sửa"
+                                                th:data-id="${item.id}" data-type="planning"
+                                                onclick="editItem(this.dataset.type, this.dataset.id)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn-action btn-delete" title="Xóa" th:data-id="${item.id}"
+                                                th:data-name="${item.mapType}"
+                                                onclick="deleteItem('planning', this.dataset.id, this.dataset.name)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ══════════════ SECTION 4: SUPPLIER ══════════════ -->
+            <div class="section-block" id="section-supplier">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <span class="section-title-icon icon-supplier"><i class="bi bi-truck"></i></span>
+                        Nhà cung cấp dịch vụ
+                        <span class="section-count-chip chip-supplier" id="chip-supplier"
+                            th:text="${suppliers.size()}">0</span>
+                    </h5>
+                    <button class="btn-add" onclick="openModal('supplier')">
+                        <i class="bi bi-plus-lg"></i> Thêm mới
+                    </button>
+                </div>
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table modern-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:48px">#</th>
+                                    <th>Tên nhà cung cấp</th>
+                                    <th>Loại dịch vụ</th>
+                                    <th>Điện thoại</th>
+                                    <th>Email</th>
+                                    <th>Địa chỉ</th>
+                                    <th>Ghi chú</th>
+                                    <th style="width:90px">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-supplier">
+                                <tr th:if="${suppliers.empty}">
+                                    <td colspan="8">
+                                        <div class="empty-state">
+                                            <i class="bi bi-inbox"></i>
+                                            <p>Chưa có dữ liệu</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:each="item, idx : ${suppliers}">
+                                    <td class="text-muted" th:text="${idx.count}">1</td>
+                                    <td><strong th:text="${item.name}">-</strong></td>
+                                    <td>
+                                        <span class="type-badge badge-other" th:text="${item.serviceType}">-</span>
+                                    </td>
+                                    <td th:text="${item.phone}">-</td>
+                                    <td th:text="${item.email}">-</td>
+                                    <td><span class="address-cell" th:text="${item.address}">-</span></td>
+                                    <td><span class="note-cell" th:text="${item.note}">-</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn-action btn-edit" title="Chỉnh sửa"
+                                                th:data-id="${item.id}" data-type="supplier"
+                                                onclick="editItem(this.dataset.type, this.dataset.id)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn-action btn-delete" title="Xóa" th:data-id="${item.id}"
+                                                th:data-name="${item.name}"
+                                                onclick="deleteItem('supplier', this.dataset.id, this.dataset.name)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /container-fluid -->
+    </main>
+
+    <!-- ══════════════════════════════════════════
+     MODAL: LEGAL AUTHORITY
+══════════════════════════════════════════ -->
+    <div class="modal fade" id="modalLegal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-shield-check" style="color:#8b5cf6"></i> <span
+                            id="modalLegalTitle">Thêm cơ quan pháp lý</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="legal-id">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Tên cơ quan <span class="text-danger">*</span></label>
+                            <input type="text" id="legal-authorityName" class="form-control"
+                                placeholder="Văn phòng công chứng số 1...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Loại cơ quan <span class="text-danger">*</span></label>
+                            <select id="legal-authorityType" class="form-select">
+                                <option value="">-- Chọn loại --</option>
+                                <option value="NOTARY">Công chứng</option>
+                                <option value="LAND_REGISTRY">Đăng ký đất đai</option>
+                                <option value="LAW_FIRM">Văn phòng luật</option>
+                                <option value="TAX_OFFICE">Cục thuế</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Điện thoại <span class="text-danger">*</span></label>
+                            <input type="tel" id="legal-phone" class="form-control" placeholder="0901234567"
+                                maxlength="10" pattern="\d{10}" inputmode="numeric"
+                                oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" id="legal-email" class="form-control" placeholder="contact@example.com"
+                                autocomplete="email">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                            <textarea id="legal-address" class="form-control"
+                                placeholder="Số nhà, đường, phường, quận..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea id="legal-note" class="form-control" placeholder="Ghi chú thêm..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn-modal-save" onclick="saveItem('legal')">
+                        <i class="bi bi-check-lg"></i> Lưu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+     MODAL: NEARBY AMENITY
+══════════════════════════════════════════ -->
+    <div class="modal fade" id="modalAmenity" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-geo-alt" style="color:#10b981"></i> <span
+                            id="modalAmenityTitle">Thêm tiện ích lân cận</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="amenity-id">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Tên tiện ích <span class="text-danger">*</span></label>
+                            <input type="text" id="amenity-name" class="form-control"
+                                placeholder="Siêu thị Vinmart, Công viên Tao Đàn...">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Loại tiện ích <span class="text-danger">*</span></label>
+                            <select id="amenity-amenityType" class="form-select">
+                                <option value="">-- Chọn loại --</option>
+                                <option value="SHOPPING">Mua sắm</option>
+                                <option value="PARK">Công viên</option>
+                                <option value="HOSPITAL">Bệnh viện</option>
+                                <option value="SCHOOL">Trường học</option>
+                                <option value="RESTAURANT">Nhà hàng</option>
+                                <option value="BANK">Ngân hàng</option>
+                                <option value="GYM">Gym</option>
+                                <option value="TRANSPORT">Giao thông</option>
+                                <option value="OTHER">Khác</option>
+                            </select>
+                        </div>
+                        <input type="hidden" id="amenity-distanceMeter">
+                        <div class="col-12">
+                            <label class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                            <input type="text" id="amenity-address" class="form-control"
+                                placeholder="Địa chỉ tiện ích...">
+                        </div>
+
+                        <!-- Tọa độ: chọn bằng Goong Map -->
+                        <div class="col-12">
+                            <label class="form-label">Tọa độ <span class="text-danger">*</span></label>
+                            <div class="coord-picker-row">
+                                <div class="coord-inputs">
+                                    <div>
+                                        <input type="text" id="amenity-latitude" class="form-control"
+                                            placeholder="Vĩ độ" readonly>
+                                    </div>
+                                    <div>
+                                        <input type="text" id="amenity-longitude" class="form-control"
+                                            placeholder="Kinh độ" readonly>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-open-map" onclick="openAmenityMapModal()">
+                                    <i class="bi bi-map"></i> Chọn trên bản đồ
+                                </button>
+                            </div>
+                            <div class="coord-display-strip">
+                                <i class="bi bi-pin-map-fill"></i>
+                                <span id="amenityCoordDisplay">Chưa chọn tọa độ</span>
+                                <span id="amenityDistanceDisplay"
+                                    style="display:none;margin-left:8px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:20px;padding:0.1rem 0.6rem;font-size:0.75rem;font-weight:600;font-family:sans-serif;">
+                                    <i class="bi bi-arrows-angle-contract" style="font-size:0.7rem;"></i> <span
+                                        id="amenityDistanceText"></span>
+                                </span>
+                                <button type="button" id="btnClearAmenityCoord" onclick="clearAmenityCoord()"
+                                    style="display:none;background:none;border:none;color:#ef4444;font-size:0.75rem;cursor:pointer;padding:0;margin-left:4px;">
+                                    <i class="bi bi-x-circle"></i> Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn-modal-save" onclick="saveItem('amenity')">
+                        <i class="bi bi-check-lg"></i> Lưu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+     MODAL: PLANNING MAP
+══════════════════════════════════════════ -->
+    <div class="modal fade" id="modalPlanning" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-map" style="color:#3b82f6"></i> <span
+                            id="modalPlanningTitle">Thêm bản đồ quy hoạch</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="planning-id">
+                    <input type="hidden" id="planning-imageUrl">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Loại bản đồ <span class="text-danger">*</span></label>
+                            <input type="text" id="planning-mapType" class="form-control"
+                                placeholder="Quy hoạch 1/500, Quy hoạch phân khu...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Cơ quan ban hành <span class="text-danger">*</span></label>
+                            <input type="text" id="planning-issuedBy" class="form-control"
+                                placeholder="UBND TP.HCM, Sở Quy hoạch...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ngày ban hành <span class="text-danger">*</span></label>
+                            <input type="date" id="planning-issuedDate" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ngày hết hạn <span class="text-danger">*</span></label>
+                            <input type="date" id="planning-expiredDate" class="form-control">
+                        </div>
+
+                        <!-- Upload ảnh -->
+                        <div class="col-12">
+                            <label class="form-label">Ảnh bản đồ <span class="text-danger">*</span></label>
+                            <div id="planningUploadZone" class="planning-upload-zone"
+                                onclick="if(!event.target.closest('#planningUploadPreview'))document.getElementById('planningImageFile').click()">
+                                <div id="planningUploadPlaceholder">
+                                    <i class="bi bi-cloud-arrow-up"
+                                        style="font-size:1.75rem;color:#d1d5db;display:block;margin-bottom:0.4rem;"></i>
+                                    <div style="font-size:0.8125rem;color:#6b7280;">Nhấn để chọn ảnh hoặc kéo thả vào
+                                        đây</div>
+                                    <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.2rem;">JPG, PNG, WEBP · Tối
+                                        đa 5MB</div>
+                                </div>
+                                <div id="planningUploadPreview"
+                                    style="display:none;position:relative;width:fit-content;margin:0 auto;">
+                                    <img id="planningPreviewImg" src="" alt="preview"
+                                        style="max-height:140px;max-width:100%;border-radius:6px;border:1px solid #e5e7eb;object-fit:contain;">
+                                    <button type="button" onclick="event.stopPropagation();clearPlanningImage()"
+                                        style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;background:#ef4444;color:#fff;border:none;border-radius:50%;font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <input type="file" id="planningImageFile" accept="image/jpeg,image/png,image/webp"
+                                style="display:none;" onchange="handlePlanningImageSelect(this)">
+                            <div
+                                style="font-size:0.775rem;color:#9ca3af;margin-top:0.3rem;display:flex;align-items:center;gap:0.35rem;">
+                                <i class="bi bi-info-circle" style="font-size:0.75rem;"></i>
+                                Chỉ chấp nhận định dạng <strong style="color:#6b7280;">JPG, PNG, WEBP</strong> · Dung
+                                lượng tối đa <strong style="color:#6b7280;">5MB</strong>
+                            </div>
+                            <div id="planningUploadStatus" style="font-size:0.78rem;margin-top:0.25rem;"></div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea id="planning-note" class="form-control" placeholder="Ghi chú thêm..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn-modal-save" onclick="saveItem('planning')">
+                        <i class="bi bi-check-lg"></i> Lưu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+     MODAL: SUPPLIER
+══════════════════════════════════════════ -->
+    <div class="modal fade" id="modalSupplier" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-truck" style="color:#f59e0b"></i> <span
+                            id="modalSupplierTitle">Thêm nhà cung cấp</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="supplier-id">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Tên nhà cung cấp <span class="text-danger">*</span></label>
+                            <input type="text" id="supplier-name" class="form-control"
+                                placeholder="Công ty TNHH Dịch vụ XYZ...">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Loại dịch vụ <span class="text-danger">*</span></label>
+                            <input type="text" id="supplier-serviceType" class="form-control"
+                                placeholder="Điện, Nước, Vệ sinh, Bảo vệ...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Điện thoại <span class="text-danger">*</span></label>
+                            <input type="tel" id="supplier-phone" class="form-control" placeholder="0901234567"
+                                maxlength="10" pattern="\d{10}" inputmode="numeric"
+                                oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" id="supplier-email" class="form-control"
+                                placeholder="contact@supplier.com" autocomplete="email">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Địa chỉ</label>
+                            <textarea id="supplier-address" class="form-control"
+                                placeholder="Địa chỉ nhà cung cấp..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea id="supplier-note" class="form-control" placeholder="Ghi chú thêm..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn-modal-save" onclick="saveItem('supplier')">
+                        <i class="bi bi-check-lg"></i> Lưu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+     GOONG MAP MODAL (Amenity coord picker)
+══════════════════════════════════════════ -->
+    <div id="amenityMapModal"
+        style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+        <div
+            style="background:#fff;border-radius:12px;width:90vw;max-width:900px;height:680px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+            <!-- Header -->
+            <div
+                style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;flex-shrink:0;background:#fafbfc;">
+                <div
+                    style="font-weight:700;font-size:0.9375rem;color:#111827;display:flex;align-items:center;gap:0.5rem;">
+                    <i class="bi bi-geo-alt-fill" style="color:#3b82f6;"></i> Chọn vị trí trên bản đồ
+                </div>
+                <button type="button" onclick="closeAmenityMapModal(false)"
+                    style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#6b7280;padding:0.25rem;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <!-- Search -->
+            <div style="padding:0.875rem 1.5rem;border-bottom:1px solid #f3f4f6;flex-shrink:0;">
+                <div id="amenitySearchWrapper" style="position:relative;">
+                    <input type="text" id="amenitySearchInput" placeholder="Tìm kiếm địa điểm..." autocomplete="off"
+                        oninput="onAmenitySearchInput()" onkeydown="if(event.key==='Escape')closeAmenityAcDropdown();"
+                        style="width:100%;padding:0.45rem 0.75rem;border:1px solid #e5e7eb;border-radius:7px;font-size:0.875rem;outline:none;box-sizing:border-box;">
+                    <div id="amenityAcDropdown"
+                        style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:7px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:10000;margin-top:2px;max-height:200px;overflow-y:auto;">
+                    </div>
+                </div>
+            </div>
+            <!-- Hint -->
+            <div
+                style="padding:0.5rem 1.5rem;background:#f0f9ff;border-bottom:1px solid #e0f2fe;font-size:0.78rem;color:#0369a1;flex-shrink:0;">
+                <i class="bi bi-hand-index-thumb me-1"></i> Click lên bản đồ để đặt pin. Kéo pin để điều chỉnh vị trí.
+            </div>
+            <!-- Map -->
+            <div id="amenityModalMap" style="flex:1;min-height:0;"></div>
+            <!-- Footer -->
+            <div
+                style="padding:0.875rem 1.5rem;border-top:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fafbfc;">
+                <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                    <div id="amenityModalCoordDisplay" style="font-size:0.8125rem;color:#6b7280;font-family:monospace;">
+                        Chưa chọn vị trí</div>
+                    <span id="amenityModalDistanceDisplay"
+                        style="display:none;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:20px;padding:0.15rem 0.65rem;font-size:0.775rem;font-weight:600;">
+                        <i class="bi bi-arrows-angle-contract" style="font-size:0.7rem;"></i> <span
+                            id="amenityModalDistanceText"></span> từ tòa nhà
+                    </span>
+                </div>
+                <div style="display:flex;gap:0.5rem;align-items:center;">
+                    <button type="button" id="btnFlyToBuilding" onclick="flyToBuilding()" title="Về vị trí tòa nhà"
+                        style="padding:0.4rem 0.75rem;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:7px;font-size:0.8125rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:0.35rem;transition:background 0.15s;"
+                        onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                        <i class="bi bi-building"></i> Về tòa nhà
+                    </button>
+                    <button type="button" onclick="closeAmenityMapModal(false)"
+                        style="padding:0.45rem 1rem;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-size:0.875rem;font-weight:600;cursor:pointer;">
+                        Hủy
+                    </button>
+                    <button type="button" id="btnConfirmAmenityCoord" onclick="confirmAmenityCoord()" disabled
+                        style="padding:0.45rem 1rem;background:#3b82f6;color:#fff;border:none;border-radius:7px;font-size:0.875rem;font-weight:600;cursor:pointer;opacity:0.5;display:inline-flex;align-items:center;gap:0.35rem;">
+                        <i class="bi bi-check-circle"></i> Xác nhận
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Goong JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js"></script>
+
+    <script th:inline="javascript">
+        const BUILDING_ID = /*[[${buildingId}]]*/ 0;
+        const BUILDING_LAT = /*[[${buildingLat}]]*/ null;
+        const BUILDING_LNG = /*[[${buildingLng}]]*/ null;
+        const BASE = '/admin/building-additional-information';
+        // Prefix ảnh planning — Spring serve trực tiếp từ static/images/planning_map_img/
+        const PLANNING_IMG_PREFIX = '/images/planning_map_img/';
+
+        // ── Goong Map keys ──
+        var MAPTILES_KEY = 'd2vMzWHY7kcxkY1yITDytGLWaIPf9knt8mLMXmkx';
+        var GOONG_API_KEY = /*[[${goongApiKey}]]*/ '';
+
+        // ── Bootstrap modal instances ──
+        const bsModals = {
+            legal: new bootstrap.Modal(document.getElementById('modalLegal')),
+            amenity: new bootstrap.Modal(document.getElementById('modalAmenity')),
+            planning: new bootstrap.Modal(document.getElementById('modalPlanning')),
+            supplier: new bootstrap.Modal(document.getElementById('modalSupplier')),
+        };
+
+        const modalTitles = {
+            legal: { create: 'Thêm cơ quan pháp lý', edit: 'Chỉnh sửa cơ quan pháp lý' },
+            amenity: { create: 'Thêm tiện ích lân cận', edit: 'Chỉnh sửa tiện ích lân cận' },
+            planning: { create: 'Thêm bản đồ quy hoạch', edit: 'Chỉnh sửa bản đồ quy hoạch' },
+            supplier: { create: 'Thêm nhà cung cấp', edit: 'Chỉnh sửa nhà cung cấp' },
+        };
+
+        const endpoints = {
+            legal: 'legal-authority',
+            amenity: 'nearby-amenity',
+            planning: 'planning-map',
+            supplier: 'supplier',
+        };
+
+        const formFields = {
+            legal: ['authorityName', 'authorityType', 'phone', 'email', 'address', 'note'],
+            amenity: ['name', 'amenityType', 'distanceMeter', 'address', 'latitude', 'longitude'],
+            planning: ['mapType', 'issuedBy', 'issuedDate', 'expiredDate', 'note'],
+            supplier: ['name', 'serviceType', 'phone', 'email', 'address', 'note'],
+        };
+
+        // ── Open create modal ──
+        function openModal(type) {
+            clearForm(type);
+            document.getElementById(type + '-id').value = '';
+            document.getElementById('modal' + capitalize(type) + 'Title').textContent = modalTitles[type].create;
+            bsModals[type].show();
+        }
+
+        // ── Open edit modal ──
+        async function editItem(type, id) {
+            try {
+                const url = `${BASE}/${endpoints[type]}/${BUILDING_ID}/list`;
+                const res = await fetch(url);
+                if (!res.ok) {
+                    const errText = await res.text();
+                    console.error('editItem fetch error', res.status, errText);
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                const list = await res.json();
+                const item = list.find(i => i.id == id);
+                if (!item) { toastError('Không tìm thấy dữ liệu (id=' + id + ')'); return; }
+                clearForm(type);
+                fillForm(type, item);
+                document.getElementById(type + '-id').value = id;
+                document.getElementById('modal' + capitalize(type) + 'Title').textContent = modalTitles[type].edit;
+                if (type === 'amenity' && item.latitude) {
+                    updateAmenityCoordDisplay(item.latitude, item.longitude);
+                }
+                bsModals[type].show();
+            } catch (err) {
+                console.error('editItem error:', err);
+                toastError('Lỗi tải dữ liệu: ' + (err.message || err));
+            }
+        }
+
+        // ── Save: POST (create) or PUT (update) ──
+        async function saveItem(type) {
+            const id = document.getElementById(type + '-id').value;
+            const payload = collectForm(type);
+            if (!payload) return;
+            payload.buildingId = BUILDING_ID;
+
+            const url = id ? `${BASE}/${endpoints[type]}/${id}` : `${BASE}/${endpoints[type]}`;
+            const method = id ? 'PUT' : 'POST';
+
+            const saveBtn = document.querySelector(`#modal${capitalize(type)} .btn-modal-save`);
+            saveBtn.disabled = true;
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!res.ok) {
+                    const errBody = await res.text().catch(() => '');
+                    console.error('saveItem error', res.status, errBody);
+                    throw new Error(`HTTP ${res.status}${errBody ? ': ' + errBody : ''}`);
+                }
+                bsModals[type].hide();
+                await refreshSection(type);
+                Swal.fire({ icon: 'success', title: 'Thành công', text: id ? 'Cập nhật thành công!' : 'Thêm mới thành công!', timer: 1500, showConfirmButton: false });
+            } catch (err) {
+                console.error('saveItem caught:', err);
+                Swal.fire({ icon: 'error', title: 'Lỗi', text: err.message || 'Có lỗi xảy ra, vui lòng thử lại.' });
+            } finally {
+                saveBtn.disabled = false;
+            }
+        }
+
+        // ── DELETE ──
+        function deleteItem(type, id, name) {
+            Swal.fire({
+                title: 'Xác nhận xóa',
+                html: `Bạn có chắc muốn xóa <strong>${name}</strong>?<br><small class="text-muted">Thao tác này không thể hoàn tác.</small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Huỷ',
+            }).then(async result => {
+                if (!result.isConfirmed) return;
+                try {
+                    const res = await fetch(`${BASE}/${endpoints[type]}/${id}`, { method: 'DELETE' });
+                    if (!res.ok) throw new Error();
+                    await refreshSection(type);
+                    Swal.fire({ icon: 'success', title: 'Đã xóa', timer: 1200, showConfirmButton: false });
+                } catch {
+                    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Xóa thất bại!' });
+                }
+            });
+        }
+
+        // ── Refresh table + counters ──
+        async function refreshSection(type) {
+            const res = await fetch(`${BASE}/${endpoints[type]}/${BUILDING_ID}/list`);
+            const list = await res.json();
+            const count = list.length;
+            const cntEl = document.getElementById('cnt-' + type);
+            const chipEl = document.getElementById('chip-' + type);
+            if (cntEl) cntEl.textContent = count;
+            if (chipEl) chipEl.textContent = count;
+            document.getElementById('tbody-' + type).innerHTML =
+                count ? list.map((item, idx) => buildRow(type, item, idx + 1)).join('') : emptyRow(type);
+        }
+
+        function emptyRow(type) {
+            const colspan = { legal: 8, amenity: 7, planning: 9, supplier: 8 };
+            return `<tr><td colspan="${colspan[type] || 8}">
+            <div class="empty-state"><i class="bi bi-inbox"></i><p>Chưa có dữ liệu</p></div>
+        </td></tr>`;
+        }
+
+        // ── Row builders ──
+        function buildRow(type, item, idx) {
+            if (type === 'legal') {
+                const labels = { NOTARY: 'Công chứng', LAND_REGISTRY: 'Đăng ký đất', LAW_FIRM: 'Văn phòng luật', TAX_OFFICE: 'Cục thuế' };
+                const classes = { NOTARY: 'badge-notary', LAND_REGISTRY: 'badge-land', LAW_FIRM: 'badge-law', TAX_OFFICE: 'badge-tax' };
+                return `<tr>
+                <td class="text-muted">${idx}</td>
+                <td><strong>${esc(item.authorityName)}</strong></td>
+                <td><span class="type-badge ${classes[item.authorityType] || 'badge-other'}">${labels[item.authorityType] || item.authorityType || ''}</span></td>
+                <td><span class="address-cell">${esc(item.address)}</span></td>
+                <td>${esc(item.phone)}</td><td>${esc(item.email)}</td>
+                <td><span class="note-cell">${esc(item.note)}</span></td>
+                <td><div class="action-buttons">
+                    <button class="btn-action btn-edit" data-type="legal" data-id="${item.id}" onclick="editItem(this.dataset.type,this.dataset.id)"><i class="bi bi-pencil"></i></button>
+                    <button class="btn-action btn-delete" data-id="${item.id}" data-name="${escQ(item.authorityName)}" onclick="deleteItem('legal',this.dataset.id,this.dataset.name)"><i class="bi bi-trash"></i></button>
+                </div></td></tr>`;
+            }
+            if (type === 'amenity') {
+                const labels = { SHOPPING: 'Mua sắm', PARK: 'Công viên', HOSPITAL: 'Bệnh viện', SCHOOL: 'Trường học', RESTAURANT: 'Nhà hàng', BANK: 'Ngân hàng', GYM: 'Gym', TRANSPORT: 'Giao thông', OTHER: 'Khác' };
+                const classes = { SHOPPING: 'badge-shopping', PARK: 'badge-park', HOSPITAL: 'badge-hospital', SCHOOL: 'badge-school', BANK: 'badge-bank', GYM: 'badge-gym', TRANSPORT: 'badge-transport' };
+                return `<tr>
+                <td class="text-muted">${idx}</td>
+                <td><strong>${esc(item.name)}</strong></td>
+                <td><span class="type-badge ${classes[item.amenityType] || 'badge-other'}">${labels[item.amenityType] || item.amenityType || ''}</span></td>
+                <td>${item.distanceMeter ? item.distanceMeter + ' m' : '<span class="text-muted">-</span>'}</td>
+                <td><span class="address-cell">${esc(item.address)}</span></td>
+                <td><span style="font-size:0.8rem;color:#6b7280">${item.latitude ? item.latitude + ', ' + item.longitude : ''}</span></td>
+                <td><div class="action-buttons">
+                    <button class="btn-action btn-edit" data-type="amenity" data-id="${item.id}" onclick="editItem(this.dataset.type,this.dataset.id)"><i class="bi bi-pencil"></i></button>
+                    <button class="btn-action btn-delete" data-id="${item.id}" data-name="${escQ(item.name)}" onclick="deleteItem('amenity',this.dataset.id,this.dataset.name)"><i class="bi bi-trash"></i></button>
+                </div></td></tr>`;
+            }
+            if (type === 'planning') {
+                const now = new Date().toISOString().split('T')[0];
+                const expired = item.expiredDate && item.expiredDate < now;
+                const imgUrl = item.imageUrl ? resolveImgUrl(item.imageUrl) : '';
+                const thumbCell = imgUrl
+                    ? `<a href="${imgUrl}" target="_blank" title="Xem ảnh bản đồ">
+                       <img src="${imgUrl}" alt="map"
+                            style="width:48px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e5e7eb;display:block;"
+                            onerror="this.style.display='none'">
+                   </a>`
+                    : '<span class="text-muted" style="font-size:0.8rem;">-</span>';
+                return `<tr>
+                <td class="text-muted">${idx}</td>
+                <td><strong>${esc(item.mapType)}</strong></td>
+                <td>${esc(item.issuedBy)}</td>
+                <td>${item.issuedDate || ''}</td>
+                <td>${item.expiredDate || ''}</td>
+                <td><span class="type-badge ${expired ? 'badge-expired' : 'badge-valid'}">${expired ? 'Hết hạn' : 'Còn hiệu lực'}</span></td>
+                <td>${thumbCell}</td>
+                <td><span class="note-cell">${esc(item.note)}</span></td>
+                <td><div class="action-buttons">
+                    <button class="btn-action btn-edit" data-type="planning" data-id="${item.id}" onclick="editItem(this.dataset.type,this.dataset.id)"><i class="bi bi-pencil"></i></button>
+                    <button class="btn-action btn-delete" data-id="${item.id}" data-name="${escQ(item.mapType)}" onclick="deleteItem('planning',this.dataset.id,this.dataset.name)"><i class="bi bi-trash"></i></button>
+                </div></td></tr>`;
+            }
+            if (type === 'supplier') {
+                return `<tr>
+                <td class="text-muted">${idx}</td>
+                <td><strong>${esc(item.name)}</strong></td>
+                <td><span class="type-badge badge-other">${esc(item.serviceType)}</span></td>
+                <td>${esc(item.phone)}</td><td>${esc(item.email)}</td>
+                <td><span class="address-cell">${esc(item.address)}</span></td>
+                <td><span class="note-cell">${esc(item.note)}</span></td>
+                <td><div class="action-buttons">
+                    <button class="btn-action btn-edit" data-type="supplier" data-id="${item.id}" onclick="editItem(this.dataset.type,this.dataset.id)"><i class="bi bi-pencil"></i></button>
+                    <button class="btn-action btn-delete" data-id="${item.id}" data-name="${escQ(item.name)}" onclick="deleteItem('supplier',this.dataset.id,this.dataset.name)"><i class="bi bi-trash"></i></button>
+                </div></td></tr>`;
+            }
+        }
+
+        // ── Form helpers ──
+        function clearForm(type) {
+            formFields[type].forEach(f => {
+                const el = document.getElementById(type + '-' + f);
+                if (el) el.value = '';
+            });
+            if (type === 'amenity') {
+                document.getElementById('amenityCoordDisplay').textContent = 'Chưa chọn tọa độ';
+                document.getElementById('btnClearAmenityCoord').style.display = 'none';
+                var distEl = document.getElementById('amenityDistanceDisplay');
+                if (distEl) distEl.style.display = 'none';
+            }
+            if (type === 'planning') {
+                clearPlanningImage();
+            }
+        }
+
+        // Resolve imageUrl → URL có thể dùng làm src/href
+        // DB lưu: "/images/planning_map_img/xxx.jpg" (mới) hoặc "map3.jpg" (cũ seed data)
+        function resolveImgUrl(url) {
+            if (!url) return '';
+            if (url.startsWith('http://') || url.startsWith('https://')) return url;
+            if (url.startsWith('/')) return url; // đã là absolute path
+            // Tên file ngắn (seed data cũ: map3.jpg, map.jpg...)
+            return '/images/planning_map_img/' + url.split('/').pop();
+        }
+
+        function fillForm(type, item) {
+            formFields[type].forEach(f => {
+                const el = document.getElementById(type + '-' + f);
+                if (el && item[f] != null) el.value = item[f];
+            });
+            if (type === 'planning' && item.imageUrl) {
+                const resolvedUrl = resolveImgUrl(item.imageUrl);
+                document.getElementById('planning-imageUrl').value = item.imageUrl;
+                var img = document.getElementById('planningPreviewImg');
+                img.onerror = function () { this.style.display = 'none'; };
+                img.style.display = '';
+                img.src = resolvedUrl;
+                document.getElementById('planningUploadPlaceholder').style.display = 'none';
+                document.getElementById('planningUploadPreview').style.display = 'block';
+                document.getElementById('planningUploadZone').classList.add('has-image');
+            }
+        }
+
+        function collectForm(type) {
+            const obj = {};
+            formFields[type].forEach(f => {
+                const el = document.getElementById(type + '-' + f);
+                obj[f] = el ? (el.value.trim() || null) : null;
+            });
+            const required = {
+                legal: ['authorityName', 'authorityType', 'phone', 'email', 'address'],
+                amenity: ['name', 'amenityType', 'address', 'latitude', 'longitude'],
+                planning: ['mapType', 'issuedBy', 'issuedDate', 'expiredDate', 'imageUrl'],
+                supplier: ['name', 'serviceType', 'phone', 'email'],
+            };
+            const requiredLabels = {
+                legal: { authorityName: 'Tên cơ quan', authorityType: 'Loại cơ quan', phone: 'Điện thoại', email: 'Email', address: 'Địa chỉ' },
+                amenity: { name: 'Tên tiện ích', amenityType: 'Loại tiện ích', address: 'Địa chỉ', latitude: 'Tọa độ', longitude: 'Tọa độ' },
+                planning: { mapType: 'Loại bản đồ', issuedBy: 'Cơ quan ban hành', issuedDate: 'Ngày ban hành', expiredDate: 'Ngày hết hạn', imageUrl: 'Ảnh bản đồ' },
+                supplier: { name: 'Tên nhà cung cấp', serviceType: 'Loại dịch vụ', phone: 'Điện thoại', email: 'Email' },
+            };
+            // Gán imageUrl từ hidden field vào obj planning
+            if (type === 'planning') {
+                obj.imageUrl = document.getElementById('planning-imageUrl').value || null;
+            }
+            const missing = (required[type] || []).filter(f => !obj[f]);
+            if (missing.length) {
+                const labels = requiredLabels[type] || {};
+                const fieldNames = [...new Set(missing.map(f => labels[f] || f))];
+                Swal.fire({ icon: 'warning', title: 'Thiếu thông tin', html: 'Vui lòng điền đầy đủ:<br><strong>' + fieldNames.join(', ') + '</strong>' });
+                return null;
+            }
+            // Validate phone – đúng 10 chữ số
+            if (obj.phone) {
+                if (!/^\d{10}$/.test(obj.phone)) {
+                    Swal.fire({ icon: 'warning', title: 'Số điện thoại không hợp lệ', text: 'Số điện thoại phải đúng 10 chữ số.' });
+                    return null;
+                }
+            }
+            // Validate email – định dạng hợp lệ
+            if (obj.email) {
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(obj.email)) {
+                    Swal.fire({ icon: 'warning', title: 'Email không hợp lệ', text: 'Vui lòng nhập đúng định dạng email.' });
+                    return null;
+                }
+            }
+            if (type === 'amenity') {
+                if (obj.distanceMeter) obj.distanceMeter = parseInt(obj.distanceMeter);
+                if (obj.latitude) obj.latitude = parseFloat(obj.latitude);
+                if (obj.longitude) obj.longitude = parseFloat(obj.longitude);
+            }
+            return obj;
+        }
+
+        // ── Haversine distance (metres) ──
+        function haversineMeters(lat1, lng1, lat2, lng2) {
+            const R = 6371000;
+            const toRad = d => d * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+        }
+
+        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+        function esc(v) { return v ? String(v).replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''; }
+        function escQ(v) { return v ? String(v).replace(/'/g, "\\'") : ''; }
+        function toastError(msg) { Swal.fire({ icon: 'error', title: 'Lỗi', text: msg, timer: 2000, showConfirmButton: false }); }
+
+        // ── Scroll highlight nav ──
+        (function () {
+            const sections = ['legal', 'amenity', 'planning', 'supplier'];
+            const navLinks = {};
+            sections.forEach(id => { navLinks[id] = document.querySelector(`.section-nav a[href="#section-${id}"]`); });
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.id.replace('section-', '');
+                    if (navLinks[id]) navLinks[id].classList.toggle('active', entry.isIntersecting);
+                });
+            }, { threshold: 0.25, rootMargin: '-60px 0px -60% 0px' });
+            sections.forEach(id => { const el = document.getElementById('section-' + id); if (el) observer.observe(el); });
+        })();
+    </script>
+
+    <!-- ══════════════════════════════════════════
+     GOONG MAP JS – Amenity coord picker
+══════════════════════════════════════════ -->
+    <script>
+        var _aMap = null, _aPin = null, _aPendingLat = null, _aPendingLng = null, _aAcTimer = null;
+
+        function openAmenityMapModal() {
+            var lat = parseFloat(document.getElementById('amenity-latitude').value);
+            var lng = parseFloat(document.getElementById('amenity-longitude').value);
+            if (!isNaN(lat) && !isNaN(lng)) { _aPendingLat = lat; _aPendingLng = lng; }
+
+            // Đưa map modal lên trên Bootstrap modal (không hide BS modal để tránh backdrop conflict)
+            var mapModal = document.getElementById('amenityMapModal');
+            mapModal.style.display = 'flex';
+            mapModal.style.zIndex = '9999';
+
+            // Ẩn BS modal element khỏi tầm nhìn nhưng KHÔNG gọi .hide() để tránh tạo backdrop mới
+            document.getElementById('modalAmenity').style.visibility = 'hidden';
+
+            if (!_aMap) {
+                setTimeout(initAmenityPickerMap, 120);
+            } else {
+                setTimeout(function () {
+                    _aMap.resize();
+                    if (_aPendingLat) {
+                        if (!_aPin) placeAmenityPin(_aPendingLat, _aPendingLng);
+                        _aMap.panTo([_aPendingLng, _aPendingLat]);
+                    } else if (BUILDING_LAT && BUILDING_LNG) {
+                        _aMap.panTo([BUILDING_LNG, BUILDING_LAT]);
+                    }
+                }, 50);
+            }
+        }
+
+        function flyToBuilding() {
+            if (!_aMap || !BUILDING_LAT || !BUILDING_LNG) return;
+            _aMap.flyTo({ center: [BUILDING_LNG, BUILDING_LAT], zoom: 15 });
+        }
+
+        function closeAmenityMapModal(confirmed) {
+            document.getElementById('amenityMapModal').style.display = 'none';
+            // Hiện lại BS modal mà không trigger show/hide events
+            document.getElementById('modalAmenity').style.visibility = '';
+            if (!confirmed) {
+                // Huỷ: reset pending
+                _aPendingLat = null; _aPendingLng = null;
+            }
+        }
+
+        function initAmenityPickerMap() {
+            // Ưu tiên: tọa độ pin hiện tại → tọa độ tòa nhà → fallback Hà Nội
+            var centerLng = _aPendingLng || (BUILDING_LNG ? BUILDING_LNG : 105.8412);
+            var centerLat = _aPendingLat || (BUILDING_LAT ? BUILDING_LAT : 21.0245);
+            var initZoom = (_aPendingLat || BUILDING_LAT) ? 15 : 12;
+
+            goongjs.accessToken = MAPTILES_KEY;
+            _aMap = new goongjs.Map({
+                container: 'amenityModalMap',
+                style: 'https://tiles.goong.io/assets/goong_map_web.json',
+                center: [centerLng, centerLat],
+                zoom: initZoom
+            });
+            _aMap.addControl(new goongjs.NavigationControl(), 'top-right');
+            _aMap.on('load', function () {
+                // Hiển thị marker tòa nhà (màu xanh) nếu có tọa độ
+                if (BUILDING_LAT && BUILDING_LNG) {
+                    new goongjs.Marker({ color: '#3b82f6' })
+                        .setLngLat([BUILDING_LNG, BUILDING_LAT])
+                        .setPopup(new goongjs.Popup({ offset: 25 }).setText('Tòa nhà'))
+                        .addTo(_aMap);
+                }
+                // Nếu đang edit amenity đã có tọa độ, đặt pin đỏ
+                if (_aPendingLat) placeAmenityPin(_aPendingLat, _aPendingLng);
+            });
+            _aMap.on('click', function (e) { placeAmenityPin(e.lngLat.lat, e.lngLat.lng); });
+        }
+
+        function placeAmenityPin(lat, lng) {
+            if (_aPin) _aPin.remove();
+            _aPin = new goongjs.Marker({ color: '#ef4444', draggable: true }).setLngLat([lng, lat]).addTo(_aMap);
+            _aPin.on('dragend', function () {
+                var ll = _aPin.getLngLat();
+                updateAmenityModalCoordDisplay(ll.lat, ll.lng);
+            });
+            updateAmenityModalCoordDisplay(lat, lng);
+            _aMap.panTo([lng, lat]);
+        }
+
+        function updateAmenityModalCoordDisplay(lat, lng) {
+            _aPendingLat = lat; _aPendingLng = lng;
+            document.getElementById('amenityModalCoordDisplay').textContent =
+                'Vĩ độ: ' + lat.toFixed(7) + '  |  Kinh độ: ' + lng.toFixed(7);
+            // Tính và hiển thị khoảng cách từ tòa nhà
+            var distEl = document.getElementById('amenityModalDistanceDisplay');
+            var distTxt = document.getElementById('amenityModalDistanceText');
+            if (BUILDING_LAT && BUILDING_LNG) {
+                var m = haversineMeters(BUILDING_LAT, BUILDING_LNG, lat, lng);
+                distTxt.textContent = m >= 1000 ? (m / 1000).toFixed(2) + ' km' : m + ' m';
+                distEl.style.display = '';
+            }
+            var btn = document.getElementById('btnConfirmAmenityCoord');
+            btn.disabled = false; btn.style.opacity = '1';
+        }
+
+        function confirmAmenityCoord() {
+            if (_aPendingLat === null) return;
+            document.getElementById('amenity-latitude').value = _aPendingLat.toFixed(7);
+            document.getElementById('amenity-longitude').value = _aPendingLng.toFixed(7);
+            if (BUILDING_LAT && BUILDING_LNG) {
+                var m = haversineMeters(BUILDING_LAT, BUILDING_LNG, _aPendingLat, _aPendingLng);
+                document.getElementById('amenity-distanceMeter').value = m;
+            }
+            updateAmenityCoordDisplay(_aPendingLat, _aPendingLng);
+            closeAmenityMapModal(true);
+        }
+
+        function updateAmenityCoordDisplay(lat, lng) {
+            document.getElementById('amenityCoordDisplay').innerHTML =
+                '<span style="color:#111827;">' + parseFloat(lat).toFixed(7) + ',  ' + parseFloat(lng).toFixed(7) + '</span>';
+            // Hiện badge khoảng cách nếu có tọa độ building
+            var distEl = document.getElementById('amenityDistanceDisplay');
+            var distTxt = document.getElementById('amenityDistanceText');
+            if (distEl && BUILDING_LAT && BUILDING_LNG) {
+                var m = haversineMeters(BUILDING_LAT, BUILDING_LNG, lat, lng);
+                distTxt.textContent = m >= 1000 ? (m / 1000).toFixed(2) + ' km' : m + ' m';
+                distEl.style.display = '';
+            }
+            document.getElementById('btnClearAmenityCoord').style.display = '';
+        }
+
+        function clearAmenityCoord() {
+            document.getElementById('amenity-latitude').value = '';
+            document.getElementById('amenity-longitude').value = '';
+            document.getElementById('amenity-distanceMeter').value = '';
+            document.getElementById('amenityCoordDisplay').textContent = 'Chưa chọn tọa độ';
+            document.getElementById('btnClearAmenityCoord').style.display = 'none';
+            var distEl = document.getElementById('amenityDistanceDisplay');
+            if (distEl) distEl.style.display = 'none';
+            document.getElementById('amenityModalCoordDisplay').textContent = 'Chưa chọn vị trí';
+            var mDistEl = document.getElementById('amenityModalDistanceDisplay');
+            if (mDistEl) mDistEl.style.display = 'none';
+            var btn = document.getElementById('btnConfirmAmenityCoord');
+            if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+            if (_aPin) { _aPin.remove(); _aPin = null; }
+            _aPendingLat = null; _aPendingLng = null;
+        }
+
+        function onAmenitySearchInput() {
+            clearTimeout(_aAcTimer);
+            var q = document.getElementById('amenitySearchInput').value.trim();
+            if (q.length < 2) { closeAmenityAcDropdown(); return; }
+            _aAcTimer = setTimeout(async function () {
+                try {
+                    const res = await fetch(
+                        'https://rsapi.goong.io/Place/AutoComplete?api_key=' + GOONG_API_KEY + '&input=' + encodeURIComponent(q)
+                    );
+                    const data = await res.json();
+                    if (data.predictions && data.predictions.length > 0) {
+                        renderAmenityAcDropdown(data.predictions);
+                    } else {
+                        closeAmenityAcDropdown();
+                    }
+                } catch (e) { closeAmenityAcDropdown(); }
+            }, 300);
+        }
+
+        function renderAmenityAcDropdown(predictions) {
+            var dd = document.getElementById('amenityAcDropdown');
+            dd.innerHTML = '';
+            predictions.slice(0, 5).forEach(function (p) {
+                var item = document.createElement('div');
+                item.className = 'ac-item';
+                item.textContent = p.description;
+                item.onclick = async function () {
+                    document.getElementById('amenitySearchInput').value = p.description;
+                    closeAmenityAcDropdown();
+                    try {
+                        const res = await fetch(
+                            'https://rsapi.goong.io/Place/Detail?api_key=' + GOONG_API_KEY + '&place_id=' + p.place_id
+                        );
+                        const d = await res.json();
+                        const loc = d.result.geometry.location;
+                        placeAmenityPin(loc.lat, loc.lng);
+                        _aMap.flyTo({ center: [loc.lng, loc.lat], zoom: 16 });
+                    } catch (e) { console.error('Goong API error', e); }
+                };
+                dd.appendChild(item);
+            });
+            dd.style.display = 'block';
+        }
+
+        function closeAmenityAcDropdown() {
+            var dd = document.getElementById('amenityAcDropdown');
+            if (dd) dd.style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Ẩn nút "Về tòa nhà" nếu không có tọa độ building
+            if (!BUILDING_LAT || !BUILDING_LNG) {
+                var btn = document.getElementById('btnFlyToBuilding');
+                if (btn) btn.style.display = 'none';
+            }
+            document.getElementById('amenityMapModal').addEventListener('click', function (e) {
+                if (e.target === this) closeAmenityMapModal(false);
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && document.getElementById('amenityMapModal').style.display === 'flex') {
+                    closeAmenityMapModal(false);
+                }
+            });
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('#amenitySearchWrapper')) closeAmenityAcDropdown();
+            });
+        });
+    </script>
+
+    <!-- Planning image upload JS -->
+    <script>
+        function handlePlanningImageSelect(input) {
+            var file = input.files[0];
+            if (!file) return;
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                setPlanningUploadStatus('Định dạng không hợp lệ. Chỉ chấp nhận JPG, PNG, WEBP.', '#dc2626');
+                input.value = ''; return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                setPlanningUploadStatus('File quá lớn. Tối đa 5MB.', '#dc2626');
+                input.value = ''; return;
+            }
+
+            // Preview ngay bằng FileReader (base64) – không cần đợi upload xong
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var img = document.getElementById('planningPreviewImg');
+                img.onerror = null;        // xóa handler cũ, base64 không thể lỗi
+                img.style.display = '';    // đảm bảo img visible
+                img.src = e.target.result;
+                document.getElementById('planningUploadPlaceholder').style.display = 'none';
+                document.getElementById('planningUploadPreview').style.display = 'block';
+                document.getElementById('planningUploadZone').classList.add('has-image');
+            };
+            reader.readAsDataURL(file);
+
+            setPlanningUploadStatus('Đang tải lên...', '#6b7280');
+            document.getElementById('planningUploadZone').classList.add('uploading');
+
+            var formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/admin/building-additional-information/planning-map/upload-image', {
+                method: 'POST',
+                body: formData
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.filename) {
+                        // Lưu full path vào hidden field – giống building lưu data.filename
+                        var fullPath = '/images/planning_map_img/' + data.filename;
+                        document.getElementById('planning-imageUrl').value = fullPath;
+                        setPlanningUploadStatus('✓ ' + data.filename, '#059669');
+                        document.getElementById('planningUploadZone').classList.remove('uploading');
+                    } else {
+                        throw new Error(data.message || 'Upload thất bại');
+                    }
+                })
+                .catch(function (err) {
+                    setPlanningUploadStatus('Lỗi: ' + err.message, '#dc2626');
+                    document.getElementById('planningUploadZone').classList.remove('uploading');
+                });
+        }
+
+        function clearPlanningImage() {
+            document.getElementById('planning-imageUrl').value = '';
+            document.getElementById('planningImageFile').value = '';
+            var img = document.getElementById('planningPreviewImg');
+            img.onerror = null;
+            img.src = '';
+            img.style.display = '';
+            document.getElementById('planningUploadPlaceholder').style.display = '';
+            document.getElementById('planningUploadPreview').style.display = 'none';
+            document.getElementById('planningUploadZone').classList.remove('has-image', 'uploading');
+            setPlanningUploadStatus('', '');
+        }
+
+        function setPlanningUploadStatus(msg, color) {
+            var el = document.getElementById('planningUploadStatus');
+            el.textContent = msg;
+            el.style.color = color;
+        }
+
+        // Drag & drop
+        document.addEventListener('DOMContentLoaded', function () {
+            var zone = document.getElementById('planningUploadZone');
+            if (!zone) return;
+            zone.addEventListener('dragover', function (e) { e.preventDefault(); zone.style.borderColor = '#3b82f6'; zone.style.background = '#eff6ff'; });
+            zone.addEventListener('dragleave', function () { zone.style.borderColor = ''; zone.style.background = ''; });
+            zone.addEventListener('drop', function (e) {
+                e.preventDefault(); zone.style.borderColor = ''; zone.style.background = '';
+                var file = e.dataTransfer.files[0];
+                if (file) {
+                    var input = document.getElementById('planningImageFile');
+                    var dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+                    handlePlanningImageSelect(input);
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

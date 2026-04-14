@@ -1,0 +1,151 @@
+<aside class="sidebar" id="sidebar" th:fragment="sidebar">
+    <button class="sidebar-toggle" id="sidebarToggle" title="Thu gọn/mở sidebar">
+        <i class="bi bi-chevron-left" id="toggleIcon"></i>
+    </button>
+
+    <nav class="sidebar-nav">
+        <div class="sidebar-section-label">Menu chính</div>
+
+        <a href="/admin/dashboard" th:classappend="${page == 'dashboard'} ? 'active'" class="nav-link"
+            data-tooltip="Dashboard">
+            <div class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></div>
+            <span class="nav-text">Dashboard</span>
+        </a>
+
+        <a href="/admin/building/list" th:classappend="${page == 'building'} ? 'active'" class="nav-link"
+            data-tooltip="Bất động sản">
+            <div class="nav-icon"><i class="bi bi-buildings-fill"></i></div>
+            <span class="nav-text">Bất động sản</span>
+        </a>
+
+        <a href="/admin/contract/list" th:classappend="${page == 'contract'} ? 'active'" class="nav-link"
+            data-tooltip="Hợp đồng thuê">
+            <div class="nav-icon"><i class="bi bi-file-earmark-check-fill"></i></div>
+            <span class="nav-text">Hợp đồng thuê</span>
+            <span class="nav-badge" th:if="${newContractsCount != null and newContractsCount > 0}"
+                th:text="${newContractsCount}">3</span>
+        </a>
+
+        <a href="/admin/sale-contract/list" th:classappend="${page == 'sale-contract'} ? 'active'" class="nav-link"
+            data-tooltip="Hợp đồng mua bán">
+            <div class="nav-icon"><i class="bi bi-file-earmark-ruled-fill"></i></div>
+            <span class="nav-text">Hợp đồng mua bán</span>
+        </a>
+
+        <a href="/admin/invoice/list" th:classappend="${page == 'invoice'} ? 'active'" class="nav-link"
+            data-tooltip="Hóa đơn">
+            <div class="nav-icon"><i class="bi bi-receipt-cutoff"></i></div>
+            <span class="nav-text">Hóa đơn</span>
+            <span class="nav-badge badge-amber" th:if="${pendingInvoicesCount != null and pendingInvoicesCount > 0}"
+                th:text="${pendingInvoicesCount}">5</span>
+        </a>
+
+        <a href="/admin/report" th:classappend="${page == 'report'} ? 'active'" class="nav-link"
+            data-tooltip="Báo cáo & Thống kê">
+            <div class="nav-icon"><i class="bi bi-bar-chart-line-fill"></i></div>
+            <span class="nav-text">Báo cáo & Thống kê</span>
+        </a>
+
+        <div class="sidebar-section-label">Quản lý</div>
+
+        <a href="/admin/customer/list" th:classappend="${page == 'customer'} ? 'active'" class="nav-link"
+            data-tooltip="Khách hàng">
+            <div class="nav-icon"><i class="bi bi-people-fill"></i></div>
+            <span class="nav-text">Khách hàng</span>
+        </a>
+
+        <a href="/admin/staff/list" th:classappend="${page == 'staff'} ? 'active'" class="nav-link"
+            data-tooltip="Nhân viên">
+            <div class="nav-icon"><i class="bi bi-person-badge-fill"></i></div>
+            <span class="nav-text">Nhân viên</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-link logout-link" data-tooltip="Đăng xuất"
+            onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
+            <div class="nav-icon"><i class="bi bi-box-arrow-left"></i></div>
+            <span class="nav-text">Đăng xuất</span>
+        </a>
+        <form id="logoutForm" th:action="@{/auth/logout}" method="post" style="display:none;"></form>
+    </div>
+</aside>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<script>
+    (function () {
+        var root = document.documentElement;
+        var sidebar = document.getElementById('sidebar');
+        var backdrop = document.getElementById('sidebarBackdrop');
+        var toggleBtn = document.getElementById('sidebarToggle');
+        var icon = document.getElementById('toggleIcon');
+        var KEY = 'mn_sb';
+
+        var FULL = '220px';
+        var MINI = '60px';
+
+        function isMobile() { return window.innerWidth <= 768; }
+        function isTablet() { return window.innerWidth > 768 && window.innerWidth <= 1024; }
+
+        function applyCollapsed(collapsed) {
+            var w = collapsed ? MINI : FULL;
+            root.style.setProperty('--sb-w', w);
+            sidebar.style.width = w;
+            sidebar.classList.toggle('is-collapsed', collapsed);
+            if (icon) icon.className = collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-left';
+        }
+
+        function setCollapsed(collapsed) {
+            applyCollapsed(collapsed);
+            try { localStorage.setItem(KEY, collapsed ? '1' : '0'); } catch (e) { }
+        }
+
+        function setMobileOpen(open) {
+            sidebar.classList.toggle('mobile-open', open);
+            if (backdrop) backdrop.classList.toggle('show', open);
+        }
+
+        function onResize() {
+            if (isMobile()) {
+                root.style.setProperty('--sb-w', '0px');
+                sidebar.style.width = '';
+                sidebar.classList.remove('is-collapsed');
+                setMobileOpen(false);
+            } else {
+                var saved = localStorage.getItem(KEY);
+                var collapsed;
+                if (saved === null) {
+                    collapsed = isTablet();
+                } else {
+                    collapsed = saved === '1';
+                }
+                applyCollapsed(collapsed);
+                setMobileOpen(false);
+                if (backdrop) backdrop.classList.remove('show');
+            }
+        }
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var isCollapsed = sidebar.classList.contains('is-collapsed');
+                setCollapsed(!isCollapsed);
+            });
+        }
+
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('#navbarMenuBtn');
+            if (btn) {
+                setMobileOpen(!sidebar.classList.contains('mobile-open'));
+                return;
+            }
+            if (e.target === backdrop || e.target.id === 'sidebarBackdrop') {
+                setMobileOpen(false);
+            }
+        });
+
+        onResize();
+        window.addEventListener('resize', onResize);
+    })();
+</script>

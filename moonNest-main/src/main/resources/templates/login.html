@@ -1,0 +1,696 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoonNest - Đăng nhập</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2d3e8f;
+            --primary-light: #4a5fc1;
+            --accent: #e8472a;
+            --accent2: #f5a623;
+            --green: #1a9e6e;
+            --bg: #f4f5f8;
+            --text: #1e1e2e;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text);
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER & NAV ===== */
+        header {
+            background: var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.82);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 13px;
+            transition: color 0.2s;
+            position: relative;
+            cursor: pointer;
+            padding-bottom: 4px;
+        }
+
+        .nav-links a:not(.login-btn):hover {
+            color: white;
+        }
+
+        .nav-links a:not(.login-btn)::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: width 0.25s;
+        }
+
+        .nav-links a:not(.login-btn):hover::after {
+            width: 100%;
+        }
+
+        .nav-links a.active-nav {
+            color: white;
+        }
+
+        .nav-links a.active-nav::after {
+            width: 100%;
+        }
+
+        .login-btn {
+            background: white;
+            color: var(--primary) !important;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .login-btn:hover {
+            background: #e8f0fe;
+            transform: translateY(-1px);
+        }
+
+        .login-btn::after {
+            display: none !important;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 20px;
+            background: url('/images/background/background.jpg') no-repeat center center;
+            background-size: cover;
+            position: relative;
+        }
+
+        main::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.38);
+            z-index: 0;
+        }
+
+        /* ===== LOGIN CARD ===== */
+        .login-container {
+            background: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 8px 48px rgba(0, 0, 0, 0.28);
+            overflow: hidden;
+            width: 100%;
+            max-width: 860px;
+            display: flex;
+            min-height: 480px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* LEFT PANEL */
+        .login-header-section {
+            background: var(--primary);
+            padding: 50px 40px;
+            color: white;
+            width: 42%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .login-header-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .logo-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.13);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 5px 11px;
+            border-radius: 2px;
+            margin-bottom: 24px;
+            width: fit-content;
+        }
+
+        .brand-logo {
+            font-size: 36px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-sub {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 28px;
+        }
+
+        .divider-line {
+            width: 32px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.25);
+            margin-bottom: 24px;
+        }
+
+        .description {
+            font-size: 13.5px;
+            line-height: 1.75;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 220px;
+        }
+
+        /* Nav links inside left panel */
+        .panel-nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .panel-nav-links a {
+            color: rgba(255, 255, 255, 0.65);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 5px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .panel-nav-links a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .left-footer {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 20px;
+        }
+
+        /* RIGHT PANEL */
+        .login-form-section {
+            padding: 50px 48px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-header {
+            margin-bottom: 32px;
+        }
+
+        .login-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+        }
+
+        .login-header p {
+            color: #999;
+            font-size: 13.5px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+            color: #555;
+            font-weight: 600;
+            font-size: 12px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1.5px solid #e2e2e2;
+            border-radius: 4px;
+            font-size: 14.5px;
+            transition: all 0.2s;
+            outline: none;
+            background: #fafafa;
+            color: #1a1a2e;
+        }
+
+        .form-group input::placeholder {
+            color: #bbb;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(45, 62, 143, 0.08);
+        }
+
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 14px;
+            cursor: pointer;
+            color: #bbb;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 13px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            margin-top: 8px;
+            letter-spacing: 0.2px;
+        }
+
+        .login-button:hover {
+            background: #253480;
+            box-shadow: 0 4px 16px rgba(45, 62, 143, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .forgot-password a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .forgot-password a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        /* ===== GOOGLE BUTTON ===== */
+        .btn-google {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d0d7e2;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #1a1a2e;
+            background: #fff;
+            font-weight: 600;
+            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+        }
+
+        .btn-google:hover {
+            background: #f1f5fb;
+            border-color: #4285f4;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.18);
+            color: #1a1a2e;
+            transform: translateY(-1px);
+        }
+
+        .btn-google:active {
+            background: #e8f0fe;
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .btn-google .fa-google {
+            color: #4285f4;
+            font-size: 15px;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: #1a1a2e;
+            padding: 36px 20px 20px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr;
+            gap: 36px;
+            padding-bottom: 24px;
+        }
+
+        .footer-section h3 {
+            font-size: 15px;
+            margin-bottom: 14px;
+            color: #fff;
+        }
+
+        .footer-section p,
+        .footer-section a {
+            color: #aaa;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 7px;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+
+        .footer-section a:hover {
+            color: #fff;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+            padding-top: 18px;
+            border-top: 1px solid #333;
+            color: #aaa;
+            font-size: 12px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .nav-links {
+                position: absolute;
+                top: 56px;
+                left: 0;
+                right: 0;
+                background: var(--primary);
+                flex-direction: column;
+                padding: 16px;
+                gap: 14px;
+                display: none;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .login-container {
+                flex-direction: column;
+                max-width: 420px;
+            }
+
+            .login-header-section {
+                width: 100%;
+                padding: 28px 28px;
+                min-height: unset;
+            }
+
+            .description,
+            .divider-line {
+                display: none;
+            }
+
+            .login-form-section {
+                padding: 32px 28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+    <nav>
+        <a href="/moonnest" class="logo">MoonNest</a>
+        <button class="menu-toggle"
+                onclick="document.getElementById('navLinks').classList.toggle('active')">☰</button>
+        <div class="nav-links" id="navLinks">
+            <a href="/moonnest#home">Trang chủ</a>
+            <a href="/moonnest#introduce">Giới thiệu</a>
+            <a href="/moonnest#building">Bất động sản</a>
+            <a href="/moonnest#contact">Liên hệ</a>
+            <a href="/login" class="login-btn active-nav">
+                <p style="margin-bottom: 1px;">Đăng nhập</p>
+            </a>
+        </div>
+    </nav>
+</header>
+
+<!-- ===== MAIN: LOGIN CARD ===== -->
+<main>
+    <div class="login-container">
+        <!-- LEFT -->
+        <div class="login-header-section">
+            <div class="logo-section">
+                <div class="logo-badge">Bất động sản</div>
+                <div class="brand-logo">MoonNest</div>
+                <div class="logo-sub">Hệ thống quản lý tích hợp</div>
+                <div class="divider-line"></div>
+                <p class="description">
+                    Nền tảng quản lý bất động sản toàn diện dành cho đội ngũ chuyên nghiệp.
+                </p>
+            </div>
+            <div class="left-footer">© 2026 MoonNest. All rights reserved.</div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="login-form-section">
+            <div class="login-header">
+                <h2>Đăng nhập</h2>
+                <p>Nhập thông tin để truy cập tài khoản của bạn</p>
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="form-group">
+                    <label for="username">Tên đăng nhập / Email</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" name="username" placeholder="Nhập tên đăng nhập hoặc email"
+                               required autofocus>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
+                        <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('password')"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-button">Đăng nhập</button>
+            </form>
+
+            <div style="margin-top: 16px; text-align: center;">
+                <a href="/oauth2/authorization/google" class="btn-google">
+                    <i class="fa-brands fa-google"></i>
+                    Đăng nhập bằng Google
+                </a>
+            </div>
+
+            <div class="forgot-password">
+                <a href="/forgot-password">Quên mật khẩu?</a>
+            </div>
+
+            <div class="forgot-password" style="margin-top: 10px;">
+                <a href="/register">Đăng ký tài khoản</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+    <div class="footer-content">
+        <div class="footer-section">
+            <h3>MoonNest</h3>
+            <p>Hệ thống quản lý bất động sản chuyên nghiệp, mang đến giải pháp tối ưu cho doanh nghiệp của bạn.</p>
+        </div>
+        <div class="footer-section">
+            <h3>Liên kết nhanh</h3>
+            <a href="/moonnest#home">Trang chủ</a>
+            <a href="/moonnest#introduce">Giới thiệu</a>
+            <a href="/moonnest#building">Bất động sản</a>
+            <a href="/moonnest#contact">Liên hệ</a>
+        </div>
+        <div class="footer-section">
+            <h3>Liên hệ</h3>
+            <p>Email: moonnest@realestate.vn</p>
+            <p>Hotline: 0375577856</p>
+            <p>Địa chỉ: Ng. 158 Đ. Võ Chí Công, Xuân La, Tây Hồ, Hà Nội</p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; 2026 MoonNest. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    if ([[${ param.error != null }]]) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Đăng nhập thất bại',
+            text: 'Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.'
+        });
+    }
+
+    if ([[${ errorMessage != null }]]) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Đăng nhập thất bại',
+            text: '[[${errorMessage}]]'
+        });
+    }
+
+    if ([[${ successMessage != null}]]) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: '[[${successMessage}]]'
+        });
+    }
+    /*]]>*/
+</script>
+
+<script>
+    function togglePassword(fieldId) {
+        const input = document.getElementById(fieldId);
+        const icon = input.nextElementSibling;
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Chi tiết Hóa đơn</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: 220px;
+            padding: 0;
+            margin-top: 72px;
+        }
+
+        .detail-body {
+            padding: 1.5rem;
+        }
+
+        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        .page-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .page-header-bar h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-header-bar h2 i {
+            color: #3b82f6;
+            font-size: 1.2rem;
+        }
+
+        .page-sub {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* ══ HEADER BUTTONS ═════════════════════════════════════════════════ */
+        .btn-hd {
+            padding: 0.45rem 0.875rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: filter 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-hd-back {
+            background: #fff;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-hd-back:hover {
+            background: #f9fafb;
+            color: #111827;
+            border-color: #d1d5db;
+        }
+
+        .btn-hd-print {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+        }
+
+        .btn-hd-print:hover {
+            background: #dbeafe;
+        }
+
+        .btn-hd-pay {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        .btn-hd-pay:hover {
+            background: #dcfce7;
+            border-color: #86efac;
+        }
+
+        .btn-hd-edit {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+
+        .btn-hd-edit:hover {
+            background: #fef3c7;
+        }
+
+        .btn-hd-delete {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .btn-hd-delete:hover {
+            background: #fee2e2;
+        }
+
+        /* ══ D-CARD ═════════════════════════════════════════════════════════ */
+        .d-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
+        }
+
+        .d-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .d-card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .d-card-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .d-card-header h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .d-card-body {
+            padding: 1.25rem 1.5rem;
+        }
+
+        /* ══ INVOICE ID BADGE ═══════════════════════════════════════════════ */
+        .invoice-id-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.75rem;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8125rem;
+        }
+
+        /* ══ STATUS BADGE ═══════════════════════════════════════════════════ */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.25rem 0.7rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .status-paid {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-overdue {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* ══ INFO GRID ══════════════════════════════════════════════════════ */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 900px) {
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .info-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .info-value {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #111827;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 0.5rem 0.75rem;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .info-value.empty {
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .info-value.price {
+            color: #16a34a;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .info-value i {
+            color: #3b82f6;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        /* ══ ENTITY CARDS ═══════════════════════════════════════════════════ */
+        .entity-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            height: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .entity-card:hover {
+            border-color: #bfdbfe;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        }
+
+        .entity-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.875rem;
+            padding-bottom: 0.625rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .entity-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .entity-header h4 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .entity-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.4rem;
+            font-size: 0.8125rem;
+            color: #374151;
+            margin-bottom: 0.35rem;
+        }
+
+        .entity-row i {
+            color: #9ca3af;
+            font-size: 0.75rem;
+            margin-top: 0.15rem;
+            flex-shrink: 0;
+        }
+
+        .entity-row strong {
+            color: #111827;
+            font-weight: 600;
+        }
+
+        /* ══ FEE TABLE ══════════════════════════════════════════════════════ */
+        .fee-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .fee-table thead th {
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.625rem 1rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+
+        .fee-table tbody td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.8125rem;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        .fee-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .fee-table tbody tr:hover {
+            background: #fafbfc;
+        }
+
+        .fee-name {
+            font-weight: 600;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .fee-amount {
+            color: #16a34a;
+            font-weight: 700;
+        }
+
+        /* ══ SUMMARY BOX ════════════════════════════════════════════════════ */
+        .summary-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.875rem 1.25rem;
+            margin: 0.75rem 1.5rem 1.25rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            padding-top: 0.625rem;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 0.25rem;
+        }
+
+        .summary-label {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-size: 0.875rem;
+            color: #16a34a;
+            font-weight: 700;
+        }
+
+        .summary-row:last-child .summary-label {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: #111827;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .summary-row:last-child .summary-value {
+            font-size: 1.2rem;
+            color: #16a34a;
+            font-weight: 800;
+        }
+
+        /* ══ METER GRID ═════════════════════════════════════════════════════ */
+        .meter-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .meter-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .meter-item {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+        }
+
+        .meter-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .meter-label i {
+            color: #f59e0b;
+        }
+
+        .meter-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        /* ══ RESPONSIVE ═════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            main.content {
+                margin-left: 0;
+            }
+
+            .page-header-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+        }
+
+        /* ══ PRINT STYLES — Chuẩn hóa đơn bán hàng Việt Nam ══════════════ */
+        @media print {
+            @page {
+                size: A4;
+                margin: 12mm 14mm 14mm 14mm;
+            }
+
+            /* ── Reset toàn trang ── */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            body {
+                background: #fff !important;
+                font-family: "Times New Roman", Times, serif !important;
+                font-size: 10pt !important;
+                color: #000 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* ── Ẩn giao diện quản trị ── */
+            nav,
+            header,
+            .sidebar,
+            aside,
+            .page-header-bar,
+            .header-actions,
+            .btn-hd,
+            .btn-hd-back,
+            .btn-hd-print,
+            .btn-hd-pay,
+            .btn-hd-edit,
+            .btn-hd-delete,
+            .page-sub,
+            /* Ẩn toàn bộ d-card gốc (sẽ render lại qua print wrapper) */
+            .d-card,
+            .row.g-3 {
+                display: none !important;
+            }
+
+            main.content {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .detail-body {
+                padding: 0 !important;
+            }
+
+            /* ── Hiện print wrapper ── */
+            .print-invoice-header,
+            .print-invoice-footer {
+                display: block !important;
+            }
+
+            /* ── Ẩn sidebar/header Thymeleaf ── */
+            body>*:not(main) {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER + SIDEBAR -->
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+        <div class="detail-body">
+
+            <!-- ══════════════════════════════════════════════════════════════
+                 PRINT WRAPPER — Toàn bộ nội dung hóa đơn in
+                 Chỉ hiển thị khi in (@media print)
+            ═══════════════════════════════════════════════════════════════ -->
+            <div class="print-invoice-header" style="display:none;">
+
+                <!-- Khung viền ngoài chuẩn hóa đơn -->
+                <div
+                    style="border: 2pt solid #d00; padding: 10pt 12pt; font-family: 'Times New Roman', serif; font-size: 10pt; color: #000;">
+
+                    <!-- ── Hàng 1: Logo trái | Tiêu đề giữa | Ký hiệu/Số phải ── -->
+                    <table style="width:100%; border:none; margin-bottom:8pt;">
+                        <tr>
+                            <!-- Logo / Tên đơn vị bán -->
+                            <td style="width:30%; vertical-align:middle; border:none; padding:0;">
+                                <div
+                                    style="font-size:22pt; font-weight:900; color:#d00; letter-spacing:-1pt; line-height:1;">
+                                    MoonNest</div>
+                                <div style="font-size:7.5pt; color:#555; font-style:italic;">Ban Quản Lý Bất Động Sản</div>
+                            </td>
+                            <!-- Tiêu đề trung tâm -->
+                            <td style="width:40%; text-align:center; vertical-align:middle; border:none; padding:0;">
+                                <div
+                                    style="font-size:15pt; font-weight:bold; text-transform:uppercase; letter-spacing:.05em;">
+                                    HÓA ĐƠN DỊCH VỤ</div>
+                                <div style="font-size:8pt; font-style:italic; color:#333; margin-top:2pt;">Bản thể hiện
+                                    của hóa đơn điện tử</div>
+                                <div style="font-size:8.5pt; margin-top:2pt;">
+                                    Kỳ: <span th:text="'Tháng ' + ${invoice.month} + '/' + ${invoice.year}">Tháng
+                                        12/2024</span>
+                                </div>
+                            </td>
+                            <!-- Ký hiệu / Số hóa đơn -->
+                            <td
+                                style="width:30%; text-align:right; vertical-align:middle; border:none; padding:0; font-size:9pt;">
+                                <table style="border:none; margin-left:auto;">
+                                    <tr>
+                                        <td style="border:none; padding:1pt 4pt; text-align:right; white-space:nowrap;">
+                                            Ký hiệu:</td>
+                                        <td
+                                            style="border:none; padding:1pt 4pt; font-weight:bold; text-align:left; white-space:nowrap;">
+                                            MOONNEST</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border:none; padding:1pt 4pt; text-align:right; white-space:nowrap;">
+                                            Số:</td>
+                                        <td
+                                            style="border:none; padding:1pt 4pt; font-weight:bold; text-align:left; white-space:nowrap;">
+                                            HĐ-<span th:text="${invoice.id}">1</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <hr style="border:none; border-top:1pt solid #ccc; margin:4pt 0 8pt;">
+
+                    <!-- ── Thông tin đơn vị bán ── -->
+                    <div style="margin-bottom:6pt; font-size:9.5pt;">
+                        <strong>Đơn vị bán hàng:</strong> <span
+                            th:text="${invoice.contract?.building?.name ?: '—'}">0000000000</span> &nbsp;&nbsp;
+                        <strong>Mã số thuế:</strong> <span
+                            th:text="${invoice.contract?.building?.taxCode ?: '—'}">0000000000</span>
+                    </div>
+                    <div style="margin-bottom:2pt; font-size:9.5pt;">
+                        <strong>Địa chỉ:</strong> <span
+                            th:text="${invoice.contract?.building?.address ?: '[Địa chỉ tòa nhà]'}">[Địa chỉ]</span>
+                    </div>
+                    <div style="margin-bottom:4pt; font-size:9.5pt;">
+                        <strong>Điện thoại:</strong> <span
+                            th:text="${invoice.contract?.building?.phone ?: '—'}">[SĐT]</span>
+                    </div>
+
+                    <hr style="border:none; border-top:0.5pt dashed #aaa; margin:6pt 0;">
+
+                    <!-- ── Thông tin người mua ── -->
+                    <div style="margin-bottom:4pt; font-size:9.5pt;">
+                        <strong>Họ tên người mua hàng:</strong>
+                        <span th:text="${invoice.customer?.fullName ?: '—'}">Nguyễn Văn A</span>
+                    </div>
+                    <div style="margin-bottom:4pt; font-size:9.5pt;">
+                        <strong>Tên đơn vị:</strong>
+                        <span th:text="${invoice.customer?.fullName ?: '—'}">Công ty TNHH ...</span>
+                        &nbsp;&nbsp;
+                        <strong>Mã số thuế:</strong>
+                        <span th:text="${invoice.customer?.taxCode ?: '—'}">—</span>
+                        &nbsp;&nbsp;
+                        <strong>Điện thoại:</strong>
+                        <span th:text="${invoice.customer?.phone ?: '—'}">—</span>
+                    </div>
+                    <div style="margin-bottom:6pt; font-size:9.5pt;">
+                        <strong>Hình thức thanh toán:</strong> TM/CK
+                        &nbsp;&nbsp;
+                        <strong>Hạn thanh toán:</strong>
+                        <span th:text="${invoice.dueDate}">—</span>
+                        &nbsp;&nbsp;
+                        <strong>Trạng thái:</strong>
+                        <span
+                            th:text="${invoice.status == 'PAID'} ? 'Đã thanh toán' : (${invoice.status == 'OVERDUE'} ? 'Quá hạn' : 'Chờ thanh toán')">—</span>
+                    </div>
+
+                    <!-- ── Bảng chi tiết dịch vụ ── -->
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:0; font-size:9.5pt;">
+                        <thead>
+                            <tr style="background:#f0f0f0;">
+                                <th style="border:0.75pt solid #555; padding:4pt 6pt; text-align:center; width:6%;">STT
+                                </th>
+                                <th style="border:0.75pt solid #555; padding:4pt 6pt; text-align:center;">Tên dịch vụ
+                                </th>
+                                <th style="border:0.75pt solid #555; padding:4pt 6pt; text-align:center; width:10%;">Đơn
+                                    vị tính</th>
+                                <th style="border:0.75pt solid #555; padding:4pt 6pt; text-align:center; width:13%;">Đơn
+                                    giá</th>
+                                <th style="border:0.75pt solid #555; padding:4pt 6pt; text-align:center; width:10%;">Số
+                                    lượng</th>
+                                <th style="border:0.75pt solid #555; padding:4pt 6pt; text-align:center; width:15%;">
+                                    Thành tiền</th>
+                            </tr>
+                            <tr style="background:#f8f8f8; font-size:8pt; font-style:italic;">
+                                <td style="border:0.75pt solid #555; padding:2pt 6pt; text-align:center;">1</td>
+                                <td style="border:0.75pt solid #555; padding:2pt 6pt; text-align:center;">2</td>
+                                <td style="border:0.75pt solid #555; padding:2pt 6pt; text-align:center;">3</td>
+                                <td style="border:0.75pt solid #555; padding:2pt 6pt; text-align:center;">4</td>
+                                <td style="border:0.75pt solid #555; padding:2pt 6pt; text-align:center;">5</td>
+                                <td style="border:0.75pt solid #555; padding:2pt 6pt; text-align:center;">6 = 4 x 5</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="detail, stat : ${invoice.details}">
+                                <td style="border:0.75pt solid #555; padding:4pt 6pt; text-align:center;"
+                                    th:text="${stat.count}">1</td>
+                                <td style="border:0.75pt solid #555; padding:4pt 6pt;" th:text="${detail.description}">
+                                    Tiền thuê mặt bằng</td>
+                                <td style="border:0.75pt solid #555; padding:4pt 6pt; text-align:center;"
+                                    th:text="${detail.description.contains('thuê') or detail.description.contains('dịch vụ') or detail.description.contains('gửi ô tô') or detail.description.contains('gửi xe máy')} ? 'Tháng' : (${detail.description.contains('điện')} ? 'Số' : (${detail.description.contains('nước')} ? 'm³' : ''))">
+                                    Tháng
+                                </td>
+                                <td style="border:0.75pt solid #555; padding:4pt 6pt; text-align:right;"
+                                    th:text="${detail.description.contains('thuê') or detail.description.contains('dịch vụ') or detail.description.contains('gửi ô tô') or detail.description.contains('gửi xe máy')} ? ${#numbers.formatDecimal(detail.amount, 0, 'COMMA', 0, 'POINT')} + ' đ' : (${detail.description.contains('nước')} ? ${#numbers.formatDecimal(invoice.contract.building.waterFee, 0, 'COMMA', 0, 'POINT')} + ' đ' : (${detail.description.contains('điện')} ? ${#numbers.formatDecimal(invoice.contract.building.electricityFee, 0, 'COMMA', 0, 'POINT')} + ' đ' : '—'))">
+                                    —
+                                </td>
+                                <td style="border:0.75pt solid #555; padding:4pt 6pt; text-align:center;">1</td>
+                                <td style="border:0.75pt solid #555; padding:4pt 6pt; text-align:right; font-weight:bold;"
+                                    th:text="${#numbers.formatDecimal(detail.amount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                    15,000,000 đ
+                                </td>
+                            </tr>
+                            <!-- Đồng hồ điện nước nếu có -->
+                            <tr th:if="${invoice.utilityMeter != null}">
+                                <td colspan="6"
+                                    style="border:0.75pt solid #555; padding:3pt 8pt; background:#fafafa; font-size:8.5pt; color:#444;">
+                                    <em>
+                                        Điện: <span th:text="${invoice.utilityMeter.electricityOld}">0</span> →
+                                        <span th:text="${invoice.utilityMeter.electricityNew}">0</span> kWh
+                                        (tiêu thụ: <span
+                                            th:text="${invoice.utilityMeter.electricityNew - invoice.utilityMeter.electricityOld}">0</span>
+                                        kWh)
+                                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                                        Nước: <span th:text="${invoice.utilityMeter.waterOld}">0</span> →
+                                        <span th:text="${invoice.utilityMeter.waterNew}">0</span> m³
+                                        (tiêu thụ: <span
+                                            th:text="${invoice.utilityMeter.waterNew - invoice.utilityMeter.waterOld}">0</span>
+                                        m³)
+                                    </em>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <!-- Tổng cộng -->
+                        <tfoot>
+                            <tr>
+                                <td colspan="5"
+                                    style="border:0.75pt solid #555; padding:5pt 8pt; text-align:right; font-weight:bold;">
+                                    Tổng phí dịch vụ:</td>
+                                <td style="border:0.75pt solid #555; padding:5pt 8pt; text-align:right; font-weight:bold;"
+                                    th:text="${#numbers.formatDecimal(invoice.totalServiceFeeAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                    10,500,000 đ
+                                </td>
+                            </tr>
+                            <tr style="background:#f0f0f0;">
+                                <td colspan="4"
+                                    style="border:0.75pt solid #555; padding:5pt 8pt; text-align:right; font-weight:bold; font-size:11pt;">
+                                    Tổng cộng tiền thanh toán:</td>
+                                <td colspan="2"
+                                    style="border:0.75pt solid #555; padding:5pt 8pt; text-align:right; font-weight:bold; font-size:11pt;"
+                                    th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                    25,500,000 đ
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <!-- ── Số tiền bằng chữ ── -->
+                    <div
+                        style="margin-top:8pt; font-size:9.5pt; font-style:italic; border:0.5pt solid #ccc; padding:5pt 8pt; background:#fafafa;">
+                        <strong>Số tiền viết bằng chữ:</strong>
+                        <span th:text="${invoice.amountInWords ?: '(Số tiền bằng chữ)'}">...</span>
+                    </div>
+
+                </div><!-- /khung viền -->
+            </div>
+            <!-- ── END PRINT HEADER ── -->
+            <div class="page-header-bar">
+                <div>
+                    <h2>
+                        <i class="bi bi-receipt-cutoff"></i>
+                        Chi tiết Hóa đơn
+                    </h2>
+                    <div class="page-sub">Xem toàn bộ thông tin hóa đơn trong hệ thống</div>
+                </div>
+                <div class="header-actions">
+                    <a th:href="@{/admin/invoice/list}" class="btn-hd btn-hd-back">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+                    <button class="btn-hd btn-hd-print">
+                        <i class="bi bi-printer"></i> In hóa đơn
+                    </button>
+                    <button class="btn-hd btn-hd-pay" th:if="${invoice.status == 'PENDING'}" th:data-id="${invoice.id}">
+                        <i class="bi bi-check-circle"></i> Xác nhận thanh toán
+                    </button>
+                    <a th:href="@{'/admin/invoice/edit/' + ${invoice.id}}" class="btn-hd btn-hd-edit">
+                        <i class="bi bi-pencil"></i> Chỉnh sửa
+                    </a>
+                    <button class="btn-hd btn-hd-delete" th:data-id="${invoice.id}">
+                        <i class="bi bi-trash"></i> Xóa
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Thông tin hóa đơn ──────────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <div class="d-card-header-left">
+                        <i class="bi bi-receipt"></i>
+                        <h3>Thông tin hóa đơn</h3>
+                    </div>
+                    <span class="invoice-id-badge">
+                        <i class="bi bi-hash"></i>
+                        HĐ-<span th:text="${invoice.id}">1</span>
+                    </span>
+                </div>
+                <div class="d-card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Kỳ hóa đơn</span>
+                            <div class="info-value">
+                                <i class="bi bi-calendar-month"></i>
+                                <span th:text="'Tháng ' + ${invoice.month} + '/' + ${invoice.year}">Tháng 12/2024</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ngày tạo</span>
+                            <div class="info-value">
+                                <i class="bi bi-calendar-plus"></i>
+                                <span th:text="${invoice.createdDate}">01/12/2024</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Hạn thanh toán</span>
+                            <div class="info-value">
+                                <i class="bi bi-calendar-event"></i>
+                                <span th:text="${invoice.dueDate}">10/12/2024</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ngày thanh toán</span>
+                            <div class="info-value" th:if="${invoice.paidDate != null}">
+                                <i class="bi bi-check-circle"></i>
+                                <span th:text="${invoice.paidDate}">05/12/2024</span>
+                            </div>
+                            <div class="info-value empty" th:unless="${invoice.paidDate != null}">
+                                Chưa thanh toán
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Trạng thái</span>
+                            <div class="info-value">
+                                <span class="status-badge"
+                                    th:classappend="${invoice.status == 'PAID'} ? 'status-paid' : (${invoice.status == 'OVERDUE'} ? 'status-overdue' : 'status-pending')">
+                                    <i class="bi"
+                                        th:classappend="${invoice.status == 'PAID'} ? 'bi-check-circle-fill' : (${invoice.status == 'OVERDUE'} ? 'bi-exclamation-circle-fill' : 'bi-clock-fill')"
+                                        style="font-size:.65rem;"></i>
+                                    <span
+                                        th:text="${invoice.status == 'PAID'} ? 'Đã thanh toán' : (${invoice.status == 'OVERDUE'} ? 'Quá hạn' : 'Chờ thanh toán')">
+                                        Chờ thanh toán
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Tổng tiền</span>
+                            <div class="info-value price">
+                                <i class="bi bi-cash-stack"></i>
+                                <span
+                                    th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                    25,500,000 đ
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Khách hàng + Hợp đồng ──────────────────────────────────────── -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="entity-card" th:onclick="|window.location='/admin/customer/' + ${invoice.customer.id}|">
+                        <div class="entity-header">
+                            <i class="bi bi-person-circle"></i>
+                            <h4>Khách hàng</h4>
+                        </div>
+                        <div th:if="${invoice.customer != null}">
+                            <div class="entity-row">
+                                <i class="bi bi-person-fill"></i>
+                                <span><strong th:text="${invoice.customer.fullName}">Nguyễn Văn A</strong></span>
+                            </div>
+                            <div class="entity-row" th:if="${invoice.customer.phone != null}">
+                                <i class="bi bi-telephone-fill"></i>
+                                <span th:text="${invoice.customer.phone}">0123456789</span>
+                            </div>
+                            <div class="entity-row" th:if="${invoice.customer.email != null}">
+                                <i class="bi bi-envelope-fill"></i>
+                                <span th:text="${invoice.customer.email}"><a href="/cdn-cgi/l/email-protection"
+                                        class="__cf_email__"
+                                        data-cfemail="f59098949c99b5908d9498859990db969a98">[email&#160;protected]</a></span>
+                            </div>
+                            <div class="entity-row">
+                                <i class="bi bi-hash"></i>
+                                <span>Mã KH: <strong th:text="${invoice.customer.id}">1</strong></span>
+                            </div>
+                        </div>
+                        <div class="info-value empty" th:unless="${invoice.customer != null}">
+                            Chưa có thông tin khách hàng
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="entity-card" th:onclick="|window.location='/admin/contract/' + ${invoice.contract.id}|">
+                        <div class="entity-header">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <h4>Hợp đồng</h4>
+                        </div>
+                        <div th:if="${invoice.contract != null}">
+                            <div class="entity-row">
+                                <i class="bi bi-file-earmark-text-fill"></i>
+                                <span>Mã HĐ: <strong th:text="${invoice.contract.id}">HD-001</strong></span>
+                            </div>
+                            <div class="entity-row" th:if="${invoice.contract.building != null}">
+                                <i class="bi bi-building-fill"></i>
+                                <span th:text="${invoice.contract.building.name}">MoonNest A</span>
+                            </div>
+                            <div class="entity-row">
+                                <i class="bi bi-rulers"></i>
+                                <span th:text="${invoice.contract.rentArea} + ' m²'">100 m²</span>
+                            </div>
+                            <div class="entity-row">
+                                <i class="bi bi-cash"></i>
+                                <span
+                                    th:text="${#numbers.formatDecimal(invoice.contract.rentPrice, 0, 'COMMA', 0, 'POINT')} + ' VNĐ/m²'">
+                                    150,000 VNĐ/m²
+                                </span>
+                            </div>
+                        </div>
+                        <div class="info-value empty" th:unless="${invoice.contract != null}">
+                            Chưa có thông tin hợp đồng
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Chi tiết các khoản phí ─────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <div class="d-card-header-left">
+                        <i class="bi bi-list-check"></i>
+                        <h3>Chi tiết các khoản phí</h3>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="fee-table">
+                        <thead>
+                            <tr>
+                                <th>Tên dịch vụ</th>
+                                <th class="text-center">Đơn giá</th>
+                                <th class="text-center">Đơn vị</th>
+                                <th class="text-center">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="detail : ${invoice.details}">
+                                <td>
+                                    <span class="fee-name">
+                                        <i class="bi bi-dot" style="color:#3b82f6;"></i>
+                                        <span th:text="${detail.description}">Tiền thuê mặt bằng</span>
+                                    </span>
+                                </td>
+                                <td class="text-center fee-amount" th:text="
+                                ${detail.description.contains('thuê')
+                                    or detail.description.contains('dịch vụ')
+                                    or detail.description.contains('gửi ô tô')
+                                    or detail.description.contains('gửi xe máy')}
+                                    ? ${#numbers.formatDecimal(detail.amount, 0, 'COMMA', 0, 'POINT')} + ' đ'
+                                    : (${detail.description.contains('nước')}
+                                    ? ${#numbers.formatDecimal(invoice.contract.building.waterFee, 0, 'COMMA', 0, 'POINT')} + ' đ'
+                                    : (${detail.description.contains('điện')}
+                                    ? ${#numbers.formatDecimal(invoice.contract.building.electricityFee, 0, 'COMMA', 0, 'POINT')} + ' đ'
+                                    : ''))">
+                                    —
+                                </td>
+                                <td class="text-center" th:text="
+                                ${detail.description.contains('thuê')
+                                    or detail.description.contains('dịch vụ')
+                                    or detail.description.contains('gửi ô tô')
+                                    or detail.description.contains('gửi xe máy')}
+                                    ? 'Tháng'
+                                    : (${detail.description.contains('điện')} ? 'Số'
+                                    : (${detail.description.contains('nước')} ? 'm³' : ''))">
+                                    Tháng
+                                </td>
+                                <td class="text-center fee-amount"
+                                    th:text="${#numbers.formatDecimal(detail.amount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                    15,000,000 đ
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-row">
+                        <span class="summary-label">Tổng phí dịch vụ</span>
+                        <span class="summary-value"
+                            th:text="${#numbers.formatDecimal(invoice.totalServiceFeeAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                            10,500,000 đ
+                        </span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Tổng cộng</span>
+                        <span class="summary-value"
+                            th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                            25,500,000 đ
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Đồng hồ tiện ích ─────────────────────────────────────────── -->
+            <div class="d-card" th:if="${invoice.utilityMeter != null}">
+                <div class="d-card-header">
+                    <div class="d-card-header-left">
+                        <i class="bi bi-speedometer2"></i>
+                        <h3>Thông tin đồng hồ tiện ích</h3>
+                    </div>
+                </div>
+                <div class="d-card-body">
+                    <div class="meter-grid">
+                        <div class="meter-item">
+                            <div class="meter-label"><i class="bi bi-lightning-charge"></i> Điện đầu kỳ</div>
+                            <div class="meter-value" th:text="${invoice.utilityMeter.electricityOld} + ' kWh'">1000 kWh
+                            </div>
+                        </div>
+                        <div class="meter-item">
+                            <div class="meter-label"><i class="bi bi-lightning-charge-fill"></i> Điện cuối kỳ</div>
+                            <div class="meter-value" th:text="${invoice.utilityMeter.electricityNew} + ' kWh'">1500 kWh
+                            </div>
+                        </div>
+                        <div class="meter-item">
+                            <div class="meter-label"><i class="bi bi-calculator"></i> Tiêu thụ điện</div>
+                            <div class="meter-value"
+                                th:text="${invoice.utilityMeter.electricityNew - invoice.utilityMeter.electricityOld} + ' kWh'">
+                                500 kWh
+                            </div>
+                        </div>
+                        <div class="meter-item">
+                            <div class="meter-label"><i class="bi bi-droplet"></i> Nước đầu kỳ</div>
+                            <div class="meter-value" th:text="${invoice.utilityMeter.waterOld} + ' m³'">50 m³</div>
+                        </div>
+                        <div class="meter-item">
+                            <div class="meter-label"><i class="bi bi-droplet-fill"></i> Nước cuối kỳ</div>
+                            <div class="meter-value" th:text="${invoice.utilityMeter.waterNew} + ' m³'">80 m³</div>
+                        </div>
+                        <div class="meter-item">
+                            <div class="meter-label"><i class="bi bi-calculator"></i> Tiêu thụ nước</div>
+                            <div class="meter-value"
+                                th:text="${invoice.utilityMeter.waterNew - invoice.utilityMeter.waterOld} + ' m³'">
+                                30 m³
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── PRINT SIGNATURE (chỉ hiển thị khi in) ──────────────────── -->
+            <div class="print-invoice-footer" style="display:none;">
+                <div
+                    style="border:2pt solid #d00; border-top:none; padding:10pt 12pt; font-family:'Times New Roman',serif; font-size:9.5pt;">
+                    <!-- 3 cột chữ ký -->
+                    <table style="width:100%; border:none; margin-top:4pt;">
+                        <tr>
+                            <td style="border:none; text-align:center; vertical-align:top; width:33%;">
+                                <div style="font-weight:bold; text-transform:uppercase;">Người mua hàng</div>
+                                <div style="font-size:8.5pt; font-style:italic; color:#555; margin:2pt 0 50pt;">(Ký, ghi
+                                    rõ họ tên)</div>
+                                <div
+                                    style="border-top:0.5pt solid #999; width:70%; margin:0 auto; padding-top:3pt; font-style:italic; color:#888; font-size:8pt;">
+                                    Họ và tên</div>
+                            </td>
+                            <td style="border:none; text-align:center; vertical-align:top; width:33%;">
+                                <div style="font-weight:bold; text-transform:uppercase;">Cơ quan thuế</div>
+                                <div style="font-size:8.5pt; font-style:italic; color:#555; margin:2pt 0 50pt;">(Ký,
+                                    đóng dấu)</div>
+                                <div
+                                    style="border-top:0.5pt solid #999; width:70%; margin:0 auto; padding-top:3pt; font-style:italic; color:#888; font-size:8pt;">
+                                    Họ và tên</div>
+                            </td>
+                            <td style="border:none; text-align:center; vertical-align:top; width:33%;">
+                                <div style="font-weight:bold; text-transform:uppercase;">Người bán hàng</div>
+                                <div style="font-size:8.5pt; font-style:italic; color:#555; margin:2pt 0 50pt;">(Ký,
+                                    đóng dấu, ghi rõ họ tên)</div>
+                                <div
+                                    style="border-top:0.5pt solid #999; width:70%; margin:0 auto; padding-top:3pt; font-style:italic; color:#888; font-size:8pt;">
+                                    Họ và tên</div>
+                            </td>
+                        </tr>
+                    </table>
+                    <!-- Ghi chú nhỏ cuối trang -->
+                    <div
+                        style="margin-top:12pt; border-top:0.5pt dashed #ccc; padding-top:5pt; font-size:7.5pt; color:#666; text-align:center; font-style:italic;">
+                        Đơn vị cung cấp dịch vụ &amp; hóa đơn điện tử: Ban Quản Lý MoonNest &nbsp;|&nbsp;
+                        In ngày: <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy')}"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /detail-body -->
+    </main>
+
+    <!-- Bootstrap -->
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        @media print {
+
+            /* Hiển thị print-only elements */
+            .print-invoice-header,
+            .print-invoice-footer {
+                display: block !important;
+            }
+
+            /* Ẩn sidebar/header của Thymeleaf layout */
+            body>*:not(main) {
+                display: none !important;
+            }
+        }
+    </style>
+
+    <script>
+        $(document).on("click", ".btn-hd-print", function () {
+            window.print();
+        });
+
+        $(document).on("click", ".btn-hd-pay", function (e) {
+            e.preventDefault();
+            const id = $(this).data("id");
+            Swal.fire({
+                title: 'Xác nhận thanh toán',
+                text: "Xác nhận hóa đơn này đã được thanh toán?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#16a34a',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/admin/invoice/confirm/" + id,
+                        type: "POST",
+                        success: function () {
+                            Swal.fire({
+                                icon: 'success', title: 'Thành công',
+                                text: 'Đã xác nhận thanh toán!',
+                                timer: 1500, showConfirmButton: false
+                            }).then(() => { location.reload(); });
+                        },
+                        error: function (xhr) {
+                            const err = xhr.responseJSON;
+                            Swal.fire({ icon: 'error', title: 'Lỗi', text: err?.message || 'Xác nhận thất bại!' });
+                        }
+                    });
+                }
+            });
+        });
+
+        $(document).on("click", ".btn-hd-delete", function (e) {
+            e.preventDefault();
+            const id = $(this).data("id");
+            Swal.fire({
+                title: 'Xác nhận xóa',
+                text: "Bạn có chắc muốn xóa hóa đơn này?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/admin/invoice/delete/" + id,
+                        type: "DELETE",
+                        success: function () {
+                            Swal.fire({
+                                icon: 'success', title: 'Thành công',
+                                text: 'Xóa hóa đơn thành công!',
+                                timer: 1500, showConfirmButton: false
+                            }).then(() => { window.location.href = "/admin/invoice/list"; });
+                        },
+                        error: function (xhr) {
+                            const err = xhr.responseJSON;
+                            Swal.fire({ icon: 'error', title: 'Lỗi', text: err?.message || 'Xóa thất bại!' });
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

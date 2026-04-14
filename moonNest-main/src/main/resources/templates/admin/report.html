@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Báo cáo & Thống kê</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: var(--sb-w);
+            padding: 0;
+            transition: margin-left var(--sb-transition);
+            margin-top: 72px;
+        }
+
+        .detail-body {
+            padding: 1.5rem;
+        }
+
+        /* ══ PAGE HEADER ══════════════════════════════════════════════════════ */
+        .page-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .page-header-bar h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+        }
+
+        .page-header-bar .update-time {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+        }
+
+        /* ══ STAT CARDS ═══════════════════════════════════════════════════════ */
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: box-shadow 0.2s, transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            border-radius: 10px 0 0 10px;
+        }
+
+        .stat-card.blue::before {
+            background: #3b82f6;
+        }
+
+        .stat-card.green::before {
+            background: #10b981;
+        }
+
+        .stat-card.amber::before {
+            background: #f59e0b;
+        }
+
+        .stat-card.red::before {
+            background: #ef4444;
+        }
+
+        .stat-card.purple::before {
+            background: #8b5cf6;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .stat-card .icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.375rem;
+            flex-shrink: 0;
+        }
+
+        .stat-card.blue .icon-wrapper {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .stat-card.green .icon-wrapper {
+            background: #ecfdf5;
+            color: #10b981;
+        }
+
+        .stat-card.amber .icon-wrapper {
+            background: #fffbeb;
+            color: #f59e0b;
+        }
+
+        .stat-card.red .icon-wrapper {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .stat-card.purple .icon-wrapper {
+            background: #f5f3ff;
+            color: #8b5cf6;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #111827;
+            line-height: 1.1;
+        }
+
+        .stat-sub {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.2rem;
+            font-weight: 500;
+        }
+
+        /* ══ D-CARD ═══════════════════════════════════════════════════════════ */
+        .d-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+        }
+
+        .d-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .d-card-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .d-card-header h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .header-badge {
+            margin-left: auto;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: 20px;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .d-card-body {
+            padding: 1.5rem;
+        }
+
+        /* ══ SECTION TITLE ════════════════════════════════════════════════════ */
+        .section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 1.75rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #f3f4f6;
+            margin-left: 0.5rem;
+        }
+
+        .section-title i {
+            color: #3b82f6;
+            font-size: 0.8rem;
+        }
+
+        /* ══ DASH TABLE ═══════════════════════════════════════════════════════ */
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+
+        .dash-table thead th {
+            background: #f8fafc;
+            padding: 0.5rem 0.875rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1.5px solid #e9ecef;
+            white-space: nowrap;
+        }
+
+        .dash-table tbody td {
+            padding: 0.625rem 0.875rem;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        .dash-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dash-table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .dash-table tbody tr:hover {
+            background: #f0f9ff;
+        }
+
+        /* ══ RANK BADGES ══════════════════════════════════════════════════════ */
+        .rank-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .rank-1 {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .rank-2 {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .rank-3 {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        /* ══ PROGRESS BAR ═════════════════════════════════════════════════════ */
+        .perf-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .perf-bar-bg {
+            flex: 1;
+            height: 6px;
+            background: #f3f4f6;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .perf-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .perf-pct {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #6b7280;
+            min-width: 38px;
+            text-align: right;
+        }
+
+        /* ══ EXPIRING BADGE ═══════════════════════════════════════════════════ */
+        .days-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.15rem 0.55rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .days-critical {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .days-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .days-ok {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        /* ══ VALUE PILLS ══════════════════════════════════════════════════════ */
+        .val-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.15rem 0.55rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .val-rent {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .val-sale {
+            background: #f5f3ff;
+            color: #6d28d9;
+        }
+
+        .val-total {
+            background: #ecfdf5;
+            color: #065f46;
+            font-weight: 700;
+        }
+
+        /* ══ LEGEND PILLS ═════════════════════════════════════════════════════ */
+        .legend-pills {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ══ OCCUPANCY STRIP ══════════════════════════════════════════════════ */
+        .occupancy-strip {
+            display: flex;
+            gap: 1rem;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.875rem 1.25rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .occ-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .occ-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #111827;
+            line-height: 1;
+        }
+
+        .occ-lbl {
+            font-size: 0.72rem;
+            color: #9ca3af;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 0.2rem;
+        }
+
+        .occ-sep {
+            width: 1px;
+            height: 36px;
+            background: #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .occ-pct-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .occ-pct-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 0.5s ease;
+        }
+
+        /* ══ RESPONSIVE ═══════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            main.content {
+                margin-left: 0;
+            }
+
+            .stat-value {
+                font-size: 1.25rem;
+            }
+        }
+
+        /* ══ GROWTH CHART ══════════════════════════════════════════════════════ */
+        .growth-kpi-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .growth-kpi {
+            flex: 1;
+            min-width: 120px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+        }
+
+        .growth-kpi-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.25rem;
+        }
+
+        .growth-kpi-value {
+            font-size: 1.125rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .growth-kpi-value.positive {
+            color: #10b981;
+        }
+
+        .growth-kpi-value.negative {
+            color: #ef4444;
+        }
+
+        .growth-kpi-value.neutral {
+            color: #6b7280;
+        }
+
+        .growth-kpi-sub {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+        }
+
+        .growth-legend {
+            display: flex;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .growth-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .growth-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ══ YEAR SELECTOR ═══════════════════════════════════════════════════ */
+        .year-selector-form {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .year-selector-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+
+        .year-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath fill='%236b7280' d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 0.6rem center;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.375rem 2rem 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            min-width: 100px;
+        }
+
+        .year-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .year-select:hover {
+            border-color: #9ca3af;
+        }
+
+        .year-go-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.375rem 0.875rem;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            white-space: nowrap;
+        }
+
+        .year-go-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .year-go-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ══ PRINT STYLES — Thuần text, không màu, không biểu đồ ══════════ */
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm 18mm 18mm 18mm;
+            }
+
+            /* Ẩn toàn bộ giao diện web */
+            body>* {
+                display: none !important;
+            }
+
+            main.content {
+                display: block !important;
+            }
+
+            main.content>* {
+                display: none !important;
+            }
+
+            main.content>.detail-body {
+                display: block !important;
+            }
+
+            .detail-body>* {
+                display: none !important;
+            }
+
+            /* Chỉ hiện print wrapper */
+            .detail-body>.print-only {
+                display: block !important;
+            }
+
+            body {
+                background: #fff !important;
+                font-family: "Times New Roman", Times, serif !important;
+                font-size: 11pt !important;
+                color: #000 !important;
+                margin: 0 !important;
+            }
+
+            main.content {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .detail-body {
+                padding: 0 !important;
+            }
+
+            /* ── Print wrapper layout ── */
+            .print-only {
+                display: none;
+            }
+
+            .print-section {
+                margin-bottom: 14pt;
+                page-break-inside: avoid;
+            }
+
+            .print-section-title {
+                font-size: 11pt;
+                font-weight: bold;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                border-bottom: 1pt solid #000;
+                padding-bottom: 2pt;
+                margin-bottom: 6pt;
+            }
+
+            .print-kpi-row {
+                display: table;
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 8pt;
+            }
+
+            .print-kpi-cell {
+                display: table-cell;
+                width: 33.33%;
+                border: 0.5pt solid #000;
+                padding: 5pt 8pt;
+                vertical-align: top;
+            }
+
+            .print-kpi-label {
+                font-size: 8.5pt;
+                font-weight: bold;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+            }
+
+            .print-kpi-value {
+                font-size: 14pt;
+                font-weight: bold;
+                margin: 2pt 0 1pt;
+            }
+
+            .print-kpi-sub {
+                font-size: 8pt;
+                font-style: italic;
+            }
+
+            .print-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 9.5pt;
+                margin-bottom: 4pt;
+            }
+
+            .print-table th {
+                border: 0.75pt solid #000;
+                padding: 3pt 6pt;
+                font-weight: bold;
+                background: none;
+                text-align: left;
+            }
+
+            .print-table th.r {
+                text-align: right;
+            }
+
+            .print-table th.c {
+                text-align: center;
+            }
+
+            .print-table td {
+                border: 0.5pt solid #000;
+                padding: 3pt 6pt;
+                vertical-align: middle;
+            }
+
+            .print-table td.r {
+                text-align: right;
+            }
+
+            .print-table td.c {
+                text-align: center;
+            }
+
+            .print-table td.mono {
+                font-family: "Courier New", monospace;
+                font-size: 9pt;
+            }
+
+            .print-note {
+                font-size: 8.5pt;
+                font-style: italic;
+                margin-top: 2pt;
+            }
+
+            .print-footer-bar {
+                margin-top: 20pt;
+                border-top: 0.5pt solid #000;
+                padding-top: 5pt;
+                font-size: 8pt;
+                font-style: italic;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+        <div class="detail-body">
+
+            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <div class="page-header-bar">
+                <div>
+                    <h2>
+                        <i class="bi bi-bar-chart-line-fill me-2" style="color:#3b82f6;font-size:1.2rem;"></i>
+                        Báo cáo &amp; Thống kê
+                    </h2>
+                    <div class="update-time">
+                        Năm báo cáo: <strong th:text="${report.currentYear}" style="color:#111827;">2025</strong>
+                        &nbsp;·&nbsp; Cập nhật:
+                        <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                </div>
+                <!-- Year selector + Print -->
+                <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                    <form method="get" action="/admin/report" class="year-selector-form">
+                        <span class="year-selector-label"><i class="bi bi-calendar3 me-1"></i>Năm báo cáo:</span>
+                        <select name="year" class="year-select" onchange="this.form.submit()">
+                            <option th:each="y : ${availableYears}" th:value="${y}" th:text="${y}"
+                                th:selected="${y == report.currentYear}"></option>
+                        </select>
+                    </form>
+                    <button onclick="window.print()" style="
+                        display:inline-flex;align-items:center;gap:0.35rem;
+                        padding:0.375rem 0.875rem;
+                        background:#fff;color:#374151;
+                        border:1.5px solid #e5e7eb;border-radius:8px;
+                        font-size:0.8rem;font-weight:700;cursor:pointer;
+                        transition:border-color 0.2s,box-shadow 0.2s;white-space:nowrap;">
+                        <i class="bi bi-printer" style="font-size:0.875rem;"></i> In PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- ════════════════════════════════════════════════════════════════
+                 NHÓM 1 — KPI TỔNG QUAN
+            ════════════════════════════════════════════════════════════════════ -->
+            <div class="row g-3 mb-4">
+
+                <!-- Doanh thu thuê năm hiện tại -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="stat-card blue">
+                        <div class="icon-wrapper"><i class="bi bi-graph-up-arrow"></i></div>
+                        <div>
+                            <div class="stat-label">Doanh thu thuê <span th:text="${report.currentYear}"></span></div>
+                            <div class="stat-value" id="kpiRentRevenue"
+                                th:attr="data-value=${report.totalRentRevenueCurrentYear != null ? report.totalRentRevenueCurrentYear : 0}">
+                                —</div>
+                            <div class="stat-sub" th:text="${report.cutoffLabel}">Tích lũy đến tháng hiện tại</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tổng giá trị mua bán -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="stat-card purple">
+                        <div class="icon-wrapper"><i class="bi bi-bag-check-fill"></i></div>
+                        <div>
+                            <div class="stat-label">Tổng giá trị mua bán</div>
+                            <div class="stat-value" id="kpiSaleRevenue"
+                                th:attr="data-value=${report.totalSaleRevenueAllTime != null ? report.totalSaleRevenueAllTime : 0}">
+                                —</div>
+                            <div class="stat-sub" th:text="${report.cutoffLabel}">Tích lũy đến tháng hiện tại</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HĐ sắp hết hạn -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="stat-card red">
+                        <div class="icon-wrapper"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                        <div>
+                            <div class="stat-label">HĐ thuê sắp hết hạn</div>
+                            <div class="stat-value" th:text="${report.expiringContractsCount}">0</div>
+                            <div class="stat-sub">Trong vòng 30 ngày tới</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ════════════════════════════════════════════════════════════════
+                 NHÓM 2 — DOANH THU
+            ════════════════════════════════════════════════════════════════════ -->
+            <div class="section-title">
+                <i class="bi bi-graph-up"></i> Phân tích doanh thu
+            </div>
+
+            <div class="row g-3 mb-4">
+                <!-- Doanh thu theo tháng (stacked: thuê + mua bán) -->
+                <div class="col-lg-8">
+                    <div class="d-card h-100">
+                        <div class="d-card-header">
+                            <i class="bi bi-bar-chart-fill"></i>
+                            <h3>Doanh thu theo tháng — năm <span th:text="${report.currentYear}"></span></h3>
+                            <div class="legend-pills ms-auto">
+                                <span class="legend-pill">
+                                    <span class="legend-dot" style="background:#3b82f6;"></span> Thuê
+                                </span>
+                                <span class="legend-pill">
+                                    <span class="legend-dot" style="background:#8b5cf6;"></span> Mua bán
+                                </span>
+                            </div>
+                        </div>
+                        <div class="d-card-body">
+                            <div style="position:relative;height:280px;">
+                                <canvas id="monthlyRevenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Doanh thu gộp 3 năm -->
+                <div class="col-lg-4">
+                    <div class="d-card h-100">
+                        <div class="d-card-header">
+                            <i class="bi bi-calendar3-range"></i>
+                            <h3>Doanh thu gộp 3 năm</h3>
+                        </div>
+                        <div class="d-card-body">
+                            <div style="position:relative;height:280px;">
+                                <canvas id="yearlyRevenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ════════════════════════════════════════════════════════════════
+                 NHÓM 3 — TĂNG TRƯỞNG DOANH THU THUÊ
+            ════════════════════════════════════════════════════════════════════ -->
+            <div class="section-title">
+                <i class="bi bi-activity"></i> Tăng trưởng doanh thu thuê
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <div class="d-card">
+                        <div class="d-card-header">
+                            <i class="bi bi-graph-up" style="color:#3b82f6;"></i>
+                            <h3>So sánh doanh thu thuê theo tháng — <span th:text="${report.currentYear}"></span> vs
+                                <span th:text="${report.lastYear}"></span>
+                            </h3>
+
+                        </div>
+                        <div class="d-card-body">
+                            <!-- Thông báo chưa đủ dữ liệu (tháng 1) -->
+                            <div id="rentGrowthNotEnough" style="display:none;
+                                 background:#fffbeb;border:1px solid #fde68a;border-radius:8px;
+                                 padding:1.25rem 1.5rem;text-align:center;color:#92400e;">
+                                <i class="bi bi-exclamation-triangle-fill me-2" style="color:#f59e0b;"></i>
+                                <strong>Chưa đủ dữ liệu để so sánh.</strong>
+                                Tháng 1 là tháng đầu tiên của năm — cần ít nhất 1 tháng hoàn chỉnh để tính tăng trưởng.
+                            </div>
+                            <!-- Mini KPIs -->
+                            <div class="growth-kpi-row" id="rentGrowthKpis">
+                                <div class="growth-kpi">
+                                    <div class="growth-kpi-label">Tăng trưởng TB</div>
+                                    <div class="growth-kpi-value" id="rentAvgGrowth">—</div>
+                                    <div class="growth-kpi-sub" id="rentAvgSub">so cùng kỳ năm trước</div>
+                                </div>
+                                <div class="growth-kpi">
+                                    <div class="growth-kpi-label">Tốt nhất</div>
+                                    <div class="growth-kpi-value positive" id="rentBestGrowth">—</div>
+                                    <div class="growth-kpi-sub" id="rentBestLabel">—</div>
+                                </div>
+                                <div class="growth-kpi">
+                                    <div class="growth-kpi-label">Kém nhất</div>
+                                    <div class="growth-kpi-value negative" id="rentWorstGrowth">—</div>
+                                    <div class="growth-kpi-sub" id="rentWorstLabel">—</div>
+                                </div>
+                            </div>
+                            <div style="position:relative;height:260px;">
+                                <canvas id="rentGrowthChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ════════════════════════════════════════════════════════════════
+                 NHÓM 4 — DANH MỤC BĐS
+            ════════════════════════════════════════════════════════════════════ -->
+            <div class="section-title">
+                <i class="bi bi-buildings"></i> Phân tích danh mục bất động sản
+            </div>
+
+            <div class="row g-3 mb-4">
+                <!-- Phân bổ theo loại hình -->
+                <div class="col-lg-4">
+                    <div class="d-card h-100">
+                        <div class="d-card-header">
+                            <i class="bi bi-pie-chart-fill"></i>
+                            <h3>Phân bổ theo loại hình</h3>
+                            <span class="header-badge" th:text="${report.forRentCount + report.forSaleCount} + ' tòa'">0
+                                tòa</span>
+                        </div>
+                        <div class="d-card-body">
+                            <div style="position:relative;height:220px;">
+                                <canvas id="propertyTypeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FOR_RENT vs FOR_SALE + trạng thái -->
+                <div class="col-lg-4">
+                    <div class="d-card h-100">
+                        <div class="d-card-header">
+                            <i class="bi bi-house-gear-fill"></i>
+                            <h3>FOR_RENT vs FOR_SALE</h3>
+                        </div>
+                        <div class="d-card-body">
+                            <!-- Occupancy strip FOR_RENT -->
+                            <div class="occupancy-strip">
+                                <div class="occ-item">
+                                    <div class="occ-val" th:text="${report.forRentCount}">0</div>
+                                    <div class="occ-lbl">Cho thuê</div>
+                                </div>
+                                <div class="occ-sep"></div>
+                                <div class="occ-item">
+                                    <div class="occ-val" style="color:#10b981;" th:text="${report.forRentActiveCount}">0
+                                    </div>
+                                    <div class="occ-lbl">Đang có HĐ</div>
+                                </div>
+                                <div class="occ-sep"></div>
+                                <div class="occ-item">
+                                    <div class="occ-val" style="color:#9ca3af;"
+                                        th:text="${report.forRentCount - report.forRentActiveCount}">0</div>
+                                    <div class="occ-lbl">Trống</div>
+                                </div>
+                            </div>
+                            <div class="occ-pct-bar mb-3">
+                                <div class="occ-pct-fill" th:style="'width:' + (${report.forRentCount > 0}
+                                         ? ${report.forRentActiveCount * 100 / report.forRentCount}
+                                         : 0) + '%'"></div>
+                            </div>
+
+                            <!-- Occupancy strip FOR_SALE -->
+                            <div class="occupancy-strip" style="background:#faf5ff;border-color:#e9d5ff;">
+                                <div class="occ-item">
+                                    <div class="occ-val" th:text="${report.forSaleCount}">0</div>
+                                    <div class="occ-lbl">Mua bán</div>
+                                </div>
+                                <div class="occ-sep"></div>
+                                <div class="occ-item">
+                                    <div class="occ-val" style="color:#8b5cf6;" th:text="${report.forSaleActiveCount}">0
+                                    </div>
+                                    <div class="occ-lbl">Đã bán</div>
+                                </div>
+                                <div class="occ-sep"></div>
+                                <div class="occ-item">
+                                    <div class="occ-val" style="color:#9ca3af;"
+                                        th:text="${report.forSaleCount - report.forSaleActiveCount}">0</div>
+                                    <div class="occ-lbl">Chưa bán</div>
+                                </div>
+                            </div>
+                            <div class="occ-pct-bar" style="background:#ede9fe;">
+                                <div class="occ-pct-fill" style="background:linear-gradient(90deg,#8b5cf6,#7c3aed);"
+                                    th:style="'background:linear-gradient(90deg,#8b5cf6,#7c3aed);width:' + (${report.forSaleCount > 0}
+                                         ? ${report.forSaleActiveCount * 100 / report.forSaleCount}
+                                         : 0) + '%'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top 5 building doanh thu thuê cao nhất -->
+                <div class="col-lg-4">
+                    <div class="d-card h-100">
+                        <div class="d-card-header">
+                            <i class="bi bi-trophy-fill" style="color:#f59e0b;"></i>
+                            <h3>Top 5 BĐS doanh thu thuê cao nhất</h3>
+                        </div>
+                        <div class="d-card-body">
+                            <!-- Chart (ẩn khi in) -->
+                            <div style="position:relative;height:240px;">
+                                <canvas id="topBuildingChart"></canvas>
+                            </div>
+                            <!-- Bảng thay thế khi in (ẩn trên màn hình) -->
+                            <table class="print-data-table" style="display:none;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:left;">Tòa nhà</th>
+                                        <th>MST</th>
+                                        <th>Doanh thu thuê</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="b, iter : ${report.topBuildingsByRentRevenue}">
+                                        <td style="text-align:left;">
+                                            <span th:text="${iter.count} + '. ' + ${b.buildingName}">—</span>
+                                        </td>
+                                        <td style="text-align:center; font-family:monospace; font-size:8pt;"
+                                            th:text="${b.taxCode ?: '—'}">—</td>
+                                        <td
+                                            th:text="${#numbers.formatDecimal(b.totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                            —</td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(report.topBuildingsByRentRevenue)}">
+                                        <td colspan="3" style="text-align:center;">Chưa có dữ liệu</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ════════════════════════════════════════════════════════════════
+                 NHÓM 5 — NHÂN VIÊN & KHÁCH HÀNG
+            ════════════════════════════════════════════════════════════════════ -->
+            <div class="section-title">
+                <i class="bi bi-people-fill"></i> Hiệu suất nhân viên &amp; khách hàng
+            </div>
+
+            <div class="row g-3 mb-2">
+                <!-- Top 5 nhân viên -->
+                <div class="col-lg-6">
+                    <div class="d-card">
+                        <div class="d-card-header">
+                            <i class="bi bi-person-check-fill" style="color:#10b981;"></i>
+                            <h3>Top 5 nhân viên theo tổng giá trị</h3>
+                        </div>
+                        <div class="d-card-body" style="padding:0;">
+                            <table class="dash-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:52px;">Top</th>
+                                        <th>Nhân viên</th>
+                                        <th style="text-align:center;">Thuê</th>
+                                        <th style="text-align:center;">Mua bán</th>
+                                        <th style="min-width:100px;">Tỷ trọng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="s, iter : ${report.topStaffsByValue}"
+                                        th:onclick="|window.location='/admin/staff/' + ${s.staffId}|">
+                                        <td>
+                                            <span class="rank-badge"
+                                                th:classappend="${iter.index == 0 ? 'rank-1' : iter.index == 1 ? 'rank-2' : iter.index == 2 ? 'rank-3' : ''}"
+                                                th:text="${iter.index + 1}"></span>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight:600;color:#111827;" th:text="${s.fullName}">—</div>
+                                            <div style="font-size:0.72rem;color:#9ca3af;"
+                                                th:text="'NV-' + ${s.staffId}"></div>
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <span class="val-pill val-rent staff-rent-pill"
+                                                th:attr="data-value=${s.rentValue != null ? s.rentValue : 0}">—</span>
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <span class="val-pill val-sale staff-sale-pill"
+                                                th:attr="data-value=${s.saleValue != null ? s.saleValue : 0}">—</span>
+                                        </td>
+                                        <td>
+                                            <div class="perf-bar-wrap">
+                                                <div class="perf-bar-bg">
+                                                    <div class="perf-bar-fill"
+                                                        style="background:linear-gradient(90deg,#10b981,#059669);"
+                                                        th:attr="data-pct=${s.total}"
+                                                        th:style="'background:linear-gradient(90deg,#10b981,#059669);width:0%'">
+                                                    </div>
+                                                </div>
+                                                <span class="perf-pct staff-pct">—</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(report.topStaffsByValue)}">
+                                        <td colspan="5" style="text-align:center;color:#9ca3af;padding:1.5rem;">
+                                            Chưa có dữ liệu
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top 5 khách hàng -->
+                <div class="col-lg-6">
+                    <div class="d-card">
+                        <div class="d-card-header">
+                            <i class="bi bi-trophy-fill" style="color:#f59e0b;"></i>
+                            <h3>Top 5 khách hàng theo tổng giá trị</h3>
+                        </div>
+                        <div class="d-card-body" style="padding:0;">
+                            <table class="dash-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:52px;">Top</th>
+                                        <th>Khách hàng</th>
+                                        <th style="text-align:center;">Thuê</th>
+                                        <th style="text-align:center;">Mua bán</th>
+                                        <th style="min-width:100px;">Tỷ trọng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="c, iter : ${report.topCustomersByValue}"
+                                        th:onclick="|window.location='/admin/customer/' + ${c.customerId}|">
+                                        <td>
+                                            <span class="rank-badge"
+                                                th:classappend="${iter.index == 0 ? 'rank-1' : iter.index == 1 ? 'rank-2' : iter.index == 2 ? 'rank-3' : ''}"
+                                                th:text="${iter.index + 1}"></span>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight:600;color:#111827;" th:text="${c.fullName}">—</div>
+                                            <div style="font-size:0.72rem;color:#9ca3af;"
+                                                th:text="'KH-' + ${c.customerId}"></div>
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <span class="val-pill val-rent"
+                                                th:attr="data-value=${c.rentValue != null ? c.rentValue : 0}">—</span>
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <span class="val-pill val-sale"
+                                                th:attr="data-value=${c.saleValue != null ? c.saleValue : 0}">—</span>
+                                        </td>
+                                        <td>
+                                            <div class="perf-bar-wrap">
+                                                <div class="perf-bar-bg">
+                                                    <div class="perf-bar-fill"
+                                                        style="background:linear-gradient(90deg,#f59e0b,#d97706);width:0%"
+                                                        th:attr="data-pct=${c.total}"></div>
+                                                </div>
+                                                <span class="perf-pct cust-pct">—</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(report.topCustomersByValue)}">
+                                        <td colspan="6" style="text-align:center;color:#9ca3af;padding:1.5rem;">
+                                            Chưa có dữ liệu
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════
+                 PRINT-ONLY WRAPPER — Toàn bộ nội dung in thuần text
+                 Ẩn trên màn hình, chỉ hiện khi @media print
+            ═══════════════════════════════════════════════════════════════ -->
+            <div class="print-only" style="display:none;">
+
+                <!-- Tiêu đề -->
+                <div style="text-align:center; border-bottom:1.5pt solid #000; padding-bottom:8pt; margin-bottom:14pt;">
+                    <div style="font-size:18pt; font-weight:bold; text-transform:uppercase; letter-spacing:.06em;">
+                        BÁO CÁO THỐNG KÊ BẤT ĐỘNG SẢN
+                    </div>
+                    <div style="font-size:11pt; margin-top:3pt;">
+                        MoonNest — Năm báo cáo:
+                        <strong th:text="${report.currentYear}">2025</strong>
+                    </div>
+                    <div style="font-size:9pt; font-style:italic; margin-top:2pt;" th:text="${report.cutoffLabel}">Tích
+                        lũy đến...</div>
+                </div>
+
+                <!-- 1. KPI tổng quan -->
+                <div class="print-section">
+                    <div class="print-section-title">I. Tổng quan</div>
+                    <div class="print-kpi-row">
+                        <div class="print-kpi-cell">
+                            <div class="print-kpi-label">Doanh thu cho thuê <span
+                                    th:text="${report.currentYear}"></span></div>
+                            <div class="print-kpi-value" id="pKpiRent"
+                                th:attr="data-value=${report.totalRentRevenueCurrentYear}">—</div>
+                            <div class="print-kpi-sub" th:text="${report.cutoffLabel}"></div>
+                        </div>
+                        <div class="print-kpi-cell">
+                            <div class="print-kpi-label">Tổng giá trị mua bán</div>
+                            <div class="print-kpi-value" id="pKpiSale"
+                                th:attr="data-value=${report.totalSaleRevenueAllTime}">—</div>
+                            <div class="print-kpi-sub" th:text="${report.cutoffLabel}"></div>
+                        </div>
+                        <div class="print-kpi-cell">
+                            <div class="print-kpi-label">Hợp đồng sắp hết hạn (≤30 ngày)</div>
+                            <div class="print-kpi-value" th:text="${report.expiringContractsCount}">0</div>
+                            <div class="print-kpi-sub">Trong vòng 30 ngày tới</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Doanh thu theo tháng -->
+                <div class="print-section">
+                    <div class="print-section-title">II. Doanh thu theo tháng — năm <span
+                            th:text="${report.currentYear}"></span></div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th>Tháng</th>
+                                <th class="r">Doanh thu thuê (đ)</th>
+                                <th class="r">Doanh thu mua bán (đ)</th>
+                                <th class="r">Tổng (đ)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pMonthlyBody">
+                            <!-- Render bằng JS -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td style="font-weight:bold;">Tổng cộng</td>
+                                <td class="r" id="pRentTotal" style="font-weight:bold;">—</td>
+                                <td class="r" id="pSaleTotal" style="font-weight:bold;">—</td>
+                                <td class="r" id="pGrandTotal" style="font-weight:bold;">—</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <div class="print-note" th:text="'* ' + ${report.cutoffLabel}"></div>
+                </div>
+
+                <!-- 3. Doanh thu gộp 3 năm -->
+                <div class="print-section">
+                    <div class="print-section-title">III. Doanh thu gộp 3 năm</div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th>Năm</th>
+                                <th class="r">Doanh thu thuê (đ)</th>
+                                <th class="r">Doanh thu mua bán (đ)</th>
+                                <th class="r">Tổng (đ)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pYearlyBody">
+                            <!-- Render bằng JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 4. Danh mục BĐS -->
+                <div class="print-section">
+                    <div class="print-section-title">IV. Danh mục bất động sản</div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th>Loại hình</th>
+                                <th class="r">Tổng số</th>
+                                <th class="r">Đang hoạt động / Đã bán</th>
+                                <th class="r">Trống / Chưa bán</th>
+                                <th class="r">Tỷ lệ (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Cho thuê (FOR_RENT)</td>
+                                <td class="r" th:text="${report.forRentCount}">0</td>
+                                <td class="r" th:text="${report.forRentActiveCount}">0</td>
+                                <td class="r" th:text="${report.forRentCount - report.forRentActiveCount}">0</td>
+                                <td class="r"
+                                    th:text="${report.forRentCount > 0} ? ${#numbers.formatDecimal(report.forRentActiveCount * 100.0 / report.forRentCount, 1, 'COMMA', 1, 'POINT')} + '%' : '—'">
+                                    —</td>
+                            </tr>
+                            <tr>
+                                <td>Mua bán (FOR_SALE)</td>
+                                <td class="r" th:text="${report.forSaleCount}">0</td>
+                                <td class="r" th:text="${report.forSaleActiveCount}">0</td>
+                                <td class="r" th:text="${report.forSaleCount - report.forSaleActiveCount}">0</td>
+                                <td class="r"
+                                    th:text="${report.forSaleCount > 0} ? ${#numbers.formatDecimal(report.forSaleActiveCount * 100.0 / report.forSaleCount, 1, 'COMMA', 1, 'POINT')} + '%' : '—'">
+                                    —</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 5. Top 5 BĐS doanh thu thuê cao nhất -->
+                <div class="print-section">
+                    <div class="print-section-title">V. Top 5 bất động sản — doanh thu thuê cao nhất</div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th class="c" style="width:32pt;">STT</th>
+                                <th>Tên tòa nhà</th>
+                                <th class="c">Mã số thuế</th>
+                                <th class="r">Doanh thu thuê (đ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="b, iter : ${report.topBuildingsByRentRevenue}">
+                                <td class="c" th:text="${iter.count}">1</td>
+                                <td th:text="${b.buildingName}">—</td>
+                                <td class="c mono" th:text="${b.taxCode ?: '—'}">—</td>
+                                <td class="r"
+                                    th:text="${#numbers.formatDecimal(b.totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ'">—
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(report.topBuildingsByRentRevenue)}">
+                                <td colspan="4" class="c">Chưa có dữ liệu</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 6. Top 5 nhân viên -->
+                <div class="print-section">
+                    <div class="print-section-title">VI. Top 5 nhân viên theo tổng giá trị</div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th class="c" style="width:32pt;">STT</th>
+                                <th>Tên nhân viên</th>
+                                <th class="r">Doanh thu thuê (đ)</th>
+                                <th class="r">Giá trị mua bán (đ)</th>
+                                <th class="r">Tổng (đ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="s, iter : ${report.topStaffsByValue}">
+                                <td class="c" th:text="${iter.count}">1</td>
+                                <td th:text="${s.fullName}">—</td>
+                                <td class="r"
+                                    th:text="${#numbers.formatDecimal(s.rentValue, 0, 'COMMA', 0, 'POINT')} + ' đ'">—
+                                </td>
+                                <td class="r"
+                                    th:text="${#numbers.formatDecimal(s.saleValue, 0, 'COMMA', 0, 'POINT')} + ' đ'">—
+                                </td>
+                                <td class="r"
+                                    th:text="${#numbers.formatDecimal(s.total, 0, 'COMMA', 0, 'POINT')} + ' đ'">—</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(report.topStaffsByValue)}">
+                                <td colspan="5" class="c">Chưa có dữ liệu</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 7. Top 5 khách hàng -->
+                <div class="print-section">
+                    <div class="print-section-title">VII. Top 5 khách hàng theo tổng giá trị</div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th class="c" style="width:32pt;">STT</th>
+                                <th>Tên khách hàng</th>
+                                <th class="c">Mã số thuế</th>
+                                <th class="r">Doanh thu thuê (đ)</th>
+                                <th class="r">Giá trị mua bán (đ)</th>
+                                <th class="r">Tổng (đ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="c, iter : ${report.topCustomersByValue}">
+                                <td class="c" th:text="${iter.count}">1</td>
+                                <td th:text="${c.fullName}">—</td>
+                                <td class="c mono" th:text="${c.taxCode ?: '—'}">—</td>
+                                <td class="r"
+                                    th:text="${#numbers.formatDecimal(c.rentValue, 0, 'COMMA', 0, 'POINT')} + ' đ'">—
+                                </td>
+                                <td class="r"
+                                    th:text="${#numbers.formatDecimal(c.saleValue, 0, 'COMMA', 0, 'POINT')} + ' đ'">—
+                                </td>
+                                <td class="r"
+                                    th:text="${#numbers.formatDecimal(c.total, 0, 'COMMA', 0, 'POINT')} + ' đ'">—</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(report.topCustomersByValue)}">
+                                <td colspan="6" class="c">Chưa có dữ liệu</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 8. HĐ sắp hết hạn -->
+                <div class="print-section" th:if="${not #lists.isEmpty(report.expiringContracts)}">
+                    <div class="print-section-title">VIII. Hợp đồng sắp hết hạn (trong 30 ngày)</div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th class="c" style="width:32pt;">STT</th>
+                                <th>Tòa nhà</th>
+                                <th>Khách hàng</th>
+                                <th class="c">Ngày hết hạn</th>
+                                <th class="r">Còn lại (ngày)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="e, iter : ${report.expiringContracts}">
+                                <td class="c" th:text="${iter.count}">1</td>
+                                <td th:text="${e.buildingName}">—</td>
+                                <td th:text="${e.customerName}">—</td>
+                                <td class="c" th:text="${#temporals.format(e.endDate, 'dd/MM/yyyy')}">—</td>
+                                <td class="r" th:text="${e.daysLeft}">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer -->
+                <div class="print-footer-bar">
+                    Báo cáo MoonNest &nbsp;|&nbsp;
+                    In ngày: <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}"></span>
+                    &nbsp;|&nbsp; <span th:text="${report.cutoffLabel}"></span>
+                </div>
+
+            </div><!-- /print-only -->
+
+        </div><!-- /detail-body -->
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script th:inline="javascript">
+
+        /* ── Chart defaults ─────────────────────────────────────────────────── */
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        Chart.defaults.color = '#6b7280';
+        Chart.defaults.font.size = 12;
+
+        const tooltipDefaults = {
+            backgroundColor: 'rgba(17,24,39,0.92)',
+            titleColor: '#f9fafb',
+            bodyColor: '#d1d5db',
+            padding: 10,
+            borderColor: '#374151',
+            borderWidth: 1,
+            cornerRadius: 6
+        };
+
+        const scaleDefaults = {
+            y: { beginAtZero: true, grid: { color: '#f3f4f6' }, border: { display: false } },
+            x: { grid: { display: false }, border: { display: false } }
+        };
+
+        /* ── Helper: format tỷ VNĐ ─────────────────────────────────────────── */
+        function fmtBil(val) {
+            if (val == null) return '0';
+            return (val / 1_000_000_000).toFixed(2);
+        }
+
+        function fmtShort(val) {
+            if (val == null || val == 0) return '0';
+            if (val >= 1_000_000_000) return (val / 1_000_000_000).toFixed(1) + ' tỷ';
+            if (val >= 1_000_000) return (val / 1_000_000).toFixed(0) + ' tr';
+            return val.toLocaleString('vi-VN');
+        }
+
+        /* ── Inject data từ Thymeleaf ───────────────────────────────────────── */
+        // Thymeleaf thay thế /*[[...]]*/ bằng giá trị thực, phần sau comment bị loại bỏ
+        // => KHÔNG được để bất kỳ expression JS nào sau fallback default
+        function _safe(v, n) { return (Array.isArray(v) && v.length > 0) ? v : Array(n).fill(0); }
+
+        const monthlyRent = _safe(/*[[${report.monthlyRentRevenue}]]*/ null, 12);
+        const monthlyRentLastYear = _safe(/*[[${report.monthlyRentLastYear}]]*/ null, 12);
+        const monthlySale = _safe(/*[[${report.monthlySaleRevenue}]]*/ null, 12);
+        const monthlySaleLastYear = _safe(/*[[${report.monthlySaleLastYear}]]*/ null, 12);
+        const yearlyRent = _safe(/*[[${report.yearlyRentRevenue}]]*/ null, 3);
+        const yearlySale = _safe(/*[[${report.yearlySaleRevenue}]]*/ null, 3);
+
+        const yearBeforeLast = /*[[${report.yearBeforeLast}]]*/ 2022;
+        const lastYear = /*[[${report.lastYear}]]*/       2023;
+        const currentYear = /*[[${report.currentYear}]]*/    2024;
+        const cutoffMonth = /*[[${report.cutoffMonth}]]*/    0;
+
+        const propTypeLabels = /*[[${report.buildingByPropertyType.keySet()}]]*/[];
+        const propTypeCounts = /*[[${report.buildingByPropertyType.values()}]]*/[];
+
+        const topBuildingNames = /*[[${report.topBuildingsByRentRevenue.![buildingName]}]]*/[];
+        const topBuildingRevenue = /*[[${report.topBuildingsByRentRevenue.![totalRevenue]}]]*/[];
+
+
+        /* ── KPI cards: format số ───────────────────────────────────────────── */
+        document.querySelectorAll('[id^="kpi"]').forEach(el => {
+            const v = parseFloat(el.dataset.value || 0);
+            el.textContent = fmtShort(v);
+        });
+
+        /* ── 1. Monthly Revenue Chart (stacked bar) ─────────────────────────── */
+        new Chart(document.getElementById('monthlyRevenueChart'), {
+            type: 'bar',
+            data: {
+                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+                datasets: [
+                    {
+                        label: 'Thuê (tỷ)',
+                        data: monthlyRent.map(v => v / 1_000_000_000),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                        stack: 'revenue'
+                    },
+                    {
+                        label: 'Mua bán (tỷ)',
+                        data: monthlySale.map(v => v / 1_000_000_000),
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                        stack: 'revenue'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        ...tooltipDefaults,
+                        callbacks: {
+                            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} tỷ`
+                        }
+                    }
+                },
+                scales: {
+                    ...scaleDefaults,
+                    x: { ...scaleDefaults.x, stacked: true },
+                    y: {
+                        ...scaleDefaults.y, stacked: true,
+                        ticks: { callback: v => v.toFixed(1) + ' tỷ' }
+                    }
+                }
+            }
+        });
+
+        /* ── 2. Yearly Revenue Chart (grouped bar) ───────────────────────────── */
+        new Chart(document.getElementById('yearlyRevenueChart'), {
+            type: 'bar',
+            data: {
+                labels: [yearBeforeLast, lastYear, currentYear],
+                datasets: [
+                    {
+                        label: 'Thuê',
+                        data: yearlyRent.map(v => v / 1_000_000_000),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5, borderSkipped: false
+                    },
+                    {
+                        label: 'Mua bán',
+                        data: yearlySale.map(v => v / 1_000_000_000),
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 5, borderSkipped: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 10, usePointStyle: true } },
+                    tooltip: {
+                        ...tooltipDefaults,
+                        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} tỷ` }
+                    }
+                },
+                scales: {
+                    ...scaleDefaults,
+                    y: { ...scaleDefaults.y, ticks: { callback: v => v.toFixed(0) + ' tỷ' } }
+                }
+            }
+        });
+
+        /* ── 3. Property Type Doughnut ───────────────────────────────────────── */
+        const ptColors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+        const ptLabels = propTypeLabels.map(l => ({
+            'OFFICE': 'Văn phòng', 'APARTMENT': 'Căn hộ',
+            'SHOPHOUSE': 'Shophouse', 'WAREHOUSE': 'Kho xưởng'
+        }[l] || l));
+
+        new Chart(document.getElementById('propertyTypeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ptLabels,
+                datasets: [{
+                    data: propTypeCounts,
+                    backgroundColor: ptColors,
+                    borderWidth: 0, hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 8, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } },
+                    tooltip: { ...tooltipDefaults, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} tòa` } }
+                }
+            }
+        });
+
+        /* ── 4. Top Building Horizontal Bar ─────────────────────────────────── */
+        new Chart(document.getElementById('topBuildingChart'), {
+            type: 'bar',
+            data: {
+                labels: topBuildingNames,
+                datasets: [{
+                    label: 'Doanh thu thuê (tỷ)',
+                    data: topBuildingRevenue.map(v => v / 1_000_000_000),
+                    backgroundColor: ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'],
+                    borderRadius: 5, borderSkipped: false
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { ...tooltipDefaults, callbacks: { label: ctx => ` ${ctx.parsed.x.toFixed(2)} tỷ VNĐ` } }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true, grid: { color: '#f3f4f6' }, border: { display: false },
+                        ticks: { callback: v => v.toFixed(1) + ' tỷ' }
+                    },
+                    y: { grid: { display: false }, border: { display: false } }
+                }
+            }
+        });
+
+        /* ── Progress bars & value pills ─────────────────────────────────────── */
+        function renderProgressBars(rows, pctClass) {
+            const totals = Array.from(rows).map(r => {
+                const bar = r.querySelector('.perf-bar-fill');
+                return bar ? parseFloat(bar.dataset.pct || 0) : 0;
+            });
+            const max = Math.max(...totals, 1);
+
+            rows.forEach((row, i) => {
+                const bar = row.querySelector('.perf-bar-fill');
+                const pctEl = row.querySelector('.' + pctClass);
+                if (bar) bar.style.width = ((totals[i] / max) * 100).toFixed(1) + '%';
+                if (pctEl) pctEl.textContent = fmtShort(totals[i]);
+            });
+        }
+
+        // Staff table progress bars
+        const staffRows = document.querySelectorAll('table:has(.staff-pct) tbody tr');
+        renderProgressBars(staffRows, 'staff-pct');
+
+        // Customer table progress bars
+        const custRows = document.querySelectorAll('table:has(.cust-pct) tbody tr');
+        renderProgressBars(custRows, 'cust-pct');
+
+        // Render TẤT CẢ val-pill (staff + customer) bằng một vòng lặp duy nhất
+        document.querySelectorAll('.val-pill[data-value]').forEach(el => {
+            const raw = el.getAttribute('data-value');
+            if (raw === null || raw === 'null' || raw === '') return;
+            const v = parseFloat(raw);
+            el.textContent = (v > 0) ? fmtShort(v) : '—';
+        });
+
+        /* ══════════════════════════════════════════════════════════════════════
+           GROWTH CHART — DOANH THU THUÊ
+           Logic: chỉ so sánh các tháng đã hoàn chỉnh (T1 … currentMonth-1).
+           Nếu currentMonth = 1 → chưa đủ dữ liệu, hiện thông báo.
+        ══════════════════════════════════════════════════════════════════════ */
+
+        /* ── Helpers ─────────────────────────────────────────────────────────── */
+        function calcGrowth(current, previous) {
+            if (previous == null || previous === 0) return null;
+            return ((current - previous) / previous) * 100;
+        }
+
+        function fmtPct(v) {
+            if (v == null) return '—';
+            const sign = v >= 0 ? '+' : '';
+            return sign + v.toFixed(1) + '%';
+        }
+
+        /* ── completedMonthCount: số tháng có data (từ server, luôn chính xác) ── */
+        // Năm hiện tại: cutoffMonth = currentRealMonth-1 (vd tháng 4 → cutoffMonth=3)
+        // Năm quá khứ: cutoffMonth = 12 (đủ 12 tháng)
+        // Tháng 1 năm hiện tại: cutoffMonth = 0 (chưa có tháng nào hoàn chỉnh)
+
+        /* ── Năm labels ──────────────────────────────────────────────────────── */
+        const yearLabels = [yearBeforeLast, lastYear, currentYear];
+        const allMonthLabels = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+
+        /* ──────────────────────────────────────────────────────────────────────
+           Tính growth array THEO THÁNG:
+           Chỉ lấy tháng 0 … (currentMonth - 2) (0-indexed), tức T1…T(currentMonth-1).
+           Các tháng còn lại trong năm loại bỏ hoàn toàn khỏi chart.
+        ────────────────────────────────────────────────────────────────────── */
+        const completedMonthCount = cutoffMonth; // từ server, đã tính đúng
+
+        // Slice chỉ lấy các tháng đã có data
+        const rentCurrSlice = monthlyRent.slice(0, completedMonthCount);
+        const rentPrevSlice = monthlyRentLastYear.slice(0, completedMonthCount);
+        const slicedMonthLabels = allMonthLabels.slice(0, completedMonthCount);
+
+        // Growth % cho từng tháng (null nếu năm trước = 0)
+        const rentMonthGrowth = rentCurrSlice.map((v, i) => calcGrowth(v, rentPrevSlice[i]));
+
+        /* ── Cập nhật KPI mini cards ─────────────────────────────────────────── */
+        function updateRentKpis(growthArr, labels) {
+            const valid = growthArr.map((v, i) => ({ v, lbl: labels[i] })).filter(x => x.v != null);
+
+            const avgEl = document.getElementById('rentAvgGrowth');
+            const bestEl = document.getElementById('rentBestGrowth');
+            const worstEl = document.getElementById('rentWorstGrowth');
+            const bestLbl = document.getElementById('rentBestLabel');
+            const worstLbl = document.getElementById('rentWorstLabel');
+            const avgSub = document.getElementById('rentAvgSub');
+
+            if (!valid.length) {
+                if (avgEl) { avgEl.textContent = '—'; avgEl.className = 'growth-kpi-value neutral'; }
+                if (bestEl) bestEl.textContent = '—';
+                if (worstEl) worstEl.textContent = '—';
+                if (bestLbl) bestLbl.textContent = '—';
+                if (worstLbl) worstLbl.textContent = '—';
+                return;
+            }
+
+            const avg = valid.reduce((s, x) => s + x.v, 0) / valid.length;
+            const best = valid.reduce((a, b) => b.v > a.v ? b : a);
+            const worst = valid.reduce((a, b) => b.v < a.v ? b : a);
+
+            if (avgEl) {
+                avgEl.textContent = fmtPct(avg);
+                avgEl.className = 'growth-kpi-value ' + (avg >= 0 ? 'positive' : 'negative');
+            }
+            if (bestEl) bestEl.textContent = fmtPct(best.v);
+            if (worstEl) worstEl.textContent = fmtPct(worst.v);
+            if (bestLbl) bestLbl.textContent = best.lbl;
+            if (worstLbl) worstLbl.textContent = worst.lbl;
+        }
+
+        /* ── Tạo growth chart ────────────────────────────────────────────────── */
+        function createRentGrowthChart(growthArr, labels) {
+            const posLine = '#3b82f6';
+            const negLine = '#ef4444';
+            const posColor = 'rgba(59,130,246,0.15)';
+            const negColor = 'rgba(239,68,68,0.12)';
+
+            const ctx = document.getElementById('rentGrowthChart');
+            if (!ctx) return null;
+
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Tăng trưởng (%)',
+                        data: growthArr,
+                        borderWidth: 2.5,
+                        pointRadius: growthArr.map(v => v != null ? 5 : 0),
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: growthArr.map(v =>
+                            v == null ? 'transparent' : v >= 0 ? posLine : negLine
+                        ),
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        tension: 0.35,
+                        fill: false,
+                        spanGaps: true,
+                        segment: {
+                            borderColor: ctx => {
+                                const y = ctx.p0.parsed.y;
+                                return y == null ? 'transparent' : y >= 0 ? posLine : negLine;
+                            }
+                        }
+                    }, {
+                        label: '_pos',
+                        data: growthArr.map(v => (v != null && v >= 0) ? v : 0),
+                        borderWidth: 0, pointRadius: 0, tension: 0.35, spanGaps: true,
+                        fill: { target: { value: 0 }, above: posColor, below: 'transparent' }
+                    }, {
+                        label: '_neg',
+                        data: growthArr.map(v => (v != null && v < 0) ? v : 0),
+                        borderWidth: 0, pointRadius: 0, tension: 0.35, spanGaps: true,
+                        fill: { target: { value: 0 }, below: negColor, above: 'transparent' }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            ...tooltipDefaults,
+                            filter: item => item.dataset.label === 'Tăng trưởng (%)',
+                            callbacks: {
+                                title: items => {
+                                    // Hiện rõ so sánh năm nào vs năm nào
+                                    return items[0].label + ' — ' + currentYear + ' vs ' + lastYear;
+                                },
+                                label: ctx => {
+                                    const v = ctx.parsed.y;
+                                    if (v == null) return ' Không có dữ liệu năm trước';
+                                    const sign = v >= 0 ? '+' : '';
+                                    return ` ${sign}${v.toFixed(2)}% so cùng kỳ năm trước`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, border: { display: false } },
+                        y: {
+                            grid: {
+                                color: ctx => ctx.tick.value === 0 ? '#d1d5db' : '#f3f4f6',
+                                lineWidth: ctx => ctx.tick.value === 0 ? 2 : 1
+                            },
+                            border: { display: false },
+                            ticks: { callback: v => (v >= 0 ? '+' : '') + v.toFixed(0) + '%' }
+                        }
+                    }
+                }
+            });
+        }
+
+        /* ── Khởi tạo ────────────────────────────────────────────────────────── */
+        const notEnoughEl = document.getElementById('rentGrowthNotEnough');
+        const kpisEl = document.getElementById('rentGrowthKpis');
+        let rentGrowthChart = null;
+
+        function initMonthMode() {
+            if (completedMonthCount === 0) {
+                // Tháng 1 → chưa có tháng hoàn chỉnh nào
+                if (notEnoughEl) notEnoughEl.style.display = 'block';
+                if (kpisEl) kpisEl.style.display = 'none';
+                const canvasParent = document.getElementById('rentGrowthChart');
+                if (canvasParent) canvasParent.parentElement.style.display = 'none';
+                return;
+            }
+            if (notEnoughEl) notEnoughEl.style.display = 'none';
+            if (kpisEl) kpisEl.style.display = '';
+            const canvasParent = document.getElementById('rentGrowthChart');
+            if (canvasParent) canvasParent.parentElement.style.display = '';
+
+            if (rentGrowthChart) rentGrowthChart.destroy();
+            rentGrowthChart = createRentGrowthChart(rentMonthGrowth, slicedMonthLabels);
+            updateRentKpis(rentMonthGrowth, slicedMonthLabels);
+        }
+
+        initMonthMode(); // khởi tạo chart tăng trưởng
+
+        /* ══════════════════════════════════════════════════════════════════════
+           PRINT — Render bảng tháng + bảng 3 năm + format KPI
+        ══════════════════════════════════════════════════════════════════════ */
+        function fmtVnd(v) {
+            if (v == null || v === 0) return '—';
+            return Number(v).toLocaleString('vi-VN') + ' đ';
+        }
+
+        // Bảng doanh thu theo tháng
+        const monthLabels = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+            'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+        const pBody = document.getElementById('pMonthlyBody');
+        if (pBody) {
+            let sumRent = 0, sumSale = 0;
+            for (let i = 0; i < 12; i++) {
+                const r = monthlyRent[i] || 0;
+                const s = monthlySale[i] || 0;
+                const total = r + s;
+                sumRent += r; sumSale += s;
+                const tr = document.createElement('tr');
+                const isEmpty = r === 0 && s === 0;
+                tr.innerHTML = `
+                    <td>${monthLabels[i]}</td>
+                    <td class="r" style="text-align:right">${isEmpty ? '—' : Number(r).toLocaleString('vi-VN') + ' đ'}</td>
+                    <td class="r" style="text-align:right">${s === 0 ? '—' : Number(s).toLocaleString('vi-VN') + ' đ'}</td>
+                    <td class="r" style="text-align:right">${isEmpty ? '—' : Number(total).toLocaleString('vi-VN') + ' đ'}</td>`;
+                pBody.appendChild(tr);
+            }
+            const rTot = document.getElementById('pRentTotal');
+            const sTot = document.getElementById('pSaleTotal');
+            const gTot = document.getElementById('pGrandTotal');
+            if (rTot) rTot.textContent = fmtVnd(sumRent);
+            if (sTot) sTot.textContent = fmtVnd(sumSale);
+            if (gTot) gTot.textContent = fmtVnd(sumRent + sumSale);
+        }
+
+        // Bảng doanh thu 3 năm
+        const pYBody = document.getElementById('pYearlyBody');
+        if (pYBody) {
+            const years = [yearBeforeLast, lastYear, currentYear];
+            years.forEach((y, i) => {
+                const r = yearlyRent[i] || 0;
+                const s = yearlySale[i] || 0;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${y}</td>
+                    <td class="r" style="text-align:right">${r === 0 ? '—' : Number(r).toLocaleString('vi-VN') + ' đ'}</td>
+                    <td class="r" style="text-align:right">${s === 0 ? '—' : Number(s).toLocaleString('vi-VN') + ' đ'}</td>
+                    <td class="r" style="text-align:right">${(r + s) === 0 ? '—' : Number(r + s).toLocaleString('vi-VN') + ' đ'}</td>`;
+                pYBody.appendChild(tr);
+            });
+        }
+
+        // Format KPI trong print-only
+        ['pKpiRent', 'pKpiSale'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = fmtShort(parseFloat(el.dataset.value || 0));
+        });
+
+    </script>
+
+</body>
+
+</html>

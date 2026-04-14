@@ -1,0 +1,12 @@
+{
+  "building": {
+    "tenCoBan": "PW Building",
+    "quanMacDinh": "1"
+  },
+  "contract": {
+    "ghiChuMacDinh": "Hop dong duoc tao tu bo du lieu test"
+  },
+  "invoice": {
+    "ghiChuMacDinh": "Hoa don duoc tao tu bo du lieu test"
+  }
+}

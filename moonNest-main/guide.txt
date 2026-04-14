@@ -1,0 +1,48 @@
+*** Thông tin tài khoản mật khẩu lưu trong bảng staff ***
+- Tài khoản admin: 
++ manh1709
++ ntn162
+- Tài khoản staff:
++ tmq0102
++ lth2105
++ pvd1208
++ nha0401
++ vnb2511
++ dhc2307
++ ltm1905
++ nta1212
++ hdk1311
++ ttt1612
++ nvt1503
++ pth2807
++ tqd0211
++ lmn3006
++ dth1708
++ nqk0404
++ vtl2210
+- Tài khoản customer:
++ abcVietNam
++ VietATMCP
++ SaigonTech
++ DaNangMedia
++ PhoHuongViet
++ AoVietFashion
++ ExpatsHCM
++ HoangGiaTM
++ NoiThatGoDat
++ SXDongNai
++ APHoldings
++ VRS
++ CPLuxuryViet
++ DTNamCuong
++ NMK
++ XDMinhPhat
++ CPLogisticsDD
+- Mật khẩu: 12345678
+
+*** URL ***
+- Trang đăng nhập: http://localhost:8080/login
+- Trang public: http://localhost:8080/moonnest
+
+*** Tạo cơ sở dữ liệu ***
+Mở folder "estate_db_generator"

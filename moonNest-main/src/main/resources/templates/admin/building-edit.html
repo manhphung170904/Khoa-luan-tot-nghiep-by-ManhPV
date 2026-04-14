@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Sửa bất động sản</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f6f9;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: 220px;
+            padding: 1.25rem 1.75rem;
+            margin-top: 72px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-header h2 i {
+            color: #3b82f6;
+            font-size: 1.2rem;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 1rem;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .btn-back:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #111827;
+        }
+
+        /* ── Sold banner ── */
+        .sold-banner {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.25rem;
+            color: #dc2626;
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+
+        .sold-banner i {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .sold-banner .sold-sub {
+            font-size: 0.8125rem;
+            font-weight: 400;
+            color: #ef4444;
+            margin-top: 0.1rem;
+        }
+
+        /* ── Cards ── */
+        .form-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 0.875rem;
+        }
+
+        .form-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .form-card-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .form-card-header h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .form-card-body {
+            padding: 1rem 1.25rem;
+        }
+
+        .section-lbl {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 0.5rem;
+            margin-top: 0.125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .section-lbl i {
+            color: #3b82f6;
+            font-size: 0.75rem;
+        }
+
+        /* ── Form controls ── */
+        .form-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.2rem;
+        }
+
+        .required {
+            color: #ef4444;
+            margin-left: 2px;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.8125rem;
+            height: 32px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            color: #111827;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: #9ca3af;
+        }
+
+        textarea.form-control {
+            height: auto;
+        }
+
+        /* Readonly — chữ mờ, không có background nặng */
+        .form-control[readonly] {
+            background: #fafbfc;
+            color: #c0c9d4;
+            border-color: #f1f5f9;
+            cursor: default;
+            font-style: italic;
+        }
+
+        .form-control:disabled,
+        .form-select:disabled {
+            background: #f8fafc !important;
+            color: #b0bec5 !important;
+            border-color: #eef2f7 !important;
+            cursor: not-allowed !important;
+            opacity: 1 !important;
+            font-style: italic !important;
+        }
+
+        /* Checkbox disabled */
+        input[type="checkbox"]:disabled {
+            cursor: not-allowed !important;
+            opacity: 0.4 !important;
+        }
+
+        /* Staff item khi bị lock */
+        .staff-list.locked {
+            pointer-events: none !important;
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+        }
+
+        /* Upload zone locked */
+        .upload-zone.locked-zone {
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+            opacity: 0.45 !important;
+            background: #f8fafc !important;
+            border-color: #eef2f7 !important;
+        }
+
+        /* type-btn locked */
+        .type-btn.locked {
+            pointer-events: none !important;
+            cursor: not-allowed !important;
+            opacity: 0.45 !important;
+        }
+
+
+        /* ── Type selector (readonly display) ── */
+        .type-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.875rem;
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            border: 1.5px solid;
+            background: #f9fafb;
+        }
+
+        .type-display.office {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .type-display.shophouse {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #d97706;
+        }
+
+        .type-display.apartment {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #059669;
+        }
+
+        .type-display.warehouse {
+            background: #fdf4ff;
+            color: #7e22ce;
+            border-color: #9333ea;
+        }
+
+        .type-display.for-rent {
+            background: #f0f9ff;
+            color: #0369a1;
+            border-color: #0891b2;
+        }
+
+        .type-display.for-sale {
+            background: #fff7ed;
+            color: #c2410c;
+            border-color: #ea580c;
+        }
+
+        /* ── Tag input ── */
+        .tag-input-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            align-items: center;
+            min-height: 36px;
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 0.3rem 0.5rem;
+            background: #fff;
+            cursor: text;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .tag-input-wrapper:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .area-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 5px;
+            padding: 0.15rem 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .area-tag button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: #93c5fd;
+            font-size: 0.7rem;
+            line-height: 1;
+        }
+
+        .area-tag button:hover {
+            color: #1d4ed8;
+        }
+
+        .tag-real-input {
+            border: none;
+            outline: none;
+            font-size: 0.875rem;
+            min-width: 60px;
+            flex: 1;
+            padding: 0.1rem 0.25rem;
+            background: transparent;
+        }
+
+        /* ── Staff list ── */
+        .staff-list {
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            background: #fafbfc;
+            max-height: 288px;
+            overflow-y: auto;
+        }
+
+        .staff-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .staff-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 2px;
+        }
+
+        .staff-list-header {
+            padding: 0.5rem 0.875rem;
+            background: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .staff-count {
+            color: #3b82f6;
+        }
+
+        .staff-item {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.5rem 0.875rem;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+
+        .staff-item:last-child {
+            border-bottom: none;
+        }
+
+        .staff-item:hover {
+            background: #f0f9ff;
+        }
+
+        .staff-item.selected {
+            background: #eff6ff;
+        }
+
+        .staff-item input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+            accent-color: #3b82f6;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .staff-item label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            cursor: pointer;
+            margin: 0;
+            flex: 1;
+            user-select: none;
+        }
+
+        .staff-item.selected label {
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        /* ── Buttons ── */
+        .form-actions {
+            display: flex;
+            gap: 0.625rem;
+            justify-content: flex-end;
+            padding-top: 1.25rem;
+            border-top: 1px solid #f3f4f6;
+            margin-top: 0.5rem;
+        }
+
+        .btn-form {
+            padding: 0.5rem 1.25rem;
+            border-radius: 7px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: filter 0.15s;
+        }
+
+        .btn-form:hover {
+            filter: brightness(0.93);
+        }
+
+        .btn-cancel {
+            background: #f3f4f6;
+            color: #374151;
+            text-decoration: none;
+        }
+
+        .btn-submit {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .btn-submit:hover {
+            background: #2563eb;
+            filter: none;
+        }
+
+        /* Sold state — toàn bộ btn mờ, không click được */
+        .sold-disabled {
+            pointer-events: none !important;
+            cursor: not-allowed !important;
+            opacity: 0.45 !important;
+        }
+
+        /* ── Type btn ── */
+        .type-btn {
+            padding: 0.4rem 0.75rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 7px;
+            background: #f9fafb;
+            color: #6b7280;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .type-btn:hover {
+            border-color: #3b82f6;
+            color: #1d4ed8;
+            background: #eff6ff;
+        }
+
+        .type-btn[data-val="FOR_RENT"].selected {
+            background: #f0f9ff;
+            color: #0369a1;
+            border-color: #0891b2;
+        }
+
+        .type-btn[data-val="FOR_SALE"].selected {
+            background: #fff7ed;
+            color: #c2410c;
+            border-color: #ea580c;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .form-hint {
+            font-size: 0.775rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        /* ── Upload ── */
+        .upload-zone {
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            background: #fafbfc;
+            position: relative;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-zone-text {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+
+        .upload-zone-hint {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        .upload-preview {
+            display: none;
+            position: relative;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .upload-preview img {
+            height: 80px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            object-fit: cover;
+        }
+
+        .upload-preview-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-status {
+            font-size: 0.78rem;
+            margin-top: 0.4rem;
+        }
+
+        .upload-status.success {
+            color: #059669;
+        }
+
+        .upload-status.error {
+            color: #dc2626;
+        }
+
+        .upload-status.loading {
+            color: #6b7280;
+        }
+
+
+
+        .current-img-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.625rem;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            margin-bottom: 0.75rem;
+        }
+
+        .current-img-wrap img {
+            height: 56px;
+            width: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .current-img-wrap span {
+            font-size: 0.8125rem;
+            color: #374151;
+        }
+
+        /* ══ INFO BOX ═══════════════════════════════════════════════════════ */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+
+        .info-box i {
+            color: #3b82f6;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .info-box-content {
+            font-size: 0.8125rem;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>
+                <i class="bi bi-pencil-square"></i>
+                Sửa thông tin bất động sản
+                <span style="font-size:0.9rem;font-weight:500;color:#6b7280;" th:text="'— ' + ${building.name}"></span>
+                <span class="type-display"
+                    th:classappend="${building.propertyType=='OFFICE'?'office':building.propertyType=='SHOPHOUSE'?'shophouse':building.propertyType=='APARTMENT'?'apartment':'warehouse'}"
+                    th:text="${building.propertyType=='OFFICE'?'Văn phòng':building.propertyType=='SHOPHOUSE'?'Nhà phố TM':building.propertyType=='APARTMENT'?'Căn hộ':'Kho xưởng'}"
+                    style="font-size:0.75rem;padding:0.25rem 0.65rem;">
+                </span>
+            </h2>
+            <a th:href="@{/admin/building/list}" class="btn-back"><i class="bi bi-arrow-left"></i> Danh sách</a>
+        </div>
+
+        <!-- Banner: Đã có hợp đồng mua bán (FOR_SALE + isSold) -->
+        <div style="display:flex;align-items:center;gap:0.75rem;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:0.875rem 1.5rem;margin-bottom:1rem;color:#dc2626;font-weight:600;font-size:0.9rem;"
+            th:if="${building.transactionType == 'FOR_SALE' and isSold}">
+            <i class="bi bi-lock-fill" style="font-size:1.2rem;flex-shrink:0;"></i>
+            <div>
+                Bất động sản này đã được bán — <span style="font-weight:400;">không thể chỉnh sửa.</span>
+            </div>
+        </div>
+
+        <!-- Banner: Đang có hợp đồng cho thuê active (FOR_RENT + hasActiveContract) -->
+        <div style="display:flex;align-items:center;gap:0.75rem;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:0.875rem 1.5rem;margin-bottom:1rem;color:#92400e;font-weight:600;font-size:0.9rem;"
+            th:if="${building.transactionType == 'FOR_RENT' and hasActiveContract}">
+            <i class="bi bi-lock-fill" style="font-size:1.2rem;flex-shrink:0;"></i>
+            <div>
+                Bất động sản này có hợp đồng cho thuê đang khả dụng — <span style="font-weight:400;">không thể chỉnh
+                    sửa.</span>
+            </div>
+        </div>
+
+        <div class="info-box"
+             th:if="${(building.transactionType == 'FOR_RENT' and !hasActiveContract)
+          or (building.transactionType == 'FOR_SALE' and !isSold)}">
+            <i class="bi bi-info-circle"></i>
+            <div class="info-box-content">
+                Vui lòng điền đầy đủ thông tin bắt buộc
+                (<span style="color:#ef4444;font-weight:700;">*</span>)
+                để cập nhật thông tin mới của bất động sản.
+            </div>
+        </div>
+
+        <form id="buildingForm">
+            <input type="hidden" id="flagIsSold"
+                th:value="${(building.transactionType == 'FOR_SALE' and isSold) ? 'true' : 'false'}">
+            <input type="hidden" id="flagHasActiveContract"
+                th:value="${(building.transactionType == 'FOR_RENT' and hasActiveContract) ? 'true' : 'false'}">
+            <input type="hidden" name="id" th:value="${building.id}">
+            <input type="hidden" name="propertyType" th:value="${building.propertyType}">
+            <input type="hidden" name="districtName" th:value="${building.districtName}">
+            <input type="hidden" name="districtId" th:value="${building.districtId}">
+            <input type="hidden" name="latitude" th:value="${building.latitude}">
+            <input type="hidden" name="longitude" th:value="${building.longitude}">
+
+            <!-- Card 1: Thông tin cơ bản -->
+            <div class="form-card">
+                <div class="form-card-header"><i class="bi bi-info-circle-fill"></i>
+                    <h3>Thông tin cơ bản</h3>
+                </div>
+                <div class="form-card-body">
+
+                    <div class="section-lbl"><i class="bi bi-arrow-left-right"></i> Phân loại giao dịch</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-auto">
+                            <!-- TransactionType — có thể đổi -->
+                            <div style="display:flex;gap:0.5rem;">
+                                <div class="type-btn" id="btnRent"
+                                    th:classappend="${building.transactionType=='FOR_RENT'?'selected':''}"
+                                    data-val="FOR_RENT" onclick="setTxType('FOR_RENT')">
+                                    <i class="bi bi-key"></i> Cho thuê
+                                </div>
+                                <div class="type-btn" id="btnSale"
+                                    th:classappend="${building.transactionType=='FOR_SALE'?'selected':''}"
+                                    data-val="FOR_SALE" onclick="setTxType('FOR_SALE')">
+                                    <i class="bi bi-bag-check"></i> Mua bán
+                                </div>
+                            </div>
+                            <input type="hidden" name="transactionType" id="transactionTypeVal"
+                                th:value="${building.transactionType}">
+                        </div>
+                    </div>
+
+                    <div class="section-lbl"><i class="bi bi-geo-alt-fill"></i> Địa chỉ</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Tên bất động sản <span class="required">*</span></label>
+                            <input type="text" class="form-control editable" name="name" th:value="${building.name}"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quận / Huyện</label>
+                            <input type="text" class="form-control" th:value="${building.districtName}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phường / Xã</label>
+                            <input type="text" class="form-control" name="ward" th:value="${building.ward}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Đường / Phố</label>
+                            <input type="text" class="form-control" name="street" th:value="${building.street}"
+                                readonly>
+                        </div>
+                    </div>
+
+                    <div class="section-lbl"><i class="bi bi-building-fill"></i> Đặc điểm</div>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Số tầng <span class="required">*</span></label>
+                            <input type="number" class="form-control editable" name="numberOfFloor"
+                                th:value="${building.numberOfFloor}" min="1" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Số tầng hầm <span class="required">*</span></label>
+                            <input type="number" class="form-control editable" name="numberOfBasement"
+                                th:value="${building.numberOfBasement}" min="0" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Diện tích sàn (m²) <span class="required">*</span></label>
+                            <input type="number" class="form-control editable" name="floorArea"
+                                th:value="${building.floorArea}" min="1" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Hạng</label>
+                            <select class="form-select editable" name="level">
+                                <option value="">-- Chọn hạng --</option>
+                                <option th:each="l : ${levels}" th:value="${l.name()}" th:text="${l.label}"
+                                    th:selected="${l.name() == building.level}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Hướng</label>
+                            <select class="form-select editable" name="direction">
+                                <option value="">-- Chọn hướng --</option>
+                                <option th:each="d : ${directions}" th:value="${d.name()}" th:text="${d.label}"
+                                    th:selected="${d.name() == building.direction}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                Mã số thuế
+                                <span style="font-size:0.7rem;font-weight:400;color:#9ca3af;margin-left:4px;">
+                                    <i class="bi bi-lock-fill"></i> Chỉ xem
+                                </span>
+                            </label>
+                            <input type="text" class="form-control" th:value="${building.taxCode}"
+                                th:placeholder="${#strings.isEmpty(building.taxCode) ? 'Chưa có mã số thuế' : ''}"
+                                readonly tabindex="-1">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Card 2: Giá và phí — FOR_RENT -->
+            <div class="form-card" id="rentCard"
+                th:style="${building.transactionType != 'FOR_RENT'} ? 'display:none' : ''">
+                <div class="form-card-header"><i class="bi bi-cash-stack"></i>
+                    <h3>Giá và phí (VNĐ)</h3>
+                </div>
+                <div class="form-card-body">
+                    <div class="section-lbl"><i class="bi bi-key-fill"></i> Giá cho thuê</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label">Giá thuê / m² <span class="required">*</span></label>
+                            <input type="number" step="0.01" class="form-control editable" name="rentPrice"
+                                th:value="${building.rentPrice}" placeholder="VD: 1200000" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Đặt cọc <span class="required">*</span></label>
+                            <input type="number" step="0.01" class="form-control editable" name="deposit"
+                                th:value="${building.deposit}" placeholder="VD: 200000000" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Phí dịch vụ <span class="required">*</span></label>
+                            <input type="number" step="0.01" class="form-control editable" name="serviceFee"
+                                th:value="${building.serviceFee}" placeholder="VD: 2500000" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Phí xe ô tô <span class="required">*</span></label>
+                            <input type="number" step="0.01" class="form-control editable" name="carFee"
+                                th:value="${building.carFee}" placeholder="VD: 2000000" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Phí xe máy <span class="required">*</span></label>
+                            <input type="number" step="0.01" class="form-control editable" name="motorbikeFee"
+                                th:value="${building.motorbikeFee}" placeholder="VD: 120000" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Phí nước (VNĐ/m³) <span class="required">*</span></label>
+                            <input type="number" step="0.01" class="form-control editable" name="waterFee"
+                                th:value="${building.waterFee}" placeholder="VD: 180000" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Phí điện (VNĐ/kWh) <span class="required">*</span></label>
+                            <input type="number" step="0.01" class="form-control editable" name="electricityFee"
+                                th:value="${building.electricityFee}" placeholder="VD: 55000" required>
+                        </div>
+                    </div>
+
+                    <div class="section-lbl"><i class="bi bi-rulers"></i> Diện tích cho thuê</div>
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Các diện tích (m²) <span class="required">*</span></label>
+                            <div class="tag-input-wrapper" id="tagWrapper">
+                                <input type="text" class="tag-real-input" id="tagRealInput"
+                                    placeholder="Gõ số rồi Enter hoặc dấu phẩy...">
+                            </div>
+                            <input type="hidden" name="rentAreaValues" id="rentAreaValuesInput"
+                                th:value="${building.rentAreaValues}">
+                            <div class="form-hint">VD: 100, 200, 350 — mỗi diện tích là 1 tag</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Giá bán — FOR_SALE -->
+            <div class="form-card" id="saleCard"
+                th:style="${building.transactionType != 'FOR_SALE'} ? 'display:none' : ''">
+                <div class="form-card-header"><i class="bi bi-cash-stack"></i>
+                    <h3>Giá bán (VNĐ)</h3>
+                </div>
+                <div class="form-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Giá bán <span class="required">*</span></label>
+                            <input type="number" step="0.01" class="form-control editable" name="salePrice"
+                                th:value="${building.salePrice}" placeholder="VD: 50000000000" required>
+                            <div class="form-hint">Đơn vị: VNĐ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Nhân viên & Thông tin khác -->
+            <div class="form-card">
+                <div class="form-card-header"><i class="bi bi-people-fill"></i>
+                    <h3>Nhân viên &amp; Thông tin khác</h3>
+                </div>
+                <div class="form-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nhân viên quản lý</label>
+                            <div class="staff-list">
+                                <div class="staff-list-header">
+                                    <span>Chọn nhân viên</span>
+                                    <span class="staff-count"><span id="selectedCount">0</span> đã chọn</span>
+                                </div>
+                                <div th:if="${managers != null and !managers.isEmpty()}">
+                                    <div class="staff-item" th:each="m : ${managers}">
+                                        <input type="checkbox" name="staffIds" th:value="${m.id}"
+                                            th:id="'staff_'+${m.id}"
+                                            th:checked="${#lists.contains(building.staffIds, m.id)}"
+                                            onchange="updateStaffCount()">
+                                        <label th:for="'staff_'+${m.id}" th:text="${m.fullName}"></label>
+                                    </div>
+                                </div>
+                                <div th:unless="${managers != null and !managers.isEmpty()}"
+                                    style="padding:1.5rem;text-align:center;color:#9ca3af;font-size:0.8125rem;">
+                                    <i class="bi bi-inbox"
+                                        style="font-size:1.5rem;display:block;margin-bottom:0.25rem;"></i>
+                                    Chưa có nhân viên
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Link bất động sản</label>
+                                    <input type="url" class="form-control editable" name="linkOfBuilding"
+                                        th:value="${building.linkOfBuilding}"
+                                        placeholder="https://example.com/building">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Hình ảnh</label>
+                                    <!-- Preview ảnh hiện tại -->
+                                    <div class="current-img-wrap" th:if="${not #strings.isEmpty(building.image)}">
+                                        <img th:src="${'/images/building_img/' + building.image}" alt="current">
+                                        <span th:text="'Ảnh hiện tại: ' + ${building.image}"></span>
+                                    </div>
+                                    <div class="upload-zone" id="uploadZone">
+                                        <input type="file" id="imageFileInput" accept=".jpg,.jpeg,.png,.webp"
+                                            onchange="handleImageSelect(this)">
+                                        <div id="uploadPlaceholder">
+                                            <div style="font-size:1.5rem;color:#d1d5db;margin-bottom:0.25rem;"><i
+                                                    class="bi bi-cloud-upload"></i></div>
+                                            <div class="upload-zone-text">Kéo thả hoặc click để thay ảnh</div>
+                                            <div class="upload-zone-hint">JPG, PNG, WEBP — tối đa 5 MB</div>
+                                        </div>
+                                        <div class="upload-preview" id="uploadPreview">
+                                            <img id="previewImg" src="" alt="preview">
+                                            <button type="button" class="upload-preview-remove"
+                                                onclick="removeImage(event)"><i class="bi bi-x"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="upload-status" id="uploadStatus"></div>
+                                    <input type="hidden" name="image" id="imageFilename" th:value="${building.image}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-form btn-cancel" onclick="resetForm()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Đặt lại
+                        </button>
+                        <button type="submit" class="btn-form btn-submit" id="btnSubmit">
+                            <i class="bi bi-check-circle-fill"></i> Lưu thay đổi
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TRANSACTION TYPE TOGGLE
+        // ═══════════════════════════════════════════════════════════════════════════
+        function setTxType(val) {
+            document.getElementById('transactionTypeVal').value = val;
+            document.querySelectorAll('.type-btn[data-val]').forEach(function (b) {
+                b.classList.toggle('selected', b.dataset.val === val);
+            });
+            var rentCard = document.getElementById('rentCard');
+            var saleCard = document.getElementById('saleCard');
+            if (rentCard) rentCard.style.display = val === 'FOR_RENT' ? '' : 'none';
+            if (saleCard) saleCard.style.display = val === 'FOR_SALE' ? '' : 'none';
+
+            // Toggle required theo loại giao dịch
+            var rentFields = ['rentPrice', 'deposit', 'serviceFee', 'carFee', 'motorbikeFee', 'waterFee', 'electricityFee'];
+            rentFields.forEach(function (name) {
+                var el = document.querySelector('[name="' + name + '"]');
+                if (el) el.required = (val === 'FOR_RENT');
+            });
+            var salePriceEl = document.querySelector('[name="salePrice"]');
+            if (salePriceEl) salePriceEl.required = (val === 'FOR_SALE');
+
+            // rentAreaValuesInput — required cho FOR_RENT (validate thủ công khi submit)
+            var rentAreaEl = document.getElementById('rentAreaValuesInput');
+            if (rentAreaEl) rentAreaEl.dataset.requiredForRent = (val === 'FOR_RENT') ? 'true' : 'false';
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // LOCK FORM — disable toàn bộ fields, buttons khi không được phép sửa
+        // Case 1: FOR_RENT + hasActiveContract  → lock
+        // Case 2: FOR_SALE + isSold             → lock
+        // Case 3: ngược lại                     → cho phép sửa bình thường
+        // ═══════════════════════════════════════════════════════════════════════════
+        function lockForm() {
+            var form = document.getElementById('buildingForm');
+
+            // 1. Tất cả input/select/textarea (trừ hidden)
+            form.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(function (el) {
+                el.disabled = true;
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.style.opacity = '0.35';
+                    el.style.cursor = 'not-allowed';
+                } else {
+                    el.style.background = '#f4f6f8';
+                    el.style.color = '#aab4be';
+                    el.style.fontStyle = 'italic';
+                    el.style.cursor = 'not-allowed';
+                    el.style.borderColor = '#eaecef';
+                    el.style.opacity = '1';
+                    el.style.pointerEvents = 'none';
+                }
+            });
+
+            // 2. Upload zone
+            var uploadZone = document.getElementById('uploadZone');
+            if (uploadZone) {
+                uploadZone.style.pointerEvents = 'none';
+                uploadZone.style.cursor = 'not-allowed';
+                uploadZone.style.opacity = '0.4';
+                uploadZone.style.background = '#f4f6f8';
+                uploadZone.style.borderColor = '#eaecef';
+            }
+
+            // 3. Nút toggle Cho thuê / Mua bán
+            form.querySelectorAll('.type-btn').forEach(function (b) {
+                b.style.pointerEvents = 'none';
+                b.style.cursor = 'not-allowed';
+                b.style.opacity = '0.4';
+            });
+
+            // 4. Tag input wrapper (diện tích cho thuê)
+            var tagWrap = document.getElementById('tagWrapper');
+            if (tagWrap) {
+                tagWrap.style.pointerEvents = 'none';
+                tagWrap.style.cursor = 'not-allowed';
+                tagWrap.style.opacity = '0.5';
+                tagWrap.style.background = '#f4f6f8';
+                tagWrap.style.borderColor = '#eaecef';
+            }
+
+            // 5. Staff list
+            var staffList = form.querySelector('.staff-list');
+            if (staffList) {
+                staffList.style.pointerEvents = 'none';
+                staffList.style.cursor = 'not-allowed';
+                staffList.style.opacity = '0.45';
+            }
+
+            // 6. Nút Reset + Lưu thay đổi
+            form.querySelectorAll('button').forEach(function (b) {
+                b.disabled = true;
+                b.style.pointerEvents = 'none';
+                b.style.cursor = 'not-allowed';
+                b.style.opacity = '0.4';
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TAG INPUT (diện tích cho thuê)
+        // ═══════════════════════════════════════════════════════════════════════════
+        var tagWrapper = document.getElementById('tagWrapper');
+        var tagRealInput = document.getElementById('tagRealInput');
+        var rentAreaHidden = document.getElementById('rentAreaValuesInput');
+        var areaTags = [];
+
+        if (rentAreaHidden && rentAreaHidden.value) {
+            rentAreaHidden.value.split(',').forEach(function (v) {
+                var t = v.trim();
+                if (t) areaTags.push(t);
+            });
+        }
+
+        function renderTags() {
+            if (!tagWrapper) return;
+            tagWrapper.querySelectorAll('.area-tag').forEach(function (t) { t.remove(); });
+            areaTags.forEach(function (val, idx) {
+                var tag = document.createElement('div');
+                tag.className = 'area-tag';
+                tag.innerHTML = val + ' m² <button type="button" onclick="removeTag(' + idx + ')"><i class="bi bi-x"></i></button>';
+                tagWrapper.insertBefore(tag, tagRealInput);
+            });
+            if (rentAreaHidden) rentAreaHidden.value = areaTags.join(',');
+        }
+
+        function addTag(raw) {
+            raw.split(',').map(function (s) { return s.trim(); }).forEach(function (s) {
+                if (s !== '' && !isNaN(s) && Number(s) > 0 && !areaTags.includes(s)) areaTags.push(s);
+            });
+            renderTags();
+        }
+
+        function removeTag(idx) { areaTags.splice(idx, 1); renderTags(); }
+
+        if (tagWrapper) {
+            tagWrapper.addEventListener('click', function () { if (tagRealInput) tagRealInput.focus(); });
+            if (tagRealInput) {
+                tagRealInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        if (this.value.trim()) { addTag(this.value.trim()); this.value = ''; }
+                    } else if (e.key === 'Backspace' && this.value === '' && areaTags.length > 0) {
+                        areaTags.pop(); renderTags();
+                    }
+                });
+                tagRealInput.addEventListener('blur', function () {
+                    if (this.value.trim()) { addTag(this.value.trim()); this.value = ''; }
+                });
+            }
+            renderTags();
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // STAFF
+        // ═══════════════════════════════════════════════════════════════════════════
+        function updateStaffCount() {
+            var count = document.querySelectorAll('input[name="staffIds"]:checked').length;
+            var countEl = document.getElementById('selectedCount');
+            if (countEl) countEl.textContent = count;
+            document.querySelectorAll('.staff-item').forEach(function (item) {
+                var cb = item.querySelector('input[type="checkbox"]');
+                if (cb) item.classList.toggle('selected', cb.checked);
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // RESET FORM
+        // ═══════════════════════════════════════════════════════════════════════════
+        function resetForm() {
+            document.querySelectorAll('.form-control.editable').forEach(function (el) { el.value = ''; });
+            document.querySelectorAll('select.form-select.editable').forEach(function (el) { el.value = ''; });
+            areaTags = [];
+            renderTags();
+            document.querySelectorAll('input[name="staffIds"]').forEach(function (cb) { cb.checked = false; });
+            updateStaffCount();
+            removeImage();
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // UPLOAD
+        // ═══════════════════════════════════════════════════════════════════════════
+        function handleImageSelect(input) {
+            var file = input.files[0];
+            if (!file) return;
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                setUploadStatus('Định dạng không hợp lệ. Chỉ JPG, PNG, WEBP.', 'error'); input.value = ''; return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                setUploadStatus('File quá lớn. Tối đa 5 MB.', 'error'); input.value = ''; return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('uploadPlaceholder').style.display = 'none';
+                document.getElementById('uploadPreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            setUploadStatus('<i class="bi bi-arrow-repeat"></i> Đang upload...', 'loading');
+            var formData = new FormData();
+            formData.append('file', file);
+            fetch('/admin/building/upload-image', { method: 'POST', body: formData })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.filename) {
+                        document.getElementById('imageFilename').value = data.filename;
+                        setUploadStatus('✓ ' + data.filename, 'success');
+                    } else {
+                        setUploadStatus(data.message || 'Upload thất bại.', 'error'); removeImage();
+                    }
+                })
+                .catch(function () { setUploadStatus('Lỗi kết nối.', 'error'); removeImage(); });
+        }
+
+        function removeImage(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('imageFileInput').value = '';
+            document.getElementById('previewImg').src = '';
+            document.getElementById('uploadPlaceholder').style.display = '';
+            document.getElementById('uploadPreview').style.display = 'none';
+            setUploadStatus('', '');
+        }
+
+        function setUploadStatus(msg, type) {
+            var el = document.getElementById('uploadStatus');
+            el.innerHTML = msg; el.className = 'upload-status ' + type;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // DOM READY — 1 listener duy nhất, thứ tự: lock → staff init
+        // ═══════════════════════════════════════════════════════════════════════════
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // ── Đọc flag từ server ──
+            var isSold = document.getElementById('flagIsSold').value === 'true';
+            var hasActive = document.getElementById('flagHasActiveContract').value === 'true';
+            var isLocked = isSold || hasActive;
+
+            // ── Lock nếu cần (phải chạy trước mọi thứ khác) ──
+            if (isLocked) {
+                lockForm();
+            }
+
+            // ── Khởi tạo required state theo transactionType hiện tại ──
+            var initTxType = document.getElementById('transactionTypeVal').value;
+            if (initTxType) setTxType(initTxType);
+
+            // ── Staff click toggle (chỉ hoạt động khi không bị lock) ──
+            if (!isLocked) {
+                document.querySelectorAll('.staff-item').forEach(function (item) {
+                    item.addEventListener('click', function (e) {
+                        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                            var cb = this.querySelector('input[type="checkbox"]');
+                            if (cb) { cb.checked = !cb.checked; updateStaffCount(); }
+                        }
+                    });
+                });
+            }
+            updateStaffCount();
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // SUBMIT
+        // ═══════════════════════════════════════════════════════════════════════════
+        document.getElementById('buildingForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Guard kép: nếu form đang bị lock thì không làm gì
+            var isSold = document.getElementById('flagIsSold').value === 'true';
+            var hasActive = document.getElementById('flagHasActiveContract').value === 'true';
+            if (isSold || hasActive) { return; }
+
+            var txType = document.getElementById('transactionTypeVal').value;
+
+            // Validate rent area nếu là FOR_RENT
+            if (txType === 'FOR_RENT') {
+                var rentAreaEl = document.getElementById('rentAreaValuesInput');
+                if (!rentAreaEl || !rentAreaEl.value || rentAreaEl.value.trim() === '') {
+                    Swal.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng nhập ít nhất một diện tích cho thuê.' });
+                    return;
+                }
+            }
+
+            var staffIds = Array.from(document.querySelectorAll('input[name="staffIds"]:checked'))
+                .map(function (cb) { return Number(cb.value); });
+            var g = function (sel) { var el = document.querySelector('[name="' + sel + '"]'); return el ? el.value : null; };
+
+            var data = {
+                id: g('id') ? Number(g('id')) : null,
+                name: g('name'),
+                districtId: g('districtId') ? Number(g('districtId')) : null,
+                ward: g('ward'),
+                street: g('street'),
+                numberOfFloor: g('numberOfFloor') ? Number(g('numberOfFloor')) : null,
+                numberOfBasement: g('numberOfBasement') ? Number(g('numberOfBasement')) : null,
+                floorArea: g('floorArea') ? Number(g('floorArea')) : null,
+                direction: g('direction') || null,
+                level: g('level') || null,
+                propertyType: g('propertyType'),
+                transactionType: txType,
+                rentPrice: txType === 'FOR_RENT' ? (g('rentPrice') || null) : null,
+                deposit: txType === 'FOR_RENT' ? (g('deposit') || null) : null,
+                serviceFee: txType === 'FOR_RENT' ? (g('serviceFee') || null) : null,
+                carFee: txType === 'FOR_RENT' ? (g('carFee') || null) : null,
+                motorbikeFee: txType === 'FOR_RENT' ? (g('motorbikeFee') || null) : null,
+                waterFee: txType === 'FOR_RENT' ? (g('waterFee') || null) : null,
+                electricityFee: txType === 'FOR_RENT' ? (g('electricityFee') || null) : null,
+                salePrice: txType === 'FOR_SALE' ? (g('salePrice') || null) : null,
+                latitude: g('latitude') ? Number(g('latitude')) : null,
+                longitude: g('longitude') ? Number(g('longitude')) : null,
+                linkOfBuilding: g('linkOfBuilding') || null,
+                image: document.getElementById('imageFilename').value || null,
+                rentAreaValues: txType === 'FOR_RENT' ? (document.getElementById('rentAreaValuesInput') ? document.getElementById('rentAreaValuesInput').value || null : null) : null,
+                staffIds: staffIds
+            };
+
+            fetch('/admin/building/edit', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(function (r) {
+                    if (r.ok) {
+                        Swal.fire({ icon: 'success', title: 'Thành công', text: 'Cập nhật thành công!', timer: 1500, showConfirmButton: false })
+                            .then(function () { window.location.href = '/admin/building/list'; });
+                    } else {
+                        return r.json().then(function (err) {
+                            Swal.fire({ icon: 'error', title: 'Lỗi', text: err.message || 'Cập nhật thất bại!' });
+                        });
+                    }
+                })
+                .catch(function () { Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi kết nối máy chủ.' }); });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoonNest - Dashboard Nhân viên</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #2d3e8f;
+            --primary-light: #4a5fc1;
+            --secondary-color: #f5f7fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--secondary-color);
+        }
+
+        .header {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-top {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-custom {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #f0f0f0;
+            color: var(--primary-color);
+        }
+
+        .nav-custom {
+            background: var(--primary-color);
+        }
+
+        .nav-custom .nav-link {
+            color: white !important;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 14px 18px;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.2s;
+        }
+
+        .nav-custom .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-custom .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            font-weight: 600;
+        }
+
+        .welcome-section {
+            background: white;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .welcome-section h1 {
+            color: var(--primary-color);
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 10px;
+            background: #f0f4ff;
+            color: var(--primary-color);
+            font-size: 24px;
+        }
+
+        .stat-info h3 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .section-header {
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            color: var(--primary-color);
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .table-custom {
+            margin: 0;
+        }
+
+        .table-custom thead th {
+            background: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #dee2e6;
+            padding: 12px;
+        }
+
+        .table-custom tbody tr {
+            transition: all 0.2s;
+        }
+
+        .table-custom tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .table-custom td {
+            padding: 12px;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-unpaid {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .info-box h5 {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .info-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .viewAllOverdueIvn,
+        .viewAllExpiringContract,
+        .viewAllExpiringInvoice {
+            color: #2d3e8f;
+            text-decoration: none;
+            font-size: 13px
+        }
+
+        .viewAllOverdueIvn:hover,
+        .viewAllExpiringContract:hover,
+        .viewAllExpiringInvoice:hover {
+            color: #0d6efd;
+        }
+
+        /* Avatar hover effects */
+        .header-top img.rounded-circle {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .header-top img.rounded-circle:hover {
+            transform: scale(1.1);
+            border-color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-top py-3">
+            <div class="container-fluid px-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="logo">MoonNest</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-end">
+                                <small class="d-block opacity-85">Xin chào,</small>
+                                <strong th:text="${staffName}">Nguyễn Văn B</strong>
+                            </div>
+                            <!-- Avatar -->
+                            <a th:href="@{/staff/profile}" class="text-decoration-none text-reset">
+                                <img th:src="@{'/images/staff_img/' + ${staffAvatar} + '.jpg'}" alt="Avatar"
+                                    class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                            </a>
+                        </div>
+                        <a href="#" class="btn btn-logout"
+                            onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Đăng
+                            xuất</a>
+                        <form id="logoutForm" th:action="@{/auth/logout}" method="post" style="display:none;"></form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="nav-custom">
+            <div class="container-fluid px-4">
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/staff/dashboard">
+                            <i class="bi bi-speedometer2 me-1"></i>Tổng quan
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/staff/buildings">
+                            <i class="bi bi-building me-1"></i>Tòa nhà
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/staff/contracts">
+                            <i class="bi bi-file-text me-1"></i>Hợp đồng thuê
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/staff/sale-contracts">
+                            <i class="bi bi-file-earmark-ruled me-1"></i>Hợp đồng mua bán
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/staff/customers">
+                            <i class="bi bi-people me-1"></i>Khách hàng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/staff/invoices">
+                            <i class="bi bi-receipt me-1"></i>Hóa đơn
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/staff/profile">
+                            <i class="bi bi-person-circle me-1"></i>Tài khoản
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <div class="container-fluid px-4 py-4">
+        <div class="welcome-section p-4 rounded mb-4">
+            <h1 class="h3 mb-2">Dashboard Nhân viên</h1>
+            <p class="text-muted mb-0">Quản lý tòa nhà, hợp đồng, khách hàng và hóa đơn</p>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <a th:href="@{/staff/buildings}" class="text-decoration-none text-reset">
+                    <div class="stat-card p-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="h4" th:text="${buildingCnt}">8</h3>
+                                <p class="text-muted mb-0 small">Tòa nhà đang quản lý</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                    <div class="stat-card p-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="bi bi-file-text"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="h4" th:text="${contractCnt}">45</h3>
+                                <p class="text-muted mb-0 small">Hợp đồng đang quản lý</p>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <div class="col-md-3">
+                <a th:href="@{/staff/customers}" class="text-decoration-none text-reset">
+                    <div class="stat-card p-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="h4" th:text="${customerCnt}">32</h3>
+                                <p class="text-muted mb-0 small">Khách hàng đang quản lý</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a th:href="@{/staff/invoices(status=PENDING)}" class="text-decoration-none text-reset">
+                    <div class="stat-card p-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="h4" th:text="${unpaidInvoiceCnt}">12</h3>
+                                <p class="text-muted mb-0 small">Hóa đơn chưa thanh toán</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="section-card p-4">
+                    <div class="section-header mb-3 d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <span th:text="'Hóa đơn quá hạn (' + ${#lists.size(overdueInvoices)} + ')'"></span>
+                        </h2>
+
+                        <!-- Chỉ hiện nút khi list có phần tử -->
+                        <a class="viewAllOverdueIvn"
+                            th:if="${overdueInvoices != null and !#lists.isEmpty(overdueInvoices)}"
+                            th:href="@{/staff/invoices(status='OVERDUE')}">
+                            Xem tất cả <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>MÃ HĐ</th>
+                                    <th>KHÁCH HÀNG</th>
+                                    <th>SỐ TIỀN</th>
+                                    <th>HẠN THANH TOÁN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Nếu có dữ liệu -->
+                                <th:block th:if="${overdueInvoices != null and !#lists.isEmpty(overdueInvoices)}">
+                                    <tr th:each="invoice, stat : ${overdueInvoices}" th:if="${stat.index < 2}">
+                                        <td><strong th:text="${invoice.id}">INV-2024120</strong></td>
+                                        <td th:text="${invoice.customer.fullName}">Lê Văn C</td>
+                                        <td>
+                                            <strong
+                                                th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
+                                                15,770,000 VNĐ
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge-status badge-unpaid"
+                                                th:text="${#temporals.format(invoice.dueDate, 'dd/MM/yyyy')}">05/01/2026
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </th:block>
+
+                                <!-- Nếu list rỗng -->
+                                <tr th:if="${overdueInvoices == null or #lists.isEmpty(overdueInvoices)}">
+                                    <td colspan="4">
+                                        <div style="
+                                        height: 66.8px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-weight: 600;
+                                        color: #777;
+                                    ">
+                                            Hiện không có hóa đơn quá hạn
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="section-card p-4">
+                    <div class="section-header mb-3 d-flex justify-content-between align-items-center">
+                        <h2>
+                            <i class="bi bi-clock-history me-2"></i>
+                            <span th:text="'Hợp đồng sắp hết hạn (' + ${#lists.size(expiringContracts)} + ')'"></span>
+                        </h2>
+                        <!-- Chỉ hiện nút khi list có phần tử -->
+                        <a class="viewAllExpiringContract"
+                            th:if="${expiringContracts != null and !#lists.isEmpty(expiringContracts)}"
+                            th:href="@{/staff/contracts(status='ACTIVE')}">
+                            Xem tất cả <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>MÃ HĐ</th>
+                                    <th>KHÁCH HÀNG</th>
+                                    <th>TÒA NHÀ</th>
+                                    <th>NGÀY HẾT HẠN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Nếu có dữ liệu -->
+                                <th:block th:if="${expiringContracts != null and !#lists.isEmpty(expiringContracts)}">
+                                    <tr th:each="contract, stat : ${expiringContracts}" th:if="${stat.index < 2}">
+                                        <td><strong th:text="${contract.id}">INV-2024120</strong></td>
+                                        <td th:text="${contract.customer}">Lê Văn C</td>
+                                        <td th:text="${contract.building}">ABC Tower</td>
+                                        <td>
+                                            <span class="badge-status badge-expired"
+                                                th:text="${#temporals.format(contract.endDate, 'dd/MM/yyyy')}">01/01/2026
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </th:block>
+
+                                <!-- Nếu list rỗng -->
+                                <tr th:if="${expiringContracts == null or #lists.isEmpty(expiringContracts)}">
+                                    <td colspan="4">
+                                        <div style="
+                                        height: 66.8px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-weight: 600;
+                                        color: #777;
+                                    ">
+                                            Hiện không có hợp đồng sắp hết hạn
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-2">
+            <div class="col-lg-9">
+                <div class="section-card p-4">
+                    <div class="section-header mb-3 d-flex justify-content-between align-items-center">
+                        <h2>
+                            <i class="bi bi-calendar-event me-2"></i>
+                            <span th:text="'Hóa đơn sắp hết hạn (' + ${#lists.size(expiringInvoices)} + ')'"></span>
+                        </h2>
+                        <!-- Chỉ hiện nút khi list có phần tử -->
+                        <a class="viewAllExpiringInvoice"
+                            th:if="${expiringInvoices != null and !#lists.isEmpty(expiringInvoices)}"
+                            th:href="@{/staff/invoices(status=PENDING)}">
+                            Xem tất cả <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>MÃ HÓA ĐƠN</th>
+                                    <th>KHÁCH HÀNG</th>
+                                    <th>TÒA NHÀ</th>
+                                    <th>THÁNG/NĂM</th>
+                                    <th>SỐ TIỀN</th>
+                                    <th>HẠN THANH TOÁN</th>
+                                    <th>TRẠNG THÁI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Nếu có dữ liệu -->
+                                <th:block th:if="${expiringInvoices != null and !#lists.isEmpty(expiringInvoices)}">
+                                    <tr th:each="invoice, stat : ${expiringInvoices}" th:if="${stat.index < 3}">
+                                        <td><strong th:text="${invoice.id}">INV-2024120</strong></td>
+                                        <td th:text="${invoice.customerName}">Lê Văn C</td>
+                                        <td th:text="${invoice.customerName}">ABC Tower</td>
+                                        <td th:text="${invoice.month} + '/' + ${invoice.year}">ABC Tower</td>
+                                        <td
+                                            th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
+                                            ABC Tower</td>
+                                        <td>
+                                            <span class="badge-status badge-unpaid"
+                                                th:text="${#temporals.format(invoice.dueDate, 'dd/MM/yyyy')}">01/01/2026
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge-status badge-unpaid"
+                                                th:text="${invoice.status == 'PENDING' ? 'Chưa thanh toán' : invoice.status}">
+                                                Chưa thanh toán
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </th:block>
+
+                                <!-- Nếu list rỗng -->
+                                <tr th:if="${expiringInvoices == null or #lists.isEmpty(expiringInvoices)}">
+                                    <td colspan="7">
+                                        <div style="
+                                        height: 87px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-weight: 600;
+                                        color: #777;
+                                    ">
+                                            Hiện không có hóa đơn sắp hết hạn
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3">
+                <div class="info-box p-3">
+                    <h5 class="mb-3">Thông tin hệ thống</h5>
+                    <div class="info-item d-flex justify-content-between">
+                        <span class="text-muted">Ngày giờ:</span>
+                        <span class="fw-semibold">13/01/2026 10:30</span>
+                    </div>
+                    <div class="info-item d-flex justify-content-between">
+                        <span class="text-muted">IP:</span>
+                        <span class="fw-semibold">127.0.0.1</span>
+                    </div>
+                    <div class="info-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Trạng thái:</span>
+                        <span class="fw-semibold text-success">Đã kích hoạt</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

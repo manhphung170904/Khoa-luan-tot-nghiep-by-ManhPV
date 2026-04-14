@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Quản lý hợp đồng mua bán</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: 220px;
+            padding: 0;
+            margin-top: 72px;
+        }
+
+        .detail-body {
+            padding: 1.5rem;
+        }
+
+        /* ══ PAGE HEADER ══════════════════════════════════════════════════════ */
+        .page-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .page-header-bar h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+        }
+
+        .page-header-bar .update-time {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+        }
+
+        .page-header-actions {
+            display: flex;
+            gap: 0.625rem;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        /* ══ BUTTONS ══════════════════════════════════════════════════════════ */
+        .btn-add {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-add:hover {
+            background: #2563eb;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ══ D-CARD ═══════════════════════════════════════════════════════════ */
+        .d-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .d-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .d-card-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .d-card-header h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .d-card-body {
+            padding: 0.875rem 1.5rem;
+        }
+
+        /* ══ FILTER CARD ══════════════════════════════════════════════════════ */
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.125rem;
+            padding-bottom: 0.875rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: border-color 0.2s ease;
+        }
+
+        .d-card-body:has(.filter-body.collapsed) .filter-header {
+            border-bottom-color: transparent;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .filter-title {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-title i {
+            color: #3b82f6;
+            font-size: 0.875rem;
+        }
+
+        .btn-toggle-filter {
+            background: #f3f4f6;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+
+        .btn-toggle-filter:hover {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .btn-toggle-filter i {
+            transition: transform 0.3s;
+        }
+
+        .btn-toggle-filter.collapsed i {
+            transform: rotate(180deg);
+        }
+
+        .filter-body {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+            opacity: 1;
+        }
+
+        .filter-body.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .filter-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .filter-section-title i {
+            color: #3b82f6;
+            font-size: 0.8rem;
+        }
+
+        .filter-body .form-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
+        }
+
+        .filter-body .form-control,
+        .filter-body .form-select {
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8125rem;
+            color: #374151;
+            background: #fff;
+            transition: all 0.2s;
+        }
+
+        .filter-body .form-control:focus,
+        .filter-body .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .range-inputs .form-control {
+            flex: 1;
+        }
+
+        .range-separator {
+            color: #d1d5db;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .btn-filter {
+            padding: 0.45rem 1rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-filter.btn-reset {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-filter.btn-reset:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-filter.btn-search {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-filter.btn-search:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ══ TABLE ════════════════════════════════════════════════════════════ */
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+
+        .dash-table thead th {
+            background: #f8fafc;
+            padding: 0.5rem 0.875rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1.5px solid #e9ecef;
+            white-space: nowrap;
+        }
+
+        .dash-table tbody td {
+            padding: 0.75rem 0.875rem;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+            vertical-align: middle;
+            font-size: 0.8125rem;
+        }
+
+        .dash-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dash-table tbody tr {
+            transition: background 0.15s;
+        }
+
+        .dash-table tbody tr:hover {
+            background: #f0f9ff;
+        }
+
+        /* ══ TABLE CELL STYLES ════════════════════════════════════════════════ */
+        .contract-id {
+            font-weight: 700;
+            color: #111827;
+            font-size: 0.8125rem;
+        }
+
+        .customer-name,
+        .building-name,
+        .staff-name {
+            font-weight: 600;
+            color: #111827;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+            max-height: 2.8em;
+        }
+
+        .price-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .date-info {
+            font-size: 0.78rem;
+            color: #6b7280;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .date-info i {
+            margin-right: 0.3rem;
+            color: #9ca3af;
+        }
+
+        /* ══ TABLE HEADER ROW ═════════════════════════════════════════════════ */
+        .table-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .thr-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .thr-title i {
+            color: #3b82f6;
+        }
+
+        /* ══ ACTION BUTTONS ═══════════════════════════════════════════════════ */
+        .action-buttons {
+            display: flex;
+            gap: 0.35rem;
+            justify-content: center;
+        }
+
+        .btn-action {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.18s;
+            text-decoration: none;
+        }
+
+        .btn-view {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .btn-view:hover {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .btn-edit {
+            background: #fffbeb;
+            color: #f59e0b;
+        }
+
+        .btn-edit:hover {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .btn-delete {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .btn-delete:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* ══ EMPTY STATE ══════════════════════════════════════════════════════ */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #9ca3af;
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 0.75rem;
+            color: #d1d5db;
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        /* ══ PAGINATION ═══════════════════════════════════════════════════════ */
+        .pagination-wrapper {
+            padding: 0.875rem 1.5rem;
+        }
+
+        .pagination .page-link {
+            border-radius: 6px !important;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            font-size: 0.8125rem;
+            padding: 0.375rem 0.625rem;
+            margin: 0 0.15rem;
+        }
+
+        .pagination .page-link:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #111827;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background: #f9fafb;
+            border-color: #e5e7eb;
+            color: #d1d5db;
+        }
+
+        /* ══ STATUS BADGE ═════════════════════════════════════════════════════ */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .status-done {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .status-pending {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+
+        /* ══ RESPONSIVE ═══════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            main.content {
+                margin-left: 0;
+                padding: 0;
+            }
+
+            .page-header-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .action-buttons {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+        <div class="detail-body">
+
+            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <div class="page-header-bar">
+                <div>
+                    <h2>
+                        <i class="bi bi-file-earmark-ruled" style="color:#3b82f6;font-size:1.2rem;"></i>
+                        Quản lý hợp đồng mua bán
+                    </h2>
+                    <div class="update-time">Danh sách toàn bộ hợp đồng mua bán trong hệ thống</div>
+                </div>
+                <div class="page-header-actions">
+                    <a th:href="@{/admin/sale-contract/add}" class="btn-add">
+                        <i class="bi bi-plus-circle"></i>
+                        Thêm hợp đồng
+                    </a>
+                </div>
+            </div>
+
+            <!-- ── Filter Card ─────────────────────────────────────────────── -->
+            <div class="d-card">
+                <form th:action="@{/admin/sale-contract/search}" method="get" id="filterForm">
+                    <div class="d-card-body">
+                        <div class="filter-header">
+                            <div class="filter-title">
+                                <i class="bi bi-funnel"></i>
+                                Bộ lọc tìm kiếm
+                            </div>
+                            <button type="button" class="btn-toggle-filter collapsed" onclick="toggleFilter()">
+                                <i class="bi bi-chevron-up" id="toggleIcon"></i>
+                            </button>
+                        </div>
+
+                        <div class="filter-body collapsed" id="filterBody">
+                            <!-- Thông tin cơ bản -->
+                            <div class="filter-section-title">
+                                <i class="bi bi-info-circle"></i> Thông tin cơ bản
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Khách hàng</label>
+                                    <select class="form-control" name="customerId" id="customerId">
+                                        <option value="">-- Chọn khách hàng --</option>
+                                        <option th:each="c : ${customers}" th:value="${c.value}" th:text="${c.key}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Bất động sản</label>
+                                    <select class="form-control" name="buildingId" id="buildingId">
+                                        <option value="">-- Chọn bất động sản --</option>
+                                        <option th:each="b : ${buildings}" th:value="${b.value}" th:text="${b.key}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Nhân viên quản lý</label>
+                                    <select class="form-control" name="staffId" id="staffId">
+                                        <option value="">-- Chọn nhân viên --</option>
+                                        <option th:each="s : ${staffs}" th:value="${s.id}" th:text="${s.fullName}">
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Giá bán, ngày ký và trạng thái -->
+                            <div class="filter-section-title">
+                                <i class="bi bi-cash-stack"></i> Giá bán, ngày ký và trạng thái
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Giá bán (VNĐ)</label>
+                                    <div class="range-inputs">
+                                        <input type="number" class="form-control" name="salePriceFrom"
+                                            id="salePriceFrom" placeholder="Từ" min="0">
+                                        <span class="range-separator">—</span>
+                                        <input type="number" class="form-control" name="salePriceTo" id="salePriceTo"
+                                            placeholder="Đến" min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Ngày ký</label>
+                                    <div class="range-inputs">
+                                        <input type="date" class="form-control" name="createdDateFrom"
+                                            id="createdDateFrom">
+                                        <span class="range-separator">—</span>
+                                        <input type="date" class="form-control" name="createdDateTo" id="createdDateTo">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Trạng thái bàn giao</label>
+                                    <select class="form-control" name="status" id="status">
+                                        <option value="">-- Tất cả --</option>
+                                        <option value="0">Chưa bàn giao</option>
+                                        <option value="1">Đã bàn giao</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="filter-actions">
+                                <button type="reset" class="btn-filter btn-reset">
+                                    <i class="bi bi-arrow-clockwise"></i> Đặt lại
+                                </button>
+                                <button type="submit" class="btn-filter btn-search">
+                                    <i class="bi bi-search"></i> Tìm kiếm
+                                </button>
+                            </div>
+                        </div><!-- /filter-body -->
+                    </div>
+                </form>
+            </div>
+
+            <!-- ── Table Card ──────────────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="table-header-row">
+                    <div class="thr-title">
+                        <i class="bi bi-table"></i>
+                        Danh sách hợp đồng mua bán
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="dash-table">
+                        <colgroup>
+                            <col style="width: 100px"> <!-- Mã HĐ -->
+                            <col style="width: 200px"> <!-- Bất động sản -->
+                            <col style="width: 190px"> <!-- Khách hàng -->
+                            <col style="width: 170px"> <!-- Nhân viên -->
+                            <col style="width: 150px"> <!-- Giá bán -->
+                            <col style="width: 110px"> <!-- Ngày ký -->
+                            <col style="width: 130px"> <!-- Trạng thái -->
+                            <col> <!-- Hành động -->
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Mã HĐ</th>
+                                <th>Bất động sản</th>
+                                <th>Khách hàng</th>
+                                <th>Nhân viên</th>
+                                <th>Giá bán</th>
+                                <th>Ngày ký</th>
+                                <th>Trạng thái</th>
+                                <th style="text-align:center;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="saleContractTableBody">
+                            <!-- Ajax render -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="pagination"></div>
+            </div>
+
+        </div><!-- /detail-body -->
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        function toggleFilter() {
+            const filterBody = document.getElementById('filterBody');
+            const toggleBtn = document.querySelector('.btn-toggle-filter');
+            filterBody.classList.toggle('collapsed');
+            toggleBtn.classList.toggle('collapsed');
+        }
+    </script>
+
+    <script>
+        let currentPage = 1;
+        const pageSize = 5;
+
+        function formatDate(dateString) {
+            if (!dateString) return '—';
+            const d = new Date(dateString);
+            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        }
+
+        function formatPrice(price) {
+            if (price == null) return '—';
+            return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' đ';
+        }
+
+        function loadSaleContracts(page, event) {
+            if (event) event.preventDefault();
+
+            $.ajax({
+                url: "/admin/sale-contract/list/page",
+                type: "GET",
+                data: { page: page, size: pageSize },
+                success: function (data) {
+                    currentPage = page;
+                    const tbody = $("#saleContractTableBody");
+                    tbody.empty();
+
+                    if (data.content.length === 0) {
+                        tbody.append(`
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>Không có dữ liệu hợp đồng mua bán</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                        $("#pagination").empty();
+                        return;
+                    }
+
+                    $.each(data.content, function (i, c) {
+                        const statusBadge = c.transferDate
+                            ? `<span class="status-badge status-done"><i class="bi bi-check-circle-fill"></i> Đã bàn giao</span>`
+                            : `<span class="status-badge status-pending"><i class="bi bi-clock"></i> Chưa bàn giao</span>`;
+                        tbody.append(`
+                        <tr>
+                            <td><span class="contract-id">HĐMB-${c.id}</span></td>
+                            <td><span class="building-name">${c.building || '—'}</span></td>
+                            <td><span class="customer-name">${c.customer || '—'}</span></td>
+                            <td><span class="staff-name">${c.staff || '—'}</span></td>
+                            <td><span class="price-badge">${formatPrice(c.salePrice)}</span></td>
+                            <td>
+                                <div class="date-info">
+                                    <div><i class="bi bi-calendar-event"></i>${formatDate(c.createdDate)}</div>
+                                </div>
+                            </td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="/admin/sale-contract/${c.id}" class="btn-action btn-view" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="/admin/sale-contract/edit/${c.id}" class="btn-action btn-edit" title="Chỉnh sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="#" title="Xóa" class="btn-action btn-delete" data-id="${c.id}">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                    });
+
+                    renderPagination(data.totalPages, page);
+                },
+                error: function () {
+                    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Không tải được dữ liệu!' });
+                }
+            });
+        }
+
+        function renderPagination(totalPages, current) {
+            const pagination = $("#pagination");
+            pagination.empty();
+            if (totalPages <= 1) return;
+
+            let html = `<nav class="pagination-wrapper"><ul class="pagination justify-content-center">`;
+
+            html += `<li class="page-item ${current === 1 ? 'disabled' : ''}">
+                    <a href="#" class="page-link" onclick="loadSaleContracts(1,event)">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                 </li>`;
+
+            html += `<li class="page-item ${current === 1 ? 'disabled' : ''}">
+                    <a href="#" class="page-link" onclick="loadSaleContracts(${current - 1},event)">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                 </li>`;
+
+            const blockSize = 5;
+            const blockStart = Math.floor((current - 1) / blockSize) * blockSize + 1;
+            const blockEnd = Math.min(blockStart + blockSize - 1, totalPages);
+
+            for (let i = blockStart; i <= blockEnd; i++) {
+                html += `<li class="page-item ${i === current ? 'active' : ''}">
+                        <a href="#" class="page-link" onclick="loadSaleContracts(${i},event)">${i}</a>
+                     </li>`;
+            }
+
+            html += `<li class="page-item ${current === totalPages ? 'disabled' : ''}">
+                    <a href="#" class="page-link" onclick="loadSaleContracts(${current + 1},event)">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                 </li>`;
+
+            html += `<li class="page-item ${current === totalPages ? 'disabled' : ''}">
+                    <a href="#" class="page-link" onclick="loadSaleContracts(${totalPages},event)">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                 </li>`;
+
+            html += `</ul></nav>`;
+            pagination.html(html);
+        }
+
+        $(document).ready(function () {
+            loadSaleContracts(1);
+        });
+
+        $(document).on("click", ".btn-delete", function (e) {
+            e.preventDefault();
+            const id = $(this).data("id");
+
+            Swal.fire({
+                title: 'Xác nhận xóa',
+                text: "Bạn có chắc muốn xóa hợp đồng mua bán này?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/admin/sale-contract/delete/" + id,
+                        type: "DELETE",
+                        success: function () {
+                            Swal.fire({
+                                icon: 'success', title: 'Thành công',
+                                text: 'Xóa hợp đồng mua bán thành công!',
+                                timer: 1500, showConfirmButton: false
+                            }).then(() => loadSaleContracts(currentPage));
+                        },
+                        error: function (xhr) {
+                            const err = xhr.responseJSON;
+                            Swal.fire({
+                                icon: 'error', title: 'Lỗi',
+                                text: err?.message || 'Xóa thất bại!'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Thêm bất động sản</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css" rel="stylesheet" />
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6f9;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: 220px;
+            padding: 2rem 2.5rem;
+            margin-top: 72px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-header h2 i {
+            color: #3b82f6;
+            font-size: 1.2rem;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 1rem;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .btn-back:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #111827;
+        }
+
+        /* ── Cards ── */
+        .form-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .form-card-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .form-card-header h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .form-card-body {
+            padding: 1.5rem;
+        }
+
+        .section-lbl {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 0.75rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .section-lbl i {
+            color: #3b82f6;
+            font-size: 0.75rem;
+        }
+
+        /* ── Form controls ── */
+        .form-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.3rem;
+        }
+
+        .required {
+            color: #ef4444;
+            margin-left: 2px;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.875rem;
+            height: 36px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            color: #111827;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: #9ca3af;
+        }
+
+        textarea.form-control {
+            height: auto;
+        }
+
+
+        /* ── Type selector ── */
+        .type-selector {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .type-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.5rem 0.75rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f9fafb;
+            color: #6b7280;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .type-btn:hover {
+            border-color: #3b82f6;
+            color: #1d4ed8;
+            background: #eff6ff;
+        }
+
+        .type-btn[data-val="OFFICE"].selected {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .type-btn[data-val="SHOPHOUSE"].selected {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #d97706;
+        }
+
+        .type-btn[data-val="APARTMENT"].selected {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #059669;
+        }
+
+        .type-btn[data-val="WAREHOUSE"].selected {
+            background: #fdf4ff;
+            color: #7e22ce;
+            border-color: #9333ea;
+        }
+
+        .type-btn[data-val="FOR_RENT"].selected {
+            background: #f0f9ff;
+            color: #0369a1;
+            border-color: #0891b2;
+        }
+
+        .type-btn[data-val="FOR_SALE"].selected {
+            background: #fff7ed;
+            color: #c2410c;
+            border-color: #ea580c;
+        }
+
+        /* ── Tag input ── */
+        .tag-input-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            align-items: center;
+            min-height: 36px;
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 0.3rem 0.5rem;
+            background: #fff;
+            cursor: text;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .tag-input-wrapper:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .area-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 5px;
+            padding: 0.15rem 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .area-tag button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: #93c5fd;
+            font-size: 0.7rem;
+            line-height: 1;
+        }
+
+        .area-tag button:hover {
+            color: #1d4ed8;
+        }
+
+        .tag-real-input {
+            border: none;
+            outline: none;
+            font-size: 0.875rem;
+            min-width: 60px;
+            flex: 1;
+            padding: 0.1rem 0.25rem;
+            background: transparent;
+        }
+
+        /* ── Staff list ── */
+        .staff-list {
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            background: #fafbfc;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .staff-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .staff-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 2px;
+        }
+
+        .staff-list-header {
+            padding: 0.5rem 0.875rem;
+            background: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .staff-count {
+            color: #3b82f6;
+        }
+
+        .staff-item {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.5rem 0.875rem;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+
+        .staff-item:last-child {
+            border-bottom: none;
+        }
+
+        .staff-item:hover {
+            background: #f0f9ff;
+        }
+
+        .staff-item.selected {
+            background: #eff6ff;
+        }
+
+        .staff-item input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+            accent-color: #3b82f6;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .staff-item label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            cursor: pointer;
+            margin: 0;
+            flex: 1;
+            user-select: none;
+        }
+
+        .staff-item.selected label {
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        /* ── Buttons ── */
+        .btn-geocode {
+            height: 36px;
+            padding: 0 0.875rem;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .btn-geocode:hover {
+            background: #2563eb;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.625rem;
+            justify-content: flex-end;
+            padding-top: 1.25rem;
+            border-top: 1px solid #f3f4f6;
+            margin-top: 0.5rem;
+        }
+
+        .btn-form {
+            padding: 0.5rem 1.25rem;
+            border-radius: 7px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: filter 0.15s;
+        }
+
+        .btn-form:hover {
+            filter: brightness(0.93);
+        }
+
+        .btn-reset-form {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-submit {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .btn-submit:hover {
+            background: #2563eb;
+            filter: none;
+        }
+
+        /* ── Sections show/hide ── */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ── Hint ── */
+        .form-hint {
+            font-size: 0.775rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        /* ── Upload ── */
+        .upload-zone {
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem 1.5rem 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            background: #fafbfc;
+            position: relative;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-zone-icon {
+            font-size: 2rem;
+            color: #d1d5db;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-zone-text {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+
+        .upload-zone-hint {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        .upload-preview {
+            display: none;
+            position: relative;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .upload-preview img {
+            height: 100px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            object-fit: cover;
+        }
+
+        .upload-preview-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-status {
+            font-size: 0.78rem;
+            margin-top: 0.4rem;
+        }
+
+        .upload-status.success {
+            color: #059669;
+        }
+
+        .upload-status.error {
+            color: #dc2626;
+        }
+
+        .upload-status.loading {
+            color: #6b7280;
+        }
+
+        /* ── Map modal autocomplete ── */
+        .ac-item {
+            padding: 0.5rem 0.875rem;
+            font-size: 0.875rem;
+            color: #374151;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .ac-item:last-child {
+            border-bottom: none;
+        }
+
+        .ac-item:hover {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        /* ══ INFO BOX ═══════════════════════════════════════════════════════ */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+
+        .info-box i {
+            color: #3b82f6;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .info-box-content {
+            font-size: 0.8125rem;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+        <div class="page-header">
+            <h2><i class="bi bi-plus-circle-fill"></i> Thêm bất động sản mới</h2>
+            <a th:href="@{/admin/building/list}" class="btn-back"><i class="bi bi-arrow-left"></i> Danh sách</a>
+        </div>
+
+        <!-- ── Info Box ────────────────────────────────────────────────── -->
+        <div class="info-box">
+            <i class="bi bi-info-circle"></i>
+            <div class="info-box-content">
+                Vui lòng điền đầy đủ thông tin bắt buộc (<span style="color:#ef4444;font-weight:700;">*</span>) để
+                thêm bất động sản mới vào hệ thống.
+            </div>
+        </div>
+
+        <form id="buildingForm">
+            <!-- Card 1: Thông tin cơ bản -->
+            <div class="form-card">
+                <div class="form-card-header"><i class="bi bi-info-circle-fill"></i>
+                    <h3>Thông tin cơ bản</h3>
+                </div>
+                <div class="form-card-body">
+
+                    <div class="section-lbl"><i class="bi bi-tag-fill"></i> Phân loại</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Loại hình BĐS <span class="required">*</span></label>
+                            <div class="type-selector" id="propertyTypeSelector">
+                                <div class="type-btn selected" data-val="OFFICE"><i class="bi bi-building"></i> Văn
+                                    phòng</div>
+                                <div class="type-btn" data-val="SHOPHOUSE"><i class="bi bi-shop"></i> Nhà phố TM</div>
+                                <div class="type-btn" data-val="APARTMENT"><i class="bi bi-houses"></i> Căn hộ</div>
+                                <div class="type-btn" data-val="WAREHOUSE"><i class="bi bi-box-seam"></i> Kho xưởng
+                                </div>
+                            </div>
+                            <input type="hidden" name="propertyType" id="propertyTypeVal" value="OFFICE">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Loại giao dịch <span class="required">*</span></label>
+                            <div class="type-selector" id="transactionTypeSelector">
+                                <div class="type-btn selected" data-val="FOR_RENT"><i class="bi bi-key"></i> Cho thuê
+                                </div>
+                                <div class="type-btn" data-val="FOR_SALE"><i class="bi bi-bag-check"></i> Mua bán</div>
+                            </div>
+                            <input type="hidden" name="transactionType" id="transactionTypeVal" value="FOR_RENT">
+                        </div>
+                    </div>
+
+                    <div class="section-lbl"><i class="bi bi-geo-alt-fill"></i> Địa chỉ</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Tên bất động sản <span class="required">*</span></label>
+                            <input type="text" class="form-control" name="name" placeholder="VD: Lotte Center Hà Nội"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quận / Huyện <span class="required">*</span></label>
+                            <select class="form-select" name="district" required>
+                                <option value="">-- Chọn khu vực --</option>
+                                <option th:each="d : ${districts}" th:value="${d.value}" th:text="${d.key}"></option>
+                            </select>
+                            <input type="hidden" name="districtId" id="districtIdHidden">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phường / Xã <span class="required">*</span></label>
+                            <input type="text" class="form-control" name="ward" placeholder="VD: P. Liễu Giai" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Đường / Phố <span class="required">*</span></label>
+                            <input type="text" class="form-control" name="street" placeholder="VD: Liễu Giai" required>
+                        </div>
+                    </div>
+
+                    <div class="section-lbl"><i class="bi bi-building-fill"></i> Đặc điểm</div>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Số tầng <span class="required">*</span></label>
+                            <input type="number" class="form-control" name="numberOfFloor" placeholder="VD: 30" min="1"
+                                required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Số tầng hầm <span class="required">*</span></label>
+                            <input type="number" class="form-control" name="numberOfBasement" placeholder="VD: 2"
+                                min="0" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Diện tích sàn (m²) <span class="required">*</span></label>
+                            <input type="number" class="form-control" name="floorArea" placeholder="VD: 5000" min="1"
+                                required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Hạng</label>
+                            <select class="form-select" name="level">
+                                <option value="">-- Chọn hạng --</option>
+                                <option th:each="l : ${levels}" th:value="${l.name()}" th:text="${l.label}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Hướng</label>
+                            <select class="form-select" name="direction">
+                                <option value="">-- Chọn hướng --</option>
+                                <option th:each="d : ${directions}" th:value="${d.name()}" th:text="${d.label}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Mã số thuế <span class="required">*</span></label>
+                            <input type="text" class="form-control" name="taxCode" placeholder="VD: 0123456789"
+                                maxlength="20" required>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Card 2: Giá và phí -->
+            <div class="form-card">
+                <div class="form-card-header"><i class="bi bi-cash-stack"></i>
+                    <h3>Giá và phí (VNĐ)</h3>
+                </div>
+                <div class="form-card-body">
+                    <div id="rentSection">
+                        <div class="section-lbl"><i class="bi bi-key-fill"></i> Giá cho thuê</div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3"><label class="form-label">Giá thuê / m² <span
+                                        class="required">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="rentPrice"
+                                    placeholder="VD: 1200000" required>
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Đặt cọc <span
+                                        class="required">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="deposit"
+                                    placeholder="VD: 200000000" required>
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Phí dịch vụ <span
+                                        class="required">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="serviceFee"
+                                    placeholder="VD: 2500000" required>
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Phí xe ô tô <span
+                                        class="required">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="carFee"
+                                    placeholder="VD: 2000000" required>
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Phí xe máy <span
+                                        class="required">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="motorbikeFee"
+                                    placeholder="VD: 120000" required>
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Phí nước (VNĐ/m³) <span
+                                        class="required">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="waterFee"
+                                    placeholder="VD: 180000" required>
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Phí điện (VNĐ/kWh) <span
+                                        class="required">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="electricityFee"
+                                    placeholder="VD: 55000" required>
+                            </div>
+                        </div>
+                        <div class="section-lbl"><i class="bi bi-rulers"></i> Diện tích cho thuê</div>
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Các diện tích (m²) <span class="required">*</span></label>
+                                <div class="tag-input-wrapper" id="tagWrapper">
+                                    <input type="text" class="tag-real-input" id="tagRealInput"
+                                        placeholder="Gõ số rồi Enter hoặc dấu phẩy...">
+                                </div>
+                                <input type="hidden" name="rentAreaValues" id="rentAreaValuesInput" required>
+                                <div class="form-hint">VD: 100, 200, 350 — mỗi diện tích là 1 tag</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="saleSection" class="hidden">
+                        <div class="section-lbl"><i class="bi bi-bag-check-fill"></i> Giá bán</div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Giá bán <span class="required">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="salePrice"
+                                    placeholder="VD: 50000000000" required>
+                                <div class="form-hint">Đơn vị: VNĐ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Vị trí bản đồ -->
+            <div class="form-card">
+                <div class="form-card-header"><i class="bi bi-geo-alt-fill"></i>
+                    <h3>Vị trí bản đồ <span class="required">*</span></h3>
+                </div>
+                <div class="form-card-body">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div
+                            style="display:flex;align-items:center;gap:0.5rem;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:0.5rem 1rem;flex:1;min-width:260px;">
+                            <i class="bi bi-geo-alt-fill" style="color:#3b82f6;font-size:1rem;flex-shrink:0;"></i>
+                            <div id="coordDisplay" style="font-size:0.875rem;color:#6b7280;font-family:monospace;">Chưa
+                                chọn tọa độ</div>
+                        </div>
+                        <button type="button" class="btn-geocode" onclick="openMapModal()">
+                            <i class="bi bi-map-fill"></i> Chọn trên bản đồ
+                        </button>
+                        <button type="button" id="btnClearCoord" onclick="clearMapPin()"
+                            style="display:none;padding:0.45rem 0.875rem;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-size:0.8125rem;font-weight:600;cursor:pointer;">
+                            <i class="bi bi-x-circle"></i> Xóa
+                        </button>
+                    </div>
+                    <input type="hidden" name="latitude" id="latInput" required>
+                    <input type="hidden" name="longitude" id="lngInput" required>
+                </div>
+            </div>
+
+            <!-- Card 4: Nhân viên & Link -->
+            <div class="form-card">
+                <div class="form-card-header"><i class="bi bi-people-fill"></i>
+                    <h3>Nhân viên &amp; Thông tin khác</h3>
+                </div>
+                <div class="form-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nhân viên quản lý</label>
+                            <div class="staff-list">
+                                <div class="staff-list-header">
+                                    <span>Chọn nhân viên</span>
+                                    <span class="staff-count"><span id="selectedCount">0</span> đã chọn</span>
+                                </div>
+                                <div th:if="${staffs != null and !staffs.isEmpty()}">
+                                    <div class="staff-item" th:each="s : ${staffs}">
+                                        <input type="checkbox" name="staffIds" th:value="${s.id}"
+                                            th:id="'staff_'+${s.id}" onchange="updateStaffCount()">
+                                        <label th:for="'staff_'+${s.id}" th:text="${s.fullName}"></label>
+                                    </div>
+                                </div>
+                                <div th:unless="${staffs != null and !staffs.isEmpty()}"
+                                    style="padding:1.5rem;text-align:center;color:#9ca3af;font-size:0.8125rem;">
+                                    <i class="bi bi-inbox"
+                                        style="font-size:1.5rem;display:block;margin-bottom:0.25rem;"></i>
+                                    Chưa có nhân viên
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Link bất động sản</label>
+                                    <input type="url" class="form-control" name="linkOfBuilding"
+                                        placeholder="https://example.com/building">
+                                    <div class="form-hint">Trang giới thiệu hoặc website chính thức</div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Hình ảnh bất động sản</label>
+                                    <div class="upload-zone" id="uploadZone">
+                                        <input type="file" id="imageFileInput" accept=".jpg,.jpeg,.png,.webp"
+                                            onchange="handleImageSelect(this)">
+                                        <div id="uploadPlaceholder">
+                                            <div class="upload-zone-icon"><i class="bi bi-cloud-upload"></i></div>
+                                            <div class="upload-zone-text">Kéo thả hoặc click để chọn ảnh</div>
+                                            <div class="upload-zone-hint">JPG, PNG, WEBP — tối đa 5 MB</div>
+                                        </div>
+                                        <div class="upload-preview" id="uploadPreview">
+                                            <img id="previewImg" src="" alt="preview">
+                                            <button type="button" class="upload-preview-remove"
+                                                onclick="removeImage(event)"><i class="bi bi-x"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="upload-status" id="uploadStatus"></div>
+                                    <input type="hidden" name="image" id="imageFilename">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-form btn-reset-form" onclick="resetForm()"><i
+                                class="bi bi-arrow-clockwise"></i> Đặt lại</button>
+                        <button type="submit" class="btn-form btn-submit"><i class="bi bi-check-circle-fill"></i> Lưu
+                            bất động sản</button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </main>
+
+    <!-- CDN — thứ tự: Bootstrap → SweetAlert2 → jQuery → Goong JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js"></script>
+
+    <script th:inline="javascript">
+        // ═══════════════════════════════════════════════════════════════════════════
+        // KEYS
+        // ═══════════════════════════════════════════════════════════════════════════
+        var MAPTILES_KEY = 'd2vMzWHY7kcxkY1yITDytGLWaIPf9knt8mLMXmkx';
+        var GOONG_API_KEY = /*[[${goongApiKey}]]*/ '';
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TYPE SELECTOR
+        // ═══════════════════════════════════════════════════════════════════════════
+        document.querySelectorAll('#propertyTypeSelector .type-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('#propertyTypeSelector .type-btn').forEach(function (b) { b.classList.remove('selected'); });
+                this.classList.add('selected');
+                document.getElementById('propertyTypeVal').value = this.dataset.val;
+            });
+        });
+
+        document.querySelectorAll('#transactionTypeSelector .type-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('#transactionTypeSelector .type-btn').forEach(function (b) { b.classList.remove('selected'); });
+                this.classList.add('selected');
+                var val = this.dataset.val;
+                document.getElementById('transactionTypeVal').value = val;
+                toggleTransactionSections(val);
+            });
+        });
+
+        function toggleTransactionSections(txType) {
+            var isRent = txType === 'FOR_RENT';
+            document.getElementById('rentSection').classList.toggle('hidden', !isRent);
+            document.getElementById('saleSection').classList.toggle('hidden', isRent);
+
+            // Toggle required theo loại giao dịch để native validation hoạt động đúng
+            var rentFields = document.querySelectorAll('#rentSection input[required], #rentSection input.was-required');
+            var saleFields = document.querySelectorAll('#saleSection input[required], #saleSection input.was-required');
+
+            document.querySelectorAll('#rentSection input[type="number"], #rentSection input[type="hidden"]').forEach(function (el) {
+                if (isRent) { el.setAttribute('required', ''); el.classList.remove('was-required'); }
+                else { el.removeAttribute('required'); el.classList.add('was-required'); }
+            });
+            document.querySelectorAll('#saleSection input[type="number"]').forEach(function (el) {
+                if (!isRent) { el.setAttribute('required', ''); el.classList.remove('was-required'); }
+                else { el.removeAttribute('required'); el.classList.add('was-required'); }
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TAG INPUT
+        // ═══════════════════════════════════════════════════════════════════════════
+        var tagWrapper = document.getElementById('tagWrapper');
+        var tagRealInput = document.getElementById('tagRealInput');
+        var rentAreaHidden = document.getElementById('rentAreaValuesInput');
+        var areaTags = [];
+
+        function renderTags() {
+            tagWrapper.querySelectorAll('.area-tag').forEach(function (t) { t.remove(); });
+            areaTags.forEach(function (val, idx) {
+                var tag = document.createElement('div');
+                tag.className = 'area-tag';
+                tag.innerHTML = val + ' m² <button type="button" onclick="removeTag(' + idx + ')"><i class="bi bi-x"></i></button>';
+                tagWrapper.insertBefore(tag, tagRealInput);
+            });
+            rentAreaHidden.value = areaTags.join(',');
+        }
+
+        function addTag(raw) {
+            raw.split(',').map(function (s) { return s.trim(); }).forEach(function (s) {
+                if (s !== '' && !isNaN(s) && Number(s) > 0 && !areaTags.includes(s)) {
+                    areaTags.push(s);
+                }
+            });
+            renderTags();
+        }
+
+        function removeTag(idx) {
+            areaTags.splice(idx, 1);
+            renderTags();
+        }
+
+        tagWrapper.addEventListener('click', function () { tagRealInput.focus(); });
+
+        tagRealInput.addEventListener('keydown', function (e) {
+            // Xóa highlight lỗi khi user bắt đầu nhập
+            document.getElementById('tagWrapper').style.borderColor = '';
+            document.getElementById('tagWrapper').style.boxShadow = '';
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                if (this.value.trim()) { addTag(this.value.trim()); this.value = ''; }
+            } else if (e.key === 'Backspace' && this.value === '' && areaTags.length > 0) {
+                areaTags.pop(); renderTags();
+            }
+        });
+
+        tagRealInput.addEventListener('blur', function () {
+            if (this.value.trim()) { addTag(this.value.trim()); this.value = ''; }
+        });
+
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // STAFF
+        // ═══════════════════════════════════════════════════════════════════════════
+        function updateStaffCount() {
+            var count = document.querySelectorAll('input[name="staffIds"]:checked').length;
+            document.getElementById('selectedCount').textContent = count;
+            document.querySelectorAll('.staff-item').forEach(function (item) {
+                item.classList.toggle('selected', item.querySelector('input[type="checkbox"]').checked);
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // UPLOAD
+        // ═══════════════════════════════════════════════════════════════════════════
+        function handleImageSelect(input) {
+            var file = input.files[0];
+            if (!file) return;
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                setUploadStatus('Định dạng không hợp lệ. Chỉ chấp nhận JPG, PNG, WEBP.', 'error');
+                input.value = ''; return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                setUploadStatus('File quá lớn. Tối đa 5 MB.', 'error');
+                input.value = ''; return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('uploadPlaceholder').style.display = 'none';
+                document.getElementById('uploadPreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            setUploadStatus('<i class="bi bi-arrow-repeat"></i> Đang upload...', 'loading');
+            var formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/admin/building/upload-image', {
+                method: 'POST',
+                body: formData
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.filename) {
+                        document.getElementById('imageFilename').value = data.filename;
+                        setUploadStatus('✓ ' + data.filename, 'success');
+                    } else {
+                        setUploadStatus(data.message || 'Upload thất bại.', 'error');
+                        removeImage();
+                    }
+                })
+                .catch(function () {
+                    setUploadStatus('Lỗi kết nối.', 'error');
+                    removeImage();
+                });
+        }
+
+        function removeImage(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('imageFileInput').value = '';
+            document.getElementById('imageFilename').value = '';
+            document.getElementById('previewImg').src = '';
+            document.getElementById('uploadPlaceholder').style.display = '';
+            document.getElementById('uploadPreview').style.display = 'none';
+            setUploadStatus('', '');
+        }
+
+        function setUploadStatus(msg, type) {
+            var el = document.getElementById('uploadStatus');
+            el.innerHTML = msg;
+            el.className = 'upload-status ' + type;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // RESET
+        // ═══════════════════════════════════════════════════════════════════════════
+        function resetForm() {
+            document.getElementById('buildingForm').reset();
+            // Type selectors
+            document.querySelectorAll('#propertyTypeSelector .type-btn').forEach(function (b, i) { b.classList.toggle('selected', i === 0); });
+            document.querySelectorAll('#transactionTypeSelector .type-btn').forEach(function (b, i) { b.classList.toggle('selected', i === 0); });
+            document.getElementById('propertyTypeVal').value = 'OFFICE';
+            document.getElementById('transactionTypeVal').value = 'FOR_RENT';
+            toggleTransactionSections('FOR_RENT');
+            // Tags
+            areaTags = []; renderTags();
+            // Map
+            clearMapPin();
+            // Staff
+            document.querySelectorAll('.staff-item').forEach(function (i) { i.classList.remove('selected'); });
+            document.getElementById('selectedCount').textContent = '0';
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // SUBMIT
+        // ═══════════════════════════════════════════════════════════════════════════
+        document.getElementById('buildingForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            var txType = document.getElementById('transactionTypeVal').value;
+
+            // ── Validate custom fields không dùng native required ──
+
+            // 1. Tag diện tích cho thuê
+            if (txType === 'FOR_RENT' && areaTags.length === 0) {
+                Swal.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng nhập ít nhất một diện tích cho thuê.' });
+                document.getElementById('tagWrapper').style.borderColor = '#ef4444';
+                document.getElementById('tagWrapper').style.boxShadow = '0 0 0 2px rgba(239,68,68,0.15)';
+                document.getElementById('tagRealInput').focus();
+                return;
+            }
+
+            // 2. Tọa độ bản đồ
+            if (!document.getElementById('latInput').value || !document.getElementById('lngInput').value) {
+                Swal.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng chọn vị trí trên bản đồ.' });
+                return;
+            }
+
+            var g = function (sel) { return document.querySelector('[name="' + sel + '"]'); };
+            var staffIds = Array.from(document.querySelectorAll('input[name="staffIds"]:checked')).map(function (cb) { return Number(cb.value); });
+
+            var data = {
+                name: g('name').value,
+                districtId: g('district').value ? Number(g('district').value) : null,
+                ward: g('ward').value,
+                street: g('street').value,
+                numberOfFloor: g('numberOfFloor').value ? Number(g('numberOfFloor').value) : null,
+                numberOfBasement: g('numberOfBasement').value ? Number(g('numberOfBasement').value) : null,
+                floorArea: g('floorArea').value ? Number(g('floorArea').value) : null,
+                direction: g('direction').value || null,
+                level: g('level').value || null,
+                propertyType: document.getElementById('propertyTypeVal').value,
+                transactionType: txType,
+                rentPrice: txType === 'FOR_RENT' ? (g('rentPrice').value || null) : null,
+                deposit: txType === 'FOR_RENT' ? (g('deposit').value || null) : null,
+                serviceFee: txType === 'FOR_RENT' ? (g('serviceFee').value || null) : null,
+                carFee: txType === 'FOR_RENT' ? (g('carFee').value || null) : null,
+                motorbikeFee: txType === 'FOR_RENT' ? (g('motorbikeFee').value || null) : null,
+                waterFee: txType === 'FOR_RENT' ? (g('waterFee').value || null) : null,
+                electricityFee: txType === 'FOR_RENT' ? (g('electricityFee').value || null) : null,
+                salePrice: txType === 'FOR_SALE' ? (g('salePrice').value || null) : null,
+                latitude: document.getElementById('latInput').value ? Number(document.getElementById('latInput').value) : null,
+                longitude: document.getElementById('lngInput').value ? Number(document.getElementById('lngInput').value) : null,
+                linkOfBuilding: g('linkOfBuilding').value || null,
+                taxCode: g('taxCode').value || null,
+                image: document.getElementById('imageFilename').value || null,
+                rentAreaValues: txType === 'FOR_RENT' ? (document.getElementById('rentAreaValuesInput').value || null) : null,
+                staffIds: staffIds
+            };
+
+            try {
+                const res = await fetch('/admin/building/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: 'Thêm bất động sản thành công!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    window.location.href = '/admin/building/list';
+                } else {
+                    const dataRes = await res.json();
+                    Swal.fire({ icon: 'error', title: 'Lỗi', text: dataRes.message || 'Thêm thất bại!' });
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi kết nối máy chủ.' });
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // DOM READY
+        // ═══════════════════════════════════════════════════════════════════════════
+        document.addEventListener('DOMContentLoaded', function () {
+            // Init required state theo loại giao dịch mặc định
+            toggleTransactionSections(document.getElementById('transactionTypeVal').value);
+
+            // Staff click
+            document.querySelectorAll('.staff-item').forEach(function (item) {
+                item.addEventListener('click', function (e) {
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                        var cb = this.querySelector('input[type="checkbox"]');
+                        cb.checked = !cb.checked;
+                        updateStaffCount();
+                    }
+                });
+            });
+            // Upload drag drop
+            var zone = document.getElementById('uploadZone');
+            if (zone) {
+                zone.addEventListener('dragover', function (e) { e.preventDefault(); zone.classList.add('dragover'); });
+                zone.addEventListener('dragleave', function () { zone.classList.remove('dragover'); });
+                zone.addEventListener('drop', function (e) {
+                    e.preventDefault(); zone.classList.remove('dragover');
+                    var file = e.dataTransfer.files[0];
+                    if (file) {
+                        var input = document.getElementById('imageFileInput');
+                        var dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+                        handleImageSelect(input);
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- MAP MODAL JS -->
+    <script>
+        var _mapInstance = null, _pinMarker = null, _pendingLat = null, _pendingLng = null, _acTimer = null;
+
+        function openMapModal() {
+            document.getElementById('mapModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            var lat = parseFloat(document.getElementById('latInput').value);
+            var lng = parseFloat(document.getElementById('lngInput').value);
+            if (!isNaN(lat) && !isNaN(lng)) { _pendingLat = lat; _pendingLng = lng; }
+            if (!_mapInstance) { initPickerMap(); }
+            else { setTimeout(function () { _mapInstance.resize(); }, 50); if (_pendingLat && !_pinMarker) placePinOnMap(_pendingLat, _pendingLng); }
+        }
+
+        function closeMapModal() {
+            document.getElementById('mapModal').style.display = 'none';
+            document.body.style.overflow = '';
+            _pendingLat = null; _pendingLng = null;
+        }
+
+        function initPickerMap() {
+            goongjs.accessToken = MAPTILES_KEY;
+            _mapInstance = new goongjs.Map({
+                container: 'modalMap',
+                style: 'https://tiles.goong.io/assets/goong_map_web.json',
+                center: [_pendingLng || 106.6297, _pendingLat || 10.8231],
+                zoom: _pendingLat ? 15 : 5
+            });
+            _mapInstance.addControl(new goongjs.NavigationControl(), 'top-right');
+            _mapInstance.on('load', function () { if (_pendingLat) placePinOnMap(_pendingLat, _pendingLng); });
+            _mapInstance.on('click', function (e) { placePinOnMap(e.lngLat.lat, e.lngLat.lng); });
+        }
+
+        function placePinOnMap(lat, lng) {
+            if (_pinMarker) _pinMarker.remove();
+            _pinMarker = new goongjs.Marker({ color: '#ef4444', draggable: true }).setLngLat([lng, lat]).addTo(_mapInstance);
+            _pinMarker.on('dragend', function () { var ll = _pinMarker.getLngLat(); updateCoordDisplay(ll.lat, ll.lng); });
+            updateCoordDisplay(lat, lng);
+            _mapInstance.panTo([lng, lat]);
+        }
+
+        function updateCoordDisplay(lat, lng) {
+            _pendingLat = lat; _pendingLng = lng;
+            document.getElementById('modalCoordDisplay').textContent = 'Vĩ độ: ' + lat.toFixed(7) + '  |  Kinh độ: ' + lng.toFixed(7);
+            var btn = document.getElementById('btnConfirmCoord');
+            btn.disabled = false; btn.style.opacity = '1';
+        }
+
+        function confirmCoord() {
+            if (_pendingLat === null) return;
+            document.getElementById('latInput').value = _pendingLat.toFixed(7);
+            document.getElementById('lngInput').value = _pendingLng.toFixed(7);
+            document.getElementById('coordDisplay').innerHTML = '<span style="color:#111827;">' + _pendingLat.toFixed(7) + ',  ' + _pendingLng.toFixed(7) + '</span>';
+            document.getElementById('btnClearCoord').style.display = '';
+            closeMapModal();
+        }
+
+        function clearMapPin() {
+            document.getElementById('latInput').value = '';
+            document.getElementById('lngInput').value = '';
+            if (_pinMarker) { _pinMarker.remove(); _pinMarker = null; }
+            document.getElementById('coordDisplay').textContent = 'Chưa chọn tọa độ';
+            document.getElementById('btnClearCoord').style.display = 'none';
+            document.getElementById('modalCoordDisplay').textContent = 'Chưa chọn vị trí';
+            var btn = document.getElementById('btnConfirmCoord');
+            btn.disabled = true; btn.style.opacity = '0.5';
+        }
+
+        function onModalSearchInput() {
+            clearTimeout(_acTimer);
+            var q = document.getElementById('modalSearchInput').value.trim();
+            if (q.length < 2) { closeAcDropdown(); return; }
+            _acTimer = setTimeout(async function () {
+                try {
+                    const res = await fetch(
+                        `https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=${encodeURIComponent(q)}`
+                    );
+
+                    const data = await res.json();
+
+                    if (!res.ok || data.status !== 'OK') {
+                        throw new Error(data.error_message || 'API lỗi');
+                    }
+
+                    if (data.predictions?.length > 0) {
+                        renderAcDropdown(data.predictions);
+                    } else {
+                        closeAcDropdown();
+                    }
+
+                } catch (e) {
+                    closeAcDropdown();
+                    console.error(e.message);
+                }
+            }, 300);
+        }
+
+        function renderAcDropdown(predictions) {
+            var dd = document.getElementById('modalAcDropdown');
+            dd.innerHTML = '';
+            predictions.slice(0, 5).forEach(function (p) {
+                var item = document.createElement('div');
+                item.className = 'ac-item';
+                item.textContent = p.description;
+                item.onclick = async function () {
+                    document.getElementById('modalSearchInput').value = p.description;
+                    closeAcDropdown();
+                    try {
+                        const res = await fetch(
+                            'https://rsapi.goong.io/Place/Detail?api_key='
+                            + GOONG_API_KEY + '&place_id=' + p.place_id
+                        );
+
+                        const d = await res.json();
+
+                        const loc = d.result.geometry.location;
+
+                        placePinOnMap(loc.lat, loc.lng);
+                        _mapInstance.flyTo({
+                            center: [loc.lng, loc.lat],
+                            zoom: 16
+                        });
+
+                    } catch (e) {
+                        console.error('Lỗi gọi API Goong', e);
+                    }
+                };
+                dd.appendChild(item);
+            });
+            dd.style.display = 'block';
+        }
+
+        function closeAcDropdown() {
+            var dd = document.getElementById('modalAcDropdown');
+            if (dd) dd.style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('mapModal').addEventListener('click', function (e) { if (e.target === this) closeMapModal(); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMapModal(); });
+            document.addEventListener('click', function (e) { if (!e.target.closest('#modalSearchWrapper')) closeAcDropdown(); });
+        });
+    </script>
+
+    <!-- MAP MODAL HTML -->
+    <div id="mapModal"
+        style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+        <div
+            style="background:#fff;border-radius:12px;width:90vw;max-width:900px;height:680px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div
+                style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;flex-shrink:0;">
+                <div
+                    style="font-weight:700;font-size:0.9375rem;color:#111827;display:flex;align-items:center;gap:0.5rem;">
+                    <i class="bi bi-geo-alt-fill" style="color:#3b82f6;"></i> Chọn vị trí trên bản đồ
+                </div>
+                <button type="button" onclick="closeMapModal()"
+                    style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#6b7280;padding:0.25rem;"><i
+                        class="bi bi-x-lg"></i></button>
+            </div>
+            <div style="padding:0.875rem 1.5rem;border-bottom:1px solid #f3f4f6;flex-shrink:0;">
+                <div id="modalSearchWrapper" style="position:relative;">
+                    <input type="text" id="modalSearchInput" placeholder="Tìm kiếm địa điểm..." autocomplete="off"
+                        oninput="onModalSearchInput()" onkeydown="if(event.key==='Escape')closeAcDropdown();"
+                        style="width:100%;padding:0.45rem 0.75rem;border:1px solid #e5e7eb;border-radius:7px;font-size:0.875rem;outline:none;box-sizing:border-box;">
+                    <div id="modalAcDropdown"
+                        style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:7px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:10000;margin-top:2px;max-height:200px;overflow-y:auto;">
+                    </div>
+                </div>
+            </div>
+            <div
+                style="padding:0.5rem 1.5rem;background:#f0f9ff;border-bottom:1px solid #e0f2fe;font-size:0.78rem;color:#0369a1;flex-shrink:0;">
+                <i class="bi bi-hand-index-thumb me-1"></i> Click lên bản đồ để đặt pin. Kéo pin để điều chỉnh.
+            </div>
+            <div id="modalMap" style="height:450px;"></div>
+            <div
+                style="padding:0.875rem 1.5rem;border-top:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fafbfc;">
+                <div id="modalCoordDisplay" style="font-size:0.8125rem;color:#6b7280;font-family:monospace;">Chưa chọn
+                    vị trí</div>
+                <div style="display:flex;gap:0.5rem;">
+                    <button type="button" onclick="closeMapModal()"
+                        style="padding:0.45rem 1rem;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-size:0.875rem;font-weight:600;cursor:pointer;">Hủy</button>
+                    <button type="button" id="btnConfirmCoord" onclick="confirmCoord()" disabled
+                        style="padding:0.45rem 1rem;background:#3b82f6;color:#fff;border:none;border-radius:7px;font-size:0.875rem;font-weight:600;cursor:pointer;opacity:0.5;">
+                        <i class="bi bi-check-circle"></i> Xác nhận
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

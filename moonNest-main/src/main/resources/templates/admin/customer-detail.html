@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Chi tiết Khách hàng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: 220px;
+            padding: 0;
+            margin-top: 72px;
+        }
+
+        /* ══ BODY ════════════════════════════════════════════════════════════ */
+        .detail-body {
+            padding: 1.5rem;
+        }
+
+        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        .page-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .page-header-bar h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-header-bar h2 i {
+            color: #3b82f6;
+            font-size: 1.2rem;
+        }
+
+        .page-sub {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+        }
+
+        /* ══ HEADER BUTTONS ═════════════════════════════════════════════════ */
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-hd {
+            padding: 0.45rem 0.875rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: filter 0.15s ease;
+        }
+
+        .btn-hd-back {
+            background: #fff;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-hd-back:hover {
+            background: #f9fafb;
+            color: #111827;
+        }
+
+        .btn-hd-edit {
+            background: #f59e0b;
+            color: #fff;
+        }
+
+        .btn-hd-edit:hover {
+            filter: brightness(0.93);
+            color: #fff;
+        }
+
+        .btn-hd-edit:active {
+            filter: brightness(0.87);
+        }
+
+        .btn-hd-delete {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        .btn-hd-delete:hover {
+            filter: brightness(0.93);
+            color: #fff;
+        }
+
+        .btn-hd-delete:active {
+            filter: brightness(0.87);
+        }
+
+        /* ══ CUSTOMER ID STRIP ══════════════════════════════════════════════ */
+        .customer-strip {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0.875rem 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .strip-icon {
+            width: 40px;
+            height: 40px;
+            background: #eff6ff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #2563eb;
+            flex-shrink: 0;
+        }
+
+        .strip-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .strip-id {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #111827;
+            font-family: monospace;
+        }
+
+        .strip-sep {
+            width: 1px;
+            height: 30px;
+            background: #e5e7eb;
+        }
+
+        /* ══ CARD ════════════════════════════════════════════════════════════ */
+        .d-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
+        }
+
+        .d-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .d-card-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .d-card-header h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .d-card-body {
+            padding: 1.25rem 1.5rem;
+        }
+
+        /* ══ FIELD ════════════════════════════════════════════════════════════ */
+        .field-lbl {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.2rem;
+        }
+
+        .field-val {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #111827;
+        }
+
+        .field-val.empty {
+            color: #d1d5db;
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        /* ══ SECTION DIVIDER ════════════════════════════════════════════════ */
+        .section-div {
+            border: none;
+            border-top: 1px solid #f3f4f6;
+            margin: 1rem 0;
+        }
+
+        /* ══ ENTITY LIST (Staff) ════════════════════════════════════════════ */
+        .entity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.15s;
+        }
+
+        .entity-item:last-child {
+            border-bottom: none;
+        }
+
+        .entity-item:hover {
+            background: #fafbfc;
+        }
+
+        .entity-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .avatar-staff {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .entity-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .entity-type-lbl {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.15rem;
+        }
+
+        .entity-name {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .entity-view-btn {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #3b82f6;
+            text-decoration: none;
+            padding: 0.3rem 0.65rem;
+            border-radius: 6px;
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            transition: background 0.15s, border-color 0.15s;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .entity-view-btn:hover {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+
+        /* ══ TABLE ═══════════════════════════════════════════════════════════ */
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+
+        .dash-table thead th {
+            background: #f8fafc;
+            padding: 0.5rem 0.875rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1.5px solid #e9ecef;
+            white-space: nowrap;
+        }
+
+        .dash-table tbody td {
+            padding: 0.75rem 0.875rem;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+            vertical-align: middle;
+            font-size: 0.8125rem;
+        }
+
+        .dash-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dash-table tbody tr {
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .dash-table tbody tr:hover {
+            background: #f0f9ff;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-badge.active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-badge.active::before {
+            background: #16a34a;
+        }
+
+        .status-badge.expired {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.expired::before {
+            background: #dc2626;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.pending::before {
+            background: #d97706;
+        }
+
+        .price-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .contract-id {
+            font-weight: 700;
+            color: #111827;
+        }
+
+        /* ══ EMPTY STATE ══════════════════════════════════════════════════════ */
+        .empty-state {
+            padding: 2.5rem;
+            text-align: center;
+            color: #9ca3af;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            color: #d1d5db;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 0.8125rem;
+        }
+
+        /* ══ RESPONSIVE ═══════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            main.content {
+                margin-left: 0;
+                padding: 0;
+            }
+
+            .detail-body {
+                padding: 1rem;
+            }
+
+            .page-header-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                flex-wrap: wrap;
+            }
+
+            .entity-view-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER + SIDEBAR -->
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+        <div class="detail-body">
+
+            <!-- ── Page Header ─────────────────────────────────────────────────── -->
+            <div class="page-header-bar">
+                <div>
+                    <h2>
+                        <i class="bi bi-person-circle"></i>
+                        Chi tiết Khách hàng
+                    </h2>
+                    <div class="page-sub">Thông tin chi tiết và lịch sử hợp đồng của khách hàng</div>
+                </div>
+                <div class="header-actions">
+                    <a th:href="@{/admin/customer/list}" class="btn-hd btn-hd-back">
+                        <i class="bi bi-arrow-left"></i> Danh sách
+                    </a>
+                    <button class="btn-hd btn-hd-delete" th:data-id="${customer.id}">
+                        <i class="bi bi-trash"></i> Xóa
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Customer ID Strip ──────────────────────────────────────────── -->
+            <div class="customer-strip">
+                <div class="strip-icon">
+                    <i class="bi bi-person-vcard"></i>
+                </div>
+                <div>
+                    <div class="strip-label">Mã khách hàng</div>
+                    <div class="strip-id">KH-<span th:text="${customer.id}">001</span></div>
+                </div>
+                <div class="strip-sep"></div>
+                <div>
+                    <div class="strip-label">Tên đăng nhập</div>
+                    <div class="strip-id" th:text="${customer.username}">username</div>
+                </div>
+            </div>
+
+            <!-- ── Thông tin cơ bản ────────────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <h3>Thông tin cơ bản</h3>
+                </div>
+                <div class="d-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="field-lbl">Tên khách hàng</div>
+                            <div class="field-val" th:text="${customer.fullName}">Nguyễn Văn A</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-lbl">Tên đăng nhập</div>
+                            <div class="field-val" th:text="${customer.username}">username</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Thông tin liên hệ ───────────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-telephone-fill"></i>
+                    <h3>Thông tin liên hệ</h3>
+                </div>
+                <div class="d-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="field-lbl">Số điện thoại</div>
+                            <div class="field-val" th:classappend="${#strings.isEmpty(customer.phone)} ? 'empty'"
+                                th:text="${#strings.isEmpty(customer.phone)} ? 'Chưa cập nhật' : ${customer.phone}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-lbl">Email</div>
+                            <div class="field-val" th:classappend="${#strings.isEmpty(customer.email)} ? 'empty'"
+                                th:text="${#strings.isEmpty(customer.email)} ? 'Chưa cập nhật' : ${customer.email}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-lbl">Mã số thuế</div>
+                            <div class="field-val" th:classappend="${#strings.isEmpty(customer.taxCode)} ? 'empty'"
+                                th:text="${#strings.isEmpty(customer.taxCode)} ? 'Chưa cập nhật' : ${customer.taxCode}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Nhân viên phụ trách ─────────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-people-fill"></i>
+                    <h3>Nhân viên phụ trách</h3>
+                </div>
+
+                <div th:if="${not #lists.isEmpty(customer.staffs)}">
+                    <div class="entity-item" th:each="entry : ${customer.staffs.entrySet()}">
+                        <div class="entity-avatar avatar-staff">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <div class="entity-content">
+                            <div class="entity-type-lbl">Nhân viên phụ trách</div>
+                            <div class="entity-name" th:text="${entry.key}">Trần Thị B</div>
+                        </div>
+                        <span class="entity-view-btn" th:onclick="|window.location='/admin/staff/' + ${entry.value}|">
+                            Xem <i class="bi bi-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <div th:unless="${not #lists.isEmpty(customer.staffs)}">
+                    <div class="entity-item">
+                        <div class="entity-avatar avatar-staff">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <div class="entity-content">
+                            <div class="entity-type-lbl">Nhân viên phụ trách</div>
+                            <div class="field-val empty">Chưa có nhân viên phụ trách</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Lịch sử hợp đồng ───────────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-file-text-fill"></i>
+                    <h3>Lịch sử hợp đồng</h3>
+                </div>
+
+                <div th:if="${not #lists.isEmpty(customer.customerContracts)}">
+                    <div class="table-responsive">
+                        <table class="dash-table">
+                            <colgroup>
+                                <col style="width: 80px">
+                                <col style="width: 200px">
+                                <col style="width: 160px">
+                                <col style="width: 150px">
+                                <col style="width: 120px">
+                                <col style="width: 120px">
+                                <col style="width: 110px">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Mã HĐ</th>
+                                    <th>Bất động sản</th>
+                                    <th>Nhân viên</th>
+                                    <th>Giá thuê (VNĐ)</th>
+                                    <th>Ngày bắt đầu</th>
+                                    <th>Ngày kết thúc</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="contract : ${customer.customerContracts}"
+                                    th:onclick="|window.location='/admin/contract/' + ${contract.id}|">
+                                    <td><span class="contract-id" th:text="'HĐ-' + ${contract.id}"></span></td>
+                                    <td th:text="${contract.building}"></td>
+                                    <td th:text="${contract.staff}"></td>
+                                    <td>
+                                        <span class="price-badge"
+                                            th:text="${#numbers.formatDecimal(contract.rentPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                        </span>
+                                    </td>
+                                    <td th:text="${#temporals.format(contract.startDate, 'dd/MM/yyyy')}"></td>
+                                    <td th:text="${#temporals.format(contract.endDate, 'dd/MM/yyyy')}"></td>
+                                    <td>
+                                        <span class="status-badge"
+                                            th:classappend="${contract.status == 'ACTIVE'} ? 'active' : (${contract.status == 'EXPIRED'} ? 'expired' : 'pending')"
+                                            th:text="${contract.status == 'ACTIVE'} ? 'Hiệu lực' : (${contract.status == 'EXPIRED'} ? 'Hết hạn' : ${contract.status})">
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div th:unless="${not #lists.isEmpty(customer.customerContracts)}">
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Chưa có hợp đồng nào</p>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /detail-body -->
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).on("click", ".btn-hd-delete", function (e) {
+            e.preventDefault();
+            const id = $(e.target).closest(".btn-hd-delete").data("id");
+
+            Swal.fire({
+                title: 'Xác nhận xóa',
+                text: "Bạn có chắc muốn xóa khách hàng này?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/admin/customer/delete/" + id,
+                        type: "DELETE",
+                        success: function () {
+                            Swal.fire({
+                                icon: 'success', title: 'Thành công',
+                                text: 'Xóa khách hàng thành công!',
+                                timer: 1500, showConfirmButton: false
+                            }).then(() => { window.location.href = "/admin/customer/list"; });
+                        },
+                        error: function (xhr) {
+                            const err = xhr.responseJSON;
+                            Swal.fire({
+                                icon: 'error', title: 'Lỗi',
+                                text: err?.message || 'Xóa thất bại!'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

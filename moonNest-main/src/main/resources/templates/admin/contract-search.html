@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Kết quả tìm kiếm hợp đồng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #fafbfc;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: 220px;
+            padding: 1.5rem 1.5rem;
+            margin-top: 72px;
+        }
+
+        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        .page-header {
+            margin-bottom: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-header h2 i {
+            color: #3b82f6;
+            font-size: 1.2rem;
+        }
+
+        .page-header .update-time {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+        }
+
+        /* ══ BUTTONS ════════════════════════════════════════════════════════ */
+        .btn-back {
+            background: white;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-back:hover {
+            background: #f9fafb;
+            color: #111827;
+            border-color: #d1d5db;
+            transform: translateY(-1px);
+        }
+
+        /* ══ FILTER CARD ════════════════════════════════════════════════════ */
+        .filter-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: border-color 0.2s ease;
+        }
+
+        .filter-card:has(.filter-body.collapsed) .filter-header {
+            border-bottom-color: transparent;
+        }
+
+        .filter-title {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-title i {
+            color: #3b82f6;
+            font-size: 0.875rem;
+        }
+
+        .btn-toggle-filter {
+            background: #f3f4f6;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+
+        .btn-toggle-filter:hover {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .btn-toggle-filter i {
+            transition: transform 0.3s;
+        }
+
+        .btn-toggle-filter.collapsed i {
+            transform: rotate(180deg);
+        }
+
+        .filter-body {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .filter-body.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .filter-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.75rem;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .filter-section-title i {
+            color: #3b82f6;
+            font-size: 0.8rem;
+        }
+
+        /* Form controls */
+        .filter-card .form-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
+            display: block;
+        }
+
+        .filter-card .form-control {
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8125rem;
+            color: #374151;
+            background: #fff;
+            transition: all 0.2s;
+            height: auto;
+        }
+
+        .filter-card .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .range-inputs .form-control {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .range-separator {
+            color: #d1d5db;
+            font-weight: 600;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .btn-filter {
+            padding: 0.45rem 1rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-filter.btn-reset {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-filter.btn-reset:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-filter.btn-search {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-filter.btn-search:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ══ RESULT BADGE ════════════════════════════════════════════════════ */
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #eff6ff;
+            color: #2563eb;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
+
+        /* ══ TABLE CARD ══════════════════════════════════════════════════════ */
+        .table-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .table-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .table-header-row .thr-title {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .table-header-row .thr-title i {
+            color: #3b82f6;
+            font-size: 0.9375rem;
+        }
+
+        /* ══ TABLE ═══════════════════════════════════════════════════════════ */
+        .table-responsive {
+            min-height: unset;
+        }
+
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+
+        .modern-table thead th {
+            background: #f8fafc;
+            border: none;
+            border-bottom: 1.5px solid #e9ecef;
+            padding: 0.5rem 0.875rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+
+        .modern-table tbody td {
+            padding: 0.75rem 0.875rem;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+            vertical-align: middle;
+            font-size: 0.8125rem;
+        }
+
+        .modern-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .modern-table tbody tr {
+            transition: background 0.15s;
+        }
+
+        .modern-table tbody tr:hover {
+            background: #f0f9ff;
+        }
+
+        /* ══ TABLE CELL STYLES ═══════════════════════════════════════════════ */
+        .contract-id {
+            font-weight: 700;
+            color: #111827;
+            font-size: 0.8125rem;
+        }
+
+        .customer-name,
+        .building-name {
+            font-weight: 600;
+            color: #111827;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+            max-height: 2.8em;
+        }
+
+        .price-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-badge.active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-badge.active::before {
+            background: #16a34a;
+        }
+
+        .status-badge.expired {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.expired::before {
+            background: #dc2626;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.pending::before {
+            background: #d97706;
+        }
+
+        .date-info {
+            font-size: 0.775rem;
+            color: #6b7280;
+            line-height: 1.7;
+        }
+
+        .date-info i {
+            font-size: 0.7rem;
+            margin-right: 3px;
+        }
+
+        /* ══ ACTION BUTTONS ═══════════════════════════════════════════════════ */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .btn-action {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border-radius: 7px;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .btn-action.btn-view {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .btn-action.btn-view:hover {
+            background: #dbeafe;
+            transform: translateY(-1px);
+        }
+
+        .btn-action.btn-edit {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .btn-action.btn-edit:hover {
+            background: #fef3c7;
+            transform: translateY(-1px);
+        }
+
+        .btn-action.btn-delete {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .btn-action.btn-delete:hover {
+            background: #fee2e2;
+            transform: translateY(-1px);
+        }
+
+        /* ══ EMPTY STATE ══════════════════════════════════════════════════════ */
+        .empty-state {
+            padding: 3rem;
+            text-align: center;
+            color: #9ca3af;
+            min-height: 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 0.875rem;
+        }
+
+        /* ══ PAGINATION ═══════════════════════════════════════════════════════ */
+        .pagination-wrapper {
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .pagination {
+            gap: 0.3rem;
+            margin: 0;
+        }
+
+        .pagination .page-item {
+            margin: 0;
+        }
+
+        .pagination .page-link {
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 0.35rem 0.75rem;
+            color: #374151;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            background: #fff;
+        }
+
+        .pagination .page-link:hover {
+            background: #f0f9ff;
+            border-color: #bfdbfe;
+            color: #1e40af;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background: #f9fafb;
+            border-color: #e5e7eb;
+            color: #d1d5db;
+        }
+
+        /* ══ RESPONSIVE ═══════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            main.content {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .action-buttons {
+                flex-wrap: wrap;
+            }
+        }
+
+        .separator {
+            height: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER + SIDEBAR -->
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h2>
+                    <i class="bi bi-search"></i>
+                    Kết quả tìm kiếm hợp đồng
+                </h2>
+                <div class="update-time">Danh sách hợp đồng theo điều kiện tìm kiếm</div>
+            </div>
+            <a th:href="@{/admin/contract/list}" class="btn-back">
+                <i class="bi bi-arrow-left"></i>
+                Quay lại danh sách
+            </a>
+        </div>
+
+        <!-- Result Badge -->
+        <div class="result-badge">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Tìm thấy <strong id="totalElements">0</strong> hợp đồng</span>
+        </div>
+
+        <!-- Table Card -->
+        <div class="table-card">
+            <div class="table-header-row">
+                <div class="thr-title">
+                    <i class="bi bi-table"></i>
+                    Kết quả tìm kiếm
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table modern-table">
+                    <colgroup>
+                        <col style="width: 90px">
+                        <col style="width: 300px">
+                        <col style="width: 210px">
+                        <col style="width: 150px">
+                        <col style="width: 160px">
+                        <col style="width: 110px">
+                        <col>
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Mã HĐ</th>
+                            <th>Khách hàng</th>
+                            <th>Bất động sản</th>
+                            <th>Giá thuê (m²)</th>
+                            <th>Thời gian</th>
+                            <th>Hiệu lực</th>
+                            <th style="text-align:center;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contractTableBody">
+                        <!-- Ajax render -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination inside card -->
+            <div id="pagination"></div>
+        </div>
+
+        <!-- Filter Card -->
+        <form class="filter-card" th:action="@{/admin/contract/search}" method="get">
+            <div class="filter-header">
+                <div class="filter-title">
+                    <i class="bi bi-funnel"></i>
+                    Bộ lọc tìm kiếm
+                </div>
+                <button type="button" class="btn-toggle-filter" onclick="toggleFilter()">
+                    <i class="bi bi-chevron-up" id="toggleIcon"></i>
+                </button>
+            </div>
+
+            <div class="filter-body" id="filterBody">
+                <!-- Thông tin cơ bản -->
+                <div class="filter-section-title">
+                    <i class="bi bi-info-circle"></i> Thông tin cơ bản
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Tên khách hàng</label>
+                        <select class="form-control" name="customerId" th:value="${filter.customerId}">
+                            <option value="">-- Chọn khách hàng --</option>
+                            <option th:each="c : ${customers}" th:value="${c.value}" th:text="${c.key}"
+                                th:selected="${c.value == filter.customerId}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tên bất động sản</label>
+                        <select class="form-control" name="buildingId" th:value="${filter.buildingId}">
+                            <option value="">-- Chọn bất động sản --</option>
+                            <option th:each="b : ${buildings}" th:value="${b.value}" th:text="${b.key}"
+                                th:selected="${b.value == filter.buildingId}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Nhân viên quản lý</label>
+                        <select class="form-control" name="staffId" th:value="${filter.staffId}">
+                            <option value="">-- Chọn nhân viên --</option>
+                            <option th:each="s : ${staffs}" th:value="${s.id}" th:text="${s.fullName}"
+                                th:selected="${s.id == filter.staffId}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Giá thuê và thời gian -->
+                <div class="filter-section-title">
+                    <i class="bi bi-cash-stack"></i> Giá thuê và thời gian
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Giá thuê (VNĐ)</label>
+                        <div class="range-inputs">
+                            <input type="number" class="form-control" name="rentPriceFrom"
+                                th:value="${filter.rentPriceFrom}" placeholder="Từ" min="0">
+                            <span class="range-separator">-</span>
+                            <input type="number" class="form-control" name="rentPriceTo"
+                                th:value="${filter.rentPriceTo}" placeholder="Đến" min="0">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ngày bắt đầu - Ngày kết thúc</label>
+                        <div class="range-inputs">
+                            <input type="date" class="form-control" name="startDate" th:value="${filter.startDate}">
+                            <span class="range-separator">-</span>
+                            <input type="date" class="form-control" name="endDate" th:value="${filter.endDate}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Trạng thái</label>
+                        <select class="form-control" name="status" th:value="${filter.status}">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            <option value="ACTIVE" th:selected="${filter.status == 'ACTIVE'}">Đang hiệu lực</option>
+                            <option value="EXPIRED" th:selected="${filter.status == 'EXPIRED'}">Hết hạn</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="button" class="btn-filter btn-reset" onclick="resetFilter()">
+                        <i class="bi bi-arrow-clockwise"></i> Đặt lại
+                    </button>
+                    <button type="submit" class="btn-filter btn-search">
+                        <i class="bi bi-search"></i> Tìm kiếm
+                    </button>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        /* ── Toggle filter ──────────────────────────────────────────────── */
+        function toggleFilter() {
+            const filterBody = document.getElementById('filterBody');
+            const toggleBtn = document.querySelector('.btn-toggle-filter');
+            filterBody.classList.toggle('collapsed');
+            toggleBtn.classList.toggle('collapsed');
+            localStorage.setItem('filterCollapsed', filterBody.classList.contains('collapsed'));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const filterBody = document.getElementById('filterBody');
+            const toggleBtn = document.querySelector('.btn-toggle-filter');
+            if (localStorage.getItem('filterCollapsed') === 'true') {
+                filterBody.classList.add('collapsed');
+                toggleBtn.classList.add('collapsed');
+            }
+        });
+
+        function resetFilter() {
+            document.querySelectorAll('.filter-card .form-control, .filter-card select')
+                .forEach(el => el.value = '');
+        }
+    </script>
+
+    <script th:inline="javascript">
+        let filter = /*[[${filter}]]*/ {};
+    </script>
+
+    <script>
+        let currentPage = 1;
+        const pageSize = 5;
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const d = new Date(dateString);
+            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        }
+
+        function formatPrice(price) {
+            if (price == null) return '';
+            return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' đ';
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'ACTIVE': { cls: 'active', text: 'Hiệu lực' },
+                'EXPIRED': { cls: 'expired', text: 'Hết hạn' },
+            };
+            const s = map[status] || { cls: 'pending', text: status };
+            return `<span class="status-badge ${s.cls}">${s.text}</span>`;
+        }
+
+        function loadContracts(page) {
+            $.ajax({
+                url: "/admin/contract/search/page",
+                type: "GET",
+                data: {
+                    page: page,
+                    size: pageSize,
+                    customerId: filter.customerId,
+                    buildingId: filter.buildingId,
+                    staffId: filter.staffId,
+                    rentPriceFrom: filter.rentPriceFrom,
+                    rentPriceTo: filter.rentPriceTo,
+                    startDate: filter.startDate,
+                    endDate: filter.endDate,
+                    status: filter.status
+                },
+                success: function (data) {
+                    currentPage = page;
+                    const tbody = $("#contractTableBody");
+                    tbody.empty();
+
+                    $("#totalElements").text(data.totalElements);
+
+                    if (data.content.length === 0) {
+                        tbody.append(`
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>Không có dữ liệu hợp đồng</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                        $("#pagination").empty();
+                        return;
+                    }
+
+                    $.each(data.content, function (i, c) {
+                        tbody.append(`
+                        <tr>
+                            <td><span class="contract-id">HĐ-${c.id}</span></td>
+                            <td><span class="customer-name">${c.customer || ''}</span></td>
+                            <td><span class="building-name">${c.building || ''}</span></td>
+                            <td><span class="price-badge">${formatPrice(c.rentPrice)}</span></td>
+                            <td>
+                                <div class="date-info">
+                                    <div><i class="bi bi-calendar-check"></i>${formatDate(c.startDate)}</div>
+                                    <div><i class="bi bi-calendar-x"></i>${formatDate(c.endDate)}</div>
+                                </div>
+                            </td>
+                            <td>${getStatusBadge(c.status)}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="/admin/contract/${c.id}" class="btn-action btn-view" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="/admin/contract/edit/${c.id}" class="btn-action btn-edit" title="Chỉnh sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="#" title="Xóa" class="btn-action btn-delete" data-id="${c.id}">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                    });
+
+                    renderPagination(data.totalPages, page);
+                },
+                error: function () {
+                    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Không tải được dữ liệu!' });
+                }
+            });
+        }
+
+        function renderPagination(totalPages, current) {
+            const pagination = $("#pagination");
+            pagination.empty();
+            if (totalPages <= 1) return;
+
+            let html = `<nav class="pagination-wrapper"><ul class="pagination justify-content-center">`;
+
+            html += `<li class="page-item ${current === 1 ? 'disabled' : ''}">
+                    <a href="#" class="page-link" onclick="loadContracts(1); return false;">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                 </li>`;
+
+            html += `<li class="page-item ${current === 1 ? 'disabled' : ''}">
+                    <a href="#" class="page-link" onclick="loadContracts(${current - 1}); return false;">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                 </li>`;
+
+            const blockSize = 5;
+            const blockStart = Math.floor((current - 1) / blockSize) * blockSize + 1;
+            let blockEnd = Math.min(blockStart + blockSize - 1, totalPages);
+
+            for (let i = blockStart; i <= blockEnd; i++) {
+                html += `<li class="page-item ${i === current ? 'active' : ''}">
+                        <a href="#" class="page-link" onclick="loadContracts(${i}); return false;">${i}</a>
+                     </li>`;
+            }
+
+            html += `<li class="page-item ${current === totalPages ? 'disabled' : ''}">
+                    <a href="#" class="page-link" onclick="loadContracts(${current + 1}); return false;">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                 </li>`;
+
+            html += `<li class="page-item ${current === totalPages ? 'disabled' : ''}">
+                    <a href="#" class="page-link" onclick="loadContracts(${totalPages}); return false;">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                 </li>`;
+
+            html += `</ul></nav>`;
+            pagination.html(html);
+        }
+
+        $(document).ready(function () {
+            loadContracts(1);
+        });
+
+        // Ajax xóa hợp đồng
+        $(document).on("click", ".btn-delete", function (e) {
+            e.preventDefault();
+            const id = $(this).data("id");
+
+            Swal.fire({
+                title: 'Xác nhận xóa',
+                text: "Bạn có chắc muốn xóa hợp đồng này?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/admin/contract/delete/" + id,
+                        type: "DELETE",
+                        success: function () {
+                            Swal.fire({
+                                icon: 'success', title: 'Thành công',
+                                text: 'Xóa hợp đồng thành công!',
+                                timer: 1500, showConfirmButton: false
+                            }).then(() => {
+                                window.location.href = "/admin/contract/list";
+                            });
+                        },
+                        error: function (xhr) {
+                            const err = xhr.responseJSON;
+                            Swal.fire({
+                                icon: 'error', title: 'Lỗi',
+                                text: err?.message || 'Xóa thất bại!'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

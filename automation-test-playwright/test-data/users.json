@@ -1,0 +1,17 @@
+{
+  "admin": {
+    "username": "manh1709",
+    "password": "12345678",
+    "expectedLandingUrl": "/admin/dashboard"
+  },
+  "staff": {
+    "username": "pvd1208",
+    "password": "12345678",
+    "expectedLandingUrl": "/staff/dashboard"
+  },
+  "customer": {
+    "username": "abcVietNam",
+    "password": "12345678",
+    "expectedLandingUrl": "/customer/home"
+  }
+}

@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MoonNest - Lịch Sử Giao Dịch</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --primary-color: #2d3e8f;
+            --primary-light: #4a5fc1;
+            --secondary-color: #f5f7fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--secondary-color);
+        }
+
+        /* Header */
+        .header {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-top {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-custom {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #f0f0f0;
+            color: var(--primary-color);
+        }
+
+        /* Navigation */
+        .nav-custom {
+            background: var(--primary-color);
+        }
+
+        .nav-custom .nav-link {
+            color: white !important;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 14px 18px;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.2s;
+        }
+
+        .nav-custom .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-custom .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            font-weight: 600;
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu-custom {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .welcome-section h1 {
+            color: var(--primary-color);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: white;
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .filter-header {
+            margin-bottom: 0;
+        }
+
+        .filter-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 14px;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(45, 62, 143, 0.1);
+        }
+
+        .btn-filter {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-filter:hover {
+            background: var(--primary-light);
+            color: white;
+        }
+
+        .btn-reset {
+            background: white;
+            color: #666;
+            border: 1px solid #ddd;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-reset:hover {
+            background: #f5f7fa;
+            color: #666;
+        }
+
+        /* Statistics Bar */
+        .stats-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.75rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .stat-item:hover {
+            background: #f8f9fa;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Thông báo số hóa đơn tìm kiếm */
+        .total-transaction-search {
+            background: linear-gradient(135deg, #e8f0fe 0%, #f0f7ff 100%);
+            padding: 14px 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            font-size: 15px;
+            color: #495057;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            display: none;
+        }
+
+        .total-transaction-search strong {
+            color: var(--primary-color);
+            font-size: 18px;
+            margin-left: 4px;
+        }
+
+        /* Table Container */
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Table Styles */
+        .table-custom {
+            margin: 0;
+            width: 100%;
+        }
+
+        .table-custom thead {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .table-custom thead th {
+            font-weight: 600;
+            font-size: 14px;
+            padding: 1rem 1.25rem;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .table-custom tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s;
+        }
+
+        .table-custom tbody tr:hover {
+            background: #f8f9fa;
+            transform: scale(1.002);
+        }
+
+        .table-custom tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .table-custom tbody td {
+            padding: 1rem 1.25rem;
+            font-size: 14px;
+            color: #333;
+            vertical-align: middle;
+        }
+
+        .table-custom tbody td:first-child {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .table-custom tbody td:last-child {
+            font-weight: 700;
+            color: #059669;
+            font-size: 15px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 3rem;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: #666;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* Pagination Styles */
+        .pagination-container {
+            background: white;
+            border-radius: 10px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .pagination {
+            margin: 0;
+            gap: 0.5rem;
+        }
+
+        .pagination .page-item {
+            margin: 0;
+        }
+
+        .pagination .page-link {
+            border: 1px solid #e0e0e0;
+            color: #666;
+            padding: 0.5rem 0.85rem;
+            font-weight: 500;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+        }
+
+        .pagination .page-link:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(45, 62, 143, 0.2);
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(45, 62, 143, 0.3);
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background: #f5f5f5;
+            border-color: #e0e0e0;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-item.disabled .page-link:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .pagination .page-link i {
+            font-size: 12px;
+        }
+
+        /* Responsive Table */
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+            }
+
+            .table-custom {
+                min-width: 800px;
+            }
+
+            .pagination {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Building Link */
+        .building-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .building-link:hover {
+            color: var(--primary-light);
+            text-decoration: underline;
+        }
+
+        /* Badge for Month/Year */
+        .month-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #e8f0fe 0%, #f0f7ff 100%);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Area Badge */
+        .area-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #666;
+        }
+
+        .area-badge i {
+            color: var(--primary-color);
+            font-size: 12px;
+        }
+
+        /* Date Badge */
+        .date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #666;
+        }
+
+        .date-badge i {
+            color: #10b981;
+            font-size: 12px;
+        }
+
+        /* Amount Badge */
+        .amount-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .amount-badge i {
+            color: #059669;
+            font-size: 14px;
+        }
+
+        /* Highlight khi có giá trị */
+        .filter-section .form-select.has-value {
+            background-color: #E8F0FE;
+            border-color: #3b82f6;
+            font-weight: 600;
+        }
+
+        /* Invoice modal */
+        .modal-header {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .invoice-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .invoice-id {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .invoice-period {
+            font-size: 1rem;
+            opacity: 0.95;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-section-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #333;
+            text-align: right;
+        }
+
+        .utility-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .utility-item {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid #e0e0e0;
+        }
+
+        .utility-label {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .utility-value {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .meter-reading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid #e0e0e0;
+        }
+
+        .meter-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .meter-icon {
+            width: 40px;
+            height: 40px;
+            background: #f0f4ff;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+
+        .meter-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meter-label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .meter-values {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .usage-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 0.375rem 0.75rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            width: fit-content;
+            margin-left: auto;
+        }
+
+        .total-section {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .total-row:last-child {
+            margin-bottom: 0;
+            padding-top: 0.75rem;
+            border-top: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .total-label {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .total-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #d32f2f;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            border-radius: 1.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .status-unpaid {
+            background: #fff3e0;
+            color: #f57c00;
+            border: 2px solid #ffb74d;
+        }
+
+        .btn-payment {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .btn-payment:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 62, 143, 0.3);
+        }
+
+        .icon-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+        }
+
+        /* Base table styles */
+        #transactionTableBody tr {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        /* Simple hover effect */
+        #transactionTableBody tr:hover {
+            background-color: #f5f7fa;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Badge base styles */
+        .month-badge,
+        .amount-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .month-badge {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .amount-badge {
+            background-color: #e8f5e9;
+            color: #388e3c;
+            font-weight: 600;
+        }
+
+        .building-link {
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .building-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top py-3">
+            <div class="container-fluid px-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="logo">MoonNest</div>
+                    <button class="navbar-toggler d-lg-none text-white" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarNav">
+                        <i class="bi bi-list fs-3"></i>
+                    </button>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-end">
+                                <small class="d-block opacity-85">Xin chào,</small>
+                                <strong th:text="${#authentication.name}">Nguyễn Văn A</strong>
+                            </div>
+                            <span class="badge-custom">KHÁCH HÀNG</span>
+                        </div>
+                        <a href="#" class="btn btn-logout"
+                            onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Đăng
+                            xuất</a>
+                        <form id="logoutForm" th:action="@{/auth/logout}" method="post" style="display:none;"></form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="nav-custom">
+            <div class="container-fluid px-4">
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/home}">
+                            <i class="bi bi-house-door me-1"></i>Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/contract/list}">
+                            <i class="bi bi-file-text me-1"></i>Hợp đồng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/invoice/list}">
+                            <i class="bi bi-credit-card me-1"></i>Thanh toán
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/building/list}">
+                            <i class="bi bi-building me-1"></i>Tòa nhà
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-grid-3x3-gap me-1"></i>Tiện ích
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-custom">
+                            <li>
+                                <a class="dropdown-item" th:href="@{/customer/transaction/history}">
+                                    <i class="bi bi-clock-history me-2"></i>Lịch sử giao dịch
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/customer/service}">
+                                    <i class="bi bi-clipboard-check me-2"></i>Dịch vụ
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/profile}">
+                            <i class="bi bi-person-circle me-1"></i>Tài khoản
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container-fluid px-4 py-4">
+        <!-- Welcome Section -->
+        <div class="welcome-section p-4 rounded mb-4">
+            <h1 class="h3 mb-2">
+                <i class="bi bi-clock-history me-2"></i>
+                Lịch Sử Giao Dịch
+            </h1>
+            <p class="text-muted mb-0">Xem lại toàn bộ lịch sử thanh toán hóa đơn của bạn</p>
+        </div>
+
+        <!-- Statistics Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number">
+                    <span th:text="${totalTransaction}">
+                        0
+                    </span>
+                </div>
+                <div class="stat-label">Tổng giao dịch</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">
+                    <span th:text="${totalPaidAmount} + ' VNĐ'">
+                        0 VNĐ
+                    </span>
+                </div>
+                <div class="stat-label">Tổng số tiền</div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form id="filterForm">
+                <div class="filter-header mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="filter-title">
+                            <i class="bi bi-funnel"></i>
+                            Bộ lọc tìm kiếm
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Tháng</label>
+                        <select class="form-select" name="month">
+                            <option value="">-- Chọn tháng --</option>
+                            <option value="1">Tháng 1</option>
+                            <option value="2">Tháng 2</option>
+                            <option value="3">Tháng 3</option>
+                            <option value="4">Tháng 4</option>
+                            <option value="5">Tháng 5</option>
+                            <option value="6">Tháng 6</option>
+                            <option value="7">Tháng 7</option>
+                            <option value="8">Tháng 8</option>
+                            <option value="9">Tháng 9</option>
+                            <option value="10">Tháng 10</option>
+                            <option value="11">Tháng 11</option>
+                            <option value="12">Tháng 12</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Năm</label>
+                        <select class="form-select" name="year">
+                            <option value="">-- Chọn năm --</option>
+                            <!-- Động từ server hoặc JS -->
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-filter flex-grow-1">
+                                <i class="bi bi-search"></i>
+                                Tìm kiếm
+                            </button>
+                            <button type="button" class="btn-reset" onclick="resetFilter()">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                Đặt lại
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Result Count -->
+        <div id="totalTransactionSearch" class="total-transaction-search"></div>
+
+        <!-- Table Container -->
+        <div class="table-container">
+            <table class="table table-custom">
+                <thead>
+                    <tr>
+                        <th><i class="bi bi-calendar-check me-2"></i>Hóa đơn tháng</th>
+                        <th><i class="bi bi-building me-2"></i>Tòa nhà</th>
+                        <th><i class="bi bi-rulers me-2"></i>Diện tích thuê</th>
+                        <th><i class="bi bi-clock me-2"></i>Ngày thanh toán</th>
+                        <th><i class="bi bi-currency-dollar me-2"></i>Tổng thanh toán</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionTableBody">
+                    <!-- Data will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div id="transactionPagination"></div>
+
+        <!-- Modal Chi Tiết Hóa Đơn -->
+        <div id="modalContainer">
+        </div>
+
+        <!-- Bootstrap 5 JS Bundle -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <!--JQuery-->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+        <script>
+            // Khởi tạo danh sách năm
+            function initYearSelect() {
+                const currentYear = new Date().getFullYear();
+                const yearSelect = $("[name='year']");
+
+                for (let year = currentYear; year >= currentYear - 10; year--) {
+                    yearSelect.append(`<option value="${year}">${year}</option>`);
+                }
+            }
+
+
+            function loadTransactions(page, event) {
+                if (event) event.preventDefault();
+
+                $.ajax({
+                    url: "/customer/transaction/list/page",
+                    type: "GET",
+                    data: {
+                        month: $("[name='month']").val(),
+                        year: $("[name='year']").val(),
+                        page: page,
+                        size: 5
+                    },
+                    success: function (data) {
+                        const tbody = $("#transactionTableBody");
+                        tbody.empty();
+                        const modalContainer = $("#modalContainer");
+                        modalContainer.empty();
+
+                        const searchResult = $("#totalTransactionSearch");
+
+                        if (data.content.length === 0) {
+                            tbody.append(`
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <h3>Không có giao dịch nào</h3>
+                                    <p>Chưa có lịch sử giao dịch theo điều kiện tìm kiếm</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                            $("#transactionPagination").empty();
+                            searchResult.hide();
+                            return;
+                        }
+
+                        searchResult.html(`Kết quả tìm kiếm: <strong>${data.totalElements}</strong> giao dịch`).show();
+
+                        $.each(data.content, function (i, t) {
+                            const totalPaidAmount = (Number(t.totalAmount))
+                                .toLocaleString("vi-VN").replace(/\./g, ",");
+
+                            tbody.append(`
+                            <tr data-bs-toggle="modal" data-bs-target="#invoiceModal-${t.id}">
+                                <td>
+                                    <span class="month-badge">
+                                        ${t.month}/${t.year}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/customer/building/list?buildingName=${t.contract.building.name}" class="building-link">
+                                        ${t.contract.building.name}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="area-badge">
+                                        ${t.contract.rentArea} m²
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="date-badge">
+                                        ${t.paidDate}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="amount-badge">
+                                        ${totalPaidAmount} đ
+                                    </span>
+                                </td>
+                            </tr>
+                        `);
+
+                            modalContainer.append(`
+                            <div class="modal fade" id="invoiceModal-${t.id}" tabindex="-1" aria-labelledby="invoiceModalLabel-${i}" aria-hidden="true">
+                                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="invoiceModalLabel-${i}">
+                                                <i class="bi bi-file-earmark-text me-2"></i>Chi Tiết Hóa Đơn
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <!-- Invoice Header -->
+                                            <div class="invoice-header">
+                                                <div class="invoice-id">
+                                                    <i class="bi bi-receipt me-2"></i>
+                                                    <span>Mã hóa đơn: ${t.id}</span>
+                                                </div>
+                                                <div class="invoice-period">
+                                                    <i class="bi bi-calendar-month me-2"></i>
+                                                    <span>
+                                                        Tháng ${t.month}/${t.year}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Thông tin chung -->
+                                            <div class="info-section">
+                                                <div class="info-section-title">
+                                                    <i class="bi bi-info-circle me-2"></i>Thông Tin Chung
+                                                </div>
+                                                <div class="info-row">
+                                                    <span class="info-label">Ngày tạo hóa đơn</span>
+                                                    <span class="info-value">${t.createdDate}</span>
+                                                </div>
+                                                <div class="info-row">
+                                                    <span class="info-label">Hạn thanh toán</span>
+                                                    <span class="info-value text-danger">${t.dueDate}</span>
+                                                </div>
+                                                <div class="info-row">
+                                                    <p class="text-muted mb-0 small">
+                                                        Tòa ${t.contract.building.name} - Thuê ${t.contract.rentArea} m²
+                                                    </p>
+                                                </div>
+                                                <div class="info-row">
+                                                    <span class="info-label">Trạng thái</span>
+                                                    <span class="status-badge status-unpaid">
+                                                        <i class="bi bi-exclamation-circle"></i>
+                                                        Chưa thanh toán
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Chi phí cố định -->
+                                            <div class="info-section">
+                                                <div class="info-section-title">
+                                                    <i class="bi bi-cash-stack me-2"></i>Chi Phí Cố Định
+                                                </div>
+                                                <div class="info-row">
+                                                    <span class="info-label">Tiền thuê mặt bằng</span>
+                                                    <span class="info-value">
+                                                        ${Number(t.contract.rentPrice).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
+                                                        </span>
+                                                </div>
+                                                <div class="info-row">
+                                                    <span class="info-label">Phí dịch vụ</span>
+                                                    <span class="info-value" >
+                                                        ${Number(t.details[1].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Chi phí phương tiện -->
+                                            <div class="info-section">
+                                                <div class="info-section-title">
+                                                    <i class="bi bi-car-front me-2"></i>Phí Gửi Xe
+                                                </div>
+                                                <div class="utility-grid">
+                                                    <div class="utility-item">
+                                                        <div class="utility-label">
+                                                            <i class="bi bi-car-front-fill me-1"></i>Ô tô
+                                                        </div>
+                                                        <div class="utility-value">
+                                                            ${Number(t.details[2].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
+                                                        </div>
+                                                    </div>
+                                                    <div class="utility-item">
+                                                        <div class="utility-label">
+                                                            <i class="bi bi-bicycle me-1"></i>Xe máy
+                                                        </div>
+                                                        <div class="utility-value">
+                                                            ${Number(t.details[3].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Chi phí sinh hoạt -->
+                                            <div class="info-section">
+                                                <div class="info-section-title">
+                                                    <i class="bi bi-house"></i> Phí sinh hoạt
+                                                </div>
+                                                <div class="utility-grid">
+                                                    <div class="utility-item">
+                                                        <div class="utility-label">
+                                                            <i class="bi bi-lightning-charge"></i> Điện
+                                                        </div>
+                                                        <div class="utility-value">
+                                                            ${Number(t.contract.building.electricityFee).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
+                                                        </div>
+                                                    </div>
+                                                    <div class="utility-item">
+                                                        <div class="utility-label">
+                                                            <i class="bi bi-droplet"></i> Nước
+                                                        </div>
+                                                        <div class="utility-value">
+                                                            ${Number(t.contract.building.waterFee).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Tiện ích (Điện & Nước) -->
+                                            <div class="info-section">
+                                                <div class="info-section-title">
+                                                    <i class="bi bi-house"></i> Sinh hoạt
+                                                </div>
+
+                                                <!-- Điện -->
+                                                <div class="meter-reading">
+                                                    <div class="meter-info">
+                                                        <div class="meter-icon">
+                                                            <i class="bi bi-lightning-charge-fill"></i>
+                                                        </div>
+                                                        <div class="meter-details">
+                                                            <span class="meter-label">Điện</span>
+                                                            <span class="meter-values">
+                                                                <span>${t.utilityMeter.electricityOld}</span> →
+                                                                <span>${t.utilityMeter.electricityNew}</span> kWh
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="usage-badge">
+                                                            <span>${t.utilityMeter.electricityNew - t.utilityMeter.electricityOld}</span>
+                                                            kWh
+                                                        </div>
+                                                        <div class="info-value mt-1">
+                                                            ${Number(t.details[4].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Nước -->
+                                                <div class="meter-reading">
+                                                    <div class="meter-info">
+                                                        <div class="meter-icon">
+                                                            <i class="bi bi-droplet-fill"></i>
+                                                        </div>
+                                                        <div class="meter-details">
+                                                            <span class="meter-label">Nước</span>
+                                                            <span class="meter-values">
+                                                                <span>${t.utilityMeter.waterOld}</span> →
+                                                                <span>${t.utilityMeter.waterNew}</span> m³
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="usage-badge">
+                                                            <span>${t.utilityMeter.waterNew - t.utilityMeter.waterOld}</span>
+                                                            m³
+                                                        </div>
+                                                        <div class="info-value mt-1">
+                                                            ${Number(t.details[5].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Tổng cộng -->
+                                            <div class="total-section">
+                                                <div class="total-row">
+                                                    <span class="total-label">
+                                                        <i class="bi bi-cash-coin me-2"></i>TỔNG CỘNG
+                                                    </span>
+                                                    <span class="total-amount">
+                                                        ${Number(t.totalAmount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                <i class="bi bi-x-circle me-2"></i>Đóng
+                                            </button>
+                                            <button type="button" class="btn btn-payment"
+                                                onclick="payInvoice(${t.id})">
+                                                <i class="bi bi-credit-card me-2"></i> Xác Nhận Thanh Toán
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                        });
+
+                        renderTransactionPagination(data.totalPages, page);
+                    },
+                    error: function () {
+                        alert("Không tải được dữ liệu!");
+                    }
+                });
+            }
+
+            function renderTransactionPagination(totalPages, current) {
+                const pagination = $("#transactionPagination");
+                pagination.empty();
+                if (totalPages <= 1) return;
+
+                let html = `
+        <div class="pagination-container">
+            <nav>
+                <ul class="pagination justify-content-center">
+        `;
+
+                // --- First ---
+                html += `
+            <li class="page-item ${current === 1 ? 'disabled' : ''}">
+                <a href="#" class="page-link" onclick="loadTransactions(1, event)" title="Trang đầu">
+                    <i class="bi bi-chevron-bar-left"></i>
+                </a>
+            </li>
+        `;
+
+                // --- Prev ---
+                html += `
+            <li class="page-item ${current === 1 ? 'disabled' : ''}">
+                <a href="#" class="page-link" onclick="loadTransactions(${current - 1}, event)" title="Trang trước">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+        `;
+
+                // --- BLOCK 5 PAGE ---
+                const blockSize = 5;
+                const blockStart = Math.floor((current - 1) / blockSize) * blockSize + 1;
+                let blockEnd = blockStart + blockSize - 1;
+                if (blockEnd > totalPages) blockEnd = totalPages;
+
+                for (let i = blockStart; i <= blockEnd; i++) {
+                    html += `
+                <li class="page-item ${i === current ? 'active' : ''}">
+                    <a href="#" class="page-link" onclick="loadTransactions(${i}, event)">${i}</a>
+                </li>
+            `;
+                }
+
+                // --- Next ---
+                html += `
+            <li class="page-item ${current === totalPages ? 'disabled' : ''}">
+                <a href="#" class="page-link" onclick="loadTransactions(${current + 1}, event)" title="Trang sau">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        `;
+
+                // --- Last ---
+                html += `
+            <li class="page-item ${current === totalPages ? 'disabled' : ''}">
+                <a href="#" class="page-link" onclick="loadTransactions(${totalPages}, event)" title="Trang cuối">
+                    <i class="bi bi-chevron-bar-right"></i>
+                </a>
+            </li>
+        `;
+
+                html += `
+                </ul>
+            </nav>
+        </div>
+        `;
+
+                pagination.html(html);
+            }
+
+            // Reset input filter
+            function resetFilter() {
+                document.querySelectorAll('.form-select').forEach(input => {
+                    input.value = '';
+                });
+
+                setTimeout(function () {
+                    $('.filter-section .form-select').removeClass('has-value');
+                }, 10);
+            }
+
+            // Lắng nghe sự kiện input/change để highlight real-time
+            $('.filter-section .form-select').on('input change', function () {
+                const $this = $(this);
+                if ($this.val() && $this.val().trim() !== '') {
+                    $this.addClass('has-value');
+                } else {
+                    $this.removeClass('has-value');
+                }
+            });
+
+            $(document).ready(function () {
+                initYearSelect();
+                loadTransactions(1);
+            });
+
+            $("#filterForm").on("submit", function (e) {
+                e.preventDefault();
+                loadTransactions(1);
+            });
+        </script>
+    </div>
+</body>
+
+</html>

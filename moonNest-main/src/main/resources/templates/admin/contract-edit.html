@@ -1,0 +1,742 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Sửa Hợp Đồng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: 220px;
+            padding: 0;
+            margin-top: 72px;
+        }
+
+        /* ══ PAGE BODY ══════════════════════════════════════════════════════ */
+        .detail-body {
+            padding: 1.5rem;
+        }
+
+        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        .page-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .page-header-bar h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-header-bar h2 i {
+            color: #3b82f6;
+            font-size: 1.2rem;
+        }
+
+        .page-header-bar .update-time {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+        }
+
+        /* ══ BACK BUTTON ════════════════════════════════════════════════════ */
+        .btn-back {
+            background: white;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .btn-back:hover {
+            background: #f9fafb;
+            color: #111827;
+            border-color: #d1d5db;
+            transform: translateY(-1px);
+        }
+
+        /* ══ D-CARD ═════════════════════════════════════════════════════════ */
+        .d-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
+        }
+
+        .d-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .d-card-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .d-card-header h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .d-card-header .header-badge {
+            margin-left: auto;
+        }
+
+        .d-card-body {
+            padding: 1.25rem 1.5rem;
+        }
+
+        /* ══ SECTION TITLE ══════════════════════════════════════════════════ */
+        .form-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.875rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .form-section-title i {
+            color: #3b82f6;
+            font-size: 0.8rem;
+        }
+
+        /* ══ FORM CONTROLS ══════════════════════════════════════════════════ */
+        .form-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
+            display: block;
+        }
+
+        .required {
+            color: #ef4444;
+            margin-left: 0.2rem;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8125rem;
+            color: #374151;
+            background: #fff;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: #9ca3af;
+        }
+
+        /* ══ INPUT GROUP ════════════════════════════════════════════════════ */
+        .input-group-text {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-right: none;
+            color: #6b7280;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            border-radius: 7px 0 0 7px;
+        }
+
+        .input-group .form-control,
+        .input-group .form-select {
+            border-left: none;
+            border-radius: 0 7px 7px 0;
+        }
+
+        .input-group:focus-within .input-group-text {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        /* ══ HELPER TEXT ════════════════════════════════════════════════════ */
+        .form-text {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.3rem;
+        }
+
+        /* ══ INFO BOX ═══════════════════════════════════════════════════════ */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+
+        .info-box i {
+            color: #3b82f6;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .info-box-content {
+            font-size: 0.8125rem;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+
+        /* ══ STATUS BADGE (header) ══════════════════════════════════════════ */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-badge.active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-badge.active::before {
+            background: #16a34a;
+        }
+
+        .status-badge.expired {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.expired::before {
+            background: #dc2626;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.pending::before {
+            background: #d97706;
+        }
+
+        .status-badge.cancelled {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .status-badge.cancelled::before {
+            background: #9ca3af;
+        }
+
+        /* ══ DIVIDER ════════════════════════════════════════════════════════ */
+        .section-divider {
+            border: none;
+            border-top: 1px solid #f3f4f6;
+            margin: 1.25rem 0;
+        }
+
+        /* ══ FORM ACTIONS ═══════════════════════════════════════════════════ */
+        .form-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            padding-top: 1rem;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .btn-filter {
+            padding: 0.45rem 1rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-filter.btn-reset {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-filter.btn-reset:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-filter.btn-submit {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-filter.btn-submit:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ══ DATE VALIDATION ════════════════════════════════════════════════ */
+        .date-validation {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            font-weight: 600;
+        }
+
+        .date-validation.valid {
+            color: #10b981;
+        }
+
+        .date-validation.invalid {
+            color: #ef4444;
+        }
+
+        /* ══ EXPIRED LOCK ═══════════════════════════════════════════════════ */
+        .expired-banner {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+
+        .expired-banner i {
+            color: #ea580c;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .expired-banner-content {
+            font-size: 0.8125rem;
+            color: #9a3412;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .form-locked .form-control,
+        .form-locked .form-select {
+            background-color: #f9fafb;
+            color: #6b7280;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .form-locked .input-group-text {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        /* ══ RESPONSIVE ═════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            main.content {
+                margin-left: 0;
+            }
+
+            .page-header-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn-filter {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER + SIDEBAR -->
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+        <div class="detail-body">
+
+            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <div class="page-header-bar">
+                <div>
+                    <h2>
+                        <i class="bi bi-pencil-square"></i>
+                        Sửa thông tin hợp đồng
+                    </h2>
+                    <div class="update-time">Cập nhật thông tin hợp đồng trong hệ thống</div>
+                </div>
+                <a th:href="@{/admin/contract/list}" class="btn-back">
+                    <i class="bi bi-arrow-left"></i>
+                    Quay lại danh sách
+                </a>
+            </div>
+
+            <!-- ── Expired Banner / Info Box ──────────────────────────────── -->
+            <div class="expired-banner" th:if="${contract.status == 'EXPIRED'}">
+                <i class="bi bi-lock-fill"></i>
+                <div class="expired-banner-content">
+                    Hợp đồng này đã <strong>hết hạn</strong> — không thể chỉnh sửa thông tin.
+                </div>
+            </div>
+            <div class="info-box" th:unless="${contract.status == 'EXPIRED'}">
+                <i class="bi bi-info-circle"></i>
+                <div class="info-box-content">
+                    Vui lòng điền đầy đủ thông tin bắt buộc (<span style="color:#ef4444;font-weight:700;">*</span>) để
+                    cập nhật thông tin mới của hợp đồng.
+                </div>
+            </div>
+
+            <!-- ── Form Card ───────────────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <h3>Thông tin hợp đồng</h3>
+                    <div class="header-badge" th:if="${contract.status}">
+                        <span class="status-badge" th:classappend="${contract.status == 'ACTIVE' ? 'active' :
+                                             contract.status == 'PENDING' ? 'pending' :
+                                             contract.status == 'EXPIRED' ? 'expired' : 'cancelled'}"
+                            th:text="${contract.status}">
+                        </span>
+                    </div>
+                </div>
+
+                <form id="contractForm" th:classappend="${contract.status == 'EXPIRED'} ? 'form-locked' : ''"
+                    th:attr="data-expired=${contract.status == 'EXPIRED'}">
+                    <div class="d-card-body">
+
+                        <!-- Thông tin cơ bản -->
+                        <div class="form-section-title">
+                            <i class="bi bi-info-circle"></i> Thông tin cơ bản
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <input type="hidden" name="id" th:value="${contract.id}">
+                            <input type="hidden" name="rentArea" th:value="${contract.rentArea}">
+
+                            <div class="col-md-4">
+                                <label class="form-label">Bất động sản<span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                    <select class="form-select" name="buildingId" required
+                                        th:disabled="${contract.status == 'EXPIRED'}">
+                                        <option value="">-- Chọn bất động sản --</option>
+                                        <option th:each="b : ${buildings}" th:value="${b.value}" th:text="${b.key}"
+                                            th:selected="${b.value == contract.buildingId}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <small class="form-text">Chọn bất động sản cho thuê</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Khách hàng <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <select class="form-select" name="customerId" required
+                                        th:disabled="${contract.status == 'EXPIRED'}">
+                                        <option value="">-- Chọn khách hàng --</option>
+                                        <option th:each="c : ${customers}" th:value="${c.value}" th:text="${c.key}"
+                                            th:selected="${c.value == contract.customerId}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <small class="form-text">Chọn khách hàng thuê</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Nhân viên phụ trách <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                                    <select class="form-select" name="staffId" required
+                                        th:disabled="${contract.status == 'EXPIRED'}">
+                                        <option value="">-- Chọn nhân viên --</option>
+                                        <option th:each="s : ${staffs}" th:value="${s.id}" th:text="${s.fullName}"
+                                            th:selected="${s.id == contract.staffId}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <small class="form-text">Nhân viên quản lý hợp đồng</small>
+                            </div>
+                        </div>
+
+                        <hr class="section-divider">
+
+                        <!-- Thời gian và giá -->
+                        <div class="form-section-title">
+                            <i class="bi bi-calendar-range"></i> Thời gian và giá thuê
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Ngày bắt đầu <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
+                                    <input type="date" class="form-control" name="startDate" required
+                                        th:value="${contract.startDate}" id="startDateInput"
+                                        th:disabled="${contract.status == 'EXPIRED'}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Ngày kết thúc <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-calendar-x"></i></span>
+                                    <input type="date" class="form-control" name="endDate" required
+                                        th:value="${contract.endDate}" id="endDateInput"
+                                        th:disabled="${contract.status == 'EXPIRED'}">
+                                </div>
+                                <small class="date-validation" id="dateValidation"></small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Giá thuê (VNĐ/tháng) <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                    <input type="number" step="0.01" class="form-control" name="rentPrice"
+                                        placeholder="VD: 50000000" th:value="${contract.rentPrice}" required
+                                        th:disabled="${contract.status == 'EXPIRED'}">
+                                </div>
+                                <small class="form-text">Giá thuê hàng tháng</small>
+                            </div>
+                        </div>
+
+                        <hr class="section-divider">
+
+                        <!-- Trạng thái -->
+                        <div class="form-section-title">
+                            <i class="bi bi-flag"></i> Trạng thái hợp đồng
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Trạng thái <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-toggle-on"></i></span>
+                                    <select class="form-select" name="status" required
+                                        th:disabled="${contract.status == 'EXPIRED'}">
+                                        <option value="">-- Chọn trạng thái --</option>
+                                        <option value="ACTIVE" th:selected="${contract.status == 'ACTIVE'}">Đang hiệu
+                                            lực</option>
+                                        <option value="EXPIRED" th:selected="${contract.status == 'EXPIRED'}">Hết hạn
+                                        </option>
+                                    </select>
+                                </div>
+                                <small class="form-text">Trạng thái hiện tại của hợp đồng</small>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions" th:unless="${contract.status == 'EXPIRED'}">
+                            <button type="button" class="btn-filter btn-reset" onclick="resetInputData()">
+                                <i class="bi bi-arrow-clockwise"></i> Đặt lại
+                            </button>
+                            <button type="submit" class="btn-filter btn-submit">
+                                <i class="bi bi-check-circle"></i> Lưu hợp đồng
+                            </button>
+                        </div>
+
+                    </div><!-- /d-card-body -->
+                </form>
+            </div><!-- /d-card -->
+
+        </div><!-- /detail-body -->
+    </main>
+
+    <!--Bootstrap-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- CDN SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!--JQuery-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Date validation
+        function validateDateRange() {
+            const startDate = document.getElementById('startDateInput').value;
+            const endDate = document.getElementById('endDateInput').value;
+            const validation = document.getElementById('dateValidation');
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            if (end <= start) {
+                validation.className = 'date-validation invalid';
+                validation.textContent = 'Ngày kết thúc phải sau ngày bắt đầu';
+                return false;
+            } else {
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                validation.className = 'date-validation valid';
+                validation.textContent = `Thời hạn hợp đồng: ${diffDays} ngày`;
+                return true;
+            }
+        }
+
+        document.getElementById('startDateInput').addEventListener('change', validateDateRange);
+        document.getElementById('endDateInput').addEventListener('change', validateDateRange);
+    </script>
+
+    <script>
+        function resetInputData() {
+            document.querySelectorAll('#contractForm input, #contractForm select')
+                .forEach(e => {
+                    if (e.type === "checkbox" || e.type === "radio") {
+                        e.checked = false;
+                    } else if (e.type !== "hidden") {
+                        e.value = "";
+                    }
+                });
+            document.getElementById('dateValidation').textContent = '';
+        }
+    </script>
+
+    <script>
+        $("#contractForm").on("submit", function (e) {
+            e.preventDefault();
+
+            // Block submit nếu hợp đồng đã hết hạn
+            if ($(this).attr('data-expired') === 'true') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không thể chỉnh sửa',
+                    text: 'Hợp đồng đã hết hạn, không được phép chỉnh sửa!'
+                });
+                return;
+            }
+
+            // Validate date range
+            if (!validateDateRange()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Cảnh báo',
+                    text: 'Ngày kết thúc phải sau ngày bắt đầu!'
+                });
+                return;
+            }
+
+            const data = {
+                id: $("[name='id']").val() ? Number($("[name='id']").val()) : null,
+                buildingId: $("[name='buildingId']").val() ? Number($("[name='buildingId']").val()) : null,
+                customerId: $("[name='customerId']").val() ? Number($("[name='customerId']").val()) : null,
+                staffId: $("[name='staffId']").val() ? Number($("[name='staffId']").val()) : null,
+                rentArea: $("[name='rentArea']").val() ? Number($("[name='rentArea']").val()) : null,
+                rentPrice: $("[name='rentPrice']").val(),
+                startDate: $("[name='startDate']").val(),
+                endDate: $("[name='endDate']").val(),
+                status: $("[name='status']").val()
+            };
+
+            $.ajax({
+                url: "/admin/contract/edit",
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: 'Sửa thông tin hợp đồng thành công!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = "/admin/contract/list";
+                    });
+                },
+                error: function (xhr) {
+                    const err = xhr.responseJSON;
+                    if (err && err.message) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: err.message
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: 'Sửa thông tin hợp đồng thất bại!'
+                        });
+                    }
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            // Trigger date validation on load if both values exist
+            if ($('#startDateInput').val() && $('#endDateInput').val()) {
+                validateDateRange();
+            }
+        });
+    </script>
+</body>
+
+</html>
+
+
+
+
+

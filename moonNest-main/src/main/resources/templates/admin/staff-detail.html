@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Chi tiết Nhân viên</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: 220px;
+            padding: 0;
+            margin-top: 72px;
+        }
+
+        /* ══ BODY ════════════════════════════════════════════════════════════ */
+        .detail-body {
+            padding: 1.5rem;
+        }
+
+        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        .page-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .page-header-bar h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-header-bar h2 i {
+            color: #3b82f6;
+            font-size: 1.2rem;
+        }
+
+        .page-sub {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+        }
+
+        /* ══ HEADER BUTTONS ═════════════════════════════════════════════════ */
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-hd {
+            padding: 0.45rem 0.875rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: filter 0.15s ease;
+        }
+
+        .btn-hd-back {
+            background: #fff;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-hd-back:hover {
+            background: #f9fafb;
+            color: #111827;
+        }
+
+        .btn-hd-delete {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        .btn-hd-delete:hover {
+            filter: brightness(0.93);
+            color: #fff;
+        }
+
+        .btn-hd-delete:active {
+            filter: brightness(0.87);
+        }
+
+        /* ══ STAFF ID STRIP ═════════════════════════════════════════════════ */
+        .staff-strip {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0.875rem 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .strip-icon {
+            width: 40px;
+            height: 40px;
+            background: #fef3c7;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #d97706;
+            flex-shrink: 0;
+        }
+
+        .strip-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .strip-id {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #111827;
+            font-family: monospace;
+        }
+
+        .strip-sep {
+            width: 1px;
+            height: 30px;
+            background: #e5e7eb;
+        }
+
+        /* Role badge in strip */
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .role-badge.admin {
+            background: #fef3c7;
+            color: #78350f;
+        }
+
+        .role-badge.staff {
+            background: #dbeafe;
+            color: #1e3a8a;
+        }
+
+        /* ══ CARD ════════════════════════════════════════════════════════════ */
+        .d-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
+        }
+
+        .d-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .d-card-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .d-card-header h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 auto 2px 0;
+        }
+
+        .d-card-body {
+            padding: 1.25rem 1.5rem;
+        }
+
+        /* ══ FIELD ════════════════════════════════════════════════════════════ */
+        .field-lbl {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.2rem;
+        }
+
+        .field-val {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #111827;
+        }
+
+        .field-val.empty {
+            color: #d1d5db;
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        /* ══ ENTITY LIST ════════════════════════════════════════════════════ */
+        .entity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.15s;
+        }
+
+        .entity-item:last-child {
+            border-bottom: none;
+        }
+
+        .entity-item:hover {
+            background: #fafbfc;
+        }
+
+        .entity-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .avatar-customer {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .avatar-building {
+            background: #f0fdf4;
+            color: #059669;
+        }
+
+        .entity-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .entity-type-lbl {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.15rem;
+        }
+
+        .entity-name {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .entity-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem 0.875rem;
+            margin-top: 0.2rem;
+        }
+
+        .entity-meta-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .entity-meta-pill i {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .entity-view-btn {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #3b82f6;
+            text-decoration: none;
+            padding: 0.3rem 0.65rem;
+            border-radius: 6px;
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            transition: background 0.15s, border-color 0.15s;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .entity-view-btn:hover {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+
+        /* ══ EMPTY STATE ════════════════════════════════════════════════════ */
+        .empty-state {
+            padding: 2.5rem;
+            text-align: center;
+            color: #9ca3af;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            color: #d1d5db;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 0.8125rem;
+        }
+
+        /* ══ ASSIGNMENT EDIT BUTTON ══════════════════════════════════════════ */
+        .btn-assign-edit {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #374151;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 0.3rem 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+        }
+
+        .btn-assign-edit:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #111827;
+        }
+
+        .btn-assign-edit i {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .d-card-header {
+            justify-content: space-between;
+        }
+
+        .d-card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* ══ MODAL CHECKBOX LIST ══════════════════════════════════════════════ */
+        .assign-modal .modal-header {
+            border-bottom: 1px solid #f3f4f6;
+            padding: 1rem 1.25rem;
+        }
+
+        .assign-modal .modal-title {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .assign-modal .modal-title i {
+            color: #3b82f6;
+        }
+
+        .assign-modal .modal-body {
+            padding: 0;
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .assign-modal .modal-footer {
+            border-top: 1px solid #f3f4f6;
+            padding: 0.875rem 1.25rem;
+            gap: 0.5rem;
+        }
+
+        .assign-loading {
+            padding: 2.5rem;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .assign-check-item {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid #f9fafb;
+            transition: background 0.12s;
+            cursor: pointer;
+        }
+
+        .assign-check-item:last-child {
+            border-bottom: none;
+        }
+
+        .assign-check-item:hover {
+            background: #f9fafb;
+        }
+
+        .assign-check-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .assign-check-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .assign-check-avatar.building {
+            background: #f0fdf4;
+            color: #059669;
+        }
+
+        .assign-check-avatar.customer {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .assign-check-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .assign-check-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #111827;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .assign-check-sub {
+            font-size: 0.78rem;
+            color: #9ca3af;
+            margin-top: 0.1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-modal-cancel {
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            border-radius: 7px;
+            padding: 0.45rem 1rem;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-modal-cancel:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-modal-save {
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            padding: 0.45rem 1rem;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .btn-modal-save:hover {
+            background: #2563eb;
+        }
+
+        .btn-modal-save:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        /* ══ RESPONSIVE ══════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            main.content {
+                margin-left: 0;
+            }
+
+            .detail-body {
+                padding: 1rem;
+            }
+
+            .page-header-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .entity-view-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER + SIDEBAR -->
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+        <div class="detail-body">
+
+            <!-- ── Page Header ─────────────────────────────────────────────────── -->
+            <div class="page-header-bar">
+                <div>
+                    <h2>
+                        <i class="bi bi-person-badge-fill"></i>
+                        Chi tiết Nhân viên
+                    </h2>
+                    <div class="page-sub">Xem thông tin chi tiết nhân viên trong hệ thống</div>
+                </div>
+                <div class="header-actions">
+                    <a th:href="@{/admin/staff/list}" class="btn-hd btn-hd-back">
+                        <i class="bi bi-arrow-left"></i> Danh sách
+                    </a>
+                    <button class="btn-hd btn-hd-delete" th:data-id="${staff.id}">
+                        <i class="bi bi-trash"></i> Xóa
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Staff ID Strip ─────────────────────────────────────────────── -->
+            <div class="staff-strip">
+                <div class="strip-icon">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+                <div>
+                    <div class="strip-label">Mã nhân viên</div>
+                    <div class="strip-id">NV-<span th:text="${staff.id}">001</span></div>
+                </div>
+                <div class="strip-sep"></div>
+                <div>
+                    <div class="strip-label">Vai trò</div>
+                    <span class="role-badge" th:classappend="${staff.role == 'ADMIN'} ? 'admin' : 'staff'">
+                        <i class="bi bi-circle-fill" style="font-size: 0.42rem;"></i>
+                        <span th:text="${staff.role == 'ADMIN'} ? 'Quản trị viên' : 'Nhân viên'">Nhân viên</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- ── Thông tin cơ bản ────────────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <h3>Thông tin cơ bản</h3>
+                </div>
+                <div class="d-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <div class="field-lbl">Tên đăng nhập</div>
+                            <div class="field-val" th:text="${staff.username}">staff01</div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="field-lbl">Họ và tên</div>
+                            <div class="field-val" th:text="${staff.fullName}">Nguyễn Văn A</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Thông tin liên hệ ───────────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-telephone-fill"></i>
+                    <h3>Thông tin liên hệ</h3>
+                </div>
+                <div class="d-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <div class="field-lbl">Số điện thoại</div>
+                            <div class="field-val" th:classappend="${#strings.isEmpty(staff.phone)} ? 'empty'"
+                                th:text="${#strings.isEmpty(staff.phone)} ? 'Chưa cập nhật' : ${staff.phone}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="field-lbl">Email</div>
+                            <div class="field-val" th:classappend="${#strings.isEmpty(staff.email)} ? 'empty'"
+                                th:text="${#strings.isEmpty(staff.email)} ? 'Chưa cập nhật' : ${staff.email}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Khách hàng được phân công ──────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <div class="d-card-header-left">
+                        <i class="bi bi-people-fill"></i>
+                        <h3>Khách hàng được phân công chăm sóc</h3>
+                    </div>
+                    <button class="btn-assign-edit" id="btnEditCustomers" th:data-staff-id="${staff.id}">
+                        <i class="bi bi-pencil"></i> Chỉnh sửa
+                    </button>
+                </div>
+
+                <div th:if="${not #lists.isEmpty(staff.customers)}">
+                    <div class="entity-item" th:each="customer : ${staff.customers}">
+                        <div class="entity-avatar avatar-customer">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <div class="entity-content">
+                            <div class="entity-type-lbl">Khách hàng</div>
+                            <div class="entity-name" th:text="${customer.fullName}">Nguyễn Văn A</div>
+                            <div class="entity-meta">
+                                <span class="entity-meta-pill" th:if="${customer.phone != null}">
+                                    <i class="bi bi-telephone-fill"></i>
+                                    <span th:text="${customer.phone}">0912345678</span>
+                                </span>
+                            </div>
+                        </div>
+                        <span class="entity-view-btn"
+                            th:onclick="|window.location='/admin/customer/' + ${customer.id}|">
+                            Xem <i class="bi bi-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <div th:unless="${not #lists.isEmpty(staff.customers)}">
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Chưa có khách hàng được phân công</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Bất động sản được phân công ─────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <div class="d-card-header-left">
+                        <i class="bi bi-building-fill"></i>
+                        <h3>Bất động sản được phân công quản lý</h3>
+                    </div>
+                    <button class="btn-assign-edit" id="btnEditBuildings" th:data-staff-id="${staff.id}">
+                        <i class="bi bi-pencil"></i> Chỉnh sửa
+                    </button>
+                </div>
+
+                <div th:if="${not #lists.isEmpty(staff.buildings)}">
+                    <div class="entity-item" th:each="building : ${staff.buildings}">
+                        <div class="entity-avatar avatar-building">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div class="entity-content">
+                            <div class="entity-type-lbl">Bất động sản</div>
+                            <div class="entity-name" th:text="${building.name}">MoonNest A</div>
+                            <div class="entity-meta">
+                                <span class="entity-meta-pill" th:if="${building.address != null}">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                    <span th:text="${building.address}">123 Lê Lợi, Q1</span>
+                                </span>
+                            </div>
+                        </div>
+                        <span class="entity-view-btn"
+                            th:onclick="|window.location='/admin/building/' + ${building.id}|">
+                            Xem <i class="bi bi-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <div th:unless="${not #lists.isEmpty(staff.buildings)}">
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Chưa có bất động sản được phân công</p>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /detail-body -->
+    </main>
+
+    <!-- ══ Modal: Phân công bất động sản ══════════════════════════════════════════ -->
+    <div class="modal fade assign-modal" id="modalBuildings" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+            <div class="modal-content" style="border-radius: 12px; border: 1px solid #e5e7eb;">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i class="bi bi-building-fill"></i>
+                        Phân công bất động sản
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="buildingCheckList">
+                    <div class="assign-loading">
+                        <i class="bi bi-arrow-repeat"
+                            style="font-size:1.5rem; display:block; margin-bottom:0.5rem;"></i>
+                        Đang tải dữ liệu...
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn-modal-save" id="saveBuildingsBtn">
+                        <i class="bi bi-check2"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Modal: Phân công Khách hàng ══════════════════════════════════════ -->
+    <div class="modal fade assign-modal" id="modalCustomers" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+            <div class="modal-content" style="border-radius: 12px; border: 1px solid #e5e7eb;">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i class="bi bi-people-fill"></i>
+                        Phân công Khách hàng
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="customerCheckList">
+                    <div class="assign-loading">
+                        <i class="bi bi-arrow-repeat"
+                            style="font-size:1.5rem; display:block; margin-bottom:0.5rem;"></i>
+                        Đang tải dữ liệu...
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn-modal-save" id="saveCustomersBtn">
+                        <i class="bi bi-check2"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script th:inline="javascript">
+        const STAFF_ID = /*[[${staff.id}]]*/ 0;
+    </script>
+
+    <script>
+        // ── Delete staff ──────────────────────────────────────────────────────
+        $(document).on("click", ".btn-hd-delete", function (e) {
+            e.preventDefault();
+            let id = $(e.target).closest(".btn-hd-delete").data("id");
+            Swal.fire({
+                title: 'Xác nhận xóa',
+                text: "Bạn có chắc muốn xóa nhân viên này?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/admin/staff/delete/" + id,
+                        type: "DELETE",
+                        success: function () {
+                            Swal.fire({ icon: 'success', title: 'Thành công', text: 'Xóa nhân viên thành công!', timer: 1500, showConfirmButton: false })
+                                .then(() => { window.location.href = "/admin/staff/list"; });
+                        },
+                        error: function (xhr) {
+                            const err = xhr.responseJSON;
+                            Swal.fire({ icon: 'error', title: 'Lỗi', text: err?.message || 'Xóa thất bại!' });
+                        }
+                    });
+                }
+            });
+        });
+
+        // ── Building Assignment Modal ─────────────────────────────────────────
+        $("#btnEditBuildings").on("click", function () {
+            const modal = new bootstrap.Modal(document.getElementById("modalBuildings"));
+            $("#buildingCheckList").html(`
+            <div class="assign-loading">
+                <i class="bi bi-arrow-repeat" style="font-size:1.5rem; display:block; margin-bottom:0.5rem;"></i>
+                Đang tải dữ liệu...
+            </div>
+        `);
+            modal.show();
+
+            // Load all buildings + assigned buildings concurrently
+            Promise.all([
+                $.getJSON("/admin/staff/buildings"),
+                $.getJSON("/admin/staff/" + STAFF_ID + "/assignments/buildings")
+            ]).then(function ([allBuildings, assignedIds]) {
+                if (allBuildings.length === 0) {
+                    $("#buildingCheckList").html(`
+                    <div class="assign-loading">Không có tòa nhà nào trong hệ thống.</div>
+                `);
+                    return;
+                }
+                let html = "";
+                allBuildings.forEach(function (b) {
+                    const checked = assignedIds.includes(b.id) ? "checked" : "";
+                    html += `
+                    <label class="assign-check-item">
+                        <input type="checkbox" name="buildingIds" value="${b.id}" ${checked}>
+                        <div class="assign-check-avatar building">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div class="assign-check-info">
+                            <div class="assign-check-name">${b.name}</div>
+                            <div class="assign-check-sub">${b.address || ''}</div>
+                        </div>
+                    </label>
+                `;
+                });
+                $("#buildingCheckList").html(html);
+            }).catch(function () {
+                $("#buildingCheckList").html(`<div class="assign-loading" style="color:#dc2626;">Không tải được dữ liệu.</div>`);
+            });
+        });
+
+        $("#saveBuildingsBtn").on("click", function () {
+            const btn = $(this);
+            const selectedIds = [];
+            $("#buildingCheckList input[name='buildingIds']:checked").each(function () {
+                selectedIds.push(parseInt($(this).val()));
+            });
+
+            btn.prop("disabled", true).html('<i class="bi bi-hourglass-split"></i> Đang lưu...');
+
+            $.ajax({
+                url: "/admin/staff/" + STAFF_ID + "/assignments/buildings",
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(selectedIds),
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: 'Cập nhật phân công tòa nhà thành công!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => { location.reload(); });
+                },
+                error: function (xhr) {
+                    const err = xhr.responseJSON;
+                    btn.prop("disabled", false).html('<i class="bi bi-check2"></i> Lưu thay đổi');
+                    Swal.fire({ icon: 'error', title: 'Lỗi', text: err?.message || 'Cập nhật thất bại!' });
+                }
+            });
+        });
+
+        // ── Customer Assignment Modal ─────────────────────────────────────────
+        $("#btnEditCustomers").on("click", function () {
+            const modal = new bootstrap.Modal(document.getElementById("modalCustomers"));
+            $("#customerCheckList").html(`
+            <div class="assign-loading">
+                <i class="bi bi-arrow-repeat" style="font-size:1.5rem; display:block; margin-bottom:0.5rem;"></i>
+                Đang tải dữ liệu...
+            </div>
+        `);
+            modal.show();
+
+            Promise.all([
+                $.getJSON("/admin/staff/customers"),
+                $.getJSON("/admin/staff/" + STAFF_ID + "/assignments/customers")
+            ]).then(function ([allCustomers, assignedIds]) {
+                if (allCustomers.length === 0) {
+                    $("#customerCheckList").html(`
+                    <div class="assign-loading">Không có khách hàng nào trong hệ thống.</div>
+                `);
+                    return;
+                }
+                let html = "";
+                allCustomers.forEach(function (c) {
+                    const checked = assignedIds.includes(c.id) ? "checked" : "";
+                    html += `
+                    <label class="assign-check-item">
+                        <input type="checkbox" name="customerIds" value="${c.id}" ${checked}>
+                        <div class="assign-check-avatar customer">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <div class="assign-check-info">
+                            <div class="assign-check-name">${c.fullName}</div>
+                            <div class="assign-check-sub">${c.phone || ''}</div>
+                        </div>
+                    </label>
+                `;
+                });
+                $("#customerCheckList").html(html);
+            }).catch(function () {
+                $("#customerCheckList").html(`<div class="assign-loading" style="color:#dc2626;">Không tải được dữ liệu.</div>`);
+            });
+        });
+
+        $("#saveCustomersBtn").on("click", function () {
+            const btn = $(this);
+            const selectedIds = [];
+            $("#customerCheckList input[name='customerIds']:checked").each(function () {
+                selectedIds.push(parseInt($(this).val()));
+            });
+
+            btn.prop("disabled", true).html('<i class="bi bi-hourglass-split"></i> Đang lưu...');
+
+            $.ajax({
+                url: "/admin/staff/" + STAFF_ID + "/assignments/customers",
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(selectedIds),
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: 'Cập nhật phân công khách hàng thành công!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => { location.reload(); });
+                },
+                error: function (xhr) {
+                    const err = xhr.responseJSON;
+                    btn.prop("disabled", false).html('<i class="bi bi-check2"></i> Lưu thay đổi');
+                    Swal.fire({ icon: 'error', title: 'Lỗi', text: err?.message || 'Cập nhật thất bại!' });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

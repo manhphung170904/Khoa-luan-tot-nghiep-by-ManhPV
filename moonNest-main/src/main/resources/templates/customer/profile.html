@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MoonNest - Tài Khoản</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --primary-color: #2d3e8f;
+            --primary-light: #4a5fc1;
+            --secondary-color: #f5f7fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--secondary-color);
+        }
+
+        /* Header */
+        .header {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-top {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-custom {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #f0f0f0;
+            color: var(--primary-color);
+        }
+
+        /* Navigation */
+        .nav-custom {
+            background: var(--primary-color);
+        }
+
+        .nav-custom .nav-link {
+            color: white !important;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 14px 18px;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.2s;
+        }
+
+        .nav-custom .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-custom .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            font-weight: 600;
+        }
+
+        /* Dropdown Menu Styling */
+        .nav-custom .dropdown-menu {
+            background: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .nav-custom .dropdown-item {
+            color: #333;
+            padding: 0.75rem 1.25rem;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-custom .dropdown-item:hover {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .nav-custom .dropdown-item i {
+            color: var(--primary-color);
+        }
+
+        /* Profile Card */
+        .profile-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-role {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: inline-block;
+        }
+
+        /* Info Section */
+        .info-section {
+            padding: 2rem;
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-item {
+            padding: 1.25rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .info-item:hover {
+            background: #f0f4ff;
+            transform: translateX(3px);
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-value {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Action Buttons */
+        .action-section {
+            padding: 2rem;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .btn-action {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary-custom {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary-custom:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 62, 143, 0.3);
+        }
+
+        .btn-outline-custom {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn-outline-custom:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 62, 143, 0.2);
+        }
+
+        /* Modal */
+        .modal-header {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(45, 62, 143, 0.1);
+        }
+
+        .security-card {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .security-card i {
+            color: #ff9800;
+            font-size: 24px;
+        }
+
+        /* Password Toggle */
+        .password-toggle-wrapper {
+            position: relative;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .password-toggle-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .password-toggle-btn i {
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top py-3">
+            <div class="container-fluid px-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="logo">MoonNest</div>
+                    <button class="navbar-toggler d-lg-none text-white" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarNav">
+                        <i class="bi bi-list fs-3"></i>
+                    </button>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-end">
+                                <small class="d-block opacity-85">Xin chào,</small>
+                                <strong th:text="${#authentication.name}">Nguyễn Văn A</strong>
+                            </div>
+                            <span class="badge-custom">KHÁCH HÀNG</span>
+                        </div>
+                        <a href="#" class="btn btn-logout"
+                            onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Đăng
+                            xuất</a>
+                        <form id="logoutForm" th:action="@{/auth/logout}" method="post" style="display:none;"></form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="nav-custom">
+            <div class="container-fluid px-4">
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/home}">
+                            <i class="bi bi-house-door me-1"></i>Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/contract/list}">
+                            <i class="bi bi-file-text me-1"></i>Hợp đồng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/invoice/list}">
+                            <i class="bi bi-credit-card me-1"></i>Thanh toán
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/building/list}">
+                            <i class="bi bi-building me-1"></i>Tòa nhà
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-grid-3x3-gap me-1"></i>Tiện Ích
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" th:href="@{/customer/transaction/history}">
+                                    <i class="bi bi-clock-history me-2"></i>Lịch sử giao dịch
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/customer/service}">
+                                    <i class="bi bi-clipboard-check me-2"></i>Dịch vụ
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/customer/profile}">
+                            <i class="bi bi-person-circle me-1"></i>Tài khoản
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container-fluid px-4 py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Profile Card -->
+                <div class="profile-card">
+                    <!-- Profile Header -->
+                    <div class="profile-header">
+                        <div class="profile-name" th:text="${customer.fullName}">Nguyễn Văn A</div>
+                        <div class="profile-role">KHÁCH HÀNG</div>
+                    </div>
+
+                    <!-- Info Section -->
+                    <div class="info-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-person-badge"></i>
+                            Thông Tin Tài Khoản
+                        </h2>
+
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-person-circle"></i>
+                                Tên đăng nhập
+                            </div>
+                            <div class="info-value" th:text="${customer.username}">nguyenvana</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-envelope"></i>
+                                Email
+                            </div>
+                            <div class="info-value" th:text="${customer.email}">nguyenvana@example.com</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-link-45deg"></i>
+                                Email Google liên kết
+                            </div>
+                            <div class="info-value"
+                                th:text="${linkedGoogleEmail != null ? linkedGoogleEmail : 'Chưa liên kết'}">Chưa liên
+                                kết</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-telephone"></i>
+                                Số điện thoại
+                            </div>
+                            <div class="info-value" th:text="${customer.phone}">0123456789</div>
+                        </div>
+                    </div>
+
+                    <!-- Security Notice -->
+                    <div class="info-section">
+                        <div class="security-card">
+                            <div class="d-flex gap-3">
+                                <div>
+                                    <i class="bi bi-shield-lock"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-2" style="color: #ff9800; font-weight: 600;">Bảo Mật Tài Khoản</h5>
+                                    <p class="mb-0" style="color: #666; font-size: 14px;">
+                                        Để bảo vệ tài khoản của bạn, hãy thường xuyên cập nhật mật khẩu và không chia sẻ
+                                        thông tin đăng nhập với người khác.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-gear"></i>
+                            Quản Lý Tài Khoản
+                        </h2>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <button class="btn btn-primary-custom btn-action w-100" data-bs-toggle="modal"
+                                    data-bs-target="#editUsernameModal">
+                                    <i class="bi bi-person-check"></i>
+                                    Đổi Tên Đăng Nhập
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-primary-custom btn-action w-100" data-bs-toggle="modal"
+                                    data-bs-target="#editPhoneModal">
+                                    <i class="bi bi-phone"></i>
+                                    Đổi Số Điện Thoại
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-outline-custom btn-action w-100" data-bs-toggle="modal"
+                                    data-bs-target="#changePasswordModal">
+                                    <i class="bi bi-key"></i>
+                                    Đổi Mật Khẩu
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <a th:if="${linkedGoogleEmail == null}" class="btn btn-outline-custom btn-action w-100"
+                                    th:href="@{/auth/link/google(returnTo='/customer/profile')}"
+                                    style="text-decoration:none;color:inherit;">
+                                    <i class="bi bi-google"></i>
+                                    Liên Kết Google
+                                </a>
+                                <div th:if="${linkedGoogleEmail != null}"
+                                    class="btn btn-outline-custom btn-action w-100"
+                                    style="opacity:.55; cursor:not-allowed;">
+                                    <i class="bi bi-google"></i>
+                                    Đã liên kết Google
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Đổi Tên Đăng Nhập -->
+    <div class="modal fade" id="editUsernameModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-check me-2"></i>Đổi Tên Đăng Nhập
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="usernameForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Tên đăng nhập hiện tại</label>
+                            <input type="text" class="form-control" th:value="${customer.username}" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tên đăng nhập mới</label>
+                            <input type="text" class="form-control" name="newUsername" required
+                                placeholder="Nhập tên đăng nhập mới">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mã OTP xác nhận</label>
+                            <div class="d-flex gap-2">
+                                <input type="text" class="form-control" name="otp" id="usernameOtp"
+                                    placeholder="Nhập mã OTP" required>
+                                <button type="button" class="btn btn-primary-custom"
+                                    onclick="sendOtp('PROFILE_USERNAME', 'usernameOtp')">Gửi mã</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary-custom">Xác Nhận</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Đổi Email -->
+    <div class="modal fade" id="editEmailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-envelope-at me-2"></i>Đổi Email
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="emailForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Email hiện tại</label>
+                            <input type="email" class="form-control" th:value="${customer.email}" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email mới</label>
+                            <input type="email" class="form-control" name="newEmail" required
+                                placeholder="Nhập email mới">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mật khẩu xác nhận</label>
+                            <div class="password-toggle-wrapper">
+                                <input type="password" class="form-control" name="password" id="emailPassword" required
+                                    placeholder="Nhập mật khẩu để xác nhận" style="padding-right: 45px;">
+                                <button type="button" class="password-toggle-btn"
+                                    onclick="togglePassword('emailPassword')">
+                                    <i class="bi bi-eye" id="emailPassword-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary-custom">Xác Nhận</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Đổi Số Điện Thoại -->
+    <div class="modal fade" id="editPhoneModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-phone me-2"></i>Đổi Số Điện Thoại
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="phoneForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Số điện thoại hiện tại</label>
+                            <input type="text" class="form-control" th:value="${customer.phone}" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Số điện thoại mới</label>
+                            <input type="tel" class="form-control" name="newPhoneNumber" required
+                                placeholder="Nhập số điện thoại mới">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mã OTP xác nhận</label>
+                            <div class="d-flex gap-2">
+                                <input type="text" class="form-control" name="otp" id="phoneOtp"
+                                    placeholder="Nhập mã OTP" required>
+                                <button type="button" class="btn btn-primary-custom"
+                                    onclick="sendOtp('PROFILE_PHONE', 'phoneOtp')">Gửi mã</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary-custom">Xác Nhận</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Đổi Mật Khẩu -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-key me-2"></i>Đổi Mật Khẩu
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="passwordForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Mật khẩu mới</label>
+                            <div class="password-toggle-wrapper">
+                                <input type="password" class="form-control" name="newPassword" id="newPassword" required
+                                    minlength="8" placeholder="Nhập mật khẩu mới" style="padding-right: 45px;">
+                                <button type="button" class="password-toggle-btn"
+                                    onclick="togglePassword('newPassword')">
+                                    <i class="bi bi-eye" id="newPassword-icon"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Mật khẩu tối thiểu 8 ký tự, bao gồm: chữ hoa, chữ thường, số và ký tự đặc biệt.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Xác nhận mật khẩu mới</label>
+                            <div class="password-toggle-wrapper">
+                                <input type="password" class="form-control" name="confirmPassword" id="confirmPassword"
+                                    required minlength="8" placeholder="Nhập lại mật khẩu mới"
+                                    style="padding-right: 45px;">
+                                <button type="button" class="password-toggle-btn"
+                                    onclick="togglePassword('confirmPassword')">
+                                    <i class="bi bi-eye" id="confirmPassword-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label">Mã OTP xác nhận</label>
+                            <div class="d-flex gap-2">
+                                <input type="text" class="form-control" name="otp" id="passwordOtp"
+                                    placeholder="Nhập mã OTP" required>
+                                <button type="button" class="btn btn-primary-custom"
+                                    onclick="sendOtp('PROFILE_PASSWORD', 'passwordOtp')">Gửi mã</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary-custom">Xác Nhận</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- CDN SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!--JQuery-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script th:inline="javascript">
+        const profileSuccessMessage = /*[[${successMessage}]]*/ null;
+        const profileErrorMessage = /*[[${errorMessage}]]*/ null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (profileSuccessMessage) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công',
+                    text: profileSuccessMessage
+                });
+            } else if (profileErrorMessage) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Thất bại',
+                    text: profileErrorMessage
+                });
+            }
+        });
+    </script>
+
+    <script>
+        function sendOtp(purpose) {
+            Swal.fire({
+                title: 'Đang gửi mã OTP',
+                text: 'Vui lòng chờ trong giây lát...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            $.ajax({
+                url: `/customer/profile/otp/${purpose}`,
+                type: 'POST',
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đã gửi mã OTP',
+                        text: 'Vui lòng kiểm tra email liên kết.'
+                    });
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Không thể gửi mã',
+                        text: xhr.responseJSON?.message || 'Gửi mã thất bại.'
+                    });
+                }
+            });
+        }
+
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(inputId + '-icon');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+
+        // Auto dismiss alerts
+        setTimeout(function () {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.classList.remove('show');
+            });
+        }, 5000);
+
+        // Highlight active menu
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentPath = window.location.pathname;
+            const menuLinks = document.querySelectorAll('.nav-link');
+
+            menuLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $("#usernameForm").on("submit", function (e) {
+            e.preventDefault(); // Ngăn form submit mặc định
+
+            const data = {
+                newUsername: $("[name='newUsername']").val(),
+                otp: $("#usernameOtp").val()
+            };
+
+            $.ajax({
+                url: "/customer/profile/username",
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: 'Cập nhật tên đăng nhập thành công!',
+                        timer: 1500,       // tự động đóng sau 1.5s
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = "/customer/profile";
+                    });
+                },
+                error: function (xhr) {
+                    const err = xhr.responseJSON;
+                    if (err && err.message) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: err.message
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: 'Cập nhật thất bại!'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $("#emailForm").on("submit", function (e) {
+            e.preventDefault(); // Ngăn form submit mặc định
+
+            const data = {
+                newEmail: $("[name='newEmail']").val(),
+                password: $("#emailPassword").val()
+            };
+
+            $.ajax({
+                url: "/customer/profile/email",
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: 'Cập nhật Email thành công!',
+                        timer: 1500,       // tự động đóng sau 1.5s
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = "/customer/profile";
+                    });
+                },
+                error: function (xhr) {
+                    const err = xhr.responseJSON;
+                    if (err && err.message) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: err.message
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: 'Cập nhật thất bại!'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $("#phoneForm").on("submit", function (e) {
+            e.preventDefault(); // Ngăn form submit mặc định
+
+            const data = {
+                newPhoneNumber: $("[name='newPhoneNumber']").val(),
+                otp: $("#phoneOtp").val()
+            };
+
+            $.ajax({
+                url: "/customer/profile/phoneNumber",
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: 'Cập nhật số điện thoại thành công!',
+                        timer: 1500,       // tự động đóng sau 1.5s
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = "/customer/profile";
+                    });
+                },
+                error: function (xhr) {
+                    const err = xhr.responseJSON;
+                    if (err && err.message) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: err.message
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: 'Cập nhật thất bại!'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $("#passwordForm").on("submit", function (e) {
+            e.preventDefault(); // Ngăn form submit mặc định
+
+            const newPassword = $("#newPassword").val();
+            const confirmPassword = $("#confirmPassword").val();
+
+            if (newPassword !== confirmPassword) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Mật khẩu không khớp',
+                    text: 'Vui lòng nhập lại mật khẩu xác nhận.',
+                    confirmButtonText: 'Thử lại',
+                    confirmButtonColor: '#2d3e8f'
+                });
+                return;
+            }
+
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+            if (!passwordRegex.test(newPassword)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Mật khẩu không đạt yêu cầu',
+                    text: 'Mật khẩu phải từ 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*?&).',
+                    confirmButtonText: 'Thử lại',
+                    confirmButtonColor: '#2d3e8f'
+                });
+                return;
+            }
+
+            const data = {
+                newPassword: newPassword,
+                confirmPassword: confirmPassword,
+                otp: $("#passwordOtp").val()
+            };
+
+            $.ajax({
+                url: "/customer/profile/password",
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: 'Cập nhật mật khẩu thành công!',
+                        timer: 1500,       // tự động đóng sau 1.5s
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = "/customer/profile";
+                    });
+                },
+                error: function (xhr) {
+                    const err = xhr.responseJSON;
+                    if (err && err.message) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: err.message
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: 'Cập nhật thất bại!'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

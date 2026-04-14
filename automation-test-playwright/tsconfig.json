@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "node16",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node", "@playwright/test"],
+    "paths": {
+      "@config/*": ["./config/*"],
+      "@pages/*": ["./pages/*"],
+      "@helpers/*": ["./utils/helpers/*"],
+      "@fixtures/*": ["./utils/fixtures/*"],
+      "@data/*": ["./test-data/*"]
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true
+  },
+  "include": [
+    "playwright.config.ts",
+    "config/**/*.ts",
+    "pages/**/*.ts",
+    "utils/**/*.ts",
+    "tests/**/*.ts",
+    "test-data/**/*.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "artifacts",
+    "playwright-report",
+    "reports"
+  ]
+}

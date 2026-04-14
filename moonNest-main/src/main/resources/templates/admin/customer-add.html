@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Thêm Khách hàng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: 220px;
+            padding: 0;
+            margin-top: 72px;
+        }
+
+        .detail-body {
+            padding: 1.5rem;
+        }
+
+        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        .page-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .page-header-bar h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+        }
+
+        .page-header-bar .update-time {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+        }
+
+        .page-header-actions {
+            display: flex;
+            gap: 0.625rem;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        /* ══ BUTTONS ═════════════════════════════════════════════════════════ */
+        .btn-back {
+            background: white;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-back:hover {
+            background: #f9fafb;
+            color: #111827;
+            border-color: #d1d5db;
+            transform: translateY(-1px);
+        }
+
+        /* ══ D-CARD ══════════════════════════════════════════════════════════ */
+        .d-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .d-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .d-card-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .d-card-header h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .d-card-body {
+            padding: 1.25rem 1.5rem;
+        }
+
+        /* ══ SECTION TITLE ═══════════════════════════════════════════════════ */
+        .form-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .form-section-title i {
+            color: #3b82f6;
+            font-size: 0.8rem;
+        }
+
+        /* ══ FORM CONTROLS ═══════════════════════════════════════════════════ */
+        .form-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
+            display: block;
+        }
+
+        .required {
+            color: #ef4444;
+            margin-left: 0.2rem;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8125rem;
+            color: #374151;
+            background: #fff;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: #9ca3af;
+            font-weight: 400;
+        }
+
+        .form-text {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.3rem;
+        }
+
+        /* Input groups */
+        .input-group-text {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-right: none;
+            color: #6b7280;
+            font-size: 0.8125rem;
+            border-radius: 7px 0 0 7px;
+        }
+
+        .input-group .form-control {
+            border-left: none;
+            border-radius: 0 7px 7px 0;
+        }
+
+        .input-group:focus-within .input-group-text {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        /* ══ INFO BOX ════════════════════════════════════════════════════════ */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            font-size: 0.8125rem;
+            color: #1e40af;
+        }
+
+        .info-box i {
+            color: #3b82f6;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        /* ══ STAFF SELECTION ═════════════════════════════════════════════════ */
+        .staff-selection-container {
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            background: #fafbfc;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .staff-selection-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .staff-selection-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .staff-selection-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .staff-selection-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .staff-selection-header {
+            padding: 0.6rem 0.875rem;
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+            border-radius: 7px 7px 0 0;
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .selected-count {
+            color: #3b82f6;
+            font-weight: 700;
+        }
+
+        .staff-item {
+            padding: 0.625rem 0.875rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            cursor: pointer;
+        }
+
+        .staff-item:last-child {
+            border-bottom: none;
+        }
+
+        .staff-item:hover {
+            background: #f0f9ff;
+        }
+
+        .staff-item.selected {
+            background: #eff6ff;
+        }
+
+        .staff-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #3b82f6;
+            flex-shrink: 0;
+        }
+
+        .staff-label {
+            font-size: 0.8125rem;
+            color: #374151;
+            cursor: pointer;
+            flex-grow: 1;
+            margin: 0;
+            user-select: none;
+        }
+
+        .staff-item:hover .staff-label {
+            color: #1e40af;
+        }
+
+        .staff-empty {
+            padding: 1.5rem 1rem;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.8125rem;
+        }
+
+        /* ══ PASSWORD STRENGTH ═══════════════════════════════════════════════ */
+        .password-strength {
+            height: 3px;
+            border-radius: 2px;
+            background: #e5e7eb;
+            margin-top: 0.4rem;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+
+        .password-strength-bar.weak {
+            width: 33%;
+            background: #ef4444;
+        }
+
+        .password-strength-bar.medium {
+            width: 66%;
+            background: #f59e0b;
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: #10b981;
+        }
+
+        .password-strength-text {
+            font-size: 0.72rem;
+            margin-top: 0.2rem;
+            font-weight: 600;
+        }
+
+        .password-strength-text.weak {
+            color: #ef4444;
+        }
+
+        .password-strength-text.medium {
+            color: #f59e0b;
+        }
+
+        .password-strength-text.strong {
+            color: #10b981;
+        }
+
+        /* ══ FORM ACTIONS ════════════════════════════════════════════════════ */
+        .form-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .btn-filter {
+            padding: 0.45rem 1rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-filter.btn-reset {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-filter.btn-reset:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-filter.btn-submit {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-filter.btn-submit:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ══ RESPONSIVE ═══════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            main.content {
+                margin-left: 0;
+                padding: 0;
+            }
+
+            .page-header-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn-filter {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER + SIDEBAR -->
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+        <div class="detail-body">
+
+            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <div class="page-header-bar">
+                <div>
+                    <h2>
+                        <i class="bi bi-person-plus" style="color:#3b82f6;font-size:1.2rem;"></i>
+                        Thêm khách hàng mới
+                    </h2>
+                    <div class="update-time">Điền đầy đủ thông tin để thêm khách hàng vào hệ thống</div>
+                </div>
+                <div class="page-header-actions">
+                    <a th:href="@{/admin/customer/list}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i>
+                        Quay lại danh sách
+                    </a>
+                </div>
+            </div>
+
+            <!-- ── Form Card ───────────────────────────────────────────────── -->
+            <div class="d-card">
+                <div class="d-card-header">
+                    <i class="bi bi-people"></i>
+                    <h3>Thông tin khách hàng</h3>
+                </div>
+                <div class="d-card-body">
+
+                    <!-- Info Box -->
+                    <div class="info-box mb-4">
+                        <i class="bi bi-info-circle"></i>
+                        Vui lòng điền đầy đủ thông tin bắt buộc (<span style="color:#ef4444;">*</span>) để thêm khách
+                        hàng mới vào hệ thống.
+                    </div>
+
+                    <form id="customerForm">
+
+                        <!-- Thông tin tài khoản -->
+                        <div class="form-section-title">
+                            <i class="bi bi-person-circle"></i> Thông tin tài khoản
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Tên đăng nhập <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control" name="username" placeholder="VD: customer01"
+                                        required>
+                                </div>
+                                <small class="form-text">Tên đăng nhập phải là duy nhất trong hệ thống</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mật khẩu <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control" name="password"
+                                        placeholder="Nhập mật khẩu" required id="passwordInput">
+                                </div>
+                                <div class="password-strength">
+                                    <div class="password-strength-bar" id="strengthBar"></div>
+                                </div>
+                                <small class="password-strength-text" id="strengthText"></small>
+                            </div>
+                        </div>
+
+                        <!-- Thông tin cá nhân -->
+                        <div class="form-section-title">
+                            <i class="bi bi-info-circle"></i> Thông tin cá nhân
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Tên khách hàng <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                                    <input type="text" class="form-control" name="fullName"
+                                        placeholder="VD: Công ty TNHH ABC" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Số điện thoại <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                    <input type="tel" class="form-control" name="phone" placeholder="VD: 0912345678"
+                                        required>
+                                </div>
+                                <small class="form-text">Nhập số điện thoại 10 chữ số</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control" name="email"
+                                        placeholder="VD: customer@example.com" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phân công nhân viên -->
+                        <div class="form-section-title">
+                            <i class="bi bi-person-badge"></i> Phân công nhân viên chăm sóc
+                        </div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-md-12">
+                                <label class="form-label">Nhân viên chăm sóc <span class="required">*</span></label>
+                                <div class="staff-selection-container">
+                                    <div class="staff-selection-header">
+                                        <span>Chọn nhân viên</span>
+                                        <span class="selected-count">(<span id="selectedCount">0</span> đã chọn)</span>
+                                    </div>
+                                    <div th:if="${staffs != null and !staffs.isEmpty()}">
+                                        <div class="staff-item" th:each="s : ${staffs}">
+                                            <input type="checkbox" class="staff-checkbox" name="staffIds"
+                                                th:value="${s.id}" th:id="'staff_' + ${s.id}"
+                                                onchange="updateSelectedCount()">
+                                            <label class="staff-label" th:for="'staff_' + ${s.id}"
+                                                th:text="${s.fullName}"></label>
+                                        </div>
+                                    </div>
+                                    <div th:if="${staffs == null or staffs.isEmpty()}" class="staff-empty">
+                                        <i class="bi bi-inbox d-block mb-1" style="font-size:1.5rem;opacity:0.4;"></i>
+                                        Không có nhân viên nào
+                                    </div>
+                                </div>
+                                <small class="form-text">Chọn một hoặc nhiều nhân viên để chăm sóc khách hàng
+                                    này</small>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="reset" class="btn-filter btn-reset" onclick="resetForm()">
+                                <i class="bi bi-arrow-clockwise"></i> Đặt lại
+                            </button>
+                            <button type="submit" class="btn-filter btn-submit">
+                                <i class="bi bi-check-circle"></i> Lưu khách hàng
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div><!-- /detail-body -->
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        /* ── Password strength ──────────────────────────────────────────── */
+        function checkPasswordStrength(password) {
+            const bar = document.getElementById('strengthBar');
+            const text = document.getElementById('strengthText');
+
+            if (!password) {
+                bar.className = 'password-strength-bar';
+                text.textContent = '';
+                return;
+            }
+
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+
+            bar.className = 'password-strength-bar';
+            text.className = 'password-strength-text';
+
+            if (strength <= 1) {
+                bar.classList.add('weak');
+                text.classList.add('weak');
+                text.textContent = 'Mật khẩu yếu';
+            } else if (strength <= 2) {
+                bar.classList.add('medium');
+                text.classList.add('medium');
+                text.textContent = 'Mật khẩu trung bình';
+            } else {
+                bar.classList.add('strong');
+                text.classList.add('strong');
+                text.textContent = 'Mật khẩu mạnh';
+            }
+        }
+
+        document.getElementById('passwordInput').addEventListener('input', function (e) {
+            checkPasswordStrength(e.target.value);
+        });
+
+        /* ── Staff selection ────────────────────────────────────────────── */
+        function updateSelectedCount() {
+            const checked = document.querySelectorAll('input[name="staffIds"]:checked');
+            document.getElementById('selectedCount').textContent = checked.length;
+            document.querySelectorAll('.staff-item').forEach(item => {
+                item.classList.toggle('selected', item.querySelector('.staff-checkbox').checked);
+            });
+        }
+
+        function resetForm() {
+            document.querySelectorAll('input[name="staffIds"]').forEach(cb => cb.checked = false);
+            updateSelectedCount();
+            const bar = document.getElementById('strengthBar');
+            const text = document.getElementById('strengthText');
+            bar.className = 'password-strength-bar';
+            text.textContent = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.staff-item').forEach(item => {
+                item.addEventListener('click', function (e) {
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                        const cb = this.querySelector('.staff-checkbox');
+                        cb.checked = !cb.checked;
+                        updateSelectedCount();
+                    }
+                });
+            });
+            updateSelectedCount();
+        });
+    </script>
+
+    <script>
+        /* ── Form submit ────────────────────────────────────────────────── */
+        $("#customerForm").on("submit", function (e) {
+            e.preventDefault();
+
+            const staffIds = $("input[name='staffIds']:checked")
+                .map(function () { return Number($(this).val()); }).get();
+
+            const data = {
+                username: $("[name='username']").val(),
+                password: $("[name='password']").val(),
+                fullName: $("[name='fullName']").val(),
+                phone: $("[name='phone']").val(),
+                email: $("[name='email']").val(),
+                staffIds: staffIds
+            };
+
+            $.ajax({
+                url: "/admin/customer/add",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function () {
+                    Swal.fire({
+                        icon: 'success', title: 'Thành công',
+                        text: 'Thêm khách hàng thành công!',
+                        timer: 1500, showConfirmButton: false
+                    }).then(() => { window.location.href = "/admin/customer/list"; });
+                },
+                error: function (xhr) {
+                    const err = xhr.responseJSON;
+                    Swal.fire({
+                        icon: 'error', title: 'Lỗi',
+                        text: err?.message || 'Thêm thất bại!'
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

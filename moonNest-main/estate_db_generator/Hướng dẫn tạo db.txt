@@ -1,0 +1,6 @@
+Bước 1: Mở my sql -> Chạy sql_estate để khởi tạo db.
+Bước 2: Mở folder chứa file generate_invoice_data.py (Tức folder estate_db_generator).
+Bước 3: Chạy cmd tại folder này.
+Bước 4: Chạy lệnh python generate_invoice_data.py
+Xong!
+(Lưu ý: Sau khi tạo xong db, vui lòng đăng nhập với tài khoản admin và kích chọn "Cập nhật trạng thái" ở mục quản lý hợp đồng và quản lý hóa đơn để có dữ liệu thực tế nhất!)

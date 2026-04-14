@@ -1,0 +1,28 @@
+<header class="navbar shadow-sm" th:fragment="header">
+    <button class="navbar-menu-btn" id="navbarMenuBtn" aria-label="Mở menu">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <div class="brand">
+        <div class="brand-logo">
+            <i class="bi bi-moon-stars-fill"></i>
+        </div>
+        <div class="brand-text">
+            <strong>MoonNest</strong>
+            <span class="brand-sub">Management</span>
+        </div>
+    </div>
+
+    <div class="navbar-right">
+        <a th:href="@{/admin/profile}" class="user-block" aria-label="Hồ sơ cá nhân">
+            <div class="user-info">
+                <span class="user-greeting">Xin chào,</span>
+                <strong class="user-name" th:text="${staffName}">Phùng Văn Mạnh</strong>
+            </div>
+            <div class="avatar-wrapper">
+                <img th:src="@{'/images/staff_img/' + ${staffAvatar} + '.jpg'}" alt="Admin Avatar">
+                <span class="status-indicator"></span>
+            </div>
+        </a>
+    </div>
+</header>

@@ -1,0 +1,72 @@
+name: Playwright CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Lay ma nguon
+        uses: actions/checkout@v4
+
+      - name: Cai Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: automation-test-playwright/package-lock.json
+
+      - name: Cai dependency
+        working-directory: automation-test-playwright
+        run: npm install
+
+      - name: Cai trinh duyet Chromium
+        working-directory: automation-test-playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Kiem tra TypeScript
+        working-directory: automation-test-playwright
+        run: npm run typecheck
+
+      - name: Tao session dang nhap
+        working-directory: automation-test-playwright
+        env:
+          APP_ENV: test
+          BASE_URL: ${{ secrets.SUNTOWER_BASE_URL }}
+          ADMIN_USERNAME: ${{ secrets.SUNTOWER_ADMIN_USERNAME }}
+          STAFF_USERNAME: ${{ secrets.SUNTOWER_STAFF_USERNAME }}
+          CUSTOMER_USERNAME: ${{ secrets.SUNTOWER_CUSTOMER_USERNAME }}
+          DEFAULT_PASSWORD: ${{ secrets.SUNTOWER_DEFAULT_PASSWORD }}
+        run: npm run test:setup
+
+      - name: Chay regression suite
+        working-directory: automation-test-playwright
+        env:
+          APP_ENV: test
+          BASE_URL: ${{ secrets.SUNTOWER_BASE_URL }}
+          ADMIN_USERNAME: ${{ secrets.SUNTOWER_ADMIN_USERNAME }}
+          STAFF_USERNAME: ${{ secrets.SUNTOWER_STAFF_USERNAME }}
+          CUSTOMER_USERNAME: ${{ secrets.SUNTOWER_CUSTOMER_USERNAME }}
+          DEFAULT_PASSWORD: ${{ secrets.SUNTOWER_DEFAULT_PASSWORD }}
+        run: npm run test:regression
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: automation-test-playwright/playwright-report
+
+      - name: Upload artifact loi
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: automation-test-playwright/artifacts/test-results

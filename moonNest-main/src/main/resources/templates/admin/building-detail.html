@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MoonNest | Chi tiết Bất động sản</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+    <link href='https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css' rel='stylesheet' />
+    <style>
+        body {
+            background: #f4f6f9;
+            overflow-x: hidden;
+        }
+
+        main.content {
+            margin-left: 220px;
+            padding: 0;
+            margin-top: 72px;
+        }
+
+        /* ══ HERO BANNER ══════════════════════════════════════════════════════ */
+        .hero {
+            position: relative;
+            height: 240px;
+            background: #1e293b;
+            overflow: hidden;
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
+        }
+
+        .hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.55;
+        }
+
+        .hero-no-img {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #475569;
+        }
+
+        .hero-no-img i {
+            font-size: 3rem;
+        }
+
+        .hero-no-img span {
+            font-size: 0.875rem;
+        }
+
+        /* Overlay gradient phía dưới hero */
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom,
+                    transparent 30%,
+                    rgba(15, 23, 42, 0.75) 100%);
+        }
+
+        /* Nội dung nằm trên hero */
+        .hero-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.25rem 2rem;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 1rem;
+        }
+
+        .hero-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0 0 0.5rem;
+            line-height: 1.2;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .btn-hero {
+            padding: 0.45rem 0.875rem;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            backdrop-filter: blur(8px);
+        }
+
+        .btn-hero-back {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-hero-back:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+
+        .btn-hero-edit {
+            background: #f59e0b;
+            color: #fff;
+        }
+
+        .btn-hero-edit:hover {
+            background: #d97706;
+        }
+
+        .btn-hero-delete {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        .btn-hero-delete:hover {
+            background: #b91c1c;
+        }
+
+        /* ══ MAIN LAYOUT ══════════════════════════════════════════════════════ */
+        .detail-body {
+            padding: 1.5rem;
+        }
+
+        .detail-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-top: 1.25rem;
+        }
+
+        /* ══ CARD ══════════════════════════════════════════════════════════════ */
+        .d-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+        }
+
+        .d-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .d-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafbfc;
+        }
+
+        .d-card-header i {
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .d-card-header h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .d-card-body {
+            padding: 1.5rem;
+        }
+
+        /* ══ FIELD ITEM — dùng trong Bootstrap row/col ══════════════════════ */
+        .field-lbl {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.2rem;
+        }
+
+        .field-val {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #111827;
+        }
+
+        .field-val.empty {
+            color: #d1d5db;
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        /* Fee item — giống field nhưng dùng trong fee-grid */
+        .fee-lbl {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.2rem;
+        }
+
+        .fee-val {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .fee-val.empty {
+            color: #d1d5db;
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        /* ══ BADGES ════════════════════════════════════════════════════════════ */
+        .bc {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.55rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .bc-office {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .bc-shophouse {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .bc-apartment {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .bc-warehouse {
+            background: #fdf4ff;
+            color: #7e22ce;
+        }
+
+        .bc-for-rent {
+            background: #f0f9ff;
+            color: #0369a1;
+        }
+
+        .bc-for-sale {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .bc-level {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .bc-dir {
+            background: #f0fdf4;
+            color: #059669;
+        }
+
+        .bc-id {
+            background: #eef2ff;
+            color: #6366f1;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .bc-price {
+            background: #ecfdf5;
+            color: #059669;
+            font-weight: 700;
+        }
+
+        .bc-sale {
+            background: #fff7ed;
+            color: #c2410c;
+            font-weight: 700;
+        }
+
+        .bc-expired {
+            background: #fef2f2;
+            color: #dc2626;
+            font-size: 0.72rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .bc-valid {
+            background: #f0fdf4;
+            color: #166534;
+            font-size: 0.72rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        /* ══ RENT AREA TAGS ═══════════════════════════════════════════════════ */
+        .rent-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .rent-tag {
+            padding: 0.25rem 0.625rem;
+            background: #eff6ff;
+            color: #2563eb;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            border: 1px solid #dbeafe;
+        }
+
+        /* ══ STAFF LIST ═══════════════════════════════════════════════════════ */
+        .staff-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+        }
+
+        .staff-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: #f9fafb;
+            border: 1px solid #e9ecef;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .staff-item:hover {
+            background: #f0f9ff;
+            border-color: #bfdbfe;
+        }
+
+        .staff-item i {
+            color: #3b82f6;
+        }
+
+        /* ══ DETAIL TABLE (supplier, amenity, legal, planning) ════════════════ */
+        .dt {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+
+        .dt thead th {
+            background: #f8fafc;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1.5px solid #e9ecef;
+            white-space: nowrap;
+        }
+
+        .dt tbody td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        .dt tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dt tbody tr:hover {
+            background: #fafbfc;
+        }
+
+        .tc {
+            display: inline-block;
+            padding: 0.18rem 0.45rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .tc-construction {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .tc-design {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .tc-mep {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .tc-other {
+            background: #f9fafb;
+            color: #6b7280;
+        }
+
+        .tc-notary {
+            background: #fdf4ff;
+            color: #7e22ce;
+        }
+
+        .tc-land {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .tc-law {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .tc-tax {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .tc-shopping {
+            background: #fdf4ff;
+            color: #7e22ce;
+        }
+
+        .tc-park {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .tc-hospital {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .tc-school {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .tc-restaurant {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .tc-bank {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .tc-gym {
+            background: #f0fdf4;
+            color: #059669;
+        }
+
+        .tc-transport {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .dist-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #0369a1;
+        }
+
+        .legal-warn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #92400e;
+            margin-bottom: 0.75rem;
+        }
+
+        .map-link {
+            color: #3b82f6;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .map-link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
+        .coord-mono {
+            font-family: monospace;
+            font-size: 0.8125rem;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .coord-mono i {
+            color: #10b981;
+        }
+
+        /* ── Global hover effect cho tất cả button ── */
+        button:not(:disabled):not(.no-hover) {
+            transition: filter 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        button:not(:disabled):not(.no-hover):hover {
+            filter: brightness(0.93);
+        }
+
+        button:not(:disabled):not(.no-hover):active {
+            filter: brightness(0.87);
+        }
+
+        /* Override cho btn-hero vì đã có style riêng */
+        .btn-hero:hover {
+            filter: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{layout/header :: header}"></div>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <main class="content">
+
+        <!-- ══ BODY ═══════════════════════════════════════════════════════════════ -->
+        <div class="detail-body">
+
+            <!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
+            <div class="hero">
+                <!-- Ảnh nếu có -->
+                <img th:if="${not #strings.isEmpty(building.image)}"
+                    th:src="${'/images/building_img/' + building.image}" alt="" class="hero-img"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                <!-- Fallback nếu ảnh lỗi load -->
+                <div class="hero-no-img" style="display:none;">
+                    <i class="bi bi-image-fill"></i>
+                    <span>Không tải được ảnh</span>
+                </div>
+                <!-- Placeholder nếu không có ảnh -->
+                <div th:unless="${not #strings.isEmpty(building.image)}" class="hero-no-img">
+                    <i class="bi bi-buildings"></i>
+                    <span>Chưa có hình ảnh</span>
+                </div>
+                <!-- Nội dung overlay -->
+                <div class="hero-content">
+                    <div>
+                        <h1 class="hero-title" th:text="${building.name}">Tên bất động sản</h1>
+                        <div class="hero-badges">
+                            <span class="bc"
+                                th:classappend="${building.propertyType=='OFFICE'?'bc-office':building.propertyType=='SHOPHOUSE'?'bc-shophouse':building.propertyType=='APARTMENT'?'bc-apartment':'bc-warehouse'}"
+                                th:text="${building.propertyType == 'OFFICE' ? 'Văn phòng' :
+                                         building.propertyType == 'SHOPHOUSE' ? 'Nhà phố thương mại' :
+                                         building.propertyType == 'APARTMENT' ? 'Căn hộ' : 'Kho xưởng'}">Văn
+                                phòng</span>
+                            <span class="bc"
+                                th:classappend="${building.transactionType=='FOR_RENT'?'bc-for-rent':'bc-for-sale'}"
+                                th:text="${building.transactionType=='FOR_RENT'?'Cho thuê':'Mua bán'}">Cho thuê</span>
+                            <span class="bc bc-id" th:text="'BĐS-'+${building.id}">BĐS-1</span>
+                        </div>
+                    </div>
+                    <div class="hero-actions">
+                        <a th:href="@{/admin/building/list}" class="btn-hero btn-hero-back">
+                            <i class="bi bi-arrow-left"></i> Danh sách
+                        </a>
+                        <a th:href="@{'/admin/building/edit/'+${building.id}}" class="btn-hero btn-hero-edit">
+                            <i class="bi bi-pencil"></i> Chỉnh sửa
+                        </a>
+                        <button class="btn-hero btn-hero-delete" th:data-id="${building.id}">
+                            <i class="bi bi-trash"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+            </div><!-- end hero -->
+
+            <!-- ══ CONTENT ═══════════════════════════════════════════════════════════ -->
+            <div class="detail-layout">
+
+                <!-- Thông tin + Đặc điểm gom chung 1 card -->
+                <div class="d-card">
+                    <div class="d-card-header">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <h3>Thông tin bất động sản</h3>
+                    </div>
+                    <div class="d-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="field-lbl">Địa chỉ</div>
+                                <div class="field-val"
+                                    th:text="${(#strings.isEmpty(building.address) ? '' : building.address)}"></div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="field-lbl">Số tầng</div>
+                                <div class="field-val" th:text="${building.numberOfFloor}+' tầng'"></div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="field-lbl">Tầng hầm</div>
+                                <div class="field-val" th:text="${building.numberOfBasement}+' tầng'"></div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="field-lbl">Diện tích sàn</div>
+                                <div class="field-val" th:text="${building.floorArea}+' m²'"></div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="field-lbl">Hướng</div>
+                                <div class="field-val">
+                                    <span th:if="${building.direction}" class="bc bc-dir"
+                                        th:text="${building.direction}"></span>
+                                    <span th:unless="${building.direction}" class="empty">—</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="field-lbl">Hạng</div>
+                                <div class="field-val">
+                                    <span th:if="${building.level}" class="bc bc-level"
+                                        th:text="${building.level}"></span>
+                                    <span th:unless="${building.level}" class="empty">—</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="field-lbl">Mã số thuế</div>
+                                <div class="field-val" th:classappend="${#strings.isEmpty(building.taxCode)} ? 'empty'"
+                                    th:text="${not #strings.isEmpty(building.taxCode) ? building.taxCode : '—'}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Giá và phí -->
+                <div class="d-card">
+                    <div class="d-card-header">
+                        <i class="bi bi-cash-stack"></i>
+                        <h3>Giá và phí (VNĐ)</h3>
+                    </div>
+                    <div class="d-card-body">
+                        <!-- FOR_RENT -->
+                        <div th:if="${building.transactionType=='FOR_RENT'}">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="fee-lbl">Giá thuê / m²</div>
+                                    <div class="fee-val">
+                                        <span class="bc bc-price" th:if="${building.rentPrice}"
+                                            th:text="${#numbers.formatDecimal(building.rentPrice,0,'COMMA',0,'POINT')}+' đ'"></span>
+                                        <span th:unless="${building.rentPrice}" class="empty">—</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="fee-lbl">Đặt cọc</div>
+                                    <div class="fee-val" th:classappend="${building.deposit==null}?'empty'"
+                                        th:text="${building.deposit!=null?#numbers.formatDecimal(building.deposit,0,'COMMA',0,'POINT')+' đ':'—'}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="fee-lbl">Phí dịch vụ</div>
+                                    <div class="fee-val" th:classappend="${building.serviceFee==null}?'empty'"
+                                        th:text="${building.serviceFee!=null?#numbers.formatDecimal(building.serviceFee,0,'COMMA',0,'POINT')+' đ':'—'}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="fee-lbl">Phí xe ô tô</div>
+                                    <div class="fee-val" th:classappend="${building.carFee==null}?'empty'"
+                                        th:text="${building.carFee!=null?#numbers.formatDecimal(building.carFee,0,'COMMA',0,'POINT')+' đ':'—'}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="fee-lbl">Phí xe máy</div>
+                                    <div class="fee-val" th:classappend="${building.motorbikeFee==null}?'empty'"
+                                        th:text="${building.motorbikeFee!=null?#numbers.formatDecimal(building.motorbikeFee,0,'COMMA',0,'POINT')+' đ':'—'}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="fee-lbl">Phí nước</div>
+                                    <div class="fee-val" th:classappend="${building.waterFee==null}?'empty'"
+                                        th:text="${building.waterFee!=null?#numbers.formatDecimal(building.waterFee,0,'COMMA',0,'POINT')+' đ':'—'}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="fee-lbl">Phí điện</div>
+                                    <div class="fee-val" th:classappend="${building.electricityFee==null}?'empty'"
+                                        th:text="${building.electricityFee!=null?#numbers.formatDecimal(building.electricityFee,0,'COMMA',0,'POINT')+' đ':'—'}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- FOR_SALE -->
+                        <div th:if="${building.transactionType=='FOR_SALE'}">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="fee-lbl">Giá bán</div>
+                                    <div class="fee-val">
+                                        <span class="bc bc-sale" th:if="${building.salePrice}"
+                                            th:text="${#numbers.formatDecimal(building.salePrice,0,'COMMA',0,'POINT')}+' đ'"></span>
+                                        <span th:unless="${building.salePrice}" class="empty">—</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diện tích cho thuê — chỉ FOR_RENT -->
+                <div class="d-card" th:if="${building.transactionType=='FOR_RENT'}">
+                    <div class="d-card-header">
+                        <i class="bi bi-rulers"></i>
+                        <h3>Diện tích cho thuê</h3>
+                    </div>
+                    <div class="d-card-body">
+                        <div th:if="${not #strings.isEmpty(building.rentAreaValues)}" class="rent-tags">
+                            <span class="rent-tag" th:each="a : ${#strings.arraySplit(building.rentAreaValues,',')}"
+                                th:text="${a}+' m²'"></span>
+                        </div>
+                        <span th:unless="${not #strings.isEmpty(building.rentAreaValues)}" class="empty">Chưa cập
+                            nhật</span>
+                    </div>
+                </div>
+
+                <!-- Vị trí bản đồ -->
+                <div class="d-card">
+                    <div class="d-card-header">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <h3>Vị trí bản đồ</h3>
+                        <div th:if="${building.latitude!=null}" class="ms-auto d-flex align-items-center gap-3"
+                            style="font-size:0.8125rem;">
+                            <span class="coord-mono" style="color:#6b7280;">
+                                <i class="bi bi-compass text-success"></i>
+                                <span th:text="${building.latitude}+', '+${building.longitude}"></span>
+                            </span>
+                            <button onclick="openMapModal()" class="btn-open-map">
+                                <i class="bi bi-map-fill"></i> Xem bản đồ
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-card-body">
+                        <!-- Placeholder khi chưa có tọa độ -->
+                        <div th:unless="${building.latitude!=null}"
+                            style="height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;color:#9ca3af;background:#f9fafb;border-radius:8px;">
+                            <i class="bi bi-geo-alt" style="font-size:2rem;color:#d1d5db;"></i>
+                            <span style="font-size:0.875rem;">Chưa có tọa độ — cập nhật khi chỉnh sửa bất động
+                                sản</span>
+                        </div>
+                        <!-- Hint khi có tọa độ -->
+                        <div th:if="${building.latitude!=null}"
+                            style="display:flex;align-items:center;gap:0.75rem;padding:0.875rem 1rem;background:#f0f9ff;border-radius:8px;border:1px dashed #bfdbfe;">
+                            <i class="bi bi-map" style="font-size:1.5rem;color:#3b82f6;flex-shrink:0;"></i>
+                            <div>
+                                <div style="font-size:0.875rem;font-weight:600;color:#1e40af;">Tọa độ đã được ghi nhận
+                                </div>
+                                <div style="font-size:0.8rem;color:#6b7280;margin-top:0.1rem;">Nhấn <strong>Xem bản
+                                        đồ</strong> để mở bản đồ toàn màn hình
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ MAP MODAL ═══════════════════════════════════════════════════════ -->
+                <div id="mapModal" th:if="${building.latitude!=null}"
+                    style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);">
+                    <div
+                        style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:96vw;max-width:1400px;height:88vh;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.35);display:flex;flex-direction:column;">
+
+                        <!-- Modal header -->
+                        <div
+                            style="display:flex;align-items:center;gap:0.6rem;padding:0.75rem 1.25rem;border-bottom:1px solid #e5e7eb;background:#fafbfc;flex-shrink:0;">
+                            <i class="bi bi-geo-alt-fill" style="color:#3b82f6;"></i>
+                            <span style="font-weight:700;font-size:0.9375rem;color:#111827;"
+                                th:text="${building.name}"></span>
+                            <span style="font-size:0.8rem;color:#9ca3af;margin-left:0.25rem;"
+                                th:text="${building.address}"></span>
+                            <div style="margin-left:auto;display:flex;align-items:center;gap:0.75rem;">
+                                <span class="coord-mono" style="color:#6b7280;font-size:0.8rem;">
+                                    <i class="bi bi-compass text-success"></i>
+                                    <span th:text="${building.latitude}+', '+${building.longitude}"></span>
+                                </span>
+                                <button onclick="closeMapModal()"
+                                    style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.35rem 0.75rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:7px;font-size:0.8125rem;font-weight:600;color:#374151;cursor:pointer;">
+                                    <i class="bi bi-x-lg"></i> Đóng
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Body: sidebar + map -->
+                        <div style="display:flex;flex:1;overflow:hidden;">
+
+                            <!-- Directions sidebar -->
+                            <div id="directionPanel"
+                                style="width:330px;flex-shrink:0;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;background:#fff;overflow-y:auto;">
+
+                                <!-- Header chỉ đường -->
+                                <div style="padding:0.875rem 1rem;border-bottom:1px solid #f3f4f6;">
+                                    <div
+                                        style="font-size:0.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.625rem;">
+                                        <i class="bi bi-sign-turn-right-fill" style="color:#3b82f6;"></i> Chỉ đường
+                                    </div>
+
+                                    <!-- Điểm xuất phát -->
+                                    <div style="margin-bottom:0.5rem;">
+                                        <div
+                                            style="font-size:0.72rem;color:#6b7280;font-weight:600;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.3rem;">
+                                            <i class="bi bi-circle-fill" style="color:#10b981;font-size:0.45rem;"></i>
+                                            Điểm
+                                            xuất phát
+                                        </div>
+                                        <div style="position:relative;">
+                                            <div
+                                                style="display:flex;align-items:center;gap:0.4rem;padding:0.4rem 0.6rem;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;">
+                                                <input id="originInput" type="text"
+                                                    placeholder="Nhập hoặc chọn trên bản đồ..."
+                                                    style="border:none;background:transparent;outline:none;font-size:0.8125rem;color:#374151;width:100%;"
+                                                    autocomplete="off" />
+                                                <button onclick="clearOrigin()" id="btnClearOrigin"
+                                                    style="display:none;background:none;border:none;padding:0;cursor:pointer;color:#9ca3af;font-size:0.75rem;flex-shrink:0;">
+                                                    <i class="bi bi-x-circle-fill"></i>
+                                                </button>
+                                            </div>
+                                            <div id="originSuggestions"
+                                                style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:7px;box-shadow:0 6px 18px rgba(0,0,0,0.1);z-index:10000;max-height:180px;overflow-y:auto;">
+                                            </div>
+                                        </div>
+                                        <!-- Quick action buttons -->
+                                        <div style="display:flex;gap:0.375rem;margin-top:0.35rem;flex-wrap:wrap;">
+                                            <button onclick="useMyLocation()" id="btnMyLocation"
+                                                style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.5rem;background:#f0fdf4;color:#059669;border:1px solid #bbf7d0;border-radius:5px;font-size:0.75rem;font-weight:600;cursor:pointer;">
+                                                <i class="bi bi-crosshair2"></i> Vị trí của tôi
+                                            </button>
+                                            <button onclick="setPickMode('origin')" id="btnPickOrigin"
+                                                style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.5rem;background:#f9fafb;color:#374151;border:1px solid #e5e7eb;border-radius:5px;font-size:0.75rem;font-weight:600;cursor:pointer;">
+                                                <i class="bi bi-cursor-fill"></i> Chọn trên bản đồ
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Điểm đến -->
+                                    <div style="margin-bottom:0.625rem;">
+                                        <div
+                                            style="font-size:0.72rem;color:#6b7280;font-weight:600;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.3rem;">
+                                            <i class="bi bi-geo-alt-fill" style="color:#3b82f6;font-size:0.7rem;"></i>
+                                            Điểm
+                                            đến
+                                        </div>
+                                        <div
+                                            style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;padding:0.4rem 0.6rem;border:1px solid #dbeafe;border-radius:6px;background:#eff6ff;">
+                                            <span id="destLabel"
+                                                style="font-size:0.8125rem;color:#1d4ed8;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                                                th:text="${building.name}"></span>
+                                            <button onclick="setPickMode('dest')" id="btnPickDest"
+                                                style="display:inline-flex;align-items:center;gap:0.2rem;padding:0.15rem 0.4rem;background:#dbeafe;color:#1d4ed8;border:none;border-radius:4px;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+                                                <i class="bi bi-cursor-fill"></i> Đổi
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Phương tiện -->
+                                    <div style="margin-bottom:0.625rem;">
+                                        <div
+                                            style="font-size:0.72rem;color:#6b7280;font-weight:600;margin-bottom:0.25rem;">
+                                            Phương tiện
+                                        </div>
+                                        <div style="display:flex;gap:0.375rem;">
+                                            <button onclick="setVehicle('car')" id="veh-car" class="veh-btn veh-active"
+                                                style="flex:1;padding:0.3rem;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.3rem;border:1.5px solid #3b82f6;background:#eff6ff;color:#1d4ed8;">
+                                                <i class="bi bi-car-front-fill"></i> Ô tô
+                                            </button>
+                                            <button onclick="setVehicle('bike')" id="veh-bike" class="veh-btn"
+                                                style="flex:1;padding:0.3rem;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.3rem;border:1.5px solid #e5e7eb;background:#f9fafb;color:#6b7280;">
+                                                <i class="bi bi-bicycle"></i> Xe máy
+                                            </button>
+
+                                        </div>
+                                    </div>
+
+                                    <!-- Nút tìm đường -->
+                                    <button id="btnGetDirections" onclick="getDirections()"
+                                        style="width:100%;padding:0.45rem;background:#3b82f6;color:#fff;border:none;border-radius:7px;font-size:0.8125rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;">
+                                        <i class="bi bi-arrows-angle-contract"></i> Tìm đường
+                                    </button>
+                                    <button id="btnClearRoute" onclick="clearRoute()"
+                                        style="display:none;margin-top:0.4rem;width:100%;padding:0.4rem;background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;border-radius:7px;font-size:0.8rem;font-weight:600;cursor:pointer;">
+                                        <i class="bi bi-x-circle"></i> Xóa tuyến đường
+                                    </button>
+                                </div>
+
+
+                                <!-- Kết quả tuyến đường -->
+                                <div id="routeResult" style="padding:0.875rem 1rem;display:none;">
+                                    <div
+                                        style="font-size:0.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.625rem;">
+                                        Thông tin tuyến đường
+                                    </div>
+                                    <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;">
+                                        <div
+                                            style="flex:1;background:#f0fdf4;border-radius:8px;padding:0.625rem;text-align:center;">
+                                            <div style="font-size:1.125rem;font-weight:700;color:#059669;"
+                                                id="routeDistance">—
+                                            </div>
+                                            <div style="font-size:0.72rem;color:#6b7280;margin-top:0.1rem;">Khoảng cách
+                                            </div>
+                                        </div>
+                                        <div
+                                            style="flex:1;background:#eff6ff;border-radius:8px;padding:0.625rem;text-align:center;">
+                                            <div style="font-size:1.125rem;font-weight:700;color:#2563eb;"
+                                                id="routeDuration">—
+                                            </div>
+                                            <div style="font-size:0.72rem;color:#6b7280;margin-top:0.1rem;">Thời gian
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Từng bước -->
+                                    <div id="routeSteps" style="display:flex;flex-direction:column;gap:0.375rem;"></div>
+                                </div>
+
+                                <!-- Loading -->
+                                <div id="routeLoading"
+                                    style="display:none;padding:1rem;text-align:center;color:#6b7280;font-size:0.8125rem;">
+                                    <div style="margin-bottom:0.4rem;"><i class="bi bi-arrow-repeat"
+                                            style="animation:spin 1s linear infinite;display:inline-block;"></i>
+                                    </div>
+                                    Đang tìm tuyến đường...
+                                </div>
+
+                                <!-- Error -->
+                                <div id="routeError"
+                                    style="display:none;padding:0.75rem 1rem;margin:0.5rem 1rem;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;font-size:0.8rem;color:#dc2626;">
+                                </div>
+                            </div>
+
+                            <!-- Map -->
+                            <div id="buildingMap" style="flex:1;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <style>
+                    @keyframes spin {
+                        from {
+                            transform: rotate(0deg);
+                        }
+
+                        to {
+                            transform: rotate(360deg);
+                        }
+                    }
+
+                    /* Btn xem bản đồ */
+                    .btn-open-map {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 0.35rem;
+                        padding: 0.5rem 0.9rem;
+                        background: #3b82f6;
+                        color: #fff !important;
+                        border: none;
+                        border-radius: 7px;
+                        font-size: 0.8125rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: background 0.18s, box-shadow 0.18s, transform 0.15s;
+                        line-height: 1;
+                    }
+
+                    .btn-open-map i {
+                        font-size: 0.875rem;
+                        color: #fff !important;
+                        display: inline-block;
+                    }
+
+                    .btn-open-map:hover {
+                        background: #2563eb;
+                        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.45);
+                    }
+
+                    .btn-open-map:active {
+                        transform: translateY(0);
+                        box-shadow: none;
+                    }
+
+                    /* Pick mode button active state */
+                    .pick-btn-active {
+                        background: #f59e0b !important;
+                        color: #fff !important;
+                        border-color: #d97706 !important;
+                        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+                        animation: pulse-pick 1.2s ease-in-out infinite;
+                    }
+
+                    .pick-btn-dest-active {
+                        background: #3b82f6 !important;
+                        color: #fff !important;
+                        border-color: #2563eb !important;
+                        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+                        animation: pulse-pick 1.2s ease-in-out infinite;
+                    }
+
+                    @keyframes pulse-pick {
+
+                        0%,
+                        100% {
+                            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+                        }
+
+                        50% {
+                            box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.08);
+                        }
+                    }
+
+                    #originSuggestions .dir-suggest-item {
+                        padding: 0.3rem 0.625rem;
+                        font-size: 0.8rem;
+                        color: #374151;
+                        cursor: pointer;
+                        border-bottom: 1px solid #f3f4f6;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+
+                    #originSuggestions .dir-suggest-item:last-child {
+                        border-bottom: none;
+                    }
+
+                    #originSuggestions .dir-suggest-item:hover {
+                        background: #eff6ff;
+                        color: #1d4ed8;
+                    }
+
+                    .route-step {
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 0.5rem;
+                        padding: 0.4rem 0.5rem;
+                        background: #f9fafb;
+                        border-radius: 6px;
+                        font-size: 0.78rem;
+                        color: #374151;
+                        line-height: 1.4;
+                    }
+
+                    .route-step i {
+                        color: #3b82f6;
+                        margin-top: 2px;
+                        flex-shrink: 0;
+                    }
+
+                    /* pick mode cursor on map */
+                    #buildingMap.pick-mode {
+                        cursor: crosshair !important;
+                    }
+
+                    #buildingMap.pick-mode canvas {
+                        cursor: crosshair !important;
+                    }
+
+                    /* vehicle buttons */
+                    .veh-btn:hover {
+                        border-color: #3b82f6 !important;
+                        color: #1d4ed8 !important;
+                        background: #eff6ff !important;
+                    }
+
+                    /* pick mode bar */
+                </style>
+
+                <!-- Supplier -->
+                <div class="d-card" th:if="${not #lists.isEmpty(suppliers)}">
+                    <div class="d-card-header">
+                        <i class="bi bi-truck"></i>
+                        <h3>Nhà cung cấp &amp; Đơn vị thi công</h3>
+                    </div>
+                    <table class="dt">
+                        <thead>
+                            <tr>
+                                <th>Đơn vị</th>
+                                <th>Dịch vụ</th>
+                                <th>Điện thoại</th>
+                                <th>Email</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="s : ${suppliers}">
+                                <td><strong th:text="${s.name}"></strong></td>
+                                <td><span class="tc"
+                                        th:classappend="${#strings.containsIgnoreCase(s.serviceType,'xây dựng') or #strings.containsIgnoreCase(s.serviceType,'construction')?'tc-construction':
+                                                           #strings.containsIgnoreCase(s.serviceType,'thiết kế') or #strings.containsIgnoreCase(s.serviceType,'design')?'tc-design':
+                                                           #strings.containsIgnoreCase(s.serviceType,'điện') or #strings.containsIgnoreCase(s.serviceType,'PCCC')?'tc-mep':'tc-other'}"
+                                        th:text="${s.serviceType}"></span></td>
+                                <td><a th:if="${s.phone}" th:href="'tel:'+${s.phone}" class="map-link"
+                                        th:text="${s.phone}"></a><span th:unless="${s.phone}">—</span></td>
+                                <td><a th:if="${s.email}" th:href="'mailto:'+${s.email}" class="map-link"
+                                        th:text="${s.email}"></a><span th:unless="${s.email}">—</span></td>
+                                <td style="color:#9ca3af;font-style:italic;" th:text="${s.note?:'—'}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Planning Map -->
+                <!-- Nhà cung cấp &amp; Đơn vị thi công — chưa cập nhật -->
+                <div class="d-card" th:unless="${suppliers != null and not #lists.isEmpty(suppliers)}">
+                    <div class="d-card-header">
+                        <i class="bi bi-truck"></i>
+                        <h3>Nhà cung cấp &amp; Đơn vị thi công</h3>
+                    </div>
+                    <div style="padding:1.25rem 1rem;text-align:center;color:#9ca3af;font-size:0.875rem;">
+                        <i class="bi bi-inbox"
+                            style="font-size:1.5rem;display:block;margin-bottom:0.375rem;opacity:0.4;"></i>
+                        Chưa cập nhật
+                    </div>
+                </div>
+                <div class="d-card" th:if="${not #lists.isEmpty(planningMaps)}">
+                    <div class="d-card-header">
+                        <i class="bi bi-map-fill"></i>
+                        <h3>Bản đồ quy hoạch</h3>
+                    </div>
+                    <table class="dt">
+                        <thead>
+                            <tr>
+                                <th>Loại</th>
+                                <th>Cơ quan</th>
+                                <th>Ban hành</th>
+                                <th>Hết hạn</th>
+                                <th>Trạng thái</th>
+                                <th>Ảnh</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="pm : ${planningMaps}">
+                                <td><strong th:text="${pm.mapType}"></strong></td>
+                                <td th:text="${pm.issuedBy}"></td>
+                                <td th:text="${#temporals.format(pm.issuedDate,'dd/MM/yyyy')}"></td>
+                                <td
+                                    th:text="${pm.expiredDate!=null?#temporals.format(pm.expiredDate,'dd/MM/yyyy'):'—'}">
+                                </td>
+                                <td><span th:if="${pm.expired}" class="bc bc-expired">Hết hạn</span><span
+                                        th:unless="${pm.expired}" class="bc bc-valid">Còn hạn</span></td>
+                                <td>
+                                    <a th:if="${pm.imageUrl}"
+                                        th:href="${'/images/planning_map_img/' + (pm.imageUrl.contains('/') ? pm.imageUrl.substring(pm.imageUrl.lastIndexOf('/')+1) : pm.imageUrl)}"
+                                        target="_blank" title="Xem ảnh bản đồ">
+                                        <img th:src="${'/images/planning_map_img/' + (pm.imageUrl.contains('/') ? pm.imageUrl.substring(pm.imageUrl.lastIndexOf('/')+1) : pm.imageUrl)}"
+                                            alt="Bản đồ quy hoạch"
+                                            style="width:56px;height:40px;object-fit:cover;border-radius:4px;border:1px solid #e5e7eb;display:block;transition:opacity 0.15s;"
+                                            onerror="this.style.display='none'" onmouseover="this.style.opacity='0.75'"
+                                            onmouseout="this.style.opacity='1'">
+                                    </a>
+                                    <span th:unless="${pm.imageUrl}" style="color:#9ca3af;">—</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Nearby Amenity -->
+                <!-- Bản đồ quy hoạch — chưa cập nhật -->
+                <div class="d-card" th:unless="${planningMaps != null and not #lists.isEmpty(planningMaps)}">
+                    <div class="d-card-header">
+                        <i class="bi bi-map-fill"></i>
+                        <h3>Bản đồ quy hoạch</h3>
+                    </div>
+                    <div style="padding:1.25rem 1rem;text-align:center;color:#9ca3af;font-size:0.875rem;">
+                        <i class="bi bi-inbox"
+                            style="font-size:1.5rem;display:block;margin-bottom:0.375rem;opacity:0.4;"></i>
+                        Chưa cập nhật
+                    </div>
+                </div>
+                <div class="d-card" th:if="${not #lists.isEmpty(nearbyAmenities)}">
+                    <div class="d-card-header">
+                        <i class="bi bi-pin-map-fill"></i>
+                        <h3>Tiện ích lân cận</h3>
+                    </div>
+                    <table class="dt">
+                        <thead>
+                            <tr>
+                                <th>Tên</th>
+                                <th>Loại</th>
+                                <th>Khoảng cách</th>
+                                <th>Địa chỉ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="a : ${nearbyAmenities}">
+                                <td><strong th:text="${a.name}"></strong></td>
+                                <td><span class="tc"
+                                        th:classappend="${a.amenityType=='SHOPPING'?'tc-shopping':a.amenityType=='PARK'?'tc-park':a.amenityType=='HOSPITAL'?'tc-hospital':a.amenityType=='SCHOOL'?'tc-school':a.amenityType=='RESTAURANT'?'tc-restaurant':a.amenityType=='BANK'?'tc-bank':a.amenityType=='GYM'?'tc-gym':a.amenityType=='TRANSPORT'?'tc-transport':'tc-other'}"
+                                        th:text="${a.amenityTypeLabel}"></span></td>
+                                <td><span class="dist-pill"><i class="bi bi-geo"></i><span
+                                            th:text="${a.distanceMeter}+' m'"></span></span></td>
+                                <td th:text="${a.address?:'—'}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Legal Authority -->
+                <!-- Tiện ích lân cận — chưa cập nhật -->
+                <div class="d-card" th:unless="${nearbyAmenities != null and not #lists.isEmpty(nearbyAmenities)}">
+                    <div class="d-card-header">
+                        <i class="bi bi-pin-map-fill"></i>
+                        <h3>Tiện ích lân cận</h3>
+                    </div>
+                    <div style="padding:1.25rem 1rem;text-align:center;color:#9ca3af;font-size:0.875rem;">
+                        <i class="bi bi-inbox"
+                            style="font-size:1.5rem;display:block;margin-bottom:0.375rem;opacity:0.4;"></i>
+                        Chưa cập nhật
+                    </div>
+                </div>
+                <div class="d-card" th:if="${legalAuthorities!=null and not #lists.isEmpty(legalAuthorities)}">
+                    <div class="d-card-header">
+                        <i class="bi bi-shield-fill-check"></i>
+                        <h3>Cơ quan tư pháp</h3>
+                    </div>
+                    <div style="padding:0.75rem 0.75rem 0;">
+                        <div class="legal-warn"><i class="bi bi-lock-fill"></i> Chỉ hiển thị với ADMIN và STAFF phụ
+                            trách
+                        </div>
+                    </div>
+                    <table class="dt">
+                        <thead>
+                            <tr>
+                                <th>Tên cơ quan</th>
+                                <th>Loại</th>
+                                <th>Địa chỉ</th>
+                                <th>Điện thoại</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="la : ${legalAuthorities}">
+                                <td><strong th:text="${la.authorityName}"></strong></td>
+                                <td><span class="tc"
+                                        th:classappend="${la.authorityType=='NOTARY'?'tc-notary':la.authorityType=='LAND_REGISTRY'?'tc-land':la.authorityType=='LAW_FIRM'?'tc-law':'tc-tax'}"
+                                        th:text="${la.authorityTypeLabel}"></span></td>
+                                <td th:text="${la.address?:'—'}"></td>
+                                <td><a th:if="${la.phone}" th:href="'tel:'+${la.phone}" class="map-link"
+                                        th:text="${la.phone}"></a><span th:unless="${la.phone}">—</span></td>
+                                <td style="color:#9ca3af;font-style:italic;" th:text="${la.note?:'—'}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <!-- Nhân viên quản lý -->
+                <!-- Cơ quan tư pháp — chưa cập nhật -->
+                <div class="d-card" th:unless="${legalAuthorities != null and not #lists.isEmpty(legalAuthorities)}">
+                    <div class="d-card-header">
+                        <i class="bi bi-shield-fill-check"></i>
+                        <h3>Cơ quan tư pháp</h3>
+                    </div>
+                    <div style="padding:1.25rem 1rem;text-align:center;color:#9ca3af;font-size:0.875rem;">
+                        <i class="bi bi-inbox"
+                            style="font-size:1.5rem;display:block;margin-bottom:0.375rem;opacity:0.4;"></i>
+                        Chưa cập nhật
+                    </div>
+                </div>
+                <div class="d-card">
+                    <div class="d-card-header">
+                        <i class="bi bi-people-fill"></i>
+                        <h3>Nhân viên quản lý</h3>
+                    </div>
+                    <div th:if="${not building.staffs.isEmpty()}" class="d-card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            <div class="staff-item" th:each="entry : ${building.staffs.entrySet()}"
+                                th:onclick="|window.location='/admin/staff/'+${entry.value}|">
+                                <i class="bi bi-person-badge-fill"></i>
+                                <span th:text="${entry.key}"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${building.staffs.isEmpty()}"
+                        style="padding:1.25rem 1rem;text-align:center;color:#9ca3af;font-size:0.875rem;">
+                        <i class="bi bi-inbox"
+                            style="font-size:1.5rem;display:block;margin-bottom:0.375rem;opacity:0.4;"></i>
+                        Chưa cập nhật
+                    </div>
+                </div>
+
+
+            </div><!-- end detail-layout -->
+        </div><!-- end detail-body -->
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).on("click", ".btn-hero-delete", function (e) {
+            e.preventDefault();
+            const id = $(this).data("id");
+            Swal.fire({
+                title: 'Xác nhận xóa',
+                text: "Bạn có chắc muốn xóa bất động sản này?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then(r => {
+                if (r.isConfirmed) {
+                    $.ajax({
+                        url: "/admin/building/delete/" + id,
+                        type: "DELETE",
+                        success: () => Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã xóa!', timer: 1500, showConfirmButton: false })
+                            .then(() => window.location.href = "/admin/building/list"),
+                        error: xhr => Swal.fire({ icon: 'error', title: 'Lỗi', text: xhr.responseJSON?.message || 'Xóa thất bại!' })
+                    });
+                }
+            });
+        });
+    </script>
+    <script th:if="${building.latitude != null}" th:inline="javascript">
+        // ── Config ────────────────────────────────────────────────────────────────
+        var MAPTILES_KEY = 'd2vMzWHY7kcxkY1yITDytGLWaIPf9knt8mLMXmkx';
+        var GOONG_API_KEY = /*[[${goongApiKey}]]*/ '';
+
+        var _mapLat = /*[[${building.latitude}]]*/  0;
+        var _mapLng = /*[[${building.longitude}]]*/  0;
+        var _mapName = /*[[${building.name}]]*/  '';
+        var _mapAddr = /*[[${building.address}]]*/  '';
+
+        // ── State ─────────────────────────────────────────────────────────────────
+        var _mapInstance = null;
+        var _originLat = null, _originLng = null;
+        var _destLat = _mapLat, _destLng = _mapLng; // default = building
+        var _originMarker = null, _destMarker = null;
+        var _acTimer = null;
+        var _pickMode = null;  // 'origin' | 'dest' | null
+        var _vehicle = 'car'; // 'car' | 'bike' | 'foot'
+        var _isCustomDest = false; // đích đã bị thay đổi khỏi building
+
+        // ── Modal ─────────────────────────────────────────────────────────────────
+        function openMapModal() {
+            document.getElementById('mapModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            if (!_mapInstance) { initMap(); }
+            else { setTimeout(function () { _mapInstance.resize(); }, 50); }
+        }
+        function closeMapModal() {
+            cancelPickMode();
+            document.getElementById('mapModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            var modal = document.getElementById('mapModal');
+            if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closeMapModal(); });
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { if (_pickMode) cancelPickMode(); else closeMapModal(); }
+        });
+
+        // ── Init Map ──────────────────────────────────────────────────────────────
+        function initMap() {
+            goongjs.accessToken = MAPTILES_KEY;
+            _mapInstance = new goongjs.Map({
+                container: 'buildingMap',
+                style: 'https://tiles.goong.io/assets/goong_map_web.json',
+                center: [_mapLng, _mapLat],
+                zoom: 15
+            });
+            _mapInstance.addControl(new goongjs.NavigationControl(), 'top-right');
+            _mapInstance.addControl(new goongjs.FullscreenControl(), 'top-right');
+
+            _mapInstance.on('load', function () {
+                // Building marker
+                _destMarker = new goongjs.Marker({ color: '#3b82f6' })
+                    .setLngLat([_mapLng, _mapLat])
+                    .setPopup(new goongjs.Popup({ maxWidth: '220px' })
+                        .setHTML('<div style="font-size:0.875rem;"><strong>' + _mapName + '</strong><br>'
+                            + '<span style="color:#6b7280;font-size:0.78rem;">' + _mapAddr + '</span></div>'))
+                    .addTo(_mapInstance)
+                    .togglePopup();
+
+                // Route layers
+                _mapInstance.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
+                _mapInstance.addLayer({
+                    id: 'route-border', type: 'line', source: 'route',
+                    layout: { 'line-join': 'round', 'line-cap': 'round' },
+                    paint: { 'line-color': '#1d4ed8', 'line-width': 9, 'line-opacity': 0.18 }
+                });
+                _mapInstance.addLayer({
+                    id: 'route-line', type: 'line', source: 'route',
+                    layout: { 'line-join': 'round', 'line-cap': 'round' },
+                    paint: { 'line-color': '#3b82f6', 'line-width': 5, 'line-opacity': 0.9 }
+                });
+            });
+
+            // ── Click to pick ─────────────────────────────────────────────────────
+            _mapInstance.on('click', function (e) {
+                if (!_pickMode) return;
+                var lat = e.lngLat.lat, lng = e.lngLat.lng;
+
+                if (_pickMode === 'origin') {
+                    setOriginCoords(lat, lng, null); // label sẽ được reverse geocode
+                    reverseGeocode(lat, lng, function (label) {
+                        document.getElementById('originInput').value = label;
+                        if (_originMarker) _originMarker.getPopup().setHTML(
+                            '<div style="font-size:0.8rem;"><strong>Điểm xuất phát</strong><br><span style="color:#6b7280;">' + label + '</span></div>');
+                    });
+                } else if (_pickMode === 'dest') {
+                    setDestCoords(lat, lng, null);
+                    reverseGeocode(lat, lng, function (label) {
+                        document.getElementById('destLabel').textContent = label;
+                        if (_destMarker) _destMarker.getPopup().setHTML(
+                            '<div style="font-size:0.8rem;"><strong>Điểm đến</strong><br><span style="color:#6b7280;">' + label + '</span></div>');
+                    });
+                }
+                cancelPickMode();
+            });
+
+            // Click ra ngoài map khi pick mode → hủy
+            _mapInstance.getCanvasContainer().addEventListener('mouseleave', function () {
+                // không hủy khi rời map, chỉ hủy khi click (đã xử lý trên)
+            });
+        }
+
+        // ── Set origin / dest coords ──────────────────────────────────────────────
+        function setOriginCoords(lat, lng, label) {
+            _originLat = lat; _originLng = lng;
+            if (label) document.getElementById('originInput').value = label;
+            document.getElementById('btnClearOrigin').style.display = 'inline-flex';
+
+            if (_originMarker) _originMarker.remove();
+            _originMarker = new goongjs.Marker({ color: '#10b981' })
+                .setLngLat([lng, lat])
+                .setPopup(new goongjs.Popup({ maxWidth: '180px' })
+                    .setHTML('<div style="font-size:0.8rem;"><strong>Điểm xuất phát</strong><br><span style="color:#6b7280;">' + (label || lat.toFixed(5) + ', ' + lng.toFixed(5)) + '</span></div>'))
+                .addTo(_mapInstance)
+                .togglePopup();
+
+            fitBothPoints();
+        }
+
+        function setDestCoords(lat, lng, label) {
+            _destLat = lat; _destLng = lng; _isCustomDest = true;
+            var displayLabel = label || (lat.toFixed(5) + ', ' + lng.toFixed(5));
+            document.getElementById('destLabel').textContent = displayLabel;
+
+            if (_destMarker) _destMarker.remove();
+            _destMarker = new goongjs.Marker({ color: '#3b82f6' })
+                .setLngLat([lng, lat])
+                .setPopup(new goongjs.Popup({ maxWidth: '180px' })
+                    .setHTML('<div style="font-size:0.8rem;"><strong>Điểm đến</strong><br><span style="color:#6b7280;">' + displayLabel + '</span></div>'))
+                .addTo(_mapInstance)
+                .togglePopup();
+
+            fitBothPoints();
+        }
+
+        function fitBothPoints() {
+            if (!_originLat) return;
+            var bounds = new goongjs.LngLatBounds()
+                .extend([_originLng, _originLat])
+                .extend([_destLng, _destLat]);
+            _mapInstance.fitBounds(bounds, { padding: 80 });
+        }
+
+        // ── Pick mode — dùng màu sắc trên button, không có thanh thông báo ─────────
+        function setPickMode(mode) {
+            // Hủy mode hiện tại nếu click lại cùng mode (toggle off)
+            if (_pickMode === mode) { cancelPickMode(); return; }
+            cancelPickMode(); // reset mode cũ trước
+            _pickMode = mode;
+            document.getElementById('buildingMap').classList.add('pick-mode');
+            if (mode === 'origin') {
+                var btn = document.getElementById('btnPickOrigin');
+                btn.classList.add('pick-btn-active');
+                btn.innerHTML = '<i class="bi bi-cursor-fill"></i> Đang chọn...';
+            } else {
+                var btn = document.getElementById('btnPickDest');
+                btn.classList.add('pick-btn-dest-active');
+                btn.innerHTML = '<i class="bi bi-cursor-fill"></i> Đang chọn...';
+            }
+        }
+        function cancelPickMode() {
+            if (!_pickMode) return;
+            document.getElementById('buildingMap').classList.remove('pick-mode');
+            // Reset button origin
+            var bO = document.getElementById('btnPickOrigin');
+            bO.classList.remove('pick-btn-active');
+            bO.innerHTML = '<i class="bi bi-cursor-fill"></i> Chọn trên bản đồ';
+            // Reset button dest
+            var bD = document.getElementById('btnPickDest');
+            bD.classList.remove('pick-btn-dest-active');
+            bD.innerHTML = '<i class="bi bi-cursor-fill"></i> Đổi';
+            _pickMode = null;
+        }
+
+        // ── GPS — vị trí của tôi ──────────────────────────────────────────────────
+        function useMyLocation() {
+            var btn = document.getElementById('btnMyLocation');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;display:inline-block;"></i> Đang lấy...';
+
+            if (!navigator.geolocation) {
+                showRouteError('Trình duyệt không hỗ trợ định vị.');
+                btn.disabled = false; btn.innerHTML = '<i class="bi bi-crosshair2"></i> Vị trí của tôi';
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                var lat = pos.coords.latitude, lng = pos.coords.longitude;
+                setOriginCoords(lat, lng, 'Vị trí của tôi');
+                reverseGeocode(lat, lng, function (label) {
+                    document.getElementById('originInput').value = label;
+                    if (_originMarker) _originMarker.getPopup().setHTML(
+                        '<div style="font-size:0.8rem;"><strong>Vị trí của tôi</strong><br><span style="color:#6b7280;">' + label + '</span></div>');
+                });
+                btn.disabled = false; btn.innerHTML = '<i class="bi bi-crosshair2"></i> Vị trí của tôi';
+            }, function (err) {
+                showRouteError('Không lấy được vị trí: ' + (err.message || 'Lỗi không xác định'));
+                btn.disabled = false; btn.innerHTML = '<i class="bi bi-crosshair2"></i> Vị trí của tôi';
+            }, { timeout: 10000, enableHighAccuracy: true });
+        }
+
+        // ── Clear origin ──────────────────────────────────────────────────────────
+        function clearOrigin() {
+            _originLat = null; _originLng = null;
+            document.getElementById('originInput').value = '';
+            document.getElementById('btnClearOrigin').style.display = 'none';
+            if (_originMarker) { _originMarker.remove(); _originMarker = null; }
+        }
+
+        // ── Vehicle selector ──────────────────────────────────────────────────────
+        function setVehicle(v) {
+            _vehicle = v;
+            ['car', 'bike', 'foot'].forEach(function (id) {
+                var btn = document.getElementById('veh-' + id);
+                if (id === v) {
+                    btn.style.borderColor = '#3b82f6'; btn.style.background = '#eff6ff'; btn.style.color = '#1d4ed8';
+                } else {
+                    btn.style.borderColor = '#e5e7eb'; btn.style.background = '#f9fafb'; btn.style.color = '#6b7280';
+                }
+            });
+        }
+
+        // ── Reverse geocode (tọa độ → địa chỉ) ───────────────────────────────────
+        function reverseGeocode(lat, lng, cb) {
+            fetch('https://rsapi.goong.io/Geocode?latlng=' + lat + ',' + lng + '&api_key=' + GOONG_API_KEY)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var label = data.results && data.results[0] && data.results[0].formatted_address;
+                    cb(label || (lat.toFixed(5) + ', ' + lng.toFixed(5)));
+                })
+                .catch(function () { cb(lat.toFixed(5) + ', ' + lng.toFixed(5)); });
+        }
+
+        // ── Origin autocomplete ───────────────────────────────────────────────────
+        var originInput = document.getElementById('originInput');
+        var originSuggestions = document.getElementById('originSuggestions');
+
+        if (originInput) {
+            originInput.addEventListener('input', function () {
+                var q = this.value.trim();
+                if (!q) { originSuggestions.style.display = 'none'; return; }
+                clearTimeout(_acTimer);
+                _acTimer = setTimeout(function () { fetchOriginSuggestions(q); }, 350);
+            });
+            document.addEventListener('click', function (e) {
+                if (!originInput.contains(e.target) && !originSuggestions.contains(e.target))
+                    originSuggestions.style.display = 'none';
+            });
+        }
+
+        function fetchOriginSuggestions(query) {
+            fetch('https://rsapi.goong.io/Place/AutoComplete?api_key=' + GOONG_API_KEY + '&input=' + encodeURIComponent(query))
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    originSuggestions.innerHTML = '';
+                    if (!data.predictions || !data.predictions.length) { originSuggestions.style.display = 'none'; return; }
+                    data.predictions.forEach(function (p) {
+                        var item = document.createElement('div');
+                        item.className = 'dir-suggest-item';
+                        item.textContent = p.description;
+                        item.addEventListener('click', function () {
+                            originSuggestions.style.display = 'none';
+                            fetch('https://rsapi.goong.io/Place/Detail?api_key=' + GOONG_API_KEY + '&place_id=' + p.place_id)
+                                .then(function (r) { return r.json(); })
+                                .then(function (d) {
+                                    var loc = d.result && d.result.geometry && d.result.geometry.location;
+                                    if (loc) setOriginCoords(loc.lat, loc.lng, p.description);
+                                });
+                        });
+                        originSuggestions.appendChild(item);
+                    });
+                    originSuggestions.style.display = 'block';
+                })
+                .catch(function () { originSuggestions.style.display = 'none'; });
+        }
+
+        // ── Get Directions ────────────────────────────────────────────────────────
+        function getDirections() {
+            if (!_originLat || !_originLng) {
+                showRouteError('Vui lòng chọn điểm xuất phát.'); return;
+            }
+            document.getElementById('routeResult').style.display = 'none';
+            document.getElementById('routeError').style.display = 'none';
+            document.getElementById('routeLoading').style.display = 'block';
+
+            // Goong Direction API chỉ hỗ trợ: car | bike | taxi
+            // 'foot' (đi bộ) không được hỗ trợ bởi Goong → dùng bike với tốc độ thấp làm gần đúng
+            var vehicleParam = _vehicle === 'bike' ? 'bike' : 'car';
+            if (_vehicle === 'foot') { vehicleParam = 'bike'; }
+            var url = 'https://rsapi.goong.io/Direction?origin=' + _originLat + ',' + _originLng
+                + '&destination=' + _destLat + ',' + _destLng
+                + '&vehicle=' + vehicleParam + '&api_key=' + GOONG_API_KEY;
+
+            fetch(url)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    document.getElementById('routeLoading').style.display = 'none';
+                    if (!data.routes || !data.routes.length) { showRouteError('Không tìm được tuyến đường.'); return; }
+
+                    var route = data.routes[0];
+                    var leg = route.legs[0];
+
+                    document.getElementById('routeDistance').textContent = leg.distance.text;
+                    document.getElementById('routeDuration').textContent = leg.duration.text;
+
+                    var stepsEl = document.getElementById('routeSteps');
+                    stepsEl.innerHTML = '';
+                    leg.steps.forEach(function (step) {
+                        var div = document.createElement('div');
+                        div.className = 'route-step';
+                        var maneuver = step.maneuver || {};
+                        div.innerHTML = '<i class="bi ' + getManeuverIcon(maneuver.type, maneuver.modifier) + '"></i>'
+                            + '<div><div>' + (step.html_instructions || maneuver.instruction || 'Tiếp tục') + '</div>'
+                            + '<div style="font-size:0.72rem;color:#9ca3af;">' + step.distance.text + ' · ' + step.duration.text + '</div></div>';
+                        stepsEl.appendChild(div);
+                    });
+
+                    document.getElementById('routeResult').style.display = 'block';
+                    document.getElementById('btnClearRoute').style.display = 'block';
+
+                    var coords = decodePolyline(route.overview_polyline.points);
+                    _mapInstance.getSource('route').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords } });
+                    var bounds = coords.reduce(function (b, c) { return b.extend(c); }, new goongjs.LngLatBounds(coords[0], coords[0]));
+                    _mapInstance.fitBounds(bounds, { padding: 60 });
+                })
+                .catch(function () {
+                    document.getElementById('routeLoading').style.display = 'none';
+                    showRouteError('Lỗi kết nối. Vui lòng thử lại.');
+                });
+        }
+
+        function clearRoute() {
+            if (_mapInstance && _mapInstance.getSource('route'))
+                _mapInstance.getSource('route').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
+
+            // Reset origin
+            clearOrigin();
+            document.getElementById('routeResult').style.display = 'none';
+            document.getElementById('routeError').style.display = 'none';
+            document.getElementById('btnClearRoute').style.display = 'none';
+
+            // Reset dest về building nếu đã đổi
+            if (_isCustomDest) {
+                _destLat = _mapLat; _destLng = _mapLng; _isCustomDest = false;
+                document.getElementById('destLabel').textContent = _mapName;
+                if (_destMarker) _destMarker.remove();
+                _destMarker = new goongjs.Marker({ color: '#3b82f6' })
+                    .setLngLat([_mapLng, _mapLat])
+                    .setPopup(new goongjs.Popup({ maxWidth: '220px' })
+                        .setHTML('<div style="font-size:0.875rem;"><strong>' + _mapName + '</strong><br>'
+                            + '<span style="color:#6b7280;font-size:0.78rem;">' + _mapAddr + '</span></div>'))
+                    .addTo(_mapInstance)
+                    .togglePopup();
+            }
+
+            _mapInstance.setCenter([_mapLng, _mapLat]);
+            _mapInstance.setZoom(15);
+        }
+
+        function showRouteError(msg) {
+            var el = document.getElementById('routeError');
+            el.textContent = msg; el.style.display = 'block';
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────────
+        function getManeuverIcon(type, modifier) {
+            if (!type) return 'bi-arrow-up';
+            if (type === 'turn') {
+                if (modifier === 'left') return 'bi-arrow-turn-left';
+                if (modifier === 'right') return 'bi-arrow-turn-right';
+                if (modifier === 'sharp left') return 'bi-arrow-90deg-left';
+                if (modifier === 'sharp right') return 'bi-arrow-90deg-right';
+                if (modifier === 'uturn') return 'bi-arrow-clockwise';
+            }
+            if (type === 'depart' || type === 'arrive') return 'bi-geo-alt-fill';
+            if (type === 'roundabout') return 'bi-arrow-clockwise';
+            if (type === 'merge') return 'bi-sign-merge-right';
+            return 'bi-arrow-up';
+        }
+
+        function decodePolyline(encoded) {
+            var coords = [], index = 0, len = encoded.length, lat = 0, lng = 0;
+            while (index < len) {
+                var b, shift = 0, result = 0;
+                do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+                lat += (result & 1) ? ~(result >> 1) : result >> 1;
+                shift = 0; result = 0;
+                do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+                lng += (result & 1) ? ~(result >> 1) : result >> 1;
+                coords.push([lng / 1e5, lat / 1e5]);
+            }
+            return coords;
+        }
+    </script>
+
+</body>
+
+</html>
