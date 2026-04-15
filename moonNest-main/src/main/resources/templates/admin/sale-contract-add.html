@@ -350,28 +350,27 @@
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Bất động sản <span class="required">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-buildings"></i></span>
-                                    <select class="form-select" name="buildingId" required>
-                                        <option value="">-- Chọn bất động sản --</option>
-                                        <option th:each="b : ${buildings}" th:value="${b.value}" th:text="${b.key}">
-                                        </option>
-                                    </select>
-                                </div>
-                                <small class="form-text">Mỗi bất động sản chỉ có thể bán một lần</small>
+                                <label for="buildingId" class="form-label">Bất động sản</label>
+                                <select class="form-select" id="buildingId" name="buildingId">
+                                    <option value="">--- Chọn bất động sản ---</option>
+                                    <option th:each="building : ${buildings}"
+                                            th:value="${building.value}"
+                                            th:text="${building.key}"
+                                            th:selected="${prefill != null && building.value == prefill.buildingId}">
+                                    </option>
+                                </select>
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label">Khách hàng <span class="required">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                    <select class="form-select" name="customerId" required>
-                                        <option value="">-- Chọn khách hàng --</option>
-                                        <option th:each="c : ${customers}" th:value="${c.value}" th:text="${c.key}">
-                                        </option>
-                                    </select>
-                                </div>
+                                <label for="customerId" class="form-label">Khách hàng</label>
+                                <select class="form-select" id="customerId" name="customerId">
+                                    <option value="">--- Chọn khách hàng ---</option>
+                                    <option th:each="customer : ${customers}"
+                                            th:value="${customer.value}"
+                                            th:text="${customer.key}"
+                                            th:selected="${prefill != null && customer.value == prefill.customerId}">
+                                    </option>
+                                </select>
                             </div>
 
                             <div class="col-md-4">
@@ -395,13 +394,10 @@
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Giá bán (VNĐ) <span class="required">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
-                                    <input type="number" class="form-control" name="salePrice" id="salePriceInput"
-                                        placeholder="VD: 2500000000" required min="0" step="1000">
-                                </div>
-                                <small class="form-text info" id="salePriceFormatted"></small>
+                                <label for="salePrice" class="form-label">Giá bán</label>
+                                <input type="number" class="form-control" id="salePrice" name="salePrice" placeholder="Nhập giá bán"
+                                       th:value="${prefill != null ? prefill.salePrice : ''}">
+
                             </div>
 
                             <div class="col-md-6">
