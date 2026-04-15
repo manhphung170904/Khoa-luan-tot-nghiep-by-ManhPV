@@ -1,4 +1,4 @@
-# Framework Playwright cho SunTower
+# Framework Playwright cho MoonNest
 
 ## 1. Muc tieu
 Day la framework kiem thu tu dong bang Playwright + TypeScript duoc tach rieng cho he thong MoonNest. Framework duoc thiet ke de dung cho du an that te va trinh bay trong luan van tot nghiep, nen uu tien:
