@@ -59,9 +59,9 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers("/payment/qr/**").hasRole("CUSTOMER")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/staff/**").hasRole("STAFF")
-                        .requestMatchers("/customer/**").hasRole("CUSTOMER")
+                        .requestMatchers("/customer/**", "/api/customer/**").hasRole("CUSTOMER")
 
                         .anyRequest().authenticated()
                 )

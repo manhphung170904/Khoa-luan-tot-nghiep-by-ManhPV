@@ -1,6 +1,7 @@
 package com.estate.controller.admin;
 
 import com.estate.dto.ContractFilterDTO;
+import com.estate.dto.ContractFormDTO;
 import com.estate.security.CustomUserDetails;
 import com.estate.service.*;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/admin/contract")
@@ -20,6 +22,7 @@ public class AdminContractController {
     private final StaffService staffService;
     private final ContractService contractService;
     private final RentAreaService rentAreaService;
+    private final PropertyRequestService propertyRequestService;
 
     @GetMapping("/list")
     public String listContracts(
@@ -58,6 +61,7 @@ public class AdminContractController {
 
     @GetMapping("/add")
     public String addCustomerForm(
+            @RequestParam(required = false) Long fromRequestId,
             Model model,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
@@ -68,6 +72,13 @@ public class AdminContractController {
         model.addAttribute("customers", customerService.getCustomersName());
 
         model.addAttribute("rentAreas", rentAreaService.getAllRentAreas());
+
+        // Auto-fill từ yêu cầu thuê/mua
+        if (fromRequestId != null) {
+            ContractFormDTO prefill = propertyRequestService.toContractForm(fromRequestId);
+            model.addAttribute("prefill", prefill);
+            model.addAttribute("fromRequestId", fromRequestId);
+        }
 
         addCommonAttributes(model, user);
 

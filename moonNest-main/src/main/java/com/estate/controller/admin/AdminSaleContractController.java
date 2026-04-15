@@ -2,11 +2,9 @@ package com.estate.controller.admin;
 
 import com.estate.dto.SaleContractDetailDTO;
 import com.estate.dto.SaleContractFilterDTO;
+import com.estate.dto.SaleContractFormDTO;
 import com.estate.security.CustomUserDetails;
-import com.estate.service.BuildingService;
-import com.estate.service.CustomerService;
-import com.estate.service.SaleContractService;
-import com.estate.service.StaffService;
+import com.estate.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -14,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/admin/sale-contract")
@@ -23,6 +22,7 @@ public class AdminSaleContractController {
     private final BuildingService buildingService;
     private final StaffService staffService;
     private final SaleContractService saleContractService;
+    private final PropertyRequestService propertyRequestService;
 
     @GetMapping("/list")
     public String listSaleContracts(
@@ -61,6 +61,7 @@ public class AdminSaleContractController {
 
     @GetMapping("/add")
     public String addSaleContractForm(
+            @RequestParam(required = false) Long fromRequestId,
             Model model,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
@@ -69,6 +70,13 @@ public class AdminSaleContractController {
         model.addAttribute("buildings", buildingService.getBuildingsName());
 
         model.addAttribute("staffs", staffService.getStaffsName());
+
+        // Auto-fill từ yêu cầu mua
+        if (fromRequestId != null) {
+            SaleContractFormDTO prefill = propertyRequestService.toSaleContractForm(fromRequestId);
+            model.addAttribute("prefill", prefill);
+            model.addAttribute("fromRequestId", fromRequestId);
+        }
 
         addCommonAttributes(model, user);
 

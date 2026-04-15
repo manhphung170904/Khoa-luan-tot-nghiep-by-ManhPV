@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -784,6 +784,11 @@
                                     <i class="bi bi-clipboard-check me-2"></i>Dịch vụ
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/customer/property-request/list}">
+                                    <i class="bi bi-envelope-paper me-2"></i>Yêu cầu của tôi
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     <li class="nav-item">
@@ -1251,6 +1256,9 @@
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                                 <i class="bi bi-x-circle me-2"></i>Đóng
                                             </button>
+                                            <button type="button" class="btn btn-primary" onclick="openRequestForm(${b.id}, '${b.name}', '${b.transactionType}', '${b.rentAreaValues || ''}')">
+                                                <i class="bi bi-${isForSale ? 'cart-check' : 'key'} me-2"></i>${isForSale ? 'Đăng ký mua' : 'Đăng ký thuê'}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1325,6 +1333,171 @@
             }
         });
     </script>
+    <!-- Modal Gửi Yêu Cầu Thuê/Mua -->
+    <div class="modal fade" id="requestModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="requestModalTitle">
+                        <i class="bi bi-envelope-paper me-2"></i>Gửi yêu cầu
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="requestForm">
+                        <input type="hidden" name="buildingId" id="reqBuildingId">
+                        <input type="hidden" name="requestType" id="reqType">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Bất động sản</label>
+                            <input type="text" class="form-control" id="reqBuildingName" disabled>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Họ tên</label>
+                                <input type="text" class="form-control" name="fullName" placeholder="Nhập họ tên">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" name="phone" placeholder="VD: 0901234567">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" placeholder="VD: email@example.com">
+                        </div>
+
+                        <!-- Chỉ hiện khi RENT -->
+                        <div id="rentFields" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Diện tích mong muốn (m²)</label>
+                                <select class="form-control" name="desiredArea" id="reqDesiredArea">
+                                    <option value="">-- Chọn diện tích --</option>
+                                </select>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Ngày bắt đầu</label>
+                                    <input type="date" class="form-control" name="desiredStartDate">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Ngày kết thúc</label>
+                                    <input type="date" class="form-control" name="desiredEndDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Giá đề xuất (VNĐ) <small class="text-muted">- không bắt buộc</small></label>
+                            <input type="number" class="form-control" name="offeredPrice" placeholder="VD: 50000000">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea class="form-control" name="message" rows="3" placeholder="Nhập yêu cầu hoặc ghi chú thêm..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="submitRequest()">
+                        <i class="bi bi-send me-1"></i>Gửi yêu cầu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openRequestForm(buildingId, buildingName, transactionType, rentAreaValues) {
+            // Đóng modal chi tiết building
+            $('.modal').modal('hide');
+            
+            // Đợi modal cũ đóng xong
+            setTimeout(function() {
+                $('#reqBuildingId').val(buildingId);
+                $('#reqBuildingName').val(buildingName);
+
+                if (transactionType === 'FOR_SALE') {
+                    $('#reqType').val('BUY');
+                    $('#requestModalTitle').html('<i class="bi bi-cart-check me-2"></i>Đăng ký mua: ' + buildingName);
+                    $('#rentFields').hide();
+                } else {
+                    $('#reqType').val('RENT');
+                    $('#requestModalTitle').html('<i class="bi bi-key me-2"></i>Đăng ký thuê: ' + buildingName);
+                    $('#rentFields').show();
+
+                    // Load rent areas
+                    const $select = $('#reqDesiredArea');
+                    $select.empty().append('<option value="">-- Chọn diện tích --</option>');
+                    if (rentAreaValues) {
+                        rentAreaValues.split(',').forEach(function(v) {
+                            const val = v.trim();
+                            if (val) $select.append(`<option value="${val}">${val} m²</option>`);
+                        });
+                    }
+                }
+
+                // Reset form
+                $('#requestForm')[0].reset();
+                $('#reqBuildingId').val(buildingId);
+                $('#reqType').val(transactionType === 'FOR_SALE' ? 'BUY' : 'RENT');
+                $('#reqBuildingName').val(buildingName);
+
+                new bootstrap.Modal(document.getElementById('requestModal')).show();
+            }, 400);
+        }
+
+        function submitRequest() {
+            const data = {
+                buildingId: parseInt($('#reqBuildingId').val()),
+                requestType: $('#reqType').val(),
+                fullName: $('[name="fullName"]').val(),
+                phone: $('[name="phone"]').val(),
+                email: $('[name="email"]').val(),
+                desiredArea: $('[name="desiredArea"]').val() ? parseInt($('[name="desiredArea"]').val()) : null,
+                desiredStartDate: $('[name="desiredStartDate"]').val() || null,
+                desiredEndDate: $('[name="desiredEndDate"]').val() || null,
+                offeredPrice: $('[name="offeredPrice"]').val() ? parseFloat($('[name="offeredPrice"]').val()) : null,
+                message: $('[name="message"]').val()
+            };
+
+            $.ajax({
+                url: '/api/customer/property-request/submit',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(msg) {
+                    $('#requestModal').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: typeof msg === 'string' ? msg : 'Gửi yêu cầu thành công!',
+                        confirmButtonColor: '#2d3e8f'
+                    });
+                },
+                error: function(xhr) {
+                    let errMsg = 'Gửi yêu cầu thất bại!';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errMsg = xhr.responseJSON.message;
+                    } else if (xhr.responseJSON && typeof xhr.responseJSON === 'string') {
+                        errMsg = xhr.responseJSON;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi',
+                        text: errMsg,
+                        confirmButtonColor: '#2d3e8f'
+                    });
+                }
+            });
+        }
+    </script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </body>
 

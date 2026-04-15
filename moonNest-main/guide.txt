@@ -1,7 +1,7 @@
 *** Thông tin tài khoản mật khẩu lưu trong bảng staff ***
 - Tài khoản admin: 
 + manh1709
-+ ntn162
++ ntn162/ 12345678
 - Tài khoản staff:
 + tmq0102
 + lth2105

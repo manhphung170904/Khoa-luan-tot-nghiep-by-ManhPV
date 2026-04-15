@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -353,6 +353,15 @@
                 </a>
             </div>
 
+            <!-- Banner khi tạo từ yêu cầu -->
+            <div th:if="${fromRequestId}" class="info-box" style="background:#f0fdf4;border-color:#86efac;margin-bottom:1rem;">
+                <i class="bi bi-check-circle" style="color:#16a34a;"></i>
+                <div class="info-box-content" style="color:#166534;">
+                    Tạo hợp đồng từ yêu cầu <strong>#<span th:text="${fromRequestId}"></span></strong>.
+                    Dữ liệu đã được điền sẵn, vui lòng kiểm tra trước khi lưu.
+                </div>
+            </div>
+
             <!-- ── Info Box ────────────────────────────────────────────────── -->
             <div class="info-box">
                 <i class="bi bi-info-circle"></i>
@@ -491,6 +500,8 @@
     <script th:inline="javascript">
         // Lấy dữ liệu rentAreas từ Thymeleaf
         const rentAreasData = /*[[${rentAreas}]]*/ {};
+        const prefillData = /*[[${prefill}]]*/ null;
+        const fromRequestId = /*[[${fromRequestId}]]*/ null;
 
         // Xử lý thay đổi tòa nhà
         $(document).ready(function () {
@@ -534,6 +545,36 @@
             $('#rentAreaSelect').on('change', function () {
                 // no-op: has-value removed
             });
+
+            // ====== AUTO-FILL từ yêu cầu thuê/mua ======
+            if (prefillData) {
+                // Set building → trigger change → load rent areas
+                if (prefillData.buildingId) {
+                    $('[name="buildingId"]').val(prefillData.buildingId).trigger('change');
+                }
+                // Set customer
+                if (prefillData.customerId) {
+                    $('[name="customerId"]').val(prefillData.customerId);
+                }
+                // Set price
+                if (prefillData.rentPrice) {
+                    $('[name="rentPrice"]').val(prefillData.rentPrice);
+                }
+                // Set dates
+                if (prefillData.startDate) {
+                    $('[name="startDate"]').val(prefillData.startDate);
+                }
+                if (prefillData.endDate) {
+                    $('[name="endDate"]').val(prefillData.endDate);
+                    validateDateRange();
+                }
+                // Set rent area (đợi dropdown load xong)
+                if (prefillData.rentArea) {
+                    setTimeout(function() {
+                        $('[name="rentArea"]').val(prefillData.rentArea);
+                    }, 500);
+                }
+            }
         });
     </script>
 

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MoonNest - Yêu cầu của tôi</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --primary-color: #2d3e8f;
+            --primary-light: #4a5fc1;
+            --secondary-color: #f5f7fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--secondary-color);
+        }
+
+        .header {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-top { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .logo { font-size: 24px; font-weight: bold; letter-spacing: 1px; }
+        .badge-custom {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .btn-logout:hover { background: rgba(255, 255, 255, 0.2); color: white; }
+
+        .nav-custom { background: rgba(0, 0, 0, 0.1); padding: 0 1rem; }
+        .nav-custom .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 16px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .nav-custom .nav-link:hover, .nav-custom .nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-menu-custom {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ══ Content ══════════════════════════════════════════════════════ */
+        .welcome-section {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .request-card {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+            margin-bottom: 1rem;
+            padding: 1.25rem;
+        }
+        .request-card:hover { border-color: var(--primary-color); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .request-id { font-weight: 700; color: #111827; font-size: 0.9rem; }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.2rem 0.6rem; border-radius: 20px;
+            font-weight: 600; font-size: 0.78rem;
+        }
+        .status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+        .status-badge.pending { background: #fef3c7; color: #d97706; }
+        .status-badge.pending::before { background: #d97706; }
+        .status-badge.approved { background: #dcfce7; color: #16a34a; }
+        .status-badge.approved::before { background: #16a34a; }
+        .status-badge.rejected { background: #fee2e2; color: #dc2626; }
+        .status-badge.rejected::before { background: #dc2626; }
+        .status-badge.cancelled { background: #f3f4f6; color: #6b7280; }
+        .status-badge.cancelled::before { background: #6b7280; }
+
+        .type-badge {
+            display: inline-flex; padding: 0.15rem 0.5rem;
+            border-radius: 4px; font-weight: 600; font-size: 0.75rem;
+        }
+        .type-badge.rent { background: #eff6ff; color: #2563eb; }
+        .type-badge.buy { background: #fef3c7; color: #b45309; }
+
+        .request-info { font-size: 0.8125rem; color: #6b7280; }
+        .request-info i { margin-right: 0.25rem; }
+
+        .btn-cancel {
+            background: #fee2e2; color: #dc2626; border: none;
+            padding: 0.35rem 0.75rem; border-radius: 6px;
+            font-weight: 600; font-size: 0.78rem; cursor: pointer;
+        }
+        .btn-cancel:hover { background: #fecaca; }
+
+        .empty-state {
+            padding: 3rem; text-align: center; color: #9ca3af;
+        }
+        .empty-state i { font-size: 3rem; color: #d1d5db; margin-bottom: 1rem; display: block; }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top py-3">
+            <div class="container-fluid px-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="logo">MoonNest</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-end">
+                                <small class="d-block opacity-85">Xin chào,</small>
+                                <strong th:text="${#authentication.name}">Nguyễn Văn A</strong>
+                            </div>
+                            <span class="badge-custom">KHÁCH HÀNG</span>
+                        </div>
+                        <a href="#" class="btn btn-logout"
+                            onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Đăng xuất</a>
+                        <form id="logoutForm" th:action="@{/auth/logout}" method="post" style="display:none;"></form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="nav-custom">
+            <div class="container-fluid px-4">
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/home}">
+                            <i class="bi bi-house-door me-1"></i>Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/contract/list}">
+                            <i class="bi bi-file-text me-1"></i>Hợp đồng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/invoice/list}">
+                            <i class="bi bi-credit-card me-1"></i>Thanh toán
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/building/list}">
+                            <i class="bi bi-building me-1"></i>Tòa nhà
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-grid-3x3-gap me-1"></i>Tiện ích
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-custom">
+                            <li><a class="dropdown-item" th:href="@{/customer/transaction/history}"><i class="bi bi-clock-history me-2"></i>Lịch sử giao dịch</a></li>
+                            <li><a class="dropdown-item" th:href="@{/customer/service}"><i class="bi bi-clipboard-check me-2"></i>Dịch vụ</a></li>
+                            <li><a class="dropdown-item active" th:href="@{/customer/property-request/list}"><i class="bi bi-envelope-paper me-2"></i>Yêu cầu của tôi</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customer/profile}">
+                            <i class="bi bi-person-circle me-1"></i>Tài khoản
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <div class="container-fluid px-4 py-4">
+        <div class="welcome-section p-4 rounded mb-4">
+            <h1 class="h3 mb-2">Yêu cầu của tôi</h1>
+            <p class="text-muted mb-0">Theo dõi trạng thái các yêu cầu thuê/mua bất động sản</p>
+        </div>
+
+        <div id="requestList">
+            <!-- Ajax load -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function loadRequests() {
+            $.ajax({
+                url: '/api/customer/property-request/list',
+                type: 'GET',
+                success: function(data) {
+                    const container = $('#requestList');
+                    container.empty();
+
+                    if (!data || data.length === 0) {
+                        container.append(`
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <h5>Chưa có yêu cầu nào</h5>
+                                <p>Bạn có thể gửi yêu cầu thuê/mua từ trang <a href="/customer/building/list">Tòa nhà</a></p>
+                            </div>
+                        `);
+                        return;
+                    }
+
+                    data.forEach(function(r) {
+                        const statusClass = r.status.toLowerCase();
+                        const typeClass = r.requestType === 'RENT' ? 'rent' : 'buy';
+                        const date = r.createdDate ? new Date(r.createdDate).toLocaleDateString('vi-VN') : '';
+
+                        let cancelBtn = '';
+                        if (r.status === 'PENDING') {
+                            cancelBtn = `<button class="btn-cancel" onclick="cancelRequest(${r.id})">
+                                            <i class="bi bi-x-circle me-1"></i>Hủy
+                                         </button>`;
+                        }
+
+                        container.append(`
+                            <div class="request-card">
+                                <div class="request-header">
+                                    <div>
+                                        <span class="request-id">Yêu cầu #${r.id}</span>
+                                        <span class="type-badge ${typeClass} ms-2">${r.requestTypeLabel}</span>
+                                    </div>
+                                    <span class="status-badge ${statusClass}">${r.statusLabel}</span>
+                                </div>
+                                <div class="request-info">
+                                    <div class="mb-1">
+                                        <i class="bi bi-building"></i> ${r.buildingName}
+                                    </div>
+                                    <div>
+                                        <i class="bi bi-calendar3"></i> Ngày gửi: ${date}
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-end">${cancelBtn}</div>
+                            </div>
+                        `);
+                    });
+                },
+                error: function() { alert('Không tải được dữ liệu!'); }
+            });
+        }
+
+        function cancelRequest(id) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Xác nhận hủy',
+                text: 'Bạn có chắc muốn hủy yêu cầu này?',
+                showCancelButton: true,
+                confirmButtonText: 'Hủy yêu cầu',
+                cancelButtonText: 'Không',
+                confirmButtonColor: '#dc2626',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/api/customer/property-request/cancel/${id}`,
+                        type: 'DELETE',
+                        success: function(msg) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thành công',
+                                text: typeof msg === 'string' ? msg : 'Đã hủy yêu cầu',
+                                confirmButtonColor: '#2d3e8f'
+                            }).then(() => loadRequests());
+                        },
+                        error: function(xhr) {
+                            let errMsg = 'Hủy thất bại!';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errMsg = xhr.responseJSON.message;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi',
+                                text: errMsg,
+                                confirmButtonColor: '#2d3e8f'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            loadRequests();
+        });
+    </script>
+</body>
+</html>
