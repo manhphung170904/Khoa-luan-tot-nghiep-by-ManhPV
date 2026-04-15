@@ -82,9 +82,9 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
         entity.setCustomer(customer);
         entity.setBuilding(building);
         entity.setRequestType(dto.getRequestType());
-        entity.setFullName(dto.getFullName());
-        entity.setPhone(dto.getPhone());
-        entity.setEmail(dto.getEmail());
+        entity.setFullName(customer.getFullName()); // Lấy từ thông tin khách hàng
+        entity.setPhone(customer.getPhone());             // Lấy từ form người dùng nhập
+        entity.setEmail(customer.getEmail());             // Lấy từ form người dùng nhập
         entity.setDesiredArea(dto.getDesiredArea());
         entity.setDesiredStartDate(dto.getDesiredStartDate());
         entity.setDesiredEndDate(dto.getDesiredEndDate());

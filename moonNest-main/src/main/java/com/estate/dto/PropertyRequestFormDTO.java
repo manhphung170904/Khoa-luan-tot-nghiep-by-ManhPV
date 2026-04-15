@@ -18,10 +18,6 @@ public class PropertyRequestFormDTO {
     @NotBlank(message = "Vui lòng chọn loại yêu cầu")
     private String requestType; // RENT / BUY
 
-    private String fullName;
-    private String phone;
-    private String email;
-
     private Integer desiredArea;        // Chỉ cho RENT
     private LocalDate desiredStartDate; // Chỉ cho RENT
     private LocalDate desiredEndDate;   // Chỉ cho RENT
