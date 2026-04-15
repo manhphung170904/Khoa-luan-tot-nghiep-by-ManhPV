@@ -1,21 +1,30 @@
 ﻿import { test, expect } from '@playwright/test';
 import { ApiAuthHelper } from '../../../utils/api/apiAuthHelper';
 import { DatabaseHelper } from '../../../utils/db-client';
+import { env } from '../../../config/env';
 
 test.describe('Payment API (QR VietQR) Tests', () => {
     let db: DatabaseHelper;
     let customerCookies: string;
-    let otherCustomerCookies: string;
     let adminCookies: string;
+    let customerInvoiceId: number;
+    let nonexistentInvoiceId: number;
 
     test.beforeAll(async () => {
         db = new DatabaseHelper();
         await db.connect();
-        
-        // Setup mảng giả lập Auth context Authorization headers
-        customerCookies = await ApiAuthHelper.loginAsCustomer(); // userId = 1
-        otherCustomerCookies = 'NO_AUTH'; // separate customer not available in test env // userId = 2
+
+        customerCookies = await ApiAuthHelper.loginAsCustomer();
         adminCookies = await ApiAuthHelper.loginAsAdmin();
+
+        const invoiceRows = await db.query<{ id: number }>(
+            'SELECT i.id FROM invoice i JOIN customer c ON i.customer_id = c.id WHERE c.username = ? ORDER BY i.id DESC LIMIT 1',
+            [env.customerUsername]
+        );
+        customerInvoiceId = invoiceRows.length > 0 ? invoiceRows[0].id : 1;
+
+        const maxRow = await db.query<{ maxId: number }>('SELECT MAX(id) AS maxId FROM invoice');
+        nonexistentInvoiceId = (maxRow[0]?.maxId ?? 0) + 99999;
     });
 
     test.afterAll(async () => {
@@ -23,70 +32,62 @@ test.describe('Payment API (QR VietQR) Tests', () => {
     });
 
     test.describe.serial('Luồng Render Mã VietQR (GET /payment/qr/{id})', () => {
-        
-        test('[Security] Reject ngầm nếu truy cập QRCode mà chưa login', async ({ request }) => {
-            const response = await request.get('/payment/qr/1');
-            // Mock authentication filter chặn thì trả 401
+        test('[API_TC_021] [Security] Reject unauthenticated access to QR payment page', async ({ request }) => {
+            const response = await request.get(`/payment/qr/${customerInvoiceId}`);
             expect([302, 401, 403]).toContain(response.status());
         });
 
-        test('[Security-RBAC] Chặn văng 403 / 401 nếu dùng token Admin để truy cập QR', async ({ request }) => {
-            // Theo code: if (!"CUSTOMER".equalsIgnoreCase(user.getRole())) throw HttpStatus.UNAUTHORIZED
-            const response = await request.get('/payment/qr/1', {
+        test('[API_TC_022] [Security] Reject admin account accessing customer QR page', async ({ request }) => {
+            const response = await request.get(`/payment/qr/${customerInvoiceId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect([302, 401, 403]).toContain(response.status());
         });
 
-        test('[Security-RBAC] Chặn lỗi chặn văng 403 nếu Customer chọc Ngoáy hóa đơn của người khác', async ({ request }) => {
-            // Giả lập logic: DB Hóa đơn số 1 thuộc về Customer A (id=1). 
-            // Nếu dùng Token của Customer B (id=2) gọi sang sẽ bị ném FORBIDDEN 403.
-            // Đoạn này phụ thuộc data trên mội trường local, expect 403 / 404
-            const response = await request.get('/payment/qr/1', { // Cố tình truyền 1 ID tĩnh 
-                headers: { Cookie: otherCustomerCookies } // token người lạ
+        test('[API_TC_023] [Boundary] Request QR for a non-existing invoice id', async ({ request }) => {
+            const response = await request.get(`/payment/qr/${nonexistentInvoiceId}`, {
+                headers: { Cookie: customerCookies }
             });
-            expect([403, 404, 500]).toContain(response.status()); 
+            expect([404, 403, 500]).toContain(response.status());
         });
 
-        test('[Positive] Pass Validate và Render mã HTML sinh QR VietQR thành công', async ({ request }) => {
-            // Gửi Token chính chủ. (Cần ID hóa đơn thực tế để test pass 100%. Nếu DB rỗng nó sẽ trả 404)
-            const response = await request.get('/payment/qr/1', { 
-                headers: { Cookie: customerCookies } 
+        test('[API_TC_024] [Happy Path] Render QR page for own invoice and validate HTML content', async ({ request }) => {
+            const response = await request.get(`/payment/qr/${customerInvoiceId}`, {
+                headers: { Cookie: customerCookies }
             });
-
-            // Nếu hóa đơn có tồn tại thì mới trả 200, còn không thì 404/500
             expect([200, 404, 500]).toContain(response.status());
 
             if (response.status() === 200) {
                 const bodyHtml = await response.text();
-                // Xác thực backend xử lý Format HTML đúng 
                 expect(bodyHtml).toContain('Thanh toán bằng QR');
                 expect(bodyHtml).toContain('img.vietqr.io');
-                expect(bodyHtml).toContain('href="/payment/qr/confirm/1"');
+                expect(bodyHtml).toContain(`/payment/qr/confirm/${customerInvoiceId}`);
+
+                const invoiceRows = await db.query<{ customer_id: number; status: string; total_amount: string | null }>(
+                    'SELECT customer_id, status, total_amount FROM invoice WHERE id = ?',
+                    [customerInvoiceId]
+                );
+                expect(invoiceRows.length).toBe(1);
+                expect(invoiceRows[0].status).toBeTruthy();
             }
         });
     });
 
-    test.describe.serial('Luồng Ấn Nút Confirm Đã Thanh Toán', () => {
-        
-        test('[Positive] Xác nhận thủ công -> Chuyển Status hóa đơn', async ({ request }) => {
-            const response = await request.get('/payment/qr/confirm/1', {
+    test.describe.serial('Luồng Xác nhận Thanh toán QR', () => {
+        test('[API_TC_025] [Happy Path] Confirm QR payment and verify invoice status becomes PAID', async ({ request }) => {
+            const response = await request.get(`/payment/qr/confirm/${customerInvoiceId}`, {
                 headers: { Cookie: customerCookies },
                 maxRedirects: 0
             });
-            
-            // Nếu hóa đơn chuẩn, nó sẽ redirect 302 về danh sách invoice
+
             expect([302, 404, 500]).toContain(response.status());
             if (response.status() === 302) {
                 expect(response.headers().location).toContain('/customer/invoice/list?paySuccess');
-                
-                // Double check backend thực sự gọi invoiceService.markPaid
-                const dbRes = await db.query("SELECT status FROM invoice WHERE id = 1");
-                if (dbRes.length > 0) {
-                    expect(dbRes[0].status).toBe('PAID');
-                }
+
+                const dbRows = await db.query<{ status: string }>('SELECT status FROM invoice WHERE id = ?', [customerInvoiceId]);
+                expect(dbRows.length).toBe(1);
+                expect(dbRows[0].status).toBe('PAID');
             }
         });
     });
-
 });

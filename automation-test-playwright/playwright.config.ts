@@ -69,8 +69,7 @@ export default defineConfig({
         },
         trace: "off",
         screenshot: "off",
-        video: "off",
-        maxRedirects: 0   // ← Bắt 302 redirect (unauthenticated → /login) thay vì follow → 200 HTML
+        video: "off"
       }
     }
   ],
