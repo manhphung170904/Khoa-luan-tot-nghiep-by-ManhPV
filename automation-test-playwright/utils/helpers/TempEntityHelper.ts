@@ -1,5 +1,6 @@
 import { expect, type APIRequestContext, type APIResponse } from "@playwright/test";
 import { TestDataFactory } from "./TestDataFactory";
+import { MySqlDbClient } from "@db/MySqlDbClient";
 
 type DanhSachPhanTrang<T> = {
   content?: T[];
@@ -38,6 +39,12 @@ type TempSaleContract = {
   customer: TempCustomer;
   building: TempBuilding;
 };
+type TempPropertyRequest = {
+  id: number;
+  buildingId: number;
+  customerId: number;
+  requestType: "RENT" | "BUY";
+};
 
 export class TempEntityHelper {
   private static taoSoDienThoai(): string {
@@ -73,21 +80,12 @@ export class TempEntityHelper {
     request: APIRequestContext,
     role: "STAFF" | "ADMIN" = "STAFF"
   ): Promise<TempStaff> {
-    const hauTo = TestDataFactory.taoHauToDuyNhat("staff");
-    const fullName = `PW ${role} ${hauTo}`;
-    const username = `${role.toLowerCase()}${String(Date.now()).slice(-8)}`;
-    const email = TestDataFactory.taoEmail(`pw-${role.toLowerCase()}`);
-    const phone = this.taoSoDienThoai();
+    const payload = TestDataFactory.buildAdminStaffPayload({}, role);
+    const fullName = String(payload.fullName);
+    const username = String(payload.username);
 
     const taoResponse = await request.post("/admin/staff/add", {
-      data: {
-        username,
-        password: "12345678",
-        fullName,
-        phone,
-        email,
-        role
-      }
+      data: payload
     });
     expect([200, 201]).toContain(taoResponse.status());
 
@@ -112,21 +110,12 @@ export class TempEntityHelper {
 
   static async taoCustomerTam(request: APIRequestContext, staffId?: number): Promise<TempCustomer> {
     const nguoiPhuTrachId = staffId ?? (await this.layMotStaffIdDangTonTai(request));
-    const hauTo = TestDataFactory.taoHauToDuyNhat("customer");
-    const fullName = `PW Customer ${hauTo}`;
-    const username = `pwcust${String(Date.now()).slice(-8)}`;
-    const email = TestDataFactory.taoEmail("pw-customer");
-    const phone = this.taoSoDienThoai();
+    const payload = TestDataFactory.buildCustomerPayload({ staffIds: [nguoiPhuTrachId] });
+    const fullName = String(payload.fullName);
+    const username = String(payload.username);
 
     const taoResponse = await request.post("/admin/customer/add", {
-      data: {
-        username,
-        password: "12345678",
-        fullName,
-        phone,
-        email,
-        staffIds: [nguoiPhuTrachId]
-      }
+      data: payload
     });
     expect([200, 201]).toContain(taoResponse.status());
 
@@ -153,37 +142,8 @@ export class TempEntityHelper {
     request: APIRequestContext,
     transactionType: "FOR_RENT" | "FOR_SALE" = "FOR_RENT"
   ): Promise<TempBuilding> {
-    const hauTo = TestDataFactory.taoHauToDuyNhat("building");
-    const name = `PW Building ${hauTo}`;
-
-    const payload = {
-      districtId: 1,
-      numberOfFloor: 10,
-      numberOfBasement: 1,
-      floorArea: 200,
-      rentPrice: transactionType === "FOR_RENT" ? 1000000 : null,
-      deposit: transactionType === "FOR_RENT" ? 2000000 : null,
-      serviceFee: transactionType === "FOR_RENT" ? 100000 : null,
-      carFee: transactionType === "FOR_RENT" ? 50000 : null,
-      motorbikeFee: transactionType === "FOR_RENT" ? 20000 : null,
-      waterFee: transactionType === "FOR_RENT" ? 15000 : null,
-      electricityFee: transactionType === "FOR_RENT" ? 3500 : null,
-      salePrice: transactionType === "FOR_SALE" ? 3000000000 : null,
-      name,
-      ward: "Xuan La",
-      street: "Vo Chi Cong",
-      propertyType: "OFFICE",
-      transactionType,
-      direction: "DONG",
-      level: "A",
-      taxCode: `PW-${Date.now()}`,
-      linkOfBuilding: "https://example.com",
-      image: null,
-      rentAreaValues: "50,100",
-      latitude: 21.0686,
-      longitude: 105.8033,
-      staffIds: []
-    };
+    const payload = TestDataFactory.buildBuildingPayload({}, transactionType);
+    const name = String(payload.name);
 
     const taoResponse = await request.post("/admin/building/add", { data: payload });
     expect([200, 201]).toContain(taoResponse.status());
@@ -225,16 +185,11 @@ export class TempEntityHelper {
     const customer = await this.taoCustomerTam(request, staff.id);
     await this.capNhatPhanCongCustomer(request, staff.id, [customer.id]);
 
-    const payload = {
+    const payload = TestDataFactory.buildContractPayload({
       customerId: customer.id,
       buildingId: building.id,
-      staffId: staff.id,
-      rentPrice: 1000000,
-      rentArea: 50,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      status: "ACTIVE"
-    };
+      staffId: staff.id
+    });
 
     const taoResponse = await request.post("/admin/contract/add", { data: payload });
     expect([200, 201]).toContain(taoResponse.status());
@@ -266,24 +221,12 @@ export class TempEntityHelper {
 
   static async taoInvoiceTam(request: APIRequestContext): Promise<TempInvoice> {
     const contract = await this.taoContractTam(request);
-    const thoiDiem = new Date();
-    thoiDiem.setMonth(thoiDiem.getMonth() - 1);
-    const month = thoiDiem.getMonth() + 1;
-    const year = thoiDiem.getFullYear();
-    const dueDate = new Date(year, month, 10).toISOString().slice(0, 10);
-
-    const payload = {
+    const payload = TestDataFactory.buildInvoicePayload({
       contractId: contract.id,
-      customerId: contract.customer.id,
-      month,
-      year,
-      status: "PENDING",
-      dueDate,
-      totalAmount: 1500000,
-      details: [{ description: "Phi dich vu test", amount: 1500000 }],
-      electricityUsage: 10,
-      waterUsage: 5
-    };
+      customerId: contract.customer.id
+    });
+    const month = Number(payload.month);
+    const year = Number(payload.year);
 
     const taoResponse = await request.post("/admin/invoice/add", { data: payload });
     expect([200, 201]).toContain(taoResponse.status());
@@ -315,14 +258,11 @@ export class TempEntityHelper {
     const customer = await this.taoCustomerTam(request, staff.id);
     await this.capNhatPhanCongCustomer(request, staff.id, [customer.id]);
 
-    const payload = {
+    const payload = TestDataFactory.buildSaleContractPayload({
       buildingId: building.id,
       customerId: customer.id,
-      staffId: staff.id,
-      salePrice: 3000000000,
-      transferDate: null,
-      note: "Hop dong mua ban test"
-    };
+      staffId: staff.id
+    });
 
     const taoResponse = await request.post("/admin/sale-contract/add", { data: payload });
     expect([200, 201]).toContain(taoResponse.status());
@@ -350,5 +290,49 @@ export class TempEntityHelper {
     await this.xoaCustomerTam(request, temp.customer.id);
     await this.xoaBuildingTam(request, temp.building.id);
     await this.xoaStaffTam(request, temp.staff.id);
+  }
+
+  static async timCustomerIdTheoUsername(username: string): Promise<number> {
+    const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM customer WHERE username = ? LIMIT 1", [username]);
+    expect(rows.length).toBeGreaterThan(0);
+    return rows[0]!.id;
+  }
+
+  static async taoPropertyRequestTam(
+    customerRequest: APIRequestContext,
+    customerUsername: string,
+    buildingId: number,
+    requestType: "RENT" | "BUY" = "RENT"
+  ): Promise<TempPropertyRequest> {
+    const payload = TestDataFactory.buildPropertyRequestPayload({ buildingId }, requestType);
+    const submitResponse = await customerRequest.post("/api/customer/property-request/submit", {
+      data: payload,
+      failOnStatusCode: false,
+      maxRedirects: 0
+    });
+    expect(submitResponse.status()).toBe(200);
+
+    const customerId = await this.timCustomerIdTheoUsername(customerUsername);
+    const rows = await MySqlDbClient.query<{ id: number }>(
+      `
+        SELECT id
+        FROM property_request
+        WHERE customer_id = ? AND building_id = ? AND request_type = ?
+        ORDER BY id DESC
+        LIMIT 1
+      `,
+      [customerId, buildingId, requestType]
+    );
+
+    expect(rows.length).toBeGreaterThan(0);
+    return { id: rows[0]!.id, buildingId, customerId, requestType };
+  }
+
+  static async xoaPropertyRequestTam(id?: number): Promise<void> {
+    if (!id) {
+      return;
+    }
+
+    await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [id]);
   }
 }

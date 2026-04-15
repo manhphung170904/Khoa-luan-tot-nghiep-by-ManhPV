@@ -650,7 +650,7 @@
 
             <!-- ── Filter Card ─────────────────────────────────────────────── -->
             <div class="d-card">
-                <form th:action="@{/admin/contract/search}" method="get">
+                <form id="contractFilterForm" th:action="@{/admin/contract/search}" method="get">
                     <div class="d-card-body">
                         <div class="filter-header">
                             <div class="filter-title">
@@ -670,26 +670,20 @@
                             <div class="row g-3 mb-3">
                                 <div class="col-md-4">
                                     <label class="form-label">Tên khách hàng</label>
-                                    <select class="form-control" name="customerId">
+                                    <select class="form-control" id="customerFilter" name="customerId">
                                         <option value="">-- Chọn khách hàng --</option>
-                                        <option th:each="c : ${customers}" th:value="${c.value}" th:text="${c.key}">
-                                        </option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Tên bất động sản</label>
-                                    <select class="form-control" name="buildingId">
+                                    <select class="form-control" id="buildingFilter" name="buildingId">
                                         <option value="">-- Chọn bất động sản --</option>
-                                        <option th:each="b : ${buildings}" th:value="${b.value}" th:text="${b.key}">
-                                        </option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Nhân viên quản lý</label>
-                                    <select class="form-control" name="staffId">
+                                    <select class="form-control" id="staffFilter" name="staffId">
                                         <option value="">-- Chọn nhân viên --</option>
-                                        <option th:each="s : ${staffs}" th:value="${s.id}" th:text="${s.fullName}">
-                                        </option>
                                     </select>
                                 </div>
                             </div>
@@ -819,6 +813,24 @@
             return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' đ';
         }
 
+        function appendOptions($select, options) {
+            $.each(options || [], function (_, option) {
+                $select.append(`<option value="${option.value}">${option.label}</option>`);
+            });
+        }
+
+        function loadContractMetadata() {
+            return $.ajax({
+                url: "/api/v1/admin/contracts/metadata",
+                type: "GET",
+                success: function (metadata) {
+                    appendOptions($("#customerFilter"), metadata.customers);
+                    appendOptions($("#buildingFilter"), metadata.buildings);
+                    appendOptions($("#staffFilter"), metadata.staffs);
+                }
+            });
+        }
+
         function getStatusBadge(status) {
             const map = {
                 'ACTIVE': { cls: 'active', text: 'Hiệu lực' },
@@ -830,11 +842,17 @@
 
         function loadContracts(page, event) {
             if (event) event.preventDefault();
+            const ajaxData = { page: page, size: pageSize };
+            $.each($("#contractFilterForm").serializeArray(), function (_, field) {
+                if (field.value != null && field.value !== '') {
+                    ajaxData[field.name] = field.value;
+                }
+            });
 
             $.ajax({
-                url: "/admin/contract/list/page",
+                url: "/api/v1/admin/contracts",
                 type: "GET",
-                data: { page: page, size: pageSize },
+                data: ajaxData,
                 success: function (data) {
                     currentPage = page;
                     $('#currentPageLabel').text(page);
@@ -941,8 +959,20 @@
         }
 
         $(document).ready(function () {
-            loadContracts(1);
+            loadContractMetadata().always(function () {
+                loadContracts(1);
+            });
 
+            $("#contractFilterForm").on("submit", function (e) {
+                e.preventDefault();
+                loadContracts(1);
+            });
+
+            $("#contractFilterForm").on("reset", function () {
+                setTimeout(function () {
+                    loadContracts(1);
+                }, 0);
+            });
         });
 
         // Ajax xóa hợp đồng
@@ -962,7 +992,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/contract/delete/" + id,
+                        url: "/api/v1/admin/contracts/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({
@@ -998,7 +1028,7 @@
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
                     return $.ajax({
-                        url: "/admin/contract/status",
+                        url: "/api/v1/admin/contracts/status",
                         type: "PUT",
                         timeout: 30000
                     }).catch(error => {

@@ -526,7 +526,7 @@
 
         function loadCustomers(page) {
             $.ajax({
-                url: "/admin/customer/search/page",
+                url: "/api/v1/admin/customers",
                 type: "GET",
                 data: { page: page, size: pageSize, fullName: fullName },
                 success: function (data) {
@@ -656,7 +656,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/customer/delete/" + id,
+                        url: "/api/v1/admin/customers/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({

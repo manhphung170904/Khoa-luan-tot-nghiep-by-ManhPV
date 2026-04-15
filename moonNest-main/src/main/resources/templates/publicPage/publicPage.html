@@ -1639,24 +1639,20 @@
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <label class="form-label">Quận</label>
-                            <select class="form-select" name="districtId">
+                            <select class="form-select" name="districtId" id="districtFilter">
                                 <option value="">-- Chọn quận --</option>
-                                <option th:each="d : ${districts}" th:value="${d.getValue()}" th:text="${d.getKey()}">
-                                </option>
                             </select>
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <label class="form-label">Phường</label>
-                            <select class="form-select" name="ward">
+                            <select class="form-select" name="ward" id="wardFilter">
                                 <option value="">-- Chọn phường --</option>
-                                <option th:each="w : ${wards}" th:value="${w}" th:text="${w}"></option>
                             </select>
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <label class="form-label">Phố</label>
-                            <select class="form-select" name="street">
+                            <select class="form-select" name="street" id="streetFilter">
                                 <option value="">-- Chọn phố --</option>
-                                <option th:each="s : ${streets}" th:value="${s}" th:text="${s}"></option>
                             </select>
                         </div>
                     </div>
@@ -1668,17 +1664,14 @@
                     <div class="row g-2 mb-3">
                         <div class="col-md-3 col-sm-6">
                             <label class="form-label">Hướng</label>
-                            <select class="form-select" name="direction">
+                            <select class="form-select" name="direction" id="directionFilter">
                                 <option value="">-- Chọn hướng --</option>
-                                <option th:each="d : ${directions}" th:value="${d.name()}" th:text="${d.label}">
-                                </option>
                             </select>
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <label class="form-label">Hạng</label>
-                            <select class="form-select" name="level">
+                            <select class="form-select" name="level" id="levelFilter">
                                 <option value="">-- Chọn hạng --</option>
-                                <option th:each="l : ${levels}" th:value="${l.name()}" th:text="${l.label}"></option>
                             </select>
                         </div>
                         <div class="col-md-3 col-sm-6">
@@ -2014,9 +2007,45 @@
             });
         }
 
+        function appendOptions($select, options) {
+            const currentValue = $select.val();
+            $select.find('option:not(:first)').remove();
+            (options || []).forEach(function (option) {
+                $select.append(`<option value="${option.value}">${option.label}</option>`);
+            });
+            if (currentValue) {
+                $select.val(currentValue);
+            }
+        }
+
+        function appendStringOptions($select, values) {
+            const currentValue = $select.val();
+            $select.find('option:not(:first)').remove();
+            (values || []).forEach(function (value) {
+                $select.append(`<option value="${value}">${value}</option>`);
+            });
+            if (currentValue) {
+                $select.val(currentValue);
+            }
+        }
+
+        function loadFilterMetadata() {
+            $.ajax({
+                url: '/api/v1/public/buildings/filters',
+                type: 'GET',
+                success: function (response) {
+                    appendOptions($('#districtFilter'), response.districts);
+                    appendStringOptions($('#wardFilter'), response.wards);
+                    appendStringOptions($('#streetFilter'), response.streets);
+                    appendOptions($('#directionFilter'), response.directions);
+                    appendOptions($('#levelFilter'), response.levels);
+                }
+            });
+        }
+
         // ===== BUILDING SEARCH =====
-        // API endpoint: /moonnest/building/search (searchByCustomer — has pagination)
-        // Paginated: page & size params supported
+        // API endpoint: /api/v1/public/buildings/page
+        // Contract: PageResponse<BuildingDetailDTO>
         let currentPage = 0;
         const PAGE_SIZE = 9;
 
@@ -2024,27 +2053,18 @@
             if (page === undefined) page = 0;
             currentPage = page;
 
-            const formData = $('#filterForm').serialize() + '&page=' + page + '&size=' + PAGE_SIZE;
+            const formData = $('#filterForm').serialize() + '&page=' + (page + 1) + '&size=' + PAGE_SIZE;
 
             $.ajax({
-                url: '/moonnest/building/search',
+                url: '/api/v1/public/buildings/page',
                 type: 'GET',
                 data: formData,
                 success: function (response) {
-                    // Support both plain list and paginated Page<BuildingDetailDTO>
                     let buildings, totalElements, totalPages;
 
-                    if (Array.isArray(response)) {
-                        // Legacy non-paginated
-                        buildings = response;
-                        totalElements = buildings.length;
-                        totalPages = 1;
-                    } else {
-                        // Spring Page object
-                        buildings = response.content || [];
-                        totalElements = response.totalElements || buildings.length;
-                        totalPages = response.totalPages || 1;
-                    }
+                    buildings = response.content || [];
+                    totalElements = response.totalElements || buildings.length;
+                    totalPages = response.totalPages || 1;
 
                     const list = $('#buildingList');
                     const total = $('#totalBuilding');
@@ -2235,6 +2255,7 @@
             if (buildingName !== "") {
                 $("[name='name']").val(buildingName);
             }
+            loadFilterMetadata();
             loadBuildings(0);
 
             $('.filter-body .form-control, .filter-body .form-select').on('input change', function () {

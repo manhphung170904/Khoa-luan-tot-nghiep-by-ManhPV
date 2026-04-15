@@ -246,6 +246,13 @@ public class BuildingServiceImpl implements BuildingService {
     }
 
     @Override
+    public Page<BuildingDetailDTO> searchByCustomer(BuildingFilterDTO filter, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        List<BuildingDetailDTO> dtoList = searchByCustomer(filter);
+        return toPage(dtoList, pageable);
+    }
+
+    @Override
     public Page<BuildingDetailDTO> searchByStaff(BuildingFilterDTO filter, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 

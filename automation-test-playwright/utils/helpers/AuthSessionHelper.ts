@@ -1,6 +1,7 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import { env } from "@config/env";
 import { LoginPage } from "@pages/auth/LoginPage";
+import { MySqlDbClient } from "@db/MySqlDbClient";
 
 export type UserRole = "admin" | "staff" | "customer";
 
@@ -52,9 +53,27 @@ export class AuthSessionHelper {
     }
   }
 
+  private static matchesRoleLandingUrl(role: UserRole, rawUrl: string): boolean {
+    return this.successUrlPattern(role).test(rawUrl);
+  }
+
+  private static async usernameMatchesRole(role: UserRole, username: string): Promise<boolean> {
+    if (role === "customer") {
+      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM customer WHERE username = ? LIMIT 1", [username]);
+      return rows.length > 0;
+    }
+
+    const staffRole = role === "admin" ? "ADMIN" : "STAFF";
+    const rows = await MySqlDbClient.query<{ id: number }>(
+      "SELECT id FROM staff WHERE username = ? AND role = ? LIMIT 1",
+      [username, staffRole]
+    );
+    return rows.length > 0;
+  }
+
   private static isSuccessfulUiLogin(page: Page, role: UserRole): boolean {
     const url = page.url();
-    return this.successUrlPattern(role).test(url) && !/\/login(?:\?|$)/.test(url);
+    return this.matchesRoleLandingUrl(role, url) && !/\/login(?:\?|$)/.test(url);
   }
 
   private static async waitForStableRoleLanding(page: Page, role: UserRole): Promise<void> {
@@ -65,7 +84,7 @@ export class AuthSessionHelper {
 
     try {
       await page.waitForURL(
-        (url) => this.successUrlPattern(role).test(url.toString()) && !/\/login-success/.test(url.toString()),
+        (url) => this.matchesRoleLandingUrl(role, url.toString()) && !/\/login-success/.test(url.toString()),
         { timeout: 5_000 }
       );
     } catch {
@@ -83,7 +102,7 @@ export class AuthSessionHelper {
     try {
       await Promise.race([
         page.waitForURL(
-          (url) => this.successUrlPattern(role).test(url.toString()) && !/\/login(?:\?|$)/.test(url.toString()),
+          (url) => this.matchesRoleLandingUrl(role, url.toString()) && !/\/login(?:\?|$)/.test(url.toString()),
           { timeout: 5_000 }
         ),
         page.waitForURL((url) => /\/login(?:\?|$)/.test(url.toString()), { timeout: 5_000 })
@@ -104,10 +123,10 @@ export class AuthSessionHelper {
         return false;
       }
 
-      return /\/login-success|\/admin\/|\/staff\/|\/customer\//.test(location);
+      return this.matchesRoleLandingUrl(role, location);
     }
 
-    return this.successUrlPattern(role).test(response.url()) && !/\/login(?:\?|$)/.test(response.url());
+    return this.matchesRoleLandingUrl(role, response.url()) && !/\/login(?:\?|$)/.test(response.url());
   }
 
   static async loginUi(page: Page, username: string, password = env.defaultPassword): Promise<void> {
@@ -151,6 +170,10 @@ export class AuthSessionHelper {
     const candidates = this.usernameCandidatesFor(role);
 
     for (const username of candidates) {
+      if (!(await this.usernameMatchesRole(role, username))) {
+        continue;
+      }
+
       if (await this.tryLoginUi(page, role, username, password)) {
         this.resolvedUsernames.set(role, username);
         return username;
@@ -185,6 +208,10 @@ export class AuthSessionHelper {
     const candidates = this.usernameCandidatesFor(role);
 
     for (const username of candidates) {
+      if (!(await this.usernameMatchesRole(role, username))) {
+        continue;
+      }
+
       const response = await this.loginApi(request, username);
       if (this.isSuccessfulApiLogin(response, role)) {
         this.resolvedUsernames.set(role, username);

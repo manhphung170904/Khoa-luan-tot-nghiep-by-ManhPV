@@ -541,11 +541,8 @@
                             <i class="bi bi-building me-1"></i>
                             Tòa nhà
                         </label>
-                        <select class="form-select" name="buildingId">
+                        <select class="form-select" name="buildingId" id="buildingFilter">
                             <option value="">-- Chọn tòa nhà --</option>
-                            <option th:each="b : ${buildings}" th:value="${b.value}" th:text="${b.key}">
-                                MoonNest
-                            </option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -582,15 +579,15 @@
         <!-- Statistics Bar -->
         <div class="stats-bar">
             <div class="stat-item">
-                <div class="stat-number" th:text="${totalContracts}">0</div>
+                <div class="stat-number" id="totalContractsStat">0</div>
                 <div class="stat-label">Tổng hợp đồng</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" th:text="${activeContracts}">0</div>
+                <div class="stat-number" id="activeContractsStat">0</div>
                 <div class="stat-label">Đang hiệu lực</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" th:text="${expiredContracts}">0</div>
+                <div class="stat-number" id="expiredContractsStat">0</div>
                 <div class="stat-label">Đã hết hạn</div>
             </div>
         </div>
@@ -608,9 +605,40 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
+        function loadContractMetadata() {
+            $.ajax({
+                url: "/api/v1/customer/contracts/metadata",
+                type: "GET",
+                success: function (data) {
+                    const buildingFilter = $("#buildingFilter");
+                    const currentValue = buildingFilter.val();
+
+                    buildingFilter.find("option:not(:first)").remove();
+                    (data.buildings || []).forEach(function (building) {
+                        buildingFilter.append(
+                            `<option value="${building.value}">${building.label}</option>`
+                        );
+                    });
+
+                    if (currentValue) {
+                        buildingFilter.val(currentValue);
+                    }
+
+                    $("#totalContractsStat").text(data.summary ? data.summary.totalContracts : 0);
+                    $("#activeContractsStat").text(data.summary ? data.summary.activeContracts : 0);
+                    $("#expiredContractsStat").text(data.summary ? data.summary.expiredContracts : 0);
+                },
+                error: function () {
+                    $("#totalContractsStat").text("0");
+                    $("#activeContractsStat").text("0");
+                    $("#expiredContractsStat").text("0");
+                }
+            });
+        }
+
         function loadContracts() {
             $.ajax({
-                url: "/customer/contract/search",
+                url: "/api/v1/customer/contracts",
                 type: "GET",
                 data: {
                     buildingId: $("[name='buildingId']").val(),
@@ -742,6 +770,7 @@
         };
 
         $(document).ready(function () {
+            loadContractMetadata();
             loadContracts(); // Gọi ngay khi load trang
         });
 

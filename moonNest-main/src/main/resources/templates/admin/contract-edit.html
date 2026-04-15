@@ -690,7 +690,7 @@
             };
 
             $.ajax({
-                url: "/admin/contract/edit",
+                url: "/api/v1/admin/contracts/" + $("input[name='id']").val(),
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),

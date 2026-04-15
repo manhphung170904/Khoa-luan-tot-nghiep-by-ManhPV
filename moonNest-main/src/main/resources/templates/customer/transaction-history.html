@@ -969,7 +969,7 @@
                 if (event) event.preventDefault();
 
                 $.ajax({
-                    url: "/customer/transaction/list/page",
+                    url: "/api/v1/customer/transactions",
                     type: "GET",
                     data: {
                         month: $("[name='month']").val(),

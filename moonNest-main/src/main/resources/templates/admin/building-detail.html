@@ -1353,7 +1353,7 @@
             }).then(r => {
                 if (r.isConfirmed) {
                     $.ajax({
-                        url: "/admin/building/delete/" + id,
+                        url: "/api/v1/admin/buildings/" + id,
                         type: "DELETE",
                         success: () => Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã xóa!', timer: 1500, showConfirmButton: false })
                             .then(() => window.location.href = "/admin/building/list"),

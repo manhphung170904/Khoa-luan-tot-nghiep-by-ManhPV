@@ -1544,7 +1544,7 @@
             };
 
             $.ajax({
-                url: "/staff/invoices/search",
+                url: "/api/v1/staff/invoices",
                 type: "GET",
                 data: filterData,
                 success: function (data) {
@@ -2254,7 +2254,7 @@
             });
 
             $.ajax({
-                url: "/staff/invoices/edit",
+                url: "/api/v1/staff/invoices/" + invoiceId,
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),
@@ -2304,7 +2304,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/staff/invoices/delete/" + invoiceId,
+                        url: "/api/v1/staff/invoices/" + invoiceId,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({
@@ -2541,7 +2541,7 @@
                 });
 
                 $.ajax({
-                    url: "/staff/invoices/add",
+                    url: "/api/v1/staff/invoices",
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify(data),

@@ -739,7 +739,7 @@
             if (event) event.preventDefault();
 
             $.ajax({
-                url: "/admin/sale-contract/list/page",
+                url: "/api/v1/admin/sale-contracts",
                 type: "GET",
                 data: { page: page, size: pageSize },
                 success: function (data) {
@@ -869,7 +869,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/sale-contract/delete/" + id,
+                        url: "/api/v1/admin/sale-contracts/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({

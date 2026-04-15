@@ -627,7 +627,7 @@
 
         function loadStaffs(page) {
             $.ajax({
-                url: "/admin/staff/search/page",
+                url: "/api/v1/admin/staff",
                 type: "GET",
                 data: {
                     page: page,
@@ -753,7 +753,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/staff/delete/" + id,
+                        url: "/api/v1/admin/staff/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({

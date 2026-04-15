@@ -834,27 +834,24 @@
 
                     <div class="col-md-3">
                         <label class="form-label">Quận</label>
-                        <select class="form-control" name="districtId">
+                            <select class="form-control" name="districtId" id="districtFilter">
                             <option value="">-- Chọn quận --</option>
-                            <option th:each="d : ${districts}" th:value="${d.getValue()}" th:text="${d.getKey()}">
                             </option>
                         </select>
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label">Phường</label>
-                        <select class="form-control" name="ward">
+                            <select class="form-control" name="ward" id="wardFilter">
                             <option value="">-- Chọn phường --</option>
-                            <option th:each="w : ${wards}" th:value="${w}" th:text="${w}">
                             </option>
                         </select>
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label">Phố</label>
-                        <select class="form-control" name="street">
+                            <select class="form-control" name="street" id="streetFilter">
                             <option value="">-- Chọn phố --</option>
-                            <option th:each="s : ${streets}" th:value="${s}" th:text="${s}">
                             </option>
                         </select>
                     </div>
@@ -905,18 +902,16 @@
 
                     <div class="col-md-3">
                         <label class="form-label">Hướng</label>
-                        <select class="form-control" name="direction">
+                        <select class="form-control" name="direction" id="directionFilter">
                             <option value="">-- Chọn hướng --</option>
-                            <option th:each="d : ${directions}" th:value="${d.name()}" th:text="${d.label}">
                             </option>
                         </select>
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label">Hạng</label>
-                        <select class="form-control" name="level">
+                        <select class="form-control" name="level" id="levelFilter">
                             <option value="">-- Chọn hạng --</option>
-                            <option th:each="l : ${levels}" th:value="${l.name()}" th:text="${l.label}">
                             </option>
                         </select>
                     </div>
@@ -1020,7 +1015,7 @@
     <script>
         function loadBuildings() {
             $.ajax({
-                url: "/customer/building/search",
+                url: "/api/v1/customer/buildings",
                 type: "GET",
                 data: {
                     name: $("[name='name']").val(),
@@ -1272,11 +1267,48 @@
             });
         }
 
+        function appendOptions($select, options) {
+            const currentValue = $select.val();
+            $select.find('option:not(:first)').remove();
+            (options || []).forEach(function (option) {
+                $select.append(`<option value="${option.value}">${option.label}</option>`);
+            });
+            if (currentValue) {
+                $select.val(currentValue);
+            }
+        }
+
+        function appendStringOptions($select, values) {
+            const currentValue = $select.val();
+            $select.find('option:not(:first)').remove();
+            (values || []).forEach(function (value) {
+                $select.append(`<option value="${value}">${value}</option>`);
+            });
+            if (currentValue) {
+                $select.val(currentValue);
+            }
+        }
+
+        function loadBuildingFilterMetadata() {
+            $.ajax({
+                url: "/api/v1/customer/buildings/filters",
+                type: "GET",
+                success: function (response) {
+                    appendOptions($("#districtFilter"), response.districts);
+                    appendStringOptions($("#wardFilter"), response.wards);
+                    appendStringOptions($("#streetFilter"), response.streets);
+                    appendOptions($("#directionFilter"), response.directions);
+                    appendOptions($("#levelFilter"), response.levels);
+                }
+            });
+        }
+
         $(document).ready(function () {
             if (buildingName !== "") {
                 $("[name='name']").val(buildingName);
             }
 
+            loadBuildingFilterMetadata();
             loadBuildings(); // Gọi ngay khi load trang
         });
 
@@ -1450,7 +1482,7 @@
             };
 
             $.ajax({
-                url: '/api/customer/property-request/submit',
+                url: '/api/v1/customer/property-requests',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(data),
@@ -1459,7 +1491,7 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Thành công',
-                        text: typeof msg === 'string' ? msg : 'Gửi yêu cầu thành công!',
+                        text: (msg && msg.message) ? msg.message : 'Gửi yêu cầu thành công!',
                         confirmButtonColor: '#2d3e8f'
                     });
                 },

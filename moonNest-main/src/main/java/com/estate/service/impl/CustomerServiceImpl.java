@@ -141,10 +141,15 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Page<CustomerDetailDTO> searchByStaff(Map<String, String> requestParam, int page, int size) {
+        String staffIdValue = requestParam.get("staffId");
+        if (staffIdValue == null || staffIdValue.isBlank()) {
+            throw new BusinessException("Thiếu thông tin nhân viên");
+        }
+
         Pageable pageable = PageRequest.of(page, size);
         Page<CustomerEntity> customerPage = customerRepository.findByNameAndStaffID(
                 requestParam.get("fullName"),
-                Long.valueOf(requestParam.get("staffId")),
+                Long.valueOf(staffIdValue),
                 pageable
         );
 
@@ -191,6 +196,7 @@ public class CustomerServiceImpl implements CustomerService {
         } else {
             // Thêm mới
             entity = customerFormConverter.toEntity(dto);
+            entity.setRole("CUSTOMER");
             entity.setAuthOrigin("LOCAL");
         }
 

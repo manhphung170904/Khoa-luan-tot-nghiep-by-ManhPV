@@ -305,8 +305,8 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: `/api/admin/property-request/reject/${requestId}`,
-                        type: 'PUT',
+                        url: `/api/v1/admin/property-requests/${requestId}/reject`,
+                        type: 'POST',
                         contentType: 'application/json',
                         data: JSON.stringify({ reason: result.value }),
                         success: function() {

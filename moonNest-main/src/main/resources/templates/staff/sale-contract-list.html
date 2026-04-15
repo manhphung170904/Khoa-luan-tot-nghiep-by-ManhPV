@@ -506,7 +506,7 @@
             formData.forEach(item => { if(item.value) data[item.name] = item.value; });
 
             $.ajax({
-                url: "/staff/sale-contracts/search",
+                url: "/api/v1/staff/sale-contracts",
                 type: "GET",
                 data: data,
                 success: function (res) {

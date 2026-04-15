@@ -271,7 +271,7 @@
             const status = $('#statusFilter').val();
 
             $.ajax({
-                url: '/api/admin/property-request/list/page',
+                url: '/api/v1/admin/property-requests',
                 type: 'GET',
                 data: { page: page, size: 10, status: status },
                 success: function(data) {

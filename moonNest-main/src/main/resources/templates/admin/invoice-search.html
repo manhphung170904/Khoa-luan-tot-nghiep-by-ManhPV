@@ -831,7 +831,7 @@
 
         function loadInvoices(page) {
             $.ajax({
-                url: "/admin/invoice/search/page",
+                url: "/api/v1/admin/invoices",
                 type: "GET",
                 data: {
                     page: page,
@@ -966,7 +966,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/invoice/delete/" + id,
+                        url: "/api/v1/admin/invoices/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({

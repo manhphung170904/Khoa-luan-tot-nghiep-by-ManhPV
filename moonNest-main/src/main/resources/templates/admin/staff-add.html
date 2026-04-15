@@ -608,7 +608,7 @@
                 role: $("[name='role']:checked").val()
             };
             $.ajax({
-                url: "/admin/staff/add",
+                url: "/api/v1/admin/staff",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(data),

@@ -810,7 +810,7 @@
 
         function loadContracts(page) {
             $.ajax({
-                url: "/admin/contract/search/page",
+                url: "/api/v1/admin/contracts",
                 type: "GET",
                 data: {
                     page: page,
@@ -951,7 +951,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/contract/delete/" + id,
+                        url: "/api/v1/admin/contracts/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({

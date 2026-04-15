@@ -1459,7 +1459,7 @@
         const BUILDING_ID = /*[[${buildingId}]]*/ 0;
         const BUILDING_LAT = /*[[${buildingLat}]]*/ null;
         const BUILDING_LNG = /*[[${buildingLng}]]*/ null;
-        const BASE = '/admin/building-additional-information';
+        const BASE = '/api/v1/admin/building-additional-information';
         // Prefix ảnh planning — Spring serve trực tiếp từ static/images/planning_map_img/
         const PLANNING_IMG_PREFIX = '/images/planning_map_img/';
 
@@ -1483,10 +1483,10 @@
         };
 
         const endpoints = {
-            legal: 'legal-authority',
-            amenity: 'nearby-amenity',
-            planning: 'planning-map',
-            supplier: 'supplier',
+            legal: 'legal-authorities',
+            amenity: 'nearby-amenities',
+            planning: 'planning-maps',
+            supplier: 'suppliers',
         };
 
         const formFields = {
@@ -1507,7 +1507,7 @@
         // ── Open edit modal ──
         async function editItem(type, id) {
             try {
-                const url = `${BASE}/${endpoints[type]}/${BUILDING_ID}/list`;
+                const url = `${BASE}/${endpoints[type]}/${BUILDING_ID}`;
                 const res = await fetch(url);
                 if (!res.ok) {
                     const errText = await res.text();
@@ -1592,7 +1592,7 @@
 
         // ── Refresh table + counters ──
         async function refreshSection(type) {
-            const res = await fetch(`${BASE}/${endpoints[type]}/${BUILDING_ID}/list`);
+            const res = await fetch(`${BASE}/${endpoints[type]}/${BUILDING_ID}`);
             const list = await res.json();
             const count = list.length;
             const cntEl = document.getElementById('cnt-' + type);
@@ -2059,7 +2059,7 @@
             var formData = new FormData();
             formData.append('file', file);
 
-            fetch('/admin/building-additional-information/planning-map/upload-image', {
+            fetch('/api/v1/admin/building-additional-information/planning-maps/image', {
                 method: 'POST',
                 body: formData
             })

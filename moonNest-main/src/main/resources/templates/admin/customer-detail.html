@@ -679,7 +679,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/customer/delete/" + id,
+                        url: "/api/v1/admin/customers/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({

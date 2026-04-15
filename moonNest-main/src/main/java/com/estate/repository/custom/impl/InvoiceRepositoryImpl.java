@@ -76,6 +76,10 @@ public class InvoiceRepositoryImpl implements InvoiceRepositoryCustom {
 
     @Override
     public Page<InvoiceEntity> searchInvoicesByStaff(InvoiceFilterDTO f, Pageable pageable, List<Long> staffIds) {
+        if (staffIds == null || staffIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
         StringBuilder jpql = new StringBuilder("SELECT i FROM InvoiceEntity i ");
         StringBuilder countJpql = new StringBuilder("SELECT COUNT(i) FROM InvoiceEntity i ");
         StringBuilder where = new StringBuilder(" WHERE 1=1 ");
@@ -85,10 +89,8 @@ public class InvoiceRepositoryImpl implements InvoiceRepositoryCustom {
             countJpql.append(" LEFT JOIN i.customer c ");
         }
 
-        if (!staffIds.isEmpty()) {
-            jpql.append(" LEFT JOIN i.contract con ");
-            countJpql.append(" LEFT JOIN i.contract con ");
-        }
+        jpql.append(" LEFT JOIN i.contract con ");
+        countJpql.append(" LEFT JOIN i.contract con ");
 
         // ========== LIKE ==========
         if (notEmpty(f.getStatus())) {
@@ -108,9 +110,7 @@ public class InvoiceRepositoryImpl implements InvoiceRepositoryCustom {
             where.append(" AND i.year = :year ");
         }
 
-        if (!staffIds.isEmpty()) {
-            where.append(" AND con.id IN :staffIds ");
-        }
+        where.append(" AND con.id IN :staffIds ");
 
         // ========== RANGE BIG DECIMAL ==========
         addRangeDecimal(where, "i.totalAmount", "totalAmountFrom", "totalAmountTo", f.getTotalAmountFrom(), f.getTotalAmountTo());

@@ -804,7 +804,7 @@
                 };
 
                 $.ajax({
-                    url: "/admin/invoice/edit",
+                    url: "/api/v1/admin/invoices/" + $("#invoiceId").val(),
                     type: "PUT",
                     contentType: "application/json",
                     data: JSON.stringify(data),

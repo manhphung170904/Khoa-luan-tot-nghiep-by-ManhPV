@@ -999,7 +999,7 @@
             var formData = new FormData();
             formData.append('file', file);
 
-            fetch('/admin/building/upload-image', {
+            fetch('/api/v1/admin/buildings/image', {
                 method: 'POST',
                 body: formData
             })
@@ -1113,7 +1113,7 @@
             };
 
             try {
-                const res = await fetch('/admin/building/add', {
+                const res = await fetch('/api/v1/admin/buildings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)

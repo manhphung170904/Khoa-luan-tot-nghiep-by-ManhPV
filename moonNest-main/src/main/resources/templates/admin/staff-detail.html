@@ -824,7 +824,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/staff/delete/" + id,
+                        url: "/api/v1/admin/staff/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({ icon: 'success', title: 'Thành công', text: 'Xóa nhân viên thành công!', timer: 1500, showConfirmButton: false })
@@ -852,8 +852,8 @@
 
             // Load all buildings + assigned buildings concurrently
             Promise.all([
-                $.getJSON("/admin/staff/buildings"),
-                $.getJSON("/admin/staff/" + STAFF_ID + "/assignments/buildings")
+                $.getJSON("/api/v1/admin/staff/buildings"),
+                $.getJSON("/api/v1/admin/staff/" + STAFF_ID + "/assignments/buildings")
             ]).then(function ([allBuildings, assignedIds]) {
                 if (allBuildings.length === 0) {
                     $("#buildingCheckList").html(`
@@ -893,7 +893,7 @@
             btn.prop("disabled", true).html('<i class="bi bi-hourglass-split"></i> Đang lưu...');
 
             $.ajax({
-                url: "/admin/staff/" + STAFF_ID + "/assignments/buildings",
+                url: "/api/v1/admin/staff/" + STAFF_ID + "/assignments/buildings",
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(selectedIds),
@@ -926,8 +926,8 @@
             modal.show();
 
             Promise.all([
-                $.getJSON("/admin/staff/customers"),
-                $.getJSON("/admin/staff/" + STAFF_ID + "/assignments/customers")
+                $.getJSON("/api/v1/admin/staff/customers"),
+                $.getJSON("/api/v1/admin/staff/" + STAFF_ID + "/assignments/customers")
             ]).then(function ([allCustomers, assignedIds]) {
                 if (allCustomers.length === 0) {
                     $("#customerCheckList").html(`
@@ -967,7 +967,7 @@
             btn.prop("disabled", true).html('<i class="bi bi-hourglass-split"></i> Đang lưu...');
 
             $.ajax({
-                url: "/admin/staff/" + STAFF_ID + "/assignments/customers",
+                url: "/api/v1/admin/staff/" + STAFF_ID + "/assignments/customers",
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(selectedIds),

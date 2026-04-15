@@ -1177,7 +1177,7 @@
             setUploadStatus('<i class="bi bi-arrow-repeat"></i> Đang upload...', 'loading');
             var formData = new FormData();
             formData.append('file', file);
-            fetch('/admin/building/upload-image', { method: 'POST', body: formData })
+            fetch('/api/v1/admin/buildings/image', { method: 'POST', body: formData })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     if (data.filename) {
@@ -1292,7 +1292,7 @@
                 staffIds: staffIds
             };
 
-            fetch('/admin/building/edit', {
+            fetch('/api/v1/admin/buildings/' + document.querySelector('input[name=\"id\"]').value, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)

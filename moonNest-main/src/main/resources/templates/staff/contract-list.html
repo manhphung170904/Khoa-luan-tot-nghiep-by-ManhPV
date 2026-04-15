@@ -601,19 +601,15 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="form-label">Tên khách hàng</label>
-                        <select class="form-control" name="customerId">
+                        <select class="form-control" name="customerId" id="customerFilter">
                             <option value="">-- Chọn khách hàng --</option>
-                            <option th:each="c : ${customers}" th:value="${c.value}" th:text="${c.key}">
-                            </option>
                         </select>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Tên tòa nhà</label>
-                        <select class="form-control" name="buildingId">
+                        <select class="form-control" name="buildingId" id="buildingFilter">
                             <option value="">-- Chọn tòa nhà --</option>
-                            <option th:each="b : ${buildings}" th:value="${b.value}" th:text="${b.key}">
-                            </option>
                         </select>
                     </div>
                 </div>
@@ -637,20 +633,20 @@
                         <div class="range-inputs">
                             <input type="date" class="form-control" name="startDate">
                             <span class="range-separator">-</span>
-                            <input type="date" class="form-control" name="endDate" th:value="${endDate}">
+                            <input type="date" class="form-control" name="endDate" id="endDateFilter">
                         </div>
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label">Trạng thái</label>
-                        <select class="form-control" name="status">
+                        <select class="form-control" name="status" id="statusFilter">
                             <option value="">-- Tất cả trạng thái --</option>
 
-                            <option value="ACTIVE" th:selected="${status == 'ACTIVE'}">
+                            <option value="ACTIVE">
                                 Đang hiệu lực
                             </option>
 
-                            <option value="EXPIRED" th:selected="${status == 'EXPIRED'}">
+                            <option value="EXPIRED">
                                 Hết hạn
                             </option>
 
@@ -779,7 +775,7 @@
             if (event) event.preventDefault();
 
             $.ajax({
-                url: "/staff/contracts/search",
+                url: "/api/v1/staff/contracts",
                 type: "GET",
                 data: {
                     page: page,
@@ -1078,7 +1074,54 @@
         }
 
         // Khi trang load, gọi Ajax lần đầu
+        function appendOptions($select, options) {
+            const currentValue = $select.val();
+            $select.find('option:not(:first)').remove();
+            (options || []).forEach(function (option) {
+                $select.append(`<option value="${option.value}">${option.label}</option>`);
+            });
+            if (currentValue) {
+                $select.val(currentValue);
+            }
+        }
+
+        function applyContractQueryDefaults() {
+            const params = new URLSearchParams(window.location.search);
+            const status = params.get("status");
+            const endDate = params.get("endDate");
+
+            if (status) {
+                $("#statusFilter").val(status);
+                if (!endDate && !$("#endDateFilter").val()) {
+                    const nextMonth = new Date();
+                    nextMonth.setMonth(nextMonth.getMonth() + 1, 1);
+                    const yyyy = nextMonth.getFullYear();
+                    const mm = String(nextMonth.getMonth() + 1).padStart(2, "0");
+                    const dd = String(nextMonth.getDate()).padStart(2, "0");
+                    $("#endDateFilter").val(`${yyyy}-${mm}-${dd}`);
+                }
+            }
+
+            if (endDate) {
+                $("#endDateFilter").val(endDate);
+            }
+        }
+
+        function loadContractMetadata() {
+            $.ajax({
+                url: "/api/v1/staff/contracts/metadata",
+                type: "GET",
+                success: function (response) {
+                    appendOptions($("#customerFilter"), response.customers);
+                    appendOptions($("#buildingFilter"), response.buildings);
+                    applyContractQueryDefaults();
+                }
+            });
+        }
+
         $(document).ready(function () {
+            loadContractMetadata();
+            applyContractQueryDefaults();
             loadContracts(1);
 
             // Hàm highlight trường có giá trị

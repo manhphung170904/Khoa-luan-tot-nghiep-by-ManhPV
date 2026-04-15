@@ -584,7 +584,7 @@
             };
 
             $.ajax({
-                url: "/admin/sale-contract/edit",
+                url: "/api/v1/admin/sale-contracts/" + id,
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),

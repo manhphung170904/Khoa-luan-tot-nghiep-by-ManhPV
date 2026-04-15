@@ -1,63 +1,70 @@
 ﻿import { test, expect } from '@playwright/test';
-import { ApiAuthHelper } from '../../../utils/api/apiAuthHelper';
-import { DatabaseHelper } from '../../../utils/db-client';
+import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
+import { expectStatusExact } from "@api/apiContractUtils";
 
-test.describe('Staff API Read-only Tests (RBAC Isolation)', () => {
-    let db: DatabaseHelper;
-    let staffCookies: string;
+type ReadonlyModule = {
+  id: string;
+  name: string;
+  path: string;
+};
 
-    test.beforeAll(async () => {
-        db = new DatabaseHelper();
-        await db.connect();
-        
-        // Mock Token cho Staff (Nhân viên giả lập đã được mapping ID)
-        staffCookies = await ApiAuthHelper.loginAsStaff(); 
+const readOnlyModules: ReadonlyModule[] = [
+  { id: "API-STF-READ-001", name: "Building", path: "/staff/building/search?page=1&size=5" },
+  { id: "API-STF-READ-002", name: "Lease Contract", path: "/staff/contracts/search?page=1&size=5" },
+  { id: "API-STF-READ-003", name: "Sale Contract", path: "/staff/sale-contracts/search?page=1&size=5" },
+  { id: "API-STF-READ-004", name: "Customer", path: "/staff/customers/search?page=1&size=5" },
+  { id: "API-STF-READ-005", name: "Invoice", path: "/staff/invoices/search?page=1&size=5" }
+];
+
+test.describe("Staff API Read-only Contract Tests", () => {
+  for (const module of readOnlyModules) {
+    test(`${module.id} rejects anonymous access with API auth status`, async ({ playwright }) => {
+      const context = await createAnonymousContext(playwright);
+      try {
+        const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
+        expect([401, 403]).toContain(response.status());
+      } finally {
+        await context.dispose();
+      }
     });
 
-    test.afterAll(async () => {
-        await db.disconnect();
+    test(`${module.id} rejects customer role`, async ({ playwright }) => {
+      const context = await createRoleContext(playwright, "customer");
+      try {
+        const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
+        expect([403, 404]).toContain(response.status());
+      } finally {
+        await context.dispose();
+      }
     });
 
-    // Mảng các module bị Khóa quyền Write (Chỉ có quyền Read-only search)
-    const readOnlyModules = [
-        { path: '/staff/buildings', name: 'Building' },
-        { path: '/staff/contracts', name: 'Lease Contract' },
-        { path: '/staff/sale-contracts', name: 'Sale Contract' },
-        { path: '/staff/customers', name: 'Customer' }
-    ];
+    test(`${module.id} returns JSON payload for staff`, async ({ playwright }) => {
+      const context = await createRoleContext(playwright, "staff");
+      try {
+        const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
+        expectStatusExact(response, 200, `${module.name} readonly search should succeed for staff role`);
 
-    test.describe.serial('Luồng Security Read-only Check', () => {
+        const payload = (await response.json()) as { content?: unknown[]; totalElements?: number };
+        expect(Array.isArray(payload.content)).toBeTruthy();
+        expect(typeof payload.totalElements).toBe("number");
+      } finally {
+        await context.dispose();
+      }
+    });
 
-        readOnlyModules.forEach(module => {
-            test(`[Security] Reject ngầm nếu truy cập ${module.name} mà thiếu JWT Staff Token`, async ({ request }) => {
-                const response = await request.get(module.path);
-                expect([302, 401, 403]).toContain(response.status());
-            });
-
-            test(`[Positive - RBAC Bound] Lấy danh sách ${module.name} Scope Staff`, async ({ request }) => {
-                const response = await request.get(module.path, {
-                    headers: { Cookie: staffCookies }
-                });
-                
-                // Backend MVC: trả HTML 200 khi đã xác thực
-                expect([200, 302]).toContain(response.status());
-                if (response.status() === 200) {
-                    const html = await response.text();
-                    expect(html.length).toBeGreaterThan(0);
-                } 
-            });
-
-            test(`[Negative] Cố tình gọi hàm POST/PUT lén/thò tay lách rào vào ${module.name} (Tapping Hack)`, async ({ request }) => {
-                // Tận dụng URL read-only và thay bằng Method POST (VD: /staff/building/add)
-                // Theo đúng logic mã nguồn, BE của Staff hoàn toàn KHÔNG CÓ CÁC Controller MAPPING endpoint này. 
-                // Do đó kết quả mong muốn là 404 Not Found, hoặc 403 Forbidden thay vì 500 do kẹt lỗi.
-                const mockHackedRoute = module.path + '/add';
-                const response = await request.post(mockHackedRoute, {
-                    headers: { Cookie: staffCookies },
-                    data: { "someFakeData": "attack" }
-                });
-                expect([404, 405, 403]).toContain(response.status()); 
-            });
+    test(`${module.id} rejects unsupported write path`, async ({ playwright }) => {
+      const context = await createRoleContext(playwright, "staff");
+      try {
+        const response = await context.post(`${module.path}/add`, {
+          failOnStatusCode: false,
+          maxRedirects: 0,
+          data: { attack: "should-not-exist" }
         });
+
+        expect([403, 404, 405]).toContain(response.status());
+      } finally {
+        await context.dispose();
+      }
     });
+  }
 });

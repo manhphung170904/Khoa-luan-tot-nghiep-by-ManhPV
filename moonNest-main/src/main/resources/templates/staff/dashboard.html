@@ -327,7 +327,7 @@
                                 <i class="bi bi-building"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 class="h4" th:text="${buildingCnt}">8</h3>
+                                <h3 class="h4" id="buildingCntStat">0</h3>
                                 <p class="text-muted mb-0 small">Tòa nhà đang quản lý</p>
                             </div>
                         </div>
@@ -341,7 +341,7 @@
                                 <i class="bi bi-file-text"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 class="h4" th:text="${contractCnt}">45</h3>
+                                <h3 class="h4" id="contractCntStat">0</h3>
                                 <p class="text-muted mb-0 small">Hợp đồng đang quản lý</p>
                             </div>
                         </div>
@@ -355,7 +355,7 @@
                                 <i class="bi bi-people"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 class="h4" th:text="${customerCnt}">32</h3>
+                                <h3 class="h4" id="customerCntStat">0</h3>
                                 <p class="text-muted mb-0 small">Khách hàng đang quản lý</p>
                             </div>
                         </div>
@@ -370,7 +370,7 @@
                                 <i class="bi bi-receipt"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 class="h4" th:text="${unpaidInvoiceCnt}">12</h3>
+                                <h3 class="h4" id="unpaidInvoiceCntStat">0</h3>
                                 <p class="text-muted mb-0 small">Hóa đơn chưa thanh toán</p>
                             </div>
                         </div>
@@ -385,12 +385,11 @@
                     <div class="section-header mb-3 d-flex justify-content-between align-items-center">
                         <h2 class="mb-0">
                             <i class="bi bi-exclamation-triangle me-2"></i>
-                            <span th:text="'Hóa đơn quá hạn (' + ${#lists.size(overdueInvoices)} + ')'"></span>
+                            <span id="overdueInvoicesTitle">Hóa đơn quá hạn (0)</span>
                         </h2>
 
                         <!-- Chỉ hiện nút khi list có phần tử -->
-                        <a class="viewAllOverdueIvn"
-                            th:if="${overdueInvoices != null and !#lists.isEmpty(overdueInvoices)}"
+                        <a class="viewAllOverdueIvn d-none" id="viewAllOverdueInvoices"
                             th:href="@{/staff/invoices(status='OVERDUE')}">
                             Xem tất cả <i class="bi bi-arrow-right"></i>
                         </a>
@@ -405,28 +404,8 @@
                                     <th>HẠN THANH TOÁN</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <!-- Nếu có dữ liệu -->
-                                <th:block th:if="${overdueInvoices != null and !#lists.isEmpty(overdueInvoices)}">
-                                    <tr th:each="invoice, stat : ${overdueInvoices}" th:if="${stat.index < 2}">
-                                        <td><strong th:text="${invoice.id}">INV-2024120</strong></td>
-                                        <td th:text="${invoice.customer.fullName}">Lê Văn C</td>
-                                        <td>
-                                            <strong
-                                                th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                                15,770,000 VNĐ
-                                            </strong>
-                                        </td>
-                                        <td>
-                                            <span class="badge-status badge-unpaid"
-                                                th:text="${#temporals.format(invoice.dueDate, 'dd/MM/yyyy')}">05/01/2026
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </th:block>
-
-                                <!-- Nếu list rỗng -->
-                                <tr th:if="${overdueInvoices == null or #lists.isEmpty(overdueInvoices)}">
+                            <tbody id="overdueInvoicesBody">
+                                <tr>
                                     <td colspan="4">
                                         <div style="
                                         height: 66.8px;
@@ -436,7 +415,7 @@
                                         font-weight: 600;
                                         color: #777;
                                     ">
-                                            Hiện không có hóa đơn quá hạn
+                                            Đang tải dữ liệu
                                         </div>
                                     </td>
                                 </tr>
@@ -451,11 +430,10 @@
                     <div class="section-header mb-3 d-flex justify-content-between align-items-center">
                         <h2>
                             <i class="bi bi-clock-history me-2"></i>
-                            <span th:text="'Hợp đồng sắp hết hạn (' + ${#lists.size(expiringContracts)} + ')'"></span>
+                            <span id="expiringContractsTitle">Hợp đồng sắp hết hạn (0)</span>
                         </h2>
                         <!-- Chỉ hiện nút khi list có phần tử -->
-                        <a class="viewAllExpiringContract"
-                            th:if="${expiringContracts != null and !#lists.isEmpty(expiringContracts)}"
+                        <a class="viewAllExpiringContract d-none" id="viewAllExpiringContracts"
                             th:href="@{/staff/contracts(status='ACTIVE')}">
                             Xem tất cả <i class="bi bi-arrow-right"></i>
                         </a>
@@ -470,23 +448,8 @@
                                     <th>NGÀY HẾT HẠN</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <!-- Nếu có dữ liệu -->
-                                <th:block th:if="${expiringContracts != null and !#lists.isEmpty(expiringContracts)}">
-                                    <tr th:each="contract, stat : ${expiringContracts}" th:if="${stat.index < 2}">
-                                        <td><strong th:text="${contract.id}">INV-2024120</strong></td>
-                                        <td th:text="${contract.customer}">Lê Văn C</td>
-                                        <td th:text="${contract.building}">ABC Tower</td>
-                                        <td>
-                                            <span class="badge-status badge-expired"
-                                                th:text="${#temporals.format(contract.endDate, 'dd/MM/yyyy')}">01/01/2026
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </th:block>
-
-                                <!-- Nếu list rỗng -->
-                                <tr th:if="${expiringContracts == null or #lists.isEmpty(expiringContracts)}">
+                            <tbody id="expiringContractsBody">
+                                <tr>
                                     <td colspan="4">
                                         <div style="
                                         height: 66.8px;
@@ -496,7 +459,7 @@
                                         font-weight: 600;
                                         color: #777;
                                     ">
-                                            Hiện không có hợp đồng sắp hết hạn
+                                            Đang tải dữ liệu
                                         </div>
                                     </td>
                                 </tr>
@@ -513,11 +476,10 @@
                     <div class="section-header mb-3 d-flex justify-content-between align-items-center">
                         <h2>
                             <i class="bi bi-calendar-event me-2"></i>
-                            <span th:text="'Hóa đơn sắp hết hạn (' + ${#lists.size(expiringInvoices)} + ')'"></span>
+                            <span id="expiringInvoicesTitle">Hóa đơn sắp hết hạn (0)</span>
                         </h2>
                         <!-- Chỉ hiện nút khi list có phần tử -->
-                        <a class="viewAllExpiringInvoice"
-                            th:if="${expiringInvoices != null and !#lists.isEmpty(expiringInvoices)}"
+                        <a class="viewAllExpiringInvoice d-none" id="viewAllExpiringInvoices"
                             th:href="@{/staff/invoices(status=PENDING)}">
                             Xem tất cả <i class="bi bi-arrow-right"></i>
                         </a>
@@ -535,33 +497,8 @@
                                     <th>TRẠNG THÁI</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <!-- Nếu có dữ liệu -->
-                                <th:block th:if="${expiringInvoices != null and !#lists.isEmpty(expiringInvoices)}">
-                                    <tr th:each="invoice, stat : ${expiringInvoices}" th:if="${stat.index < 3}">
-                                        <td><strong th:text="${invoice.id}">INV-2024120</strong></td>
-                                        <td th:text="${invoice.customerName}">Lê Văn C</td>
-                                        <td th:text="${invoice.customerName}">ABC Tower</td>
-                                        <td th:text="${invoice.month} + '/' + ${invoice.year}">ABC Tower</td>
-                                        <td
-                                            th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                            ABC Tower</td>
-                                        <td>
-                                            <span class="badge-status badge-unpaid"
-                                                th:text="${#temporals.format(invoice.dueDate, 'dd/MM/yyyy')}">01/01/2026
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge-status badge-unpaid"
-                                                th:text="${invoice.status == 'PENDING' ? 'Chưa thanh toán' : invoice.status}">
-                                                Chưa thanh toán
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </th:block>
-
-                                <!-- Nếu list rỗng -->
-                                <tr th:if="${expiringInvoices == null or #lists.isEmpty(expiringInvoices)}">
+                            <tbody id="expiringInvoicesBody">
+                                <tr>
                                     <td colspan="7">
                                         <div style="
                                         height: 87px;
@@ -571,7 +508,7 @@
                                         font-weight: 600;
                                         color: #777;
                                     ">
-                                            Hiện không có hóa đơn sắp hết hạn
+                                            Đang tải dữ liệu
                                         </div>
                                     </td>
                                 </tr>
@@ -602,6 +539,18 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/staff-dashboard-api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                await loadStaffDashboard();
+            } catch (error) {
+                renderStaffDashboardRows('overdueInvoicesBody', '', 4, 'Không thể tải hóa đơn quá hạn', '66.8px');
+                renderStaffDashboardRows('expiringContractsBody', '', 4, 'Không thể tải hợp đồng sắp hết hạn', '66.8px');
+                renderStaffDashboardRows('expiringInvoicesBody', '', 7, 'Không thể tải hóa đơn sắp hết hạn', '87px');
+            }
+        });
+    </script>
 </body>
 
 </html>

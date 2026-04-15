@@ -759,7 +759,7 @@
 
         function loadInvoices(page) {
             $.ajax({
-                url: "/admin/invoice/list/page",
+                url: "/api/v1/admin/invoices",
                 type: "GET",
                 data: { page: page, size: pageSize },
                 success: function (data) {
@@ -881,7 +881,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/invoice/delete/" + id,
+                        url: "/api/v1/admin/invoices/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({
@@ -918,7 +918,7 @@
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
                     return $.ajax({
-                        url: "/admin/invoice/status",
+                        url: "/api/v1/admin/invoices/status",
                         type: "PUT",
                         timeout: 30000
                     }).catch(error => {

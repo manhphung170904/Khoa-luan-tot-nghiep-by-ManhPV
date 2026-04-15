@@ -1113,7 +1113,7 @@
         </div>
 
         <!-- Filter Card -->
-        <form class="filter-card" th:action="@{/admin/building/search}" method="get">
+        <form id="searchForm" class="filter-card" th:action="@{/admin/building/search}" method="get">
             <div class="filter-header">
                 <div class="filter-title">
                     <i class="bi bi-funnel"></i>
@@ -1182,18 +1182,14 @@
 
                     <div class="col-md-3">
                         <label class="form-label">Loại hình BĐS</label>
-                        <select class="form-control" name="propertyType">
+                        <select class="form-control" id="propertyTypeFilter" name="propertyType">
                             <option value="">-- Tất cả --</option>
-                            <option th:each="pt : ${propertyTypes}" th:value="${pt.name()}" th:text="${pt.label}">
-                            </option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Loại giao dịch</label>
-                        <select class="form-control" name="transactionType">
+                        <select class="form-control" id="transactionTypeFilter" name="transactionType">
                             <option value="">-- Tất cả --</option>
-                            <option th:each="tt : ${transactionTypes}" th:value="${tt.name()}" th:text="${tt.label}">
-                            </option>
                         </select>
                     </div>
                 </div>
@@ -1243,28 +1239,22 @@
 
                     <div class="col-md-2">
                         <label class="form-label">Hướng</label>
-                        <select class="form-control" name="direction">
+                        <select class="form-control" id="directionFilter" name="direction">
                             <option value="">-- Chọn hướng --</option>
-                            <option th:each="d : ${directions}" th:value="${d.name()}" th:text="${d.label}">
-                            </option>
                         </select>
                     </div>
 
                     <div class="col-md-2">
                         <label class="form-label">Hạng</label>
-                        <select class="form-control" name="level">
+                        <select class="form-control" id="levelFilter" name="level">
                             <option value="">-- Chọn hạng --</option>
-                            <option th:each="l : ${levels}" th:value="${l.name()}" th:text="${l.label}">
-                            </option>
                         </select>
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label mt-2">Nhân viên quản lý</label>
-                        <select class="form-control" name="staffId">
+                        <select class="form-control" id="managerFilter" name="staffId">
                             <option value="">-- Tất cả --</option>
-                            <option th:each="m : ${managers}" th:value="${m.id}" th:text="${m.fullName}">
-                            </option>
                         </select>
                     </div>
                 </div>
@@ -1426,6 +1416,26 @@
                 .replaceAll('.', ',') + ' đ';
         }
 
+        function appendOptions($select, options) {
+            $.each(options || [], function (_, option) {
+                $select.append(`<option value="${option.value}">${option.label}</option>`);
+            });
+        }
+
+        function loadBuildingMetadata() {
+            return $.ajax({
+                url: "/api/v1/admin/buildings/metadata",
+                type: "GET",
+                success: function (metadata) {
+                    appendOptions($("#propertyTypeFilter"), metadata.propertyTypes);
+                    appendOptions($("#transactionTypeFilter"), metadata.transactionTypes);
+                    appendOptions($("#directionFilter"), metadata.directions);
+                    appendOptions($("#levelFilter"), metadata.levels);
+                    appendOptions($("#managerFilter"), metadata.managers);
+                }
+            });
+        }
+
         // Hàm load dữ liệu bảng building bằng Ajax
         function loadBuildings(page, event) {
             if (event) event.preventDefault();
@@ -1435,6 +1445,11 @@
             const lng = $('#hiddenLng').val();
             const radius = $('#radiusSelect').val();
             const ajaxData = { page: page, size: pageSize };
+            $.each($("#searchForm").serializeArray(), function (_, field) {
+                if (field.value != null && field.value !== '') {
+                    ajaxData[field.name] = field.value;
+                }
+            });
             if (lat && lng) {
                 ajaxData.lat = lat;
                 ajaxData.lng = lng;
@@ -1442,7 +1457,7 @@
             }
 
             $.ajax({
-                url: "/admin/building/list/page",
+                url: "/api/v1/admin/buildings",
                 type: "GET",
                 data: ajaxData,
                 success: function (data) {
@@ -1554,7 +1569,21 @@
 
         // Khi trang load, gọi Ajax lần đầu
         $(document).ready(function () {
-            loadBuildings(1);
+            loadBuildingMetadata().always(function () {
+                loadBuildings(1);
+            });
+
+            $("#searchForm").on("submit", function (e) {
+                e.preventDefault();
+                loadBuildings(1);
+            });
+
+            $("#searchForm").on("reset", function () {
+                setTimeout(function () {
+                    clearLocation();
+                    loadBuildings(1);
+                }, 0);
+            });
         });
 
         // Ajax xóa building
@@ -1575,7 +1604,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/building/delete/" + id,
+                        url: "/api/v1/admin/buildings/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({

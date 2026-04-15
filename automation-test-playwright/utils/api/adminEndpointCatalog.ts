@@ -100,7 +100,15 @@ export const adminEndpointCatalog: RequestDescriptor[] = [
   { id: "ADM-STF-007", method: "PUT", path: "/admin/staff/1/assignments/customers", data: [1] },
   { id: "ADM-STF-008", method: "GET", path: "/admin/staff/buildings" },
   { id: "ADM-STF-009", method: "GET", path: "/admin/staff/1/assignments/buildings" },
-  { id: "ADM-STF-010", method: "PUT", path: "/admin/staff/1/assignments/buildings", data: [1] }
+  { id: "ADM-STF-010", method: "PUT", path: "/admin/staff/1/assignments/buildings", data: [1] },
+
+  { id: "ADM-PRQ-001", method: "GET", path: "/api/admin/property-request/list/page", params: { page: 1, size: 5 } },
+  { id: "ADM-PRQ-002", method: "GET", path: "/api/admin/property-request/1" },
+  { id: "ADM-PRQ-003", method: "PUT", path: "/api/admin/property-request/reject/999999999", data: { reason: "Denied" } },
+  { id: "ADM-PRQ-004", method: "PUT", path: "/api/admin/property-request/approve/999999999", data: {} },
+  { id: "ADM-PRQ-005", method: "GET", path: "/api/admin/property-request/1/contract-data" },
+  { id: "ADM-PRQ-006", method: "GET", path: "/api/admin/property-request/1/sale-contract-data" },
+  { id: "ADM-PRQ-007", method: "GET", path: "/api/admin/property-request/pending-count" }
 ];
 
 export const invalidUploadDescriptor: RequestDescriptor = {

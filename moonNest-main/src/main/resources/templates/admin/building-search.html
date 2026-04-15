@@ -1479,7 +1479,7 @@
             if (event) event.preventDefault();
 
             $.ajax({
-                url: "/admin/building/search/page",
+                url: "/api/v1/admin/buildings",
                 type: "GET",
                 data: {
                     page: page,
@@ -1650,7 +1650,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/building/delete/" + id,
+                        url: "/api/v1/admin/buildings/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({

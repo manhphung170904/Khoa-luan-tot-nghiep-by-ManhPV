@@ -1,15 +1,20 @@
 package com.estate.api.staff;
 
+import com.estate.dto.ApiErrorResponse;
 import com.estate.dto.InvoiceDetailDTO;
 import com.estate.dto.InvoiceFilterDTO;
 import com.estate.dto.InvoiceFormDTO;
 import com.estate.security.CustomUserDetails;
 import com.estate.service.InvoiceService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.OffsetDateTime;
 
 @RestController
 @RequestMapping("/staff/invoices")
@@ -43,5 +48,10 @@ public class StaffInvoiceAPI {
     public ResponseEntity<?> addInvoice(@RequestBody InvoiceFormDTO dto) {
         invoiceService.save(dto);
         return ResponseEntity.ok("Thêm hóa đơn thành công");
+    }
+    @RequestMapping(value = "/search", method = {RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH})
+    public ResponseEntity<ApiErrorResponse> rejectUnsupportedWrite(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ApiErrorResponse.of("METHOD_NOT_ALLOWED", "Method not allowed", request.getRequestURI(), OffsetDateTime.now()));
     }
 }

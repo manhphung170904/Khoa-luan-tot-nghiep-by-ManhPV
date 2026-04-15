@@ -73,35 +73,51 @@ public class AuthCookieService {
     }
 
     private void addCookie(HttpServletResponse response, String name, String value, Duration maxAge) {
-        ResponseCookie cookie = ResponseCookie.from(name, value)
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .secure(jwtProperties.isCookieSecure())
                 .path("/")
-                .sameSite("Lax")
                 .maxAge(maxAge)
-                .build();
+                ;
+        String sameSite = resolveSameSite();
+        if (sameSite != null) {
+            cookieBuilder.sameSite(sameSite);
+        }
+        ResponseCookie cookie = cookieBuilder.build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     private void clearCookie(HttpServletResponse response, String name) {
-        ResponseCookie cookie = ResponseCookie.from(name, "")
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(name, "")
                 .httpOnly(true)
                 .secure(jwtProperties.isCookieSecure())
                 .path("/")
-                .sameSite("Lax")
                 .maxAge(Duration.ZERO)
-                .build();
+                ;
+        String sameSite = resolveSameSite();
+        if (sameSite != null) {
+            cookieBuilder.sameSite(sameSite);
+        }
+        ResponseCookie cookie = cookieBuilder.build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     private void clearSessionCookie(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from(SESSION_COOKIE, "")
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(SESSION_COOKIE, "")
                 .httpOnly(true)
                 .secure(jwtProperties.isCookieSecure())
                 .path("/")
-                .sameSite("Lax")
                 .maxAge(Duration.ZERO)
-                .build();
+                ;
+        String sameSite = resolveSameSite();
+        if (sameSite != null) {
+            cookieBuilder.sameSite(sameSite);
+        }
+        ResponseCookie cookie = cookieBuilder.build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    private String resolveSameSite() {
+        return jwtProperties.isCookieSecure() ? "Lax" : null;
     }
 }

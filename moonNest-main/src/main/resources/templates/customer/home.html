@@ -566,7 +566,7 @@
                             <i class="bi bi-file-text"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 class="h4" th:text="${totalContracts}">2</h3>
+                            <h3 class="h4" id="totalContractsStat">0</h3>
                             <p class="text-muted mb-0 small">Hợp đồng đang có</p>
                         </div>
                     </div>
@@ -579,7 +579,7 @@
                             <i class="bi bi-cash-coin"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 class="h4" th:text="${totalPayment}">15,000,000</h3>
+                            <h3 class="h4" id="totalPaymentStat">0</h3>
                             <p class="text-muted mb-0 small">Tổng tiền đã thanh toán (VNĐ)</p>
                         </div>
                     </div>
@@ -594,50 +594,15 @@
                 <!-- Contracts Section -->
                 <div class="section-card p-4">
                     <div class="section-header mb-3 d-flex justify-content-between align-items-center">
-                        <h2 th:text="'Hợp đồng của tôi ' + '(' + ${#lists.size(contracts)} + ')'"></h2>
+                        <h2 id="contractsTitle">Hợp đồng của tôi (0)</h2>
                         <a th:href="@{/customer/contract/list}" class="view-all">
                             Xem tất cả <i class="bi bi-arrow-right"></i>
                         </a>
                     </div>
 
-                    <!-- Nếu không có hợp đồng nào -->
-                    <div th:if="${contracts.isEmpty()}" class="contract-card p-3 mb-3">
-                        <p class="text-muted mb-0">Chưa có hợp đồng nào</p>
-                    </div>
-                    <!-- Contracts Card, có hợp đồng -->
-                    <div class="contract-card p-3 mb-3" th:each="contract, stat : ${contracts}"
-                        th:if="${stat.index < 2}">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="contract-id" th:text="'Mã hợp đồng: ' + ${contract.id}">HĐ-2024001</span>
-                            <span class="badge badge-active rounded-pill px-3 py-2"
-                                th:classappend="${contract.status == 'ACTIVE'} ? 'badge-active' : 'badge-expired'"
-                                th:text="${contract.status}">
-                                Đang hoạt động
-                            </span>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <div class="detail-label">Tòa nhà</div>
-                                <div class="detail-value" th:text="${contract.building.name}">MoonNest A1</div>
-                            </div>
-                            <div class="col-6">
-                                <div class="detail-label">Ngày bắt đầu</div>
-                                <div class="detail-value" th:text="${contract.formattedStartDate}">01/01/2024</div>
-                            </div>
-                            <div class="col-6">
-                                <div class="detail-label">Diện tích</div>
-                                <div class="detail-value" th:text="${contract.rentArea}">85 m²</div>
-                            </div>
-                            <div class="col-6">
-                                <div class="detail-label">Ngày kết thúc</div>
-                                <div class="detail-value" th:text="${contract.formattedEndDate}">31/12/2024</div>
-                            </div>
-                            <div class="col-6">
-                                <div class="detail-label">Giá thuê</div>
-                                <div class="detail-value"
-                                    th:text="${#numbers.formatDecimal(contract.rentPrice, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                    15,000,000 VNĐ/tháng</div>
-                            </div>
+                    <div id="contractsContainer">
+                        <div class="contract-card p-3 mb-3">
+                            <p class="text-muted mb-0">Đang tải dữ liệu...</p>
                         </div>
                     </div>
                 </div>
@@ -648,76 +613,12 @@
                 <!-- Pending Bills -->
                 <div class="section-card p-4 mb-4">
                     <div class="section-header mb-3">
-                        <h2 th:text="'Hóa đơn chờ thanh toán ' +
-                     '(' + ${totalUnpaidInvoices} + ')'">
-                            Hóa đơn chờ thanh toán: 2
-                        </h2>
+                        <h2 id="pendingInvoicesTitle">Hóa đơn chờ thanh toán (0)</h2>
                     </div>
 
-                    <!-- Bill Card -->
-                    <div class="card border-0 bg-light mb-3">
-                        <!-- Nếu không có hóa đơn -->
-                        <div th:if="${detailInvoice == null}" class="card-body text-center py-4">
-                            <p class="text-muted mb-0">Chưa có hóa đơn nào</p>
-                        </div>
-                        <!-- Nếu có hóa đơn -->
-                        <div th:if="${detailInvoice != null}" class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <h5 class="mb-1"
-                                        style="color: var(--primary-color); font-size: 15px; font-weight: 600;"
-                                        th:text="'Hóa đơn tháng ' + ${detailInvoice.month} + '/' + ${detailInvoice.year}">
-                                        Hóa đơn tháng 12/2024
-                                    </h5>
-                                    <p class="text-muted mb-0 small"
-                                        th:text="'Hạn thanh toán: ' + ${detailInvoice.dueDate}">
-                                        Hạn thanh toán: 05/12/2025
-                                    </p>
-                                    <p class="text-muted mb-0 small" th:text="'Tòa ' + ${detailInvoice.contract.building.name} +
-                                    ' - Thuê ' + ${detailInvoice.contract.rentArea} + 'm²'">
-                                        Duy Tân Tower
-                                    </p>
-                                </div>
-                                <span class="badge bg-warning text-dark rounded-pill px-3 py-2"
-                                    style="font-size: 11px;">
-                                    Chờ thanh toán
-                                </span>
-                            </div>
-
-                            <div class="border-top pt-3 mb-3">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted small">
-                                        Tiền thuê mặt bằng:
-                                    </span>
-                                    <span class="fw-semibold small"
-                                        th:text="${#numbers.formatDecimal(detailInvoice.contract.rentPrice, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                        15,000,000 VNĐ
-                                    </span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted small">Dịch vụ khác:</span>
-                                    <span class="fw-semibold small"
-                                        th:text="${#numbers.formatDecimal(detailInvoice.totalServiceFeeAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                    </span>
-                                </div>
-                                <div class="border-top pt-2 mt-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="fw-bold" style="color: var(--primary-color);">Tổng cộng:</span>
-                                        <span class="fw-bold fs-5" style="color: #dc3545;"
-                                            th:text="${#numbers.formatDecimal(detailInvoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                            15,770,000 VNĐ
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="container mt-5 d-flex justify-content-center align-items-center">
-                                <button type="button"
-                                    class="btn btn-primary d-flex justify-content-center align-items-center"
-                                    data-bs-toggle="modal" data-bs-target="#paymentModal">
-                                    <i class="bi bi-credit-card me-2"></i>Thanh toán ngay
-                                </button>
-                            </div>
+                    <div id="pendingInvoiceContainer" class="card border-0 bg-light mb-3">
+                        <div class="card-body text-center py-4">
+                            <p class="text-muted mb-0">Đang tải dữ liệu...</p>
                         </div>
                     </div>
 
@@ -733,13 +634,11 @@
                     <h5 class="mb-3">Thông tin hệ thống</h5>
                     <div class="info-item d-flex justify-content-between">
                         <span class="text-muted">Ngày giờ:</span>
-                        <span class="fw-semibold" th:text="${today != null ? today : '04/12/2025 14:30'}">04/12/2025
-                            14:30</span>
+                        <span class="fw-semibold" id="systemToday">--</span>
                     </div>
                     <div class="info-item d-flex justify-content-between">
                         <span class="text-muted">IP:</span>
-                        <span class="fw-semibold"
-                            th:text="${clientIp != null ? clientIp : '192.168.1.1'}">192.168.1.1</span>
+                        <span class="fw-semibold" id="systemIp">--</span>
                     </div>
                     <div class="info-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">Trạng thái:</span>
@@ -769,8 +668,7 @@
     </script>
 
     <!-- Modal Thanh Toán -->
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true"
-        th:if="${detailInvoice != null}">
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
@@ -779,200 +677,14 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <!-- Invoice Header -->
-                    <div class="invoice-header">
-                        <div class="invoice-id">
-                            <i class="bi bi-receipt me-2"></i>
-                            <span th:text="'Mã hóa đơn: ' + ${detailInvoice.id}">HĐ-2024001</span>
-                        </div>
-                        <div class="invoice-period">
-                            <i class="bi bi-calendar-month me-2"></i>
-                            <span th:text="'Tháng ' + ${detailInvoice.month} + '/' + ${detailInvoice.year}">Tháng
-                                12/2024</span>
-                        </div>
-                    </div>
-
-                    <!-- Thông tin chung -->
-                    <div class="info-section">
-                        <div class="info-section-title">
-                            <i class="bi bi-info-circle me-2"></i>Thông Tin Chung
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Ngày tạo hóa đơn</span>
-                            <span class="info-value" th:text="${detailInvoice.createdDate}">01/12/2024</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Hạn thanh toán</span>
-                            <span class="info-value text-danger" th:text="${detailInvoice.dueDate}">05/12/2024</span>
-                        </div>
-                        <div class="info-row">
-                            <p class="text-muted mb-0 small" th:text="'Tòa ' + ${detailInvoice.contract.building.name} +
-                                    ' - Thuê ' + ${detailInvoice.contract.rentArea} + 'm²'">
-                                Duy Tân Tower
-                            </p>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Trạng thái</span>
-                            <span class="status-badge status-unpaid">
-                                <i class="bi bi-exclamation-circle"></i>
-                                Chưa thanh toán
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Chi phí cố định -->
-                    <div class="info-section">
-                        <div class="info-section-title">
-                            <i class="bi bi-cash-stack me-2"></i>Chi Phí Cố Định
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Tiền thuê mặt bằng</span>
-                            <span class="info-value"
-                                th:text="${#numbers.formatDecimal(detailInvoice.contract.rentPrice, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">15,000,000
-                                VNĐ</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Phí dịch vụ</span>
-                            <span class="info-value"
-                                th:text="${#numbers.formatDecimal(detailInvoice.details.get(1).amount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">500,000
-                                VNĐ</span>
-                        </div>
-                    </div>
-
-                    <!-- Chi phí phương tiện -->
-                    <div class="info-section">
-                        <div class="info-section-title">
-                            <i class="bi bi-car-front me-2"></i>Phí Gửi Xe
-                        </div>
-                        <div class="utility-grid">
-                            <div class="utility-item">
-                                <div class="utility-label">
-                                    <i class="bi bi-car-front-fill me-1"></i>Ô tô
-                                </div>
-                                <div class="utility-value"
-                                    th:text="${#numbers.formatDecimal(detailInvoice.details.get(2).amount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                    500,000 VNĐ
-                                </div>
-                            </div>
-                            <div class="utility-item">
-                                <div class="utility-label">
-                                    <i class="bi bi-bicycle me-1"></i>Xe máy
-                                </div>
-                                <div class="utility-value"
-                                    th:text="${#numbers.formatDecimal(detailInvoice.details.get(3).amount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                    100,000 VNĐ
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chi phí sinh hoạt -->
-                    <div class="info-section">
-                        <div class="info-section-title">
-                            <i class="bi bi-house"></i> Phí sinh hoạt
-                        </div>
-                        <div class="utility-grid">
-                            <div class="utility-item">
-                                <div class="utility-label">
-                                    <i class="bi bi-lightning-charge"></i> Phí điện
-                                </div>
-                                <div class="utility-value"
-                                    th:text="${#numbers.formatDecimal(detailInvoice.contract.building.electricityFee, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                    500,000 VNĐ
-                                </div>
-                            </div>
-                            <div class="utility-item">
-                                <div class="utility-label">
-                                    <i class="bi bi-droplet"></i> Phí nước
-                                </div>
-                                <div class="utility-value"
-                                    th:text="${#numbers.formatDecimal(detailInvoice.contract.building.waterFee, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                    100,000 VNĐ
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tiện ích (Điện & Nước) -->
-                    <div class="info-section">
-                        <div class="info-section-title">
-                            <i class="bi bi-house"></i> Sinh hoạt
-                        </div>
-
-                        <!-- Điện -->
-                        <div class="meter-reading">
-                            <div class="meter-info">
-                                <div class="meter-icon">
-                                    <i class="bi bi-lightning-charge-fill"></i>
-                                </div>
-                                <div class="meter-details">
-                                    <span class="meter-label">Điện</span>
-                                    <span class="meter-values">
-                                        <span th:text="${detailInvoice.utilityMeter.electricityOld}">1000</span> →
-                                        <span th:text="${detailInvoice.utilityMeter.electricityNew}">1150</span> kWh
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="usage-badge">
-                                    <span
-                                        th:text="${detailInvoice.utilityMeter.electricityNew - detailInvoice.utilityMeter.electricityOld}">150</span>
-                                    kWh
-                                </div>
-                                <div class="info-value mt-1"
-                                    th:text="${#numbers.formatDecimal(detailInvoice.details.get(4).amount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                    450,000 VNĐ
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Nước -->
-                        <div class="meter-reading">
-                            <div class="meter-info">
-                                <div class="meter-icon">
-                                    <i class="bi bi-droplet-fill"></i>
-                                </div>
-                                <div class="meter-details">
-                                    <span class="meter-label">Nước</span>
-                                    <span class="meter-values">
-                                        <span th:text="${detailInvoice.utilityMeter.waterOld}">50</span> →
-                                        <span th:text="${detailInvoice.utilityMeter.waterNew}">65</span> m³
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="usage-badge">
-                                    <span
-                                        th:text="${detailInvoice.utilityMeter.waterNew - detailInvoice.utilityMeter.waterOld}">15</span>
-                                    m³
-                                </div>
-                                <div class="info-value mt-1"
-                                    th:text="${#numbers.formatDecimal(detailInvoice.details.get(5).amount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                                    220,000 VNĐ
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tổng cộng -->
-                    <div class="total-section">
-                        <div class="total-row">
-                            <span class="total-label">
-                                <i class="bi bi-cash-coin me-2"></i>TỔNG CỘNG
-                            </span>
-                            <span class="total-amount"
-                                th:text="${#numbers.formatDecimal(detailInvoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">16,770,000
-                                VNĐ</span>
-                        </div>
-                    </div>
+                <div class="modal-body" id="paymentModalBody">
+                    <p class="text-muted mb-0">Chưa có hóa đơn nào.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="bi bi-x-circle me-2"></i>Đóng
                     </button>
-                    <button type="button" class="btn btn-payment"
-                        th:onclick="'payInvoice(' + ${detailInvoice.id} + ')'">
+                    <button type="button" class="btn btn-payment d-none" id="confirmPaymentButton">
                         <i class="bi bi-credit-card me-2"></i> Xác Nhận Thanh Toán
                     </button>
                 </div>
@@ -981,6 +693,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/customer-home-api.js"></script>
 
     <script>
         setTimeout(function () {
@@ -1004,6 +717,29 @@
             window.location.href = "/payment/qr/" + invoiceId;
         });
     }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+        document.getElementById('confirmPaymentButton').addEventListener('click', function () {
+            if (currentInvoiceId) {
+                payInvoice(currentInvoiceId);
+            }
+        });
+
+        try {
+            await loadCustomerDashboard();
+        } catch (error) {
+            document.getElementById('contractsContainer').innerHTML = `
+                <div class="contract-card p-3 mb-3">
+                    <p class="text-danger mb-0">Không thể tải dashboard. Vui lòng thử lại.</p>
+                </div>
+            `;
+            document.getElementById('pendingInvoiceContainer').innerHTML = `
+                <div class="card-body text-center py-4">
+                    <p class="text-danger mb-0">Không thể tải hóa đơn.</p>
+                </div>
+            `;
+        }
+    });
 </script>
 </body>
 

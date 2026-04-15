@@ -6,6 +6,7 @@ import { env } from "@config/env";
 import { AuthSessionHelper, type UserRole } from "@helpers/AuthSessionHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import type { ExpectedApiContract, EndpointKind, ApiCoverageStatus } from "@api/apiContractUtils";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 type RequestContextFactory = {
@@ -18,6 +19,10 @@ export type RequestDescriptor = {
   id: string;
   method: HttpMethod;
   path: string;
+  roleExpected?: UserRole | "public";
+  kind?: EndpointKind;
+  coverage?: ApiCoverageStatus;
+  contract?: ExpectedApiContract;
   params?: Record<string, string | number | boolean>;
   data?: unknown;
   multipart?: Record<
@@ -69,7 +74,9 @@ export async function createRoleContext(
   });
 
   if (usernameOverride) {
-    await AuthSessionHelper.loginApi(context, usernameOverride, password);
+    const response = await AuthSessionHelper.loginApi(context, usernameOverride, password);
+    expect(response.status()).toBe(302);
+    expect(response.headers()["location"] ?? "").not.toContain("errorMessage");
     return context;
   }
 
@@ -138,6 +145,10 @@ export async function expectMessage(response: APIResponse, status: number): Prom
 
 export function expectAuthFailure(response: APIResponse): void {
   expect([302, 401, 403]).toContain(response.status());
+}
+
+export function expectApiAuthContract(response: APIResponse): void {
+  expect([401, 403]).toContain(response.status());
 }
 
 export function expectBusinessFailure(response: APIResponse): void {

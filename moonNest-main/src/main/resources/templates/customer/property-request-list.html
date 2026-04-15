@@ -217,7 +217,7 @@
     <script>
         function loadRequests() {
             $.ajax({
-                url: '/api/customer/property-request/list',
+                url: '/api/v1/customer/property-requests',
                 type: 'GET',
                 success: function(data) {
                     const container = $('#requestList');
@@ -284,13 +284,13 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: `/api/customer/property-request/cancel/${id}`,
+                        url: `/api/v1/customer/property-requests/${id}`,
                         type: 'DELETE',
                         success: function(msg) {
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Thành công',
-                                text: typeof msg === 'string' ? msg : 'Đã hủy yêu cầu',
+                                text: (msg && msg.message) ? msg.message : 'Đã hủy yêu cầu',
                                 confirmButtonColor: '#2d3e8f'
                             }).then(() => loadRequests());
                         },

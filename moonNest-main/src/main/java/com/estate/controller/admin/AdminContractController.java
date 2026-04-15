@@ -29,12 +29,6 @@ public class AdminContractController {
             Model model,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
-        model.addAttribute("customers", customerService.getCustomersName());
-
-        model.addAttribute("buildings", buildingService.getBuildingsName());
-
-        model.addAttribute("staffs", staffService.getStaffsName());
-
         addCommonAttributes(model, user);
 
         return "admin/contract-list";

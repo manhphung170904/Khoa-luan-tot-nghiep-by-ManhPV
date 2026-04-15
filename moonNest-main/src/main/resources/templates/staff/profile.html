@@ -702,7 +702,7 @@
             });
 
             $.ajax({
-                url: `/staff/profile/otp/${purpose}`,
+                url: `/api/v1/staff/profile/otp/${purpose}`,
                 type: 'POST',
                 success: function () {
                     Swal.fire({
@@ -760,7 +760,7 @@
             };
 
             $.ajax({
-                url: "/staff/profile/username",
+                url: "/api/v1/staff/profile/username",
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),
@@ -797,7 +797,7 @@
             };
 
             $.ajax({
-                url: "/staff/profile/email",
+                url: "/api/v1/staff/profile/email",
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),
@@ -843,7 +843,7 @@
             };
 
             $.ajax({
-                url: "/staff/profile/phoneNumber",
+                url: "/api/v1/staff/profile/phone-number",
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),
@@ -916,7 +916,7 @@
             };
 
             $.ajax({
-                url: "/staff/profile/password",
+                url: "/api/v1/staff/profile/password",
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),

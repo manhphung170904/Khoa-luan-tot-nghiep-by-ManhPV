@@ -1,115 +1,132 @@
-﻿import { test, expect } from '@playwright/test';
-import { ApiAuthHelper } from '../../../utils/api/apiAuthHelper';
-import { DatabaseHelper } from '../../../utils/db-client';
+import { test, expect, type APIRequestContext } from "@playwright/test";
+import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
+import { expectStatusExact } from "@api/apiContractUtils";
+import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDataFactory } from "@helpers/TestDataFactory";
+import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
-test.describe('Staff Invoice CRUD API Tests', () => {
-    let db: DatabaseHelper;
-    let staffCookies: string;
-    let createdInvoiceId: number;
+test.describe("Staff Invoice CRUD API Tests", () => {
+  let adminContext: APIRequestContext;
+  let staffContext: APIRequestContext;
+  let tempContract: Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
+  let createdInvoiceId = 0;
+  let validPayload: Record<string, unknown>;
 
-    const validPayload = {
-        contractId: 1, 
-        customerId: 1,
-        month: 12,
-        year: 2025,
-        dueDate: '2025-12-15',
-        totalAmount: 15300.5,
-        electricityUsage: 100,
-        waterUsage: 25,
-        details: []
-    };
+  test.beforeAll(async ({ playwright }) => {
+    adminContext = await createRoleContext(playwright, "admin");
+    tempContract = await TempEntityHelper.taoContractTam(adminContext);
+    staffContext = await createRoleContext(playwright, "staff", tempContract.staff.username);
+    validPayload = TestDataFactory.buildInvoicePayload({
+      contractId: tempContract.id,
+      customerId: tempContract.customer.id,
+      details: [{ description: "Staff created invoice", amount: 1500000 }]
+    });
+  });
 
-    test.beforeAll(async () => {
-        db = new DatabaseHelper();
-        await db.connect();
-        // Token của STAFF
-        staffCookies = await ApiAuthHelper.loginAsStaff();
+  test.afterAll(async () => {
+    if (createdInvoiceId) {
+      await MySqlDbClient.execute("DELETE FROM invoice_detail WHERE invoice_id = ?", [createdInvoiceId]);
+      await MySqlDbClient.execute("DELETE FROM invoice WHERE id = ?", [createdInvoiceId]);
+    }
+
+    await staffContext.dispose();
+    await TempEntityHelper.xoaContractTam(adminContext, tempContract);
+    await adminContext.dispose();
+    await MySqlDbClient.close();
+  });
+
+  test("API-STF-INV-001 rejects anonymous create access with API auth status", async ({ playwright }) => {
+    const anonymous = await createAnonymousContext(playwright);
+    try {
+      const response = await anonymous.post("/staff/invoices/add", {
+        failOnStatusCode: false,
+        maxRedirects: 0,
+        data: validPayload
+      });
+      expect([401, 403]).toContain(response.status());
+    } finally {
+      await anonymous.dispose();
+    }
+  });
+
+  test("API-STF-INV-002 rejects customer role on staff invoice search", async ({ playwright }) => {
+    const customer = await createRoleContext(playwright, "customer");
+    try {
+      const response = await customer.get("/staff/invoices/search?page=1&size=10", {
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expect([403, 404]).toContain(response.status());
+    } finally {
+      await customer.dispose();
+    }
+  });
+
+  test.describe.serial("Staff invoice lifecycle", () => {
+    test("API-STF-INV-003 staff creates invoice for assigned contract", async () => {
+      const response = await staffContext.post("/staff/invoices/add", {
+        failOnStatusCode: false,
+        maxRedirects: 0,
+        data: validPayload
+      });
+      expectStatusExact(response, 200, "Staff invoice creation should succeed");
+
+      const rows = await MySqlDbClient.query<{ id: number }>(
+        "SELECT id FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
+        [validPayload.contractId, validPayload.month, validPayload.year]
+      );
+      expect(rows.length).toBe(1);
+      createdInvoiceId = rows[0]!.id;
     });
 
-    test.afterAll(async () => {
-        if (createdInvoiceId) {
-            await db.query('DELETE FROM invoice_detail WHERE invoice_id = ?', [createdInvoiceId]);
-            await db.query('DELETE FROM invoice WHERE id = ?', [createdInvoiceId]);
+    test("API-STF-INV-004 staff searches own invoices", async () => {
+      const response = await staffContext.get("/staff/invoices/search?page=1&size=20", {
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expectStatusExact(response, 200, "Staff invoice search should succeed");
+
+      const payload = (await response.json()) as { content?: Array<{ id: number }> };
+      expect(Array.isArray(payload.content)).toBeTruthy();
+      expect(payload.content?.some((item) => item.id === createdInvoiceId)).toBeTruthy();
+    });
+
+    test("API-STF-INV-005 staff edits own invoice", async () => {
+      const response = await staffContext.put("/staff/invoices/edit", {
+        failOnStatusCode: false,
+        maxRedirects: 0,
+        data: {
+          ...validPayload,
+          id: createdInvoiceId,
+          totalAmount: 9999
         }
-        await db.disconnect();
+      });
+      expectStatusExact(response, 200, "Staff invoice edit should succeed");
+
+      const rows = await MySqlDbClient.query<{ total_amount: number }>(
+        "SELECT total_amount FROM invoice WHERE id = ?",
+        [createdInvoiceId]
+      );
+      expect(rows.length).toBe(1);
+      expect(Number(rows[0]!.total_amount)).toBe(9999);
     });
 
-    test.describe.serial('Luồng CRUD Hóa Đơn Dành Riêng Cho Staff', () => {
+    test("API-STF-INV-006 staff deletes own invoice", async () => {
+      const response = await staffContext.delete(`/staff/invoices/delete/${createdInvoiceId}`, {
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expectStatusExact(response, 200, "Staff invoice delete should succeed");
 
-        test('POST /add - [Positive] Staff tạo hóa đơn mới', async ({ request }) => {
-            const response = await request.post('/staff/invoice/add', {
-                headers: { Cookie: staffCookies },
-                data: validPayload
-            });
+      const searchResponse = await staffContext.get("/staff/invoices/search?page=1&size=20", {
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expectStatusExact(searchResponse, 200, "Staff invoice search after delete should succeed");
 
-            // Do Staff bị ràng buộc (chỉ được tạo hóa đơn thuộc tòa nhà mik quản lý), 
-            // Nếu data ko khớp, có thể ra 500/400. Ta catch cả Exception range.
-            expect([200, 400, 500]).toContain(response.status());
-
-            if (response.status() === 200) {
-                // Xác minh database
-                const dbQueryRes = await db.query('SELECT id, total_amount FROM invoice WHERE contract_id = ? AND month = ? ORDER BY id DESC LIMIT 1', 
-                    [validPayload.contractId, validPayload.month]
-                );
-                
-                expect(dbQueryRes.length).toBe(1);
-                createdInvoiceId = dbQueryRes[0].id;
-            }
-        });
-
-        test('GET /search - [Positive] Load List Invoice do mình quản lý', async ({ request }) => {
-            const response = await request.get('/staff/invoice/search?page=1&size=20', {
-                headers: { Cookie: staffCookies }
-            });
-            expect(response.status()).toBe(200);
-            const data = await response.json();
-            expect(Array.isArray(data.content)).toBeTruthy();
-            
-            if (createdInvoiceId) {
-                const found = data.content.find((i: any) => i.id === createdInvoiceId);
-                expect(found).toBeDefined();
-            }
-        });
-
-        test('PUT /edit - [Positive] Edit thông tin (Giới hạn quyền)', async ({ request }) => {
-            test.skip(!createdInvoiceId, 'Bỏ qua do bước tạo thất bại');
-
-            const editPayload = {
-                ...validPayload,
-                id: createdInvoiceId,
-                totalAmount: 9999.0, // amount bị sửa đổi
-            };
-
-            const response = await request.put('/staff/invoice/edit', {
-                headers: { Cookie: staffCookies },
-                data: editPayload
-            });
-
-            expect([200, 400]).toContain(response.status());
-            if (response.status() === 200) {
-                const dbQueryRes = await db.query('SELECT total_amount FROM invoice WHERE id = ?', [createdInvoiceId]);
-                expect(Number(dbQueryRes[0].total_amount)).toBe(9999.0);
-            }
-        });
-
-        test('DELETE /delete/{id} - [Positive] Xóa Invoice', async ({ request }) => {
-            test.skip(!createdInvoiceId, 'Bỏ qua do bước tạo thất bại');
-
-            const response = await request.delete(`/staff/invoice/delete/${createdInvoiceId}`, {
-                headers: { Cookie: staffCookies }
-            });
-
-            expect(response.status()).toBe(200);
-            const dbQueryRes = await db.query('SELECT id FROM invoice WHERE id = ?', [createdInvoiceId]);
-            if (dbQueryRes.length > 0) {
-                // Có thể API Staff chỉ gán soft delete (deleted=1 / is_deleted=1)
-                expect(dbQueryRes.length).toBeGreaterThan(0);
-            } else {
-                expect(dbQueryRes.length).toBe(0);
-            }
-            
-            createdInvoiceId = 0;
-        });
-
+      const payload = (await searchResponse.json()) as { content?: Array<{ id: number }> };
+      expect(payload.content?.some((item) => item.id === createdInvoiceId)).toBeFalsy();
+      createdInvoiceId = 0;
     });
+  });
 });

@@ -1145,7 +1145,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/invoice/confirm/" + id,
+                        url: "/api/v1/admin/invoices/" + id + "/confirm",
                         type: "POST",
                         success: function () {
                             Swal.fire({
@@ -1178,7 +1178,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "/admin/invoice/delete/" + id,
+                        url: "/api/v1/admin/invoices/" + id,
                         type: "DELETE",
                         success: function () {
                             Swal.fire({
