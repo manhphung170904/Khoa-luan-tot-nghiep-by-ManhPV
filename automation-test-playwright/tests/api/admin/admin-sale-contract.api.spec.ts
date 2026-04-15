@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ApiAuthHelper } from '../../../utils/api/apiAuthHelper';
 import { DatabaseHelper } from '../../../utils/db-client';
+import { TestSafetyHelper } from '../../../utils/helpers/TestSafetyHelper';
 
 test.describe('Admin Sale Contract API Tests', () => {
     let db: DatabaseHelper;
@@ -52,7 +53,8 @@ test.describe('Admin Sale Contract API Tests', () => {
         // ── SECURITY ──────────────────────────────────────────────
         test('[SC_001] POST /add - [Security] Reject thiếu Admin Token', async ({ request }) => {
             const response = await request.post('/admin/sale-contract/add', { data: validPayload });
-            expect([200, 302, 401, 403]).toContain(response.status());
+            // Không nên expect 200 cho trường hợp thiếu quyền/chưa đăng nhập
+            expect([302, 401, 403]).toContain(response.status());
         });
 
         // ── NEGATIVE: Validation ──────────────────────────────────
@@ -100,7 +102,8 @@ test.describe('Admin Sale Contract API Tests', () => {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
-            expect([400, 404, 500]).toContain(response.status());
+            // Tốt nhất backend nên trả 400 hoặc 404, trả 500 là lỗi server chưa bắt Exception
+            expect([400, 404]).toContain(response.status());
         });
 
         test('[SC_004] POST /add - [Negative] staffId không hợp lệ', async ({ request }) => {
@@ -109,7 +112,7 @@ test.describe('Admin Sale Contract API Tests', () => {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
-            expect([400, 404, 500]).toContain(response.status());
+            expect([400, 404]).toContain(response.status());
         });
 
         // ── POSITIVE: Create ──────────────────────────────────────
@@ -162,8 +165,13 @@ test.describe('Admin Sale Contract API Tests', () => {
                 test.skip(true, 'SC_005 chưa tạo được HĐ mua bán');
                 return;
             }
-            const response = await request.get(`/admin/sale-contract/search/page?buildingId=${validPayload.buildingId}&page=1&size=10`, {
-                headers: { Cookie: adminCookies }
+            const response = await request.get('/admin/sale-contract/search/page', {
+                headers: { Cookie: adminCookies },
+                params: {
+                    buildingId: validPayload.buildingId,
+                    page: 1,
+                    size: 10
+                }
             });
             expect(response.status()).toBe(200);
             const data = await response.json();
@@ -198,6 +206,9 @@ test.describe('Admin Sale Contract API Tests', () => {
 
         // ── POSITIVE: Delete (Teardown) ───────────────────────────
         test('[SC_009] DELETE /delete/{id} - [Positive] Xóa HĐ mua bán & DB Check', async ({ request }) => {
+            // Bảo vệ an toàn dữ liệu, tránh vô tình chạy lệnh Xóa trên môi trường thật
+            TestSafetyHelper.skipIfDestructiveTestsDisabled(test);
+            
             if (!createdSaleContractId) {
                 test.skip(true, 'SC_005 chưa tạo được HĐ mua bán');
                 return;
@@ -205,7 +216,7 @@ test.describe('Admin Sale Contract API Tests', () => {
             const response = await request.delete(`/admin/sale-contract/delete/${createdSaleContractId}`, {
                 headers: { Cookie: adminCookies }
             });
-            expect([200, 409, 500]).toContain(response.status());
+            expect([200, 409]).toContain(response.status());
 
             // ── DB VALIDATION ──
             if (response.status() === 200) {

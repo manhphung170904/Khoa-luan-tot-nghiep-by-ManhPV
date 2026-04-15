@@ -20,7 +20,12 @@ test.describe('Public Page API Tests', () => {
             );
             const ward = wardRows.length > 0 ? wardRows[0].ward : 'Ward 1';
 
-            const response = await request.get(`/moonnest/building/search?ward=${encodeURIComponent(ward)}&propertyType=OFFICE`);
+            const response = await request.get('/moonnest/building/search', {
+                params: {
+                    ward: ward,
+                    propertyType: 'OFFICE'
+                }
+            });
             expect(response.status()).toBe(200);
 
             const data = await response.json();
@@ -40,7 +45,11 @@ test.describe('Public Page API Tests', () => {
         });
 
         test('[API_TC_027] [Boundary] Search with invalid propertyType returns a valid empty result set', async ({ request }) => {
-            const response = await request.get('/moonnest/building/search?propertyType=INVALID_TYPE');
+            const response = await request.get('/moonnest/building/search', {
+                params: {
+                    propertyType: 'INVALID_TYPE'
+                }
+            });
             expect(response.status()).toBe(200);
 
             const data = await response.json();
