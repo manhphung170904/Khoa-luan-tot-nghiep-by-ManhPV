@@ -70,5 +70,9 @@ export const env = {
   workers: toNumber(process.env.WORKERS, 1),
   retryPolicy,
   authStateDir: process.env.AUTH_STATE_DIR ?? runtimePaths.authStateDir,
-  skipHealthcheck: process.env.SKIP_HEALTHCHECK === "true"
+  skipHealthcheck: process.env.SKIP_HEALTHCHECK === "true",
+  dbJdbcUrl: process.env.DB_JDBC_URL ?? process.env.SPRING_DATASOURCE_URL ?? "jdbc:mysql://localhost:3306/estate",
+  dbUsername: process.env.DB_USERNAME ?? process.env.SPRING_DATASOURCE_USERNAME ?? "root",
+  dbPassword: process.env.DB_PASSWORD ?? process.env.SPRING_DATASOURCE_PASSWORD ?? "123456",
+  dbPoolLimit: toNumber(process.env.DB_POOL_LIMIT, 5)
 };

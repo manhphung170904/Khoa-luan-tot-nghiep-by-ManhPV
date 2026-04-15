@@ -10,7 +10,9 @@
       "@pages/*": ["./pages/*"],
       "@helpers/*": ["./utils/helpers/*"],
       "@fixtures/*": ["./utils/fixtures/*"],
-      "@data/*": ["./test-data/*"]
+      "@data/*": ["./test-data/*"],
+      "@api/*": ["./utils/api/*"],
+      "@db/*": ["./utils/db/*"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true,
