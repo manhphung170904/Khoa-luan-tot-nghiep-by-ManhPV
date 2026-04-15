@@ -5,7 +5,7 @@ A Spring Boot web application for managing buildings, customers, contracts,
 invoices, and transactions with role-based access control.
 
 ## Technologies
-- Java 17
+- Java 21
 - Spring Boot, Spring MVC, Spring Data JPA
 - Spring Security, BCrypt
 - Thymeleaf, Bootstrap, JQuery, Ajax
