@@ -445,20 +445,26 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script>
+    <script th:inline="javascript">
+        const fromRequestId = /*[[${fromRequestId}]]*/ null;
+
         // Hiển thị giá bán dạng đọc được khi nhập
-        document.getElementById('salePriceInput').addEventListener('input', function () {
-            const val = parseFloat(this.value);
-            const el = document.getElementById('salePriceFormatted');
-            if (!this.value || isNaN(val)) {
-                el.textContent = '';
-                return;
-            }
-            el.textContent = new Intl.NumberFormat('vi-VN').format(val).replaceAll('.', ',') + ' VNĐ';
-        });
+        const salePriceInput = document.getElementById('salePrice');
+        if (salePriceInput) {
+            salePriceInput.addEventListener('input', function () {
+                const val = parseFloat(this.value);
+                // const el = document.getElementById('salePriceFormatted'); // Element does not exist
+                if (!this.value || isNaN(val)) {
+                    // if (el) el.textContent = '';
+                    return;
+                }
+                // if (el) el.textContent = new Intl.NumberFormat('vi-VN').format(val).replaceAll('.', ',') + ' VNĐ';
+            });
+        }
+
 
         function resetForm() {
-            document.getElementById('salePriceFormatted').textContent = '';
+            // document.getElementById('salePriceFormatted').textContent = ''; // Element does not exist
         }
 
         $("#saleContractForm").on("submit", function (e) {
@@ -470,7 +476,8 @@
                 staffId: $("[name='staffId']").val() || null,
                 salePrice: $("[name='salePrice']").val() || null,
                 transferDate: $("[name='transferDate']").val() || null,
-                note: $("[name='note']").val() || null
+                note: $("[name='note']").val() || null,
+                fromRequestId: fromRequestId
             };
 
             $.ajax({

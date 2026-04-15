@@ -31,4 +31,6 @@ public class SaleContractFormDTO {
     private LocalDate transferDate;
 
     private String note;
+    
+    private Long fromRequestId;
 }

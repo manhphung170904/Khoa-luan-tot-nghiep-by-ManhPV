@@ -24,4 +24,5 @@ public class ContractFormDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
+    private Long fromRequestId;
 }

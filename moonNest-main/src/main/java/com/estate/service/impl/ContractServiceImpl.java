@@ -50,6 +50,9 @@ public class ContractServiceImpl implements ContractService {
     @Autowired
     private SaleContractRepository saleContractRepository;
 
+    @Autowired
+    private PropertyRequestRepository propertyRequestRepository;
+
     @Override
     public Long countAll() {
         return contractRepository.count();
@@ -268,6 +271,14 @@ public class ContractServiceImpl implements ContractService {
 
         // Lưu hợp đồng
         contractRepository.save(entity);
+
+        // Cập nhật trạng thái yêu cầu
+        if (dto.getFromRequestId() != null) {
+            PropertyRequestEntity request = propertyRequestRepository.findById(dto.getFromRequestId())
+                    .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu"));
+            request.setStatus("APPROVED");
+            propertyRequestRepository.save(request);
+        }
     }
 
     @Override

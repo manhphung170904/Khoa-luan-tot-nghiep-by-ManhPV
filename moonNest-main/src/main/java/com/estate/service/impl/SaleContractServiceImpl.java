@@ -9,9 +9,11 @@ import com.estate.dto.SaleContractFormDTO;
 import com.estate.dto.SaleContractListDTO;
 import com.estate.exception.SaleContractValidationException;
 import com.estate.repository.BuildingRepository;
+import com.estate.repository.PropertyRequestRepository;
 import com.estate.repository.SaleContractRepository;
 import com.estate.repository.StaffRepository;
 import com.estate.repository.entity.BuildingEntity;
+import com.estate.repository.entity.PropertyRequestEntity;
 import com.estate.repository.entity.SaleContractEntity;
 import com.estate.service.SaleContractService;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,12 +23,14 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
 public class SaleContractServiceImpl implements SaleContractService {
 
     @Autowired
@@ -46,6 +50,9 @@ public class SaleContractServiceImpl implements SaleContractService {
 
     @Autowired
     private StaffRepository staffRepository;
+
+    @Autowired
+    private PropertyRequestRepository propertyRequestRepository;
 
     // ─────────────────────────────────────────────────────────────────────────
     // READ
@@ -140,6 +147,14 @@ public class SaleContractServiceImpl implements SaleContractService {
 
         SaleContractEntity entity = saleContractFormConverter.toEntity(dto);
         saleContractRepository.save(entity);
+
+        // Cập nhật trạng thái yêu cầu
+        if (dto.getFromRequestId() != null) {
+            PropertyRequestEntity request = propertyRequestRepository.findById(dto.getFromRequestId())
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy yêu cầu"));
+            request.setStatus("APPROVED");
+            propertyRequestRepository.save(request);
+        }
     }
 
     /** EDIT: chỉ cho phép cập nhật transferDate */
