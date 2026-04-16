@@ -39,16 +39,16 @@ test.describe('Admin Customer API Tests', () => {
 
     test.describe.serial('Luồng CRUD Khách Hàng', () => {
 
-        // ── SECURITY ──────────────────────────────────────────────
+        // -- SECURITY ----------------------------------------------
         test('[CUS_001] POST /add - [Security] Reject thiếu Admin Token', async ({ request }) => {
-            const response = await request.post('/admin/customer/add', { data: validCustomerPayload });
+            const response = await request.post('/api/v1/admin/customers', { data: validCustomerPayload });
             expect([200, 302, 401, 403]).toContain(response.status());
         });
 
-        // ── NEGATIVE: Validation ──────────────────────────────────
+        // -- NEGATIVE: Validation ----------------------------------
         test('[CUS_002] POST /add - [Negative] staffIds rỗng (@Size min=1)', async ({ request }) => {
             const invalidPayload = { ...validCustomerPayload, staffIds: [] };
-            const response = await request.post('/admin/customer/add', {
+            const response = await request.post('/api/v1/admin/customers', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -57,7 +57,7 @@ test.describe('Admin Customer API Tests', () => {
 
         test('[CUS_009] POST /add - [Negative] username < 4 ký tự (@Size min=4)', async ({ request }) => {
             const invalidPayload = { ...validCustomerPayload, username: 'abc' };
-            const response = await request.post('/admin/customer/add', {
+            const response = await request.post('/api/v1/admin/customers', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -66,7 +66,7 @@ test.describe('Admin Customer API Tests', () => {
 
         test('[CUS_003] POST /add - [Boundary] password < 6 ký tự (@Size min=6)', async ({ request }) => {
             const invalidPayload = { ...validCustomerPayload, password: '123' };
-            const response = await request.post('/admin/customer/add', {
+            const response = await request.post('/api/v1/admin/customers', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -75,7 +75,7 @@ test.describe('Admin Customer API Tests', () => {
 
         test('[CUS_010] POST /add - [Negative] email > 100 ký tự (@Size max=100)', async ({ request }) => {
             const invalidPayload = { ...validCustomerPayload, email: 'a'.repeat(95) + '@b.com' };
-            const response = await request.post('/admin/customer/add', {
+            const response = await request.post('/api/v1/admin/customers', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -84,22 +84,22 @@ test.describe('Admin Customer API Tests', () => {
 
         test('[CUS_011] POST /add - [Negative] SĐT sai định dạng', async ({ request }) => {
             const invalidPayload = { ...validCustomerPayload, phone: '9999999999' }; // Không bắt đầu bằng 0
-            const response = await request.post('/admin/customer/add', {
+            const response = await request.post('/api/v1/admin/customers', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
             expect(response.status()).toBe(400);
         });
 
-        // ── POSITIVE: Create ──────────────────────────────────────
+        // -- POSITIVE: Create --------------------------------------
         test('[CUS_004] POST /add - [Positive] Tạo khách hàng thành công & DB Check', async ({ request }) => {
-            const response = await request.post('/admin/customer/add', {
+            const response = await request.post('/api/v1/admin/customers', {
                 headers: { Cookie: adminCookies },
                 data: validCustomerPayload
             });
             expect(response.status()).toBe(200);
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT * FROM customer WHERE email = ?', [validCustomerPayload.email]);
             if (dbResult.length > 0) {
                 expect(dbResult[0].email).toBe(validCustomerPayload.email);
@@ -116,16 +116,16 @@ test.describe('Admin Customer API Tests', () => {
             expect(createdCustomerId).toBeGreaterThan(0);
         });
 
-        // ── NEGATIVE: Duplicate ───────────────────────────────────
+        // -- NEGATIVE: Duplicate -----------------------------------
         test('[CUS_012] POST /add - [Negative] Duplicate username/email', async ({ request }) => {
-            const response = await request.post('/admin/customer/add', {
+            const response = await request.post('/api/v1/admin/customers', {
                 headers: { Cookie: adminCookies },
                 data: validCustomerPayload // username + email đã tồn tại
             });
             expect([400, 409]).toContain(response.status());
         });
 
-        // ── POSITIVE: Read ────────────────────────────────────────
+        // -- POSITIVE: Read ----------------------------------------
         test('[CUS_005] GET /list/page - [Positive] Phân trang chứa customer vừa tạo', async ({ request }) => {
             const response = await request.get('/admin/customer/list/page?page=1&size=50', {
                 headers: { Cookie: adminCookies }
@@ -146,7 +146,7 @@ test.describe('Admin Customer API Tests', () => {
             expect(data.content.length).toBeGreaterThanOrEqual(1);
         });
 
-        // ── DELETE: Business Rule ─────────────────────────────────
+        // -- DELETE: Business Rule ---------------------------------
         test('[CUS_007] DELETE /delete/{id} - [Business Rule] Customer đang có hợp đồng', async ({ request }) => {
             const customerWithContract = await db.query(`
                 SELECT DISTINCT c.id FROM customer c
@@ -156,7 +156,7 @@ test.describe('Admin Customer API Tests', () => {
 
             if (customerWithContract.length > 0) {
                 const lockedId = customerWithContract[0].id;
-                const response = await request.delete(`/admin/customer/delete/${lockedId}`, {
+                const response = await request.delete(`/api/v1/admin/customers/${lockedId}`, {
                     headers: { Cookie: adminCookies }
                 });
                 expect([400, 409]).toContain(response.status());
@@ -166,20 +166,20 @@ test.describe('Admin Customer API Tests', () => {
         });
 
         test('[CUS_013] DELETE /delete/{id} - [Negative] ID không tồn tại', async ({ request }) => {
-            const response = await request.delete('/admin/customer/delete/999999', {
+            const response = await request.delete('/api/v1/admin/customers/999999', {
                 headers: { Cookie: adminCookies }
             });
             expect([400, 409]).toContain(response.status());
         });
 
-        // ── POSITIVE: Delete (Teardown) ───────────────────────────
+        // -- POSITIVE: Delete (Teardown) ---------------------------
         test('[CUS_008] DELETE /delete/{id} - [Positive] Xóa Customer & Verify DB', async ({ request }) => {
-            const response = await request.delete(`/admin/customer/delete/${createdCustomerId}`, {
+            const response = await request.delete(`/api/v1/admin/customers/${createdCustomerId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT * FROM customer WHERE id = ?', [createdCustomerId]);
             if (dbResult.length > 0) {
                 expect(dbResult[0].is_deleted || dbResult[0].deleted || dbResult[0].status === 'DELETED').toBeTruthy();
@@ -190,3 +190,4 @@ test.describe('Admin Customer API Tests', () => {
         });
     });
 });
+

@@ -24,12 +24,12 @@
             margin-top: 72px;
         }
 
-        /* ══ PAGE BODY ══════════════════════════════════════════════════════ */
+        /* -- PAGE BODY ------------------------------------------------------ */
         .detail-body {
             padding: 1.5rem;
         }
 
-        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        /* -- PAGE HEADER ---------------------------------------------------- */
         .page-header-bar {
             display: flex;
             align-items: center;
@@ -59,7 +59,7 @@
             margin-top: 0.2rem;
         }
 
-        /* ══ BACK BUTTON ════════════════════════════════════════════════════ */
+        /* -- BACK BUTTON ---------------------------------------------------- */
         .btn-back {
             background: white;
             color: #374151;
@@ -83,7 +83,7 @@
             transform: translateY(-1px);
         }
 
-        /* ══ D-CARD ═════════════════════════════════════════════════════════ */
+        /* -- D-CARD --------------------------------------------------------- */
         .d-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -117,7 +117,7 @@
             padding: 1.25rem 1.5rem;
         }
 
-        /* ══ SECTION TITLE ══════════════════════════════════════════════════ */
+        /* -- SECTION TITLE -------------------------------------------------- */
         .form-section-title {
             font-size: 0.72rem;
             font-weight: 700;
@@ -136,7 +136,7 @@
             font-size: 0.8rem;
         }
 
-        /* ══ FORM CONTROLS ══════════════════════════════════════════════════ */
+        /* -- FORM CONTROLS -------------------------------------------------- */
         .form-label {
             font-size: 0.72rem;
             font-weight: 700;
@@ -181,7 +181,7 @@
             cursor: not-allowed;
         }
 
-        /* ══ INPUT GROUP ════════════════════════════════════════════════════ */
+        /* -- INPUT GROUP ---------------------------------------------------- */
         .input-group-text {
             background: #f9fafb;
             border: 1px solid #e5e7eb;
@@ -210,7 +210,7 @@
             color: #3b82f6;
         }
 
-        /* ══ HELPER TEXT ════════════════════════════════════════════════════ */
+        /* -- HELPER TEXT ---------------------------------------------------- */
         .form-text {
             font-size: 0.75rem;
             color: #6b7280;
@@ -222,7 +222,7 @@
             font-weight: 500;
         }
 
-        /* ══ INFO BOX ═══════════════════════════════════════════════════════ */
+        /* -- INFO BOX ------------------------------------------------------- */
         .info-box {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
@@ -246,7 +246,7 @@
             line-height: 1.5;
         }
 
-        /* ══ FEE ITEMS ══════════════════════════════════════════════════════ */
+        /* -- FEE ITEMS ------------------------------------------------------ */
         .fee-item {
             background: #f9fafb;
             border: 1px solid #e5e7eb;
@@ -278,7 +278,7 @@
             font-size: 0.75rem;
         }
 
-        /* ══ METER INFO BOX ═════════════════════════════════════════════════ */
+        /* -- METER INFO BOX ------------------------------------------------- */
         .meter-info-box {
             background: #fef3c7;
             border: 1px solid #fbbf24;
@@ -302,14 +302,14 @@
             line-height: 1.5;
         }
 
-        /* ══ DIVIDER ════════════════════════════════════════════════════════ */
+        /* -- DIVIDER -------------------------------------------------------- */
         .section-divider {
             border: none;
             border-top: 1px solid #f3f4f6;
             margin: 1.25rem 0;
         }
 
-        /* ══ FORM ACTIONS ═══════════════════════════════════════════════════ */
+        /* -- FORM ACTIONS --------------------------------------------------- */
         .form-actions {
             display: flex;
             gap: 0.5rem;
@@ -351,7 +351,7 @@
             box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
         }
 
-        /* ══ RESPONSIVE ═════════════════════════════════════════════════════ */
+        /* -- RESPONSIVE ----------------------------------------------------- */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0;
@@ -383,7 +383,7 @@
     <main class="content">
         <div class="detail-body">
 
-            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <!-- -- Page Header ----------------------------------------------- -->
             <div class="page-header-bar">
                 <div>
                     <h2>
@@ -398,7 +398,7 @@
                 </a>
             </div>
 
-            <!-- ── Info Box ────────────────────────────────────────────────── -->
+            <!-- -- Info Box -------------------------------------------------- -->
             <div class="info-box">
                 <i class="bi bi-info-circle"></i>
                 <div class="info-box-content">
@@ -407,7 +407,7 @@
                 </div>
             </div>
 
-            <!-- ── Form Card ───────────────────────────────────────────────── -->
+            <!-- -- Form Card ------------------------------------------------- -->
             <div class="d-card">
                 <div class="d-card-header">
                     <i class="bi bi-receipt"></i>
@@ -572,7 +572,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label">Năm <span class="required">*</span></label>
+                                <label class="form-label">Nam <span class="required">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-calendar"></i></span>
                                     <input type="number" class="form-control" name="year" placeholder="VD: 2024"
@@ -785,7 +785,7 @@
                 (electricityUsage * Number(currentFees.electricityFee || 0)) +
                 (waterUsage * Number(currentFees.waterFee || 0));
 
-            $('#totalAmount').text(formatNumber(total) + ' đ');
+            $('#totalAmount').text(formatNumber(total) + ' d');
         }
     </script>
 

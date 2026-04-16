@@ -21,23 +21,23 @@ test.describe('Admin Building Additional Information API', () => {
         await db.disconnect();
     });
 
-    // ═══════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------
     //  LEGAL AUTHORITY CRUD (Serial)
-    // ═══════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------
     test.describe.serial('CRUD API cho Legal Authority', () => {
         let createdLegalAuthorityId: number;
 
-        // ── SECURITY ──────────────────────────────────────────────
+        // -- SECURITY ----------------------------------------------
         test('[BAI_LA_SEC] POST /legal-authority - [Security] Reject thiếu Token', async ({ request }) => {
-            const response = await request.post('/admin/building-additional-information/legal-authority', {
+            const response = await request.post('/api/v1/admin/building-additional-information/legal-authorities', {
                 data: { buildingId, authorityName: 'Test Security', authorityType: 'NOTARY' }
             });
             expect([200, 302, 401, 403]).toContain(response.status());
         });
 
-        // ── NEGATIVE ──────────────────────────────────────────────
+        // -- NEGATIVE ----------------------------------------------
         test('[BAI_LA_NEG] POST /legal-authority - [Negative] Thiếu buildingId', async ({ request }) => {
-            const response = await request.post('/admin/building-additional-information/legal-authority', {
+            const response = await request.post('/api/v1/admin/building-additional-information/legal-authorities', {
                 headers: { Cookie: adminCookies },
                 data: { authorityName: 'Test Missing Building ID', authorityType: 'NOTARY' }
             });
@@ -45,14 +45,14 @@ test.describe('Admin Building Additional Information API', () => {
         });
 
         test('[BAI_LA_BND] POST /legal-authority - [Boundary] Tên > 255 ký tự', async ({ request }) => {
-            const response = await request.post('/admin/building-additional-information/legal-authority', {
+            const response = await request.post('/api/v1/admin/building-additional-information/legal-authorities', {
                 headers: { Cookie: adminCookies },
                 data: { buildingId, authorityName: 'A'.repeat(300), authorityType: 'NOTARY' }
             });
             expect([400, 500]).toContain(response.status());
         });
 
-        // ── POSITIVE: Create ──────────────────────────────────────
+        // -- POSITIVE: Create --------------------------------------
         test('[BAI_LA_C] POST /legal-authority - [Positive] Create & DB Check', async ({ request }) => {
             const payload = {
                 buildingId,
@@ -64,7 +64,7 @@ test.describe('Admin Building Additional Information API', () => {
                 note: 'Auto test'
             };
 
-            const response = await request.post('/admin/building-additional-information/legal-authority', {
+            const response = await request.post('/api/v1/admin/building-additional-information/legal-authorities', {
                 headers: { Cookie: adminCookies },
                 data: payload
             });
@@ -75,7 +75,7 @@ test.describe('Admin Building Additional Information API', () => {
 
             createdLegalAuthorityId = data.id;
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT * FROM legal_authority WHERE id = ?', [createdLegalAuthorityId]);
             expect(dbResult.length).toBe(1);
             expect(dbResult[0].authority_name).toBe(payload.authorityName);
@@ -83,9 +83,9 @@ test.describe('Admin Building Additional Information API', () => {
             expect(dbResult[0].building_id).toBe(buildingId);
         });
 
-        // ── POSITIVE: Read ────────────────────────────────────────
+        // -- POSITIVE: Read ----------------------------------------
         test('[BAI_LA_R] GET /legal-authority/{buildingId}/list - [Positive] Read', async ({ request }) => {
-            const response = await request.get(`/admin/building-additional-information/legal-authority/${buildingId}/list`, {
+            const response = await request.get(`/api/v1/admin/building-additional-information/legal-authorities/${buildingId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -96,7 +96,7 @@ test.describe('Admin Building Additional Information API', () => {
             expect(found.authorityName).toBe('Văn phòng công chứng Auto');
         });
 
-        // ── POSITIVE: Update ──────────────────────────────────────
+        // -- POSITIVE: Update --------------------------------------
         test('[BAI_LA_U] PUT /legal-authority/{id} - [Positive] Update & DB Check', async ({ request }) => {
             const updatePayload = {
                 buildingId,
@@ -108,41 +108,41 @@ test.describe('Admin Building Additional Information API', () => {
                 note: 'Updated'
             };
 
-            const response = await request.put(`/admin/building-additional-information/legal-authority/${createdLegalAuthorityId}`, {
+            const response = await request.put(`/api/v1/admin/building-additional-information/legal-authorities/${createdLegalAuthorityId}`, {
                 headers: { Cookie: adminCookies },
                 data: updatePayload
             });
             expect(response.status()).toBe(200);
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT * FROM legal_authority WHERE id = ?', [createdLegalAuthorityId]);
             expect(dbResult[0].authority_name).toBe('VP Công Chứng - UPDATED');
             expect(dbResult[0].phone).toBe('0987654321');
             expect(dbResult[0].authority_type).toBe('LAW_FIRM');
         });
 
-        // ── POSITIVE: Delete ──────────────────────────────────────
+        // -- POSITIVE: Delete --------------------------------------
         test('[BAI_LA_D] DELETE /legal-authority/{id} - [Positive] Delete & DB Check', async ({ request }) => {
-            const response = await request.delete(`/admin/building-additional-information/legal-authority/${createdLegalAuthorityId}`, {
+            const response = await request.delete(`/api/v1/admin/building-additional-information/legal-authorities/${createdLegalAuthorityId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect([200, 204]).toContain(response.status());
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT * FROM legal_authority WHERE id = ?', [createdLegalAuthorityId]);
             expect(dbResult.length).toBe(0);
             createdLegalAuthorityId = 0;
         });
     });
 
-    // ═══════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------
     //  NEARBY AMENITY CRUD (Serial)
-    // ═══════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------
     test.describe.serial('CRUD API cho Nearby Amenity', () => {
         let createdAmenityId: number;
 
         test('[BAI_NA_SEC] POST /nearby-amenity - [Security] Reject thiếu Token', async ({ request }) => {
-            const response = await request.post('/admin/building-additional-information/nearby-amenity', {
+            const response = await request.post('/api/v1/admin/building-additional-information/nearby-amenities', {
                 data: { buildingId, name: 'Test Security', amenityType: 'PARK' }
             });
             expect([200, 302, 401, 403]).toContain(response.status());
@@ -158,7 +158,7 @@ test.describe('Admin Building Additional Information API', () => {
                 latitude: 10.762,
                 longitude: 106.660
             };
-            const response = await request.post('/admin/building-additional-information/nearby-amenity', {
+            const response = await request.post('/api/v1/admin/building-additional-information/nearby-amenities', {
                 headers: { Cookie: adminCookies },
                 data: payload
             });
@@ -166,14 +166,14 @@ test.describe('Admin Building Additional Information API', () => {
             const data = await response.json();
             createdAmenityId = data.id;
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT * FROM nearby_amenity WHERE id = ?', [createdAmenityId]);
             expect(dbResult.length).toBe(1);
             expect(dbResult[0].name).toBe(payload.name);
         });
 
         test('[BAI_NA_R] GET /nearby-amenity/{buildingId}/list - [Positive] Read', async ({ request }) => {
-            const response = await request.get(`/admin/building-additional-information/nearby-amenity/${buildingId}/list`, {
+            const response = await request.get(`/api/v1/admin/building-additional-information/nearby-amenities/${buildingId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -191,20 +191,20 @@ test.describe('Admin Building Additional Information API', () => {
                 latitude: 10.763,
                 longitude: 106.661
             };
-            const response = await request.put(`/admin/building-additional-information/nearby-amenity/${createdAmenityId}`, {
+            const response = await request.put(`/api/v1/admin/building-additional-information/nearby-amenities/${createdAmenityId}`, {
                 headers: { Cookie: adminCookies },
                 data: payload
             });
             expect(response.status()).toBe(200);
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT name, distance_meter FROM nearby_amenity WHERE id = ?', [createdAmenityId]);
             expect(dbResult[0].name).toBe('Công viên UPDATED');
             expect(dbResult[0].distance_meter).toBe(600);
         });
 
         test('[BAI_NA_D] DELETE /nearby-amenity/{id} - [Positive] Delete', async ({ request }) => {
-            const response = await request.delete(`/admin/building-additional-information/nearby-amenity/${createdAmenityId}`, {
+            const response = await request.delete(`/api/v1/admin/building-additional-information/nearby-amenities/${createdAmenityId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect([200, 204]).toContain(response.status());
@@ -214,14 +214,14 @@ test.describe('Admin Building Additional Information API', () => {
         });
     });
 
-    // ═══════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------
     //  SUPPLIER CRUD (Serial)
-    // ═══════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------
     test.describe.serial('CRUD API cho Supplier', () => {
         let createdSupplierId: number;
 
         test('[BAI_SP_SEC] POST /supplier - [Security] Reject thiếu Token', async ({ request }) => {
-            const response = await request.post('/admin/building-additional-information/supplier', {
+            const response = await request.post('/api/v1/admin/building-additional-information/suppliers', {
                 data: { buildingId, name: 'Test', serviceType: 'CLEANING' }
             });
             expect([200, 302, 401, 403]).toContain(response.status());
@@ -237,7 +237,7 @@ test.describe('Admin Building Additional Information API', () => {
                 address: '1A Đường Test',
                 note: 'Auto test'
             };
-            const response = await request.post('/admin/building-additional-information/supplier', {
+            const response = await request.post('/api/v1/admin/building-additional-information/suppliers', {
                 headers: { Cookie: adminCookies },
                 data: payload
             });
@@ -245,14 +245,14 @@ test.describe('Admin Building Additional Information API', () => {
             const data = await response.json();
             createdSupplierId = data.id;
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT * FROM supplier WHERE id = ?', [createdSupplierId]);
             expect(dbResult.length).toBe(1);
             expect(dbResult[0].name).toBe(payload.name);
         });
 
         test('[BAI_SP_R] GET /supplier/{buildingId}/list - [Positive] Read', async ({ request }) => {
-            const response = await request.get(`/admin/building-additional-information/supplier/${buildingId}/list`, {
+            const response = await request.get(`/api/v1/admin/building-additional-information/suppliers/${buildingId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -270,19 +270,19 @@ test.describe('Admin Building Additional Information API', () => {
                 address: '2B Đường Update',
                 note: 'Updated'
             };
-            const response = await request.put(`/admin/building-additional-information/supplier/${createdSupplierId}`, {
+            const response = await request.put(`/api/v1/admin/building-additional-information/suppliers/${createdSupplierId}`, {
                 headers: { Cookie: adminCookies },
                 data: payload
             });
             expect(response.status()).toBe(200);
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT name FROM supplier WHERE id = ?', [createdSupplierId]);
             expect(dbResult[0].name).toBe('Cty Vệ Sinh VIP UPDATED');
         });
 
         test('[BAI_SP_D] DELETE /supplier/{id} - [Positive] Delete', async ({ request }) => {
-            const response = await request.delete(`/admin/building-additional-information/supplier/${createdSupplierId}`, {
+            const response = await request.delete(`/api/v1/admin/building-additional-information/suppliers/${createdSupplierId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect([200, 204]).toContain(response.status());
@@ -292,14 +292,14 @@ test.describe('Admin Building Additional Information API', () => {
         });
     });
 
-    // ═══════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------
     //  PLANNING MAP CRUD (Serial)
-    // ═══════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------
     test.describe.serial('CRUD API cho Planning Map', () => {
         let createdMapId: number;
 
         test('[BAI_PM_SEC] POST /planning-map - [Security] Reject thiếu Token', async ({ request }) => {
-            const response = await request.post('/admin/building-additional-information/planning-map', {
+            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps', {
                 data: { buildingId, mapType: 'Quy hoạch', issuedBy: 'Test' }
             });
             expect([200, 302, 401, 403]).toContain(response.status());
@@ -315,7 +315,7 @@ test.describe('Admin Building Additional Information API', () => {
                 imageUrl: 'planning_auto.jpg',
                 note: 'Auto test'
             };
-            const response = await request.post('/admin/building-additional-information/planning-map', {
+            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps', {
                 headers: { Cookie: adminCookies },
                 data: payload
             });
@@ -323,14 +323,14 @@ test.describe('Admin Building Additional Information API', () => {
             const data = await response.json();
             createdMapId = data.id;
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT * FROM planning_map WHERE id = ?', [createdMapId]);
             expect(dbResult.length).toBe(1);
             expect(dbResult[0].map_type).toBe(payload.mapType);
         });
 
         test('[BAI_PM_R] GET /planning-map/{buildingId}/list - [Positive] Read', async ({ request }) => {
-            const response = await request.get(`/admin/building-additional-information/planning-map/${buildingId}/list`, {
+            const response = await request.get(`/api/v1/admin/building-additional-information/planning-maps/${buildingId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -348,19 +348,19 @@ test.describe('Admin Building Additional Information API', () => {
                 imageUrl: 'planning_auto.jpg',
                 note: 'Updated'
             };
-            const response = await request.put(`/admin/building-additional-information/planning-map/${createdMapId}`, {
+            const response = await request.put(`/api/v1/admin/building-additional-information/planning-maps/${createdMapId}`, {
                 headers: { Cookie: adminCookies },
                 data: payload
             });
             expect(response.status()).toBe(200);
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT map_type FROM planning_map WHERE id = ?', [createdMapId]);
             expect(dbResult[0].map_type).toBe('Quy hoạch UPDATED');
         });
 
         test('[BAI_PM_D] DELETE /planning-map/{id} - [Positive] Delete', async ({ request }) => {
-            const response = await request.delete(`/admin/building-additional-information/planning-map/${createdMapId}`, {
+            const response = await request.delete(`/api/v1/admin/building-additional-information/planning-maps/${createdMapId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect([200, 204]).toContain(response.status());
@@ -370,13 +370,13 @@ test.describe('Admin Building Additional Information API', () => {
         });
     });
 
-    // ═══════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------
     //  UPLOAD IMAGE (Planning Map)
-    // ═══════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------
     test.describe('Upload Image API cho Planning Map', () => {
 
         test('[BAI_UP_SEC] POST /planning-map/upload-image - [Security] Reject thiếu Token', async ({ request }) => {
-            const response = await request.post('/admin/building-additional-information/planning-map/upload-image', {
+            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps/image', {
                 multipart: {
                     file: { name: 'test.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('fake') }
                 }
@@ -385,7 +385,7 @@ test.describe('Admin Building Additional Information API', () => {
         });
 
         test('[BAI_UP_NEG] POST /planning-map/upload-image - [Negative] Sai định dạng (text/plain)', async ({ request }) => {
-            const response = await request.post('/admin/building-additional-information/planning-map/upload-image', {
+            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps/image', {
                 headers: { Cookie: adminCookies },
                 multipart: {
                     file: { name: 'test.txt', mimeType: 'text/plain', buffer: Buffer.from('not an image') }
@@ -398,7 +398,7 @@ test.describe('Admin Building Additional Information API', () => {
 
         test('[BAI_UP_BND] POST /planning-map/upload-image - [Boundary] File > 5MB', async ({ request }) => {
             const largeBuffer = Buffer.alloc(5.1 * 1024 * 1024, 'a');
-            const response = await request.post('/admin/building-additional-information/planning-map/upload-image', {
+            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps/image', {
                 headers: { Cookie: adminCookies },
                 multipart: {
                     file: { name: 'large.jpg', mimeType: 'image/jpeg', buffer: largeBuffer }
@@ -409,7 +409,7 @@ test.describe('Admin Building Additional Information API', () => {
 
         test('[BAI_UP_POS] POST /planning-map/upload-image - [Positive] Upload JPG hợp lệ', async ({ request }) => {
             const buffer = Buffer.from('fake valid image binary');
-            const response = await request.post('/admin/building-additional-information/planning-map/upload-image', {
+            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps/image', {
                 headers: { Cookie: adminCookies },
                 multipart: {
                     file: { name: 'my_map.jpg', mimeType: 'image/jpeg', buffer }
@@ -423,3 +423,4 @@ test.describe('Admin Building Additional Information API', () => {
         });
     });
 });
+

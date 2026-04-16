@@ -54,9 +54,9 @@ public class SaleContractServiceImpl implements SaleContractService {
     @Autowired
     private PropertyRequestRepository propertyRequestRepository;
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // READ
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     @Override
     public Long countByBuildingId(Long buildingId) {
@@ -112,9 +112,9 @@ public class SaleContractServiceImpl implements SaleContractService {
         return dto;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // SAVE (ADD + EDIT)
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     @Override
     public void save(SaleContractFormDTO dto) {
@@ -174,18 +174,18 @@ public class SaleContractServiceImpl implements SaleContractService {
         saleContractRepository.save(entity);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // DELETE
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     @Override
     public void delete(Long id) {
         saleContractRepository.deleteById(id);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // HELPERS
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     private void validateStaffAssignment(Long buildingId, Long customerId, Long staffId) {
         if (!staffRepository.existsByStaffIdAndBuildingId(staffId, buildingId)) {

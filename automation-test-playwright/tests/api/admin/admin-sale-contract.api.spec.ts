@@ -52,7 +52,7 @@ test.describe('Admin Sale Contract API Tests', () => {
 
         // ── SECURITY ──────────────────────────────────────────────
         test('[SC_001] POST /add - [Security] Reject thiếu Admin Token', async ({ request }) => {
-            const response = await request.post('/admin/sale-contract/add', { data: validPayload });
+            const response = await request.post('/api/v1/admin/sale-contracts', { data: validPayload });
             // Không nên expect 200 cho trường hợp thiếu quyền/chưa đăng nhập
             expect([302, 401, 403]).toContain(response.status());
         });
@@ -60,7 +60,7 @@ test.describe('Admin Sale Contract API Tests', () => {
         // ── NEGATIVE: Validation ──────────────────────────────────
         test('[SC_002] POST /add - [Negative] salePrice = 0 (@Positive)', async ({ request }) => {
             const invalidPayload = { ...validPayload, salePrice: 0 };
-            const response = await request.post('/admin/sale-contract/add', {
+            const response = await request.post('/api/v1/admin/sale-contracts', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -69,7 +69,7 @@ test.describe('Admin Sale Contract API Tests', () => {
 
         test('[SC_012] POST /add - [Boundary] salePrice = -1 (@Positive)', async ({ request }) => {
             const invalidPayload = { ...validPayload, salePrice: -1 };
-            const response = await request.post('/admin/sale-contract/add', {
+            const response = await request.post('/api/v1/admin/sale-contracts', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -79,7 +79,7 @@ test.describe('Admin Sale Contract API Tests', () => {
         test('[SC_010] POST /add - [Negative] Thiếu buildingId (@NotNull)', async ({ request }) => {
             const invalidPayload = { ...validPayload };
             delete (invalidPayload as any).buildingId;
-            const response = await request.post('/admin/sale-contract/add', {
+            const response = await request.post('/api/v1/admin/sale-contracts', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -89,7 +89,7 @@ test.describe('Admin Sale Contract API Tests', () => {
         test('[SC_011] POST /add - [Negative] Thiếu customerId (@NotNull)', async ({ request }) => {
             const invalidPayload = { ...validPayload };
             delete (invalidPayload as any).customerId;
-            const response = await request.post('/admin/sale-contract/add', {
+            const response = await request.post('/api/v1/admin/sale-contracts', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -98,7 +98,7 @@ test.describe('Admin Sale Contract API Tests', () => {
 
         test('[SC_003] POST /add - [Negative] buildingId không tồn tại', async ({ request }) => {
             const invalidPayload = { ...validPayload, buildingId: 999999 };
-            const response = await request.post('/admin/sale-contract/add', {
+            const response = await request.post('/api/v1/admin/sale-contracts', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -108,7 +108,7 @@ test.describe('Admin Sale Contract API Tests', () => {
 
         test('[SC_004] POST /add - [Negative] staffId không hợp lệ', async ({ request }) => {
             const invalidPayload = { ...validPayload, staffId: -1 };
-            const response = await request.post('/admin/sale-contract/add', {
+            const response = await request.post('/api/v1/admin/sale-contracts', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -117,7 +117,7 @@ test.describe('Admin Sale Contract API Tests', () => {
 
         // ── POSITIVE: Create ──────────────────────────────────────
         test('[SC_005] POST /add - [Positive] Tạo HĐ mua bán & DB Check', async ({ request }) => {
-            const response = await request.post('/admin/sale-contract/add', {
+            const response = await request.post('/api/v1/admin/sale-contracts', {
                 headers: { Cookie: adminCookies },
                 data: validPayload
             });
@@ -165,7 +165,7 @@ test.describe('Admin Sale Contract API Tests', () => {
                 test.skip(true, 'SC_005 chưa tạo được HĐ mua bán');
                 return;
             }
-            const response = await request.get('/admin/sale-contract/search/page', {
+            const response = await request.get('/api/v1/admin/sale-contracts', {
                 headers: { Cookie: adminCookies },
                 params: {
                     buildingId: validPayload.buildingId,
@@ -192,7 +192,7 @@ test.describe('Admin Sale Contract API Tests', () => {
                 note: 'Đã updated note'
             };
 
-            const response = await request.put('/admin/sale-contract/edit', {
+            const response = await request.put(`/api/v1/admin/sale-contracts/${createdSaleContractId}`, {
                 headers: { Cookie: adminCookies },
                 data: editPayload
             });
@@ -213,7 +213,7 @@ test.describe('Admin Sale Contract API Tests', () => {
                 test.skip(true, 'SC_005 chưa tạo được HĐ mua bán');
                 return;
             }
-            const response = await request.delete(`/admin/sale-contract/delete/${createdSaleContractId}`, {
+            const response = await request.delete(`/api/v1/admin/sale-contracts/${createdSaleContractId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect([200, 409]).toContain(response.status());
@@ -231,3 +231,4 @@ test.describe('Admin Sale Contract API Tests', () => {
         });
     });
 });
+

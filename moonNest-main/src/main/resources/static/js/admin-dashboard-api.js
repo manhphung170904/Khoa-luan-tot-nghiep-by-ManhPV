@@ -134,7 +134,7 @@ function createAdminDashboardCharts(dashboard) {
             labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
             datasets: [
                 {
-                    label: 'Năm ' + dashboard.currentYear,
+                    label: 'Nam ' + dashboard.currentYear,
                     data: (dashboard.monthlyRevenue || []).map(formatAdminDashboardBillions),
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59,130,246,0.08)',
@@ -146,7 +146,7 @@ function createAdminDashboardCharts(dashboard) {
                     pointHoverRadius: 6
                 },
                 {
-                    label: 'Năm ' + dashboard.lastYear,
+                    label: 'Nam ' + dashboard.lastYear,
                     data: (dashboard.monthlyRevenueLastYear || []).map(formatAdminDashboardBillions),
                     borderColor: '#ef4444',
                     backgroundColor: 'rgba(239,68,68,0.06)',
@@ -423,3 +423,5 @@ async function loadAdminDashboard() {
     renderRecentBuildings(dashboard.recentBuildings);
     createAdminDashboardCharts(dashboard);
 }
+
+

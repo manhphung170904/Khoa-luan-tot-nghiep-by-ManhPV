@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { createRoleContext } from "@api/adminApiUtils";
 import { expectStatusExact } from "@api/apiContractUtils";
 import { DatabaseHelper } from "../../../utils/db-client";
@@ -31,7 +31,7 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
   test("API-PAY-001 rejects anonymous QR access", async ({ playwright }) => {
     const anonymous = await playwright.request.newContext({ baseURL: env.baseUrl });
     try {
-      const response = await anonymous.get(`/payment/qr/${customerInvoiceId}`, {
+      const response = await anonymous.get(`/api/v1/payment/qr/${customerInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -44,7 +44,7 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
   test("API-PAY-002 rejects admin access to customer QR", async ({ playwright }) => {
     const admin = await createRoleContext(playwright, "admin");
     try {
-      const response = await admin.get(`/payment/qr/${customerInvoiceId}`, {
+      const response = await admin.get(`/api/v1/payment/qr/${customerInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -57,7 +57,7 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
   test("API-PAY-003 returns 404 for missing invoice id", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer");
     try {
-      const response = await customer.get(`/payment/qr/${nonexistentInvoiceId}`, {
+      const response = await customer.get(`/api/v1/payment/qr/${nonexistentInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -70,7 +70,7 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
   test("API-PAY-004 renders QR HTML for customer-owned invoice", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer");
     try {
-      const response = await customer.get(`/payment/qr/${customerInvoiceId}`, {
+      const response = await customer.get(`/api/v1/payment/qr/${customerInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -79,7 +79,7 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
       const bodyHtml = await response.text();
       expect(bodyHtml).toContain("Thanh to");
       expect(bodyHtml).toContain("img.vietqr.io");
-      expect(bodyHtml).toContain(`/payment/qr/confirm/${customerInvoiceId}`);
+      expect(bodyHtml).toContain(`/api/v1/payment/qr/confirm/${customerInvoiceId}`);
     } finally {
       await customer.dispose();
     }
@@ -88,7 +88,7 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
   test("API-PAY-005 confirms QR payment and redirects to invoice list", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer");
     try {
-      const response = await customer.get(`/payment/qr/confirm/${customerInvoiceId}`, {
+      const response = await customer.get(`/api/v1/payment/qr/confirm/${customerInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -103,3 +103,4 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
     }
   });
 });
+

@@ -1,7 +1,7 @@
-import { RoutedCrudFormPage } from "../core/RoutedCrudFormPage";
+﻿import { RoutedCrudFormPage } from "../core/RoutedCrudFormPage";
 
 export class AdminCustomerFormPage extends RoutedCrudFormPage {
-  protected readonly addPath = "/admin/customer/add";
+  protected readonly addPath = "/api/v1/admin/customers";
 
   async fillCustomerBasics(data: { fullName?: string; email?: string; phone?: string; username?: string; password?: string }): Promise<void> {
     if (data.fullName) await this.fillTextField("fullName", data.fullName);
@@ -11,3 +11,4 @@ export class AdminCustomerFormPage extends RoutedCrudFormPage {
     if (data.password) await this.fillTextField("password", data.password);
   }
 }
+

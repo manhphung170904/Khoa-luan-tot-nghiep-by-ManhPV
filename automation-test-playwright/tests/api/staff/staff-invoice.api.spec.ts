@@ -1,4 +1,4 @@
-import { test, expect, type APIRequestContext } from "@playwright/test";
+﻿import { test, expect, type APIRequestContext } from "@playwright/test";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
 import { expectStatusExact } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
@@ -38,7 +38,7 @@ test.describe("Staff Invoice CRUD API Tests", () => {
   test("API-STF-INV-001 rejects anonymous create access with API auth status", async ({ playwright }) => {
     const anonymous = await createAnonymousContext(playwright);
     try {
-      const response = await anonymous.post("/staff/invoices/add", {
+      const response = await anonymous.post("/api/v1/staff/invoices", {
         failOnStatusCode: false,
         maxRedirects: 0,
         data: validPayload
@@ -64,7 +64,7 @@ test.describe("Staff Invoice CRUD API Tests", () => {
 
   test.describe.serial("Staff invoice lifecycle", () => {
     test("API-STF-INV-003 staff creates invoice for assigned contract", async () => {
-      const response = await staffContext.post("/staff/invoices/add", {
+      const response = await staffContext.post("/api/v1/staff/invoices", {
         failOnStatusCode: false,
         maxRedirects: 0,
         data: validPayload
@@ -92,7 +92,7 @@ test.describe("Staff Invoice CRUD API Tests", () => {
     });
 
     test("API-STF-INV-005 staff edits own invoice", async () => {
-      const response = await staffContext.put("/staff/invoices/edit", {
+      const response = await staffContext.put(`/api/v1/staff/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0,
         data: {
@@ -112,7 +112,7 @@ test.describe("Staff Invoice CRUD API Tests", () => {
     });
 
     test("API-STF-INV-006 staff deletes own invoice", async () => {
-      const response = await staffContext.delete(`/staff/invoices/delete/${createdInvoiceId}`, {
+      const response = await staffContext.delete(`/api/v1/staff/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -130,3 +130,4 @@ test.describe("Staff Invoice CRUD API Tests", () => {
     });
   });
 });
+

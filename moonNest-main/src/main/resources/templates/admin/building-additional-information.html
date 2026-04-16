@@ -22,7 +22,7 @@
             margin-top: 70px;
         }
 
-        /* ── Page header ── */
+        /* -- Page header -- */
         .page-header {
             margin-bottom: 1.5rem;
             display: flex;
@@ -81,7 +81,7 @@
             border-color: #d1d5db;
         }
 
-        /* ── Quick-nav anchor bar ── */
+        /* -- Quick-nav anchor bar -- */
         .section-nav {
             display: flex;
             gap: 0.5rem;
@@ -147,13 +147,13 @@
             background: #f59e0b;
         }
 
-        /* ── Section wrapper ── */
+        /* -- Section wrapper -- */
         .section-block {
             margin-bottom: 2rem;
             scroll-margin-top: 80px;
         }
 
-        /* ── Section header strip ── */
+        /* -- Section header strip -- */
         .section-header {
             display: flex;
             align-items: center;
@@ -257,7 +257,7 @@
             color: white;
         }
 
-        /* ── Table card ── */
+        /* -- Table card -- */
         .table-card {
             background: white;
             border: 1px solid #e5e7eb;
@@ -266,7 +266,7 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
-        /* ── Modern table ── */
+        /* -- Modern table -- */
         .modern-table {
             margin: 0;
         }
@@ -304,7 +304,7 @@
             border-bottom: none;
         }
 
-        /* ── Action buttons ── */
+        /* -- Action buttons -- */
         .action-buttons {
             display: flex;
             gap: 0.35rem;
@@ -356,7 +356,7 @@
             transform: translateY(-1px);
         }
 
-        /* ── Type badges ── */
+        /* -- Type badges -- */
         .type-badge {
             display: inline-flex;
             align-items: center;
@@ -467,7 +467,7 @@
             color: #7e22ce;
         }
 
-        /* ── Cell helpers ── */
+        /* -- Cell helpers -- */
         .address-cell,
         .note-cell {
             max-width: 200px;
@@ -482,7 +482,7 @@
             font-size: 0.8125rem;
         }
 
-        /* ── Empty state ── */
+        /* -- Empty state -- */
         .empty-state {
             text-align: center;
             color: #9ca3af;
@@ -501,16 +501,16 @@
             margin: 0;
         }
 
-        /* ── Divider between sections ── */
+        /* -- Divider between sections -- */
         .section-divider {
             border: none;
             border-top: 2px dashed #e5e7eb;
             margin: 0 0 2rem 0;
         }
 
-        /* ══════════════════════════════════════
+        /* --------------------------------------
            MODAL – căn giữa màn hình, không gradient
-        ══════════════════════════════════════ */
+        -------------------------------------- */
         .modal-dialog {
             display: flex;
             align-items: center;
@@ -621,7 +621,7 @@
             cursor: not-allowed;
         }
 
-        /* ── Coord picker inside amenity modal ── */
+        /* -- Coord picker inside amenity modal -- */
         .coord-picker-row {
             display: flex;
             gap: 0.5rem;
@@ -676,7 +676,7 @@
             font-size: 0.75rem;
         }
 
-        /* ── Planning image upload zone ── */
+        /* -- Planning image upload zone -- */
         .planning-upload-zone {
             border: 2px dashed #e5e7eb;
             border-radius: 8px;
@@ -706,7 +706,7 @@
             border-color: #93c5fd;
         }
 
-        /* ── Autocomplete dropdown ── */
+        /* -- Autocomplete dropdown -- */
         .ac-item {
             padding: 0.5rem 0.875rem;
             font-size: 0.875rem;
@@ -733,7 +733,7 @@
     <main class="content">
         <div class="container-fluid">
 
-            <!-- ── Page Header ── -->
+            <!-- -- Page Header -- -->
             <div class="page-header">
                 <h2>
                     <i class="bi bi-info-circle-fill"></i>
@@ -748,7 +748,7 @@
                 </a>
             </div>
 
-            <!-- ── Quick-nav bar ── -->
+            <!-- -- Quick-nav bar -- -->
             <div class="section-nav">
                 <a href="#section-legal">
                     <i class="bi bi-shield-check"></i> Pháp lý
@@ -770,7 +770,7 @@
                 </a>
             </div>
 
-            <!-- ══════════════ SECTION 1: LEGAL AUTHORITY ══════════════ -->
+            <!-- -------------- SECTION 1: LEGAL AUTHORITY -------------- -->
             <div class="section-block" id="section-legal">
                 <div class="section-header">
                     <h5 class="section-title">
@@ -846,7 +846,7 @@
 
             <hr class="section-divider">
 
-            <!-- ══════════════ SECTION 2: NEARBY AMENITY ══════════════ -->
+            <!-- -------------- SECTION 2: NEARBY AMENITY -------------- -->
             <div class="section-block" id="section-amenity">
                 <div class="section-header">
                     <h5 class="section-title">
@@ -937,7 +937,7 @@
 
             <hr class="section-divider">
 
-            <!-- ══════════════ SECTION 3: PLANNING MAP ══════════════ -->
+            <!-- -------------- SECTION 3: PLANNING MAP -------------- -->
             <div class="section-block" id="section-planning">
                 <div class="section-header">
                     <h5 class="section-title">
@@ -1023,7 +1023,7 @@
 
             <hr class="section-divider">
 
-            <!-- ══════════════ SECTION 4: SUPPLIER ══════════════ -->
+            <!-- -------------- SECTION 4: SUPPLIER -------------- -->
             <div class="section-block" id="section-supplier">
                 <div class="section-header">
                     <h5 class="section-title">
@@ -1094,9 +1094,9 @@
         </div><!-- /container-fluid -->
     </main>
 
-    <!-- ══════════════════════════════════════════
+    <!-- ------------------------------------------
      MODAL: LEGAL AUTHORITY
-══════════════════════════════════════════ -->
+------------------------------------------ -->
     <div class="modal fade" id="modalLegal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -1148,16 +1148,16 @@
                 <div class="modal-footer">
                     <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Huỷ</button>
                     <button type="button" class="btn-modal-save" onclick="saveItem('legal')">
-                        <i class="bi bi-check-lg"></i> Lưu
+                        <i class="bi bi-check-lg"></i> Luu
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
+    <!-- ------------------------------------------
      MODAL: NEARBY AMENITY
-══════════════════════════════════════════ -->
+------------------------------------------ -->
     <div class="modal fade" id="modalAmenity" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -1233,16 +1233,16 @@
                 <div class="modal-footer">
                     <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Huỷ</button>
                     <button type="button" class="btn-modal-save" onclick="saveItem('amenity')">
-                        <i class="bi bi-check-lg"></i> Lưu
+                        <i class="bi bi-check-lg"></i> Luu
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
+    <!-- ------------------------------------------
      MODAL: PLANNING MAP
-══════════════════════════════════════════ -->
+------------------------------------------ -->
     <div class="modal fade" id="modalPlanning" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -1285,7 +1285,7 @@
                                     <div style="font-size:0.8125rem;color:#6b7280;">Nhấn để chọn ảnh hoặc kéo thả vào
                                         đây</div>
                                     <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.2rem;">JPG, PNG, WEBP · Tối
-                                        đa 5MB</div>
+                                        da 5MB</div>
                                 </div>
                                 <div id="planningUploadPreview"
                                     style="display:none;position:relative;width:fit-content;margin:0 auto;">
@@ -1317,16 +1317,16 @@
                 <div class="modal-footer">
                     <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Huỷ</button>
                     <button type="button" class="btn-modal-save" onclick="saveItem('planning')">
-                        <i class="bi bi-check-lg"></i> Lưu
+                        <i class="bi bi-check-lg"></i> Luu
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
+    <!-- ------------------------------------------
      MODAL: SUPPLIER
-══════════════════════════════════════════ -->
+------------------------------------------ -->
     <div class="modal fade" id="modalSupplier" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -1373,16 +1373,16 @@
                 <div class="modal-footer">
                     <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Huỷ</button>
                     <button type="button" class="btn-modal-save" onclick="saveItem('supplier')">
-                        <i class="bi bi-check-lg"></i> Lưu
+                        <i class="bi bi-check-lg"></i> Luu
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
+    <!-- ------------------------------------------
      GOONG MAP MODAL (Amenity coord picker)
-══════════════════════════════════════════ -->
+------------------------------------------ -->
     <div id="amenityMapModal"
         style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
         <div
@@ -1463,11 +1463,11 @@
         // Prefix ảnh planning — Spring serve trực tiếp từ static/images/planning_map_img/
         const PLANNING_IMG_PREFIX = '/images/planning_map_img/';
 
-        // ── Goong Map keys ──
+        // -- Goong Map keys --
         var MAPTILES_KEY = 'd2vMzWHY7kcxkY1yITDytGLWaIPf9knt8mLMXmkx';
         var GOONG_API_KEY = /*[[${goongApiKey}]]*/ '';
 
-        // ── Bootstrap modal instances ──
+        // -- Bootstrap modal instances --
         const bsModals = {
             legal: new bootstrap.Modal(document.getElementById('modalLegal')),
             amenity: new bootstrap.Modal(document.getElementById('modalAmenity')),
@@ -1496,7 +1496,7 @@
             supplier: ['name', 'serviceType', 'phone', 'email', 'address', 'note'],
         };
 
-        // ── Open create modal ──
+        // -- Open create modal --
         function openModal(type) {
             clearForm(type);
             document.getElementById(type + '-id').value = '';
@@ -1504,7 +1504,7 @@
             bsModals[type].show();
         }
 
-        // ── Open edit modal ──
+        // -- Open edit modal --
         async function editItem(type, id) {
             try {
                 const url = `${BASE}/${endpoints[type]}/${BUILDING_ID}`;
@@ -1531,7 +1531,7 @@
             }
         }
 
-        // ── Save: POST (create) or PUT (update) ──
+        // -- Save: POST (create) or PUT (update) --
         async function saveItem(type) {
             const id = document.getElementById(type + '-id').value;
             const payload = collectForm(type);
@@ -1566,7 +1566,7 @@
             }
         }
 
-        // ── DELETE ──
+        // -- DELETE --
         function deleteItem(type, id, name) {
             Swal.fire({
                 title: 'Xác nhận xóa',
@@ -1590,7 +1590,7 @@
             });
         }
 
-        // ── Refresh table + counters ──
+        // -- Refresh table + counters --
         async function refreshSection(type) {
             const res = await fetch(`${BASE}/${endpoints[type]}/${BUILDING_ID}`);
             const list = await res.json();
@@ -1610,7 +1610,7 @@
         </td></tr>`;
         }
 
-        // ── Row builders ──
+        // -- Row builders --
         function buildRow(type, item, idx) {
             if (type === 'legal') {
                 const labels = { NOTARY: 'Công chứng', LAND_REGISTRY: 'Đăng ký đất', LAW_FIRM: 'Văn phòng luật', TAX_OFFICE: 'Cục thuế' };
@@ -1682,7 +1682,7 @@
             }
         }
 
-        // ── Form helpers ──
+        // -- Form helpers --
         function clearForm(type) {
             formFields[type].forEach(f => {
                 const el = document.getElementById(type + '-' + f);
@@ -1778,7 +1778,7 @@
             return obj;
         }
 
-        // ── Haversine distance (metres) ──
+        // -- Haversine distance (metres) --
         function haversineMeters(lat1, lng1, lat2, lng2) {
             const R = 6371000;
             const toRad = d => d * Math.PI / 180;
@@ -1795,7 +1795,7 @@
         function escQ(v) { return v ? String(v).replace(/'/g, "\\'") : ''; }
         function toastError(msg) { Swal.fire({ icon: 'error', title: 'Lỗi', text: msg, timer: 2000, showConfirmButton: false }); }
 
-        // ── Scroll highlight nav ──
+        // -- Scroll highlight nav --
         (function () {
             const sections = ['legal', 'amenity', 'planning', 'supplier'];
             const navLinks = {};
@@ -1810,9 +1810,9 @@
         })();
     </script>
 
-    <!-- ══════════════════════════════════════════
+    <!-- ------------------------------------------
      GOONG MAP JS – Amenity coord picker
-══════════════════════════════════════════ -->
+------------------------------------------ -->
     <script>
         var _aMap = null, _aPin = null, _aPendingLat = null, _aPendingLng = null, _aAcTimer = null;
 

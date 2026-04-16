@@ -52,7 +52,7 @@ test.describe('Staff Profile API Tests', () => {
 
     test.describe.serial('Staff profile update flow with DB assertions', () => {
         test('[API_TC_016] [Happy Path] Update staff email with valid password and DB verify', async ({ request }) => {
-            const responseOtp = await request.post('/staff/profile/otp/PROFILE_EMAIL', {
+            const responseOtp = await request.post('/api/v1/staff/profile/otp/PROFILE_EMAIL', {
                 headers: { Cookie: staffCookies }
             });
             expect(responseOtp.status()).toBe(200);
@@ -60,7 +60,7 @@ test.describe('Staff Profile API Tests', () => {
             await resetOtpRow(originalEmail, 'PROFILE_EMAIL', staticOtp);
 
             const newEmail = `staff_update_${Date.now()}@example.com`;
-            const response = await request.put('/staff/profile/email', {
+            const response = await request.put('/api/v1/staff/profile/email', {
                 headers: {
                     Cookie: staffCookies,
                     'Content-Type': 'application/json'
@@ -79,7 +79,7 @@ test.describe('Staff Profile API Tests', () => {
         });
 
         test('[API_TC_017] [Negative] Reject staff email update with wrong current password', async ({ request }) => {
-            const response = await request.put('/staff/profile/email', {
+            const response = await request.put('/api/v1/staff/profile/email', {
                 headers: {
                     Cookie: staffCookies,
                     'Content-Type': 'application/json'
@@ -94,7 +94,7 @@ test.describe('Staff Profile API Tests', () => {
         });
 
         test('[API_TC_018] [Happy Path] Update staff phone with OTP and verify DB value', async ({ request }) => {
-            const responseOtp = await request.post('/staff/profile/otp/PROFILE_PHONE', {
+            const responseOtp = await request.post('/api/v1/staff/profile/otp/PROFILE_PHONE', {
                 headers: { Cookie: staffCookies }
             });
             expect(responseOtp.status()).toBe(200);
@@ -103,7 +103,7 @@ test.describe('Staff Profile API Tests', () => {
             await resetOtpRow(currentEmail, 'PROFILE_PHONE', staticOtp);
 
             const newPhone = `098${Math.floor(100000000 + Math.random() * 900000000)}`;
-            const response = await request.put('/staff/profile/phoneNumber', {
+            const response = await request.put('/api/v1/staff/profile/phone-number', {
                 headers: {
                     Cookie: staffCookies,
                     'Content-Type': 'application/json'
@@ -122,14 +122,14 @@ test.describe('Staff Profile API Tests', () => {
         });
 
         test('[API_TC_019] [Boundary] Reject staff password update when new password is too short', async ({ request }) => {
-            const responseOtp = await request.post('/staff/profile/otp/PROFILE_PASSWORD', {
+            const responseOtp = await request.post('/api/v1/staff/profile/otp/PROFILE_PASSWORD', {
                 headers: { Cookie: staffCookies }
             });
             expect(responseOtp.status()).toBe(200);
 
             await resetOtpRow(staffEmail, 'PROFILE_PASSWORD', staticOtp);
 
-            const response = await request.put('/staff/profile/password', {
+            const response = await request.put('/api/v1/staff/profile/password', {
                 headers: {
                     Cookie: staffCookies,
                     'Content-Type': 'application/json'
@@ -148,7 +148,7 @@ test.describe('Staff Profile API Tests', () => {
         test('[API_TC_020] [Happy Path] Update staff password with OTP and confirm DB hash changed', async ({ request }) => {
             const currentPasswordHash = (await db.query<{ password: string }>('SELECT password FROM staff WHERE id = ?', [staffId]))[0].password;
 
-            const responseOtp = await request.post('/staff/profile/otp/PROFILE_PASSWORD', {
+            const responseOtp = await request.post('/api/v1/staff/profile/otp/PROFILE_PASSWORD', {
                 headers: { Cookie: staffCookies }
             });
             expect(responseOtp.status()).toBe(200);
@@ -156,7 +156,7 @@ test.describe('Staff Profile API Tests', () => {
             const currentEmail = (await db.query<{ email: string }>('SELECT email FROM staff WHERE id = ?', [staffId]))[0].email;
             await resetOtpRow(currentEmail, 'PROFILE_PASSWORD', staticOtp);
 
-            const response = await request.put('/staff/profile/password', {
+            const response = await request.put('/api/v1/staff/profile/password', {
                 headers: {
                     Cookie: staffCookies,
                     'Content-Type': 'application/json'
@@ -176,3 +176,4 @@ test.describe('Staff Profile API Tests', () => {
         });
     });
 });
+

@@ -1251,6 +1251,14 @@
                 });
             }
 
+            function payInvoice(invoiceId) {
+                const shouldRedirect = window.confirm(
+                    "Xác nhận thanh toán?\nBạn sẽ được chuyển sang trang QR ngân hàng để thanh toán."
+                );
+                if (!shouldRedirect) return;
+                window.location.href = "/api/v1/payment/qr/" + invoiceId;
+            }
+
             function renderTransactionPagination(totalPages, current) {
                 const pagination = $("#transactionPagination");
                 pagination.empty();

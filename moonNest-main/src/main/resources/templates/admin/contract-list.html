@@ -24,7 +24,7 @@
             margin-top: 72px;
         }
 
-        /* ══ PAGE BODY ══════════════════════════════════════════════════════ */
+        /* -- PAGE BODY ------------------------------------------------------ */
         .detail-body {
             padding: 1.5rem;
         }
@@ -57,7 +57,7 @@
             flex-shrink: 0;
         }
 
-        /* ══ BUTTONS ═════════════════════════════════════════════════════════ */
+        /* -- BUTTONS --------------------------------------------------------- */
         .btn-add {
             background: #3b82f6;
             color: white;
@@ -147,7 +147,7 @@
             padding: 0.875rem 1.5rem;
         }
 
-        /* ══ FILTER CARD ══════════════════════════════════════════════════════ */
+        /* -- FILTER CARD ------------------------------------------------------ */
         .filter-header {
             display: flex;
             justify-content: space-between;
@@ -366,7 +366,7 @@
             background: #f0f9ff;
         }
 
-        /* ══ TABLE CELL STYLES ═══════════════════════════════════════════════ */
+        /* -- TABLE CELL STYLES ----------------------------------------------- */
         .contract-id {
             font-weight: 700;
             color: #111827;
@@ -456,7 +456,7 @@
             margin-right: 3px;
         }
 
-        /* ══ ACTION BUTTONS ═══════════════════════════════════════════════════ */
+        /* -- ACTION BUTTONS --------------------------------------------------- */
         .action-buttons {
             display: flex;
             gap: 0.35rem;
@@ -509,7 +509,7 @@
             transform: translateY(-1px);
         }
 
-        /* ══ TABLE HEADER ROW (count + title) ════════════════════════════════ */
+        /* -- TABLE HEADER ROW (count + title) -------------------------------- */
         .table-header-row {
             display: flex;
             align-items: center;
@@ -534,7 +534,7 @@
             font-size: 0.9375rem;
         }
 
-        /* ══ EMPTY STATE ══════════════════════════════════════════════════════ */
+        /* -- EMPTY STATE ------------------------------------------------------ */
         .empty-state {
             padding: 3rem;
             text-align: center;
@@ -558,7 +558,7 @@
             font-weight: 500;
         }
 
-        /* ══ PAGINATION ═══════════════════════════════════════════════════════ */
+        /* -- PAGINATION ------------------------------------------------------- */
         .pagination-wrapper {
             margin-top: 1rem;
             padding: 0.75rem 1.5rem;
@@ -599,7 +599,7 @@
             color: #d1d5db;
         }
 
-        /* ══ RESPONSIVE ═══════════════════════════════════════════════════════ */
+        /* -- RESPONSIVE ------------------------------------------------------- */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0;
@@ -627,7 +627,7 @@
     <main class="content">
         <div class="detail-body">
 
-            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <!-- -- Page Header ----------------------------------------------- -->
             <div class="page-header-bar">
                 <div>
                     <h2>
@@ -648,7 +648,7 @@
                 </div>
             </div>
 
-            <!-- ── Filter Card ─────────────────────────────────────────────── -->
+            <!-- -- Filter Card ----------------------------------------------- -->
             <div class="d-card">
                 <form id="contractFilterForm" th:action="@{/admin/contract/search}" method="get">
                     <div class="d-card-body">
@@ -734,7 +734,7 @@
                 </form>
             </div>
 
-            <!-- ── Table Card ──────────────────────────────────────────────── -->
+            <!-- -- Table Card ------------------------------------------------ -->
             <div class="d-card">
                 <div class="table-header-row">
                     <div class="thr-title">
@@ -784,7 +784,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        /* ── Toggle filter ──────────────────────────────────────────────── */
+        /* -- Toggle filter ------------------------------------------------ */
         function toggleFilter() {
             const filterBody = document.getElementById('filterBody');
             const toggleBtn = document.querySelector('.btn-toggle-filter');
@@ -810,7 +810,7 @@
 
         function formatPrice(price) {
             if (price == null) return '';
-            return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' đ';
+            return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' d';
         }
 
         function appendOptions($select, options) {
@@ -1051,3 +1051,5 @@
 </body>
 
 </html>
+
+

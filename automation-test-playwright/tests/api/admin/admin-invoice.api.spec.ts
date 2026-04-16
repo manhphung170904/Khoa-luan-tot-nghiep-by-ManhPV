@@ -71,14 +71,14 @@ test.describe('Admin Invoice API Tests', () => {
 
         // ── SECURITY ──────────────────────────────────────────────
         test('[INV_001] POST /add - [Security] Reject thiếu Admin Token', async ({ request }) => {
-            const response = await request.post('/admin/invoice/add', { data: validPayload });
+            const response = await request.post('/api/v1/admin/invoices', { data: validPayload });
             expect([200, 302, 401, 403]).toContain(response.status());
         });
 
         // ── NEGATIVE ──────────────────────────────────────────────
         test('[INV_002] POST /add - [Negative] Sai kiểu dữ liệu (month = string)', async ({ request }) => {
             const invalidPayload = { ...validPayload, month: "Mười Hai" };
-            const response = await request.post('/admin/invoice/add', {
+            const response = await request.post('/api/v1/admin/invoices', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -87,7 +87,7 @@ test.describe('Admin Invoice API Tests', () => {
 
         test('[INV_003] POST /add - [Negative] contractId không tồn tại', async ({ request }) => {
             const invalidPayload = { ...validPayload, contractId: -1 };
-            const response = await request.post('/admin/invoice/add', {
+            const response = await request.post('/api/v1/admin/invoices', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -96,7 +96,7 @@ test.describe('Admin Invoice API Tests', () => {
 
         test('[INV_004] POST /add - [Negative] customerId không tồn tại', async ({ request }) => {
             const invalidPayload = { ...validPayload, customerId: 999999 };
-            const response = await request.post('/admin/invoice/add', {
+            const response = await request.post('/api/v1/admin/invoices', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -107,7 +107,7 @@ test.describe('Admin Invoice API Tests', () => {
         test('[INV_005] POST /add - [Business Rule] DueDate phải SAU tháng hóa đơn', async ({ request }) => {
             const sameDueDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-15`;
             const invalidPayload = { ...validPayload, dueDate: sameDueDate };
-            const response = await request.post('/admin/invoice/add', {
+            const response = await request.post('/api/v1/admin/invoices', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -117,7 +117,7 @@ test.describe('Admin Invoice API Tests', () => {
         test('[INV_015] POST /add - [Business Rule] Chỉ tháng trước (month = current month)', async ({ request }) => {
             const currentMonth = now.getMonth() + 1; // 1-indexed
             const invalidPayload = { ...validPayload, month: currentMonth, year: now.getFullYear() };
-            const response = await request.post('/admin/invoice/add', {
+            const response = await request.post('/api/v1/admin/invoices', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -126,7 +126,7 @@ test.describe('Admin Invoice API Tests', () => {
 
         // ── POSITIVE: Create ──────────────────────────────────────
         test('[INV_006] POST /add - [Positive] Tạo hóa đơn thành công & Verify DB', async ({ request }) => {
-            const response = await request.post('/admin/invoice/add', {
+            const response = await request.post('/api/v1/admin/invoices', {
                 headers: { Cookie: adminCookies },
                 data: validPayload
             });
@@ -145,7 +145,7 @@ test.describe('Admin Invoice API Tests', () => {
 
         // ── BUSINESS: Duplicate ───────────────────────────────────
         test('[INV_010] POST /add - [Business Rule] Trùng Tháng-Năm-HợpĐồng', async ({ request }) => {
-            const response = await request.post('/admin/invoice/add', {
+            const response = await request.post('/api/v1/admin/invoices', {
                 headers: { Cookie: adminCookies },
                 data: validPayload
             });
@@ -182,7 +182,7 @@ test.describe('Admin Invoice API Tests', () => {
                 details: []
             };
 
-            const response = await request.put('/admin/invoice/edit', {
+            const response = await request.put(`/api/v1/admin/invoices/${createdInvoiceId}`, {
                 headers: { Cookie: adminCookies },
                 data: editPayload
             });
@@ -195,7 +195,7 @@ test.describe('Admin Invoice API Tests', () => {
 
         // ── POSITIVE: Confirm ─────────────────────────────────────
         test('[INV_011] POST /confirm/{id} - [Positive] Thanh toán & Verify status PAID', async ({ request }) => {
-            const response = await request.post(`/admin/invoice/confirm/${createdInvoiceId}`, {
+            const response = await request.post(`/api/v1/admin/invoices/${createdInvoiceId}/confirm`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -206,7 +206,7 @@ test.describe('Admin Invoice API Tests', () => {
         });
 
         test('[INV_016] POST /confirm/{id} - [Negative] ID không tồn tại', async ({ request }) => {
-            const response = await request.post('/admin/invoice/confirm/999999', {
+            const response = await request.post('/api/v1/admin/invoices/999999/confirm', {
                 headers: { Cookie: adminCookies }
             });
             expect([400, 404, 500]).toContain(response.status());
@@ -219,7 +219,7 @@ test.describe('Admin Invoice API Tests', () => {
                 id: createdInvoiceId,
                 totalAmount: 99999.0
             };
-            const response = await request.put('/admin/invoice/edit', {
+            const response = await request.put(`/api/v1/admin/invoices/${createdInvoiceId}`, {
                 headers: { Cookie: adminCookies },
                 data: editPayload
             });
@@ -227,7 +227,7 @@ test.describe('Admin Invoice API Tests', () => {
         });
 
         test('[INV_013] PUT /status - [Positive] Trigger cập nhật trạng thái hàng loạt', async ({ request }) => {
-            const response = await request.put('/admin/invoice/status', {
+            const response = await request.put('/api/v1/admin/invoices/status', {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -235,7 +235,7 @@ test.describe('Admin Invoice API Tests', () => {
 
         // ── DELETE ────────────────────────────────────────────────
         test('[INV_014] DELETE /delete/{id} - [Positive] Xóa hóa đơn & DB Check', async ({ request }) => {
-            const response = await request.delete(`/admin/invoice/delete/${createdInvoiceId}`, {
+            const response = await request.delete(`/api/v1/admin/invoices/${createdInvoiceId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -251,3 +251,4 @@ test.describe('Admin Invoice API Tests', () => {
         });
     });
 });
+

@@ -21,8 +21,8 @@ This document defines the HTTP contract used by the Playwright API suite. Tests 
 
 - `GlobalExceptionHandler` maps `InputValidationException` to `400`.
 - `GlobalExceptionHandler` maps `BusinessException` to `409`.
-- `PaymentAPI` uses `ResponseStatusException`, so missing invoice is `404` and wrong role is `401` / `403`.
-- REST endpoints under `com.estate.api` should not be accepted with `302` redirect semantics. If security still redirects to `/login`, tests keep the stricter API expectation and expose the mismatch.
+- `PaymentV1API` uses `ResponseStatusException`, so missing invoice is `404` and wrong role is `401` / `403`.
+- REST endpoints under `com.estate.api.v1` should not be accepted with `302` redirect semantics. If security still redirects to `/login`, tests keep the stricter API expectation and expose the mismatch.
 
 ## Assertion Rules
 

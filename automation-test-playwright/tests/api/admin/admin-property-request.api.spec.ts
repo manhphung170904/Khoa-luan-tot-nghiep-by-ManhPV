@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
 import { expectMessageBody, expectStatusExact } from "@api/apiContractUtils";
 import { createPropertyRequestScenario } from "../_fixtures/propertyRequestScenario";
@@ -38,7 +38,7 @@ test.describe("Admin Property Request API", () => {
   test("API-ADM-PRQ-003 returns detail and contract autofill for RENT request", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
-      const detailResponse = await scenario.admin.get(`/api/admin/property-request/${scenario.propertyRequestId}`, {
+      const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -52,7 +52,7 @@ test.describe("Admin Property Request API", () => {
       expect(detail.requestType).toBe("RENT");
 
       const contractDataResponse = await scenario.admin.get(
-        `/api/admin/property-request/${scenario.propertyRequestId}/contract-data`,
+        `/api/v1/admin/property-requests/${scenario.propertyRequestId}/contract-data`,
         { failOnStatusCode: false, maxRedirects: 0 }
       );
       expectStatusExact(contractDataResponse, 200, "Admin contract autofill should succeed");
@@ -70,7 +70,7 @@ test.describe("Admin Property Request API", () => {
     const scenario = await createPropertyRequestScenario(playwright, "BUY");
     try {
       const response = await scenario.admin.get(
-        `/api/admin/property-request/${scenario.propertyRequestId}/sale-contract-data`,
+        `/api/v1/admin/property-requests/${scenario.propertyRequestId}/sale-contract-data`,
         { failOnStatusCode: false, maxRedirects: 0 }
       );
       expectStatusExact(response, 200, "Admin sale contract autofill should succeed");
@@ -87,7 +87,7 @@ test.describe("Admin Property Request API", () => {
   test("API-ADM-PRQ-005 rejects a pending request and updates detail status", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
-      const rejectResponse = await scenario.admin.put(`/api/admin/property-request/reject/${scenario.propertyRequestId}`, {
+      const rejectResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/reject`, {
         failOnStatusCode: false,
         maxRedirects: 0,
         data: { reason: "Contract data mismatch" }
@@ -95,7 +95,7 @@ test.describe("Admin Property Request API", () => {
       const message = await expectMessageBody(rejectResponse, 200);
       expect(message.length).toBeGreaterThan(0);
 
-      const detailResponse = await scenario.admin.get(`/api/admin/property-request/${scenario.propertyRequestId}`, {
+      const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -112,7 +112,7 @@ test.describe("Admin Property Request API", () => {
   test("API-ADM-PRQ-006 approves a pending request and exposes pending-count endpoint", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "BUY");
     try {
-      const approveResponse = await scenario.admin.put(`/api/admin/property-request/approve/${scenario.propertyRequestId}`, {
+      const approveResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/approve`, {
         failOnStatusCode: false,
         maxRedirects: 0,
         data: {}
@@ -120,7 +120,7 @@ test.describe("Admin Property Request API", () => {
       const message = await expectMessageBody(approveResponse, 200);
       expect(message.length).toBeGreaterThan(0);
 
-      const detailResponse = await scenario.admin.get(`/api/admin/property-request/${scenario.propertyRequestId}`, {
+      const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -129,14 +129,13 @@ test.describe("Admin Property Request API", () => {
       const detail = (await detailResponse.json()) as { status?: string };
       expect(detail.status).toBe("APPROVED");
 
-      const pendingResponse = await scenario.admin.get("/api/admin/property-request/pending-count", {
+      const pendingResponse = await scenario.admin.get("/api/v1/admin/property-requests/pending-count", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
       expectStatusExact(pendingResponse, 200, "Admin property request pending-count should succeed");
 
       const pendingCount = Number(await pendingResponse.text());
-      expect(Number.isFinite(pendingCount)).toBeTruthy();
       expect(pendingCount).toBeGreaterThanOrEqual(0);
     } finally {
       await scenario.cleanup();
@@ -146,7 +145,7 @@ test.describe("Admin Property Request API", () => {
   test("API-ADM-PRQ-007 returns 409 for missing request id", async ({ playwright }) => {
     const admin = await createRoleContext(playwright, "admin");
     try {
-      const response = await admin.get("/api/admin/property-request/999999999", {
+      const response = await admin.get("/api/v1/admin/property-requests/999999999", {
         failOnStatusCode: false,
         maxRedirects: 0
       });

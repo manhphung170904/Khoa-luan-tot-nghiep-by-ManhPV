@@ -41,11 +41,7 @@ public class PropertyRequestApiResponseAdvice implements ResponseBodyAdvice<Obje
     }
 
     private boolean isPropertyRequestMessageEndpoint(String path) {
-        return "/api/customer/property-request/submit".equals(path)
-                || path.startsWith("/api/customer/property-request/cancel/")
-                || path.startsWith("/api/admin/property-request/reject/")
-                || path.startsWith("/api/admin/property-request/approve/")
-                || "/api/v1/customer/property-requests".equals(path)
+        return "/api/v1/customer/property-requests".equals(path)
                 || path.startsWith("/api/v1/customer/property-requests/")
                 || path.startsWith("/api/v1/admin/property-requests/");
     }

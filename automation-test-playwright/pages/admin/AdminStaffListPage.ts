@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+﻿import { expect } from "@playwright/test";
 import { RoutedCrudListPage } from "../core/RoutedCrudListPage";
 
 export class AdminStaffListPage extends RoutedCrudListPage {
@@ -16,3 +16,5 @@ export class AdminStaffListPage extends RoutedCrudListPage {
     await this.clickFirstRowLink("/admin/staff/");
   }
 }
+
+

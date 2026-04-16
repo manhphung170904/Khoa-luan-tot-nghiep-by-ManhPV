@@ -23,12 +23,12 @@
             margin-top: 72px;
         }
 
-        /* ══ BODY ════════════════════════════════════════════════════════════ */
+        /* -- BODY ------------------------------------------------------------ */
         .detail-body {
             padding: 1.5rem;
         }
 
-        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        /* -- PAGE HEADER ---------------------------------------------------- */
         .page-header-bar {
             display: flex;
             align-items: center;
@@ -59,7 +59,7 @@
             margin-top: 0.2rem;
         }
 
-        /* ══ HEADER BUTTONS ═════════════════════════════════════════════════ */
+        /* -- HEADER BUTTONS ------------------------------------------------- */
         .header-actions {
             display: flex;
             gap: 0.5rem;
@@ -104,7 +104,7 @@
             filter: brightness(0.87);
         }
 
-        /* ══ STAFF ID STRIP ═════════════════════════════════════════════════ */
+        /* -- STAFF ID STRIP ------------------------------------------------- */
         .staff-strip {
             display: flex;
             align-items: center;
@@ -172,7 +172,7 @@
             color: #1e3a8a;
         }
 
-        /* ══ CARD ════════════════════════════════════════════════════════════ */
+        /* -- CARD ------------------------------------------------------------ */
         .d-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -206,7 +206,7 @@
             padding: 1.25rem 1.5rem;
         }
 
-        /* ══ FIELD ════════════════════════════════════════════════════════════ */
+        /* -- FIELD ------------------------------------------------------------ */
         .field-lbl {
             font-size: 0.72rem;
             font-weight: 700;
@@ -228,7 +228,7 @@
             font-weight: 400;
         }
 
-        /* ══ ENTITY LIST ════════════════════════════════════════════════════ */
+        /* -- ENTITY LIST ---------------------------------------------------- */
         .entity-item {
             display: flex;
             align-items: center;
@@ -335,7 +335,7 @@
             color: #1d4ed8;
         }
 
-        /* ══ EMPTY STATE ════════════════════════════════════════════════════ */
+        /* -- EMPTY STATE ---------------------------------------------------- */
         .empty-state {
             padding: 2.5rem;
             text-align: center;
@@ -356,7 +356,7 @@
             font-size: 0.8125rem;
         }
 
-        /* ══ ASSIGNMENT EDIT BUTTON ══════════════════════════════════════════ */
+        /* -- ASSIGNMENT EDIT BUTTON ------------------------------------------ */
         .btn-assign-edit {
             flex-shrink: 0;
             display: inline-flex;
@@ -395,7 +395,7 @@
             gap: 0.5rem;
         }
 
-        /* ══ MODAL CHECKBOX LIST ══════════════════════════════════════════════ */
+        /* -- MODAL CHECKBOX LIST ---------------------------------------------- */
         .assign-modal .modal-header {
             border-bottom: 1px solid #f3f4f6;
             padding: 1rem 1.25rem;
@@ -543,7 +543,7 @@
             cursor: not-allowed;
         }
 
-        /* ══ RESPONSIVE ══════════════════════════════════════════════════════ */
+        /* -- RESPONSIVE ------------------------------------------------------ */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0;
@@ -574,7 +574,7 @@
     <main class="content">
         <div class="detail-body">
 
-            <!-- ── Page Header ─────────────────────────────────────────────────── -->
+            <!-- -- Page Header --------------------------------------------------- -->
             <div class="page-header-bar">
                 <div>
                     <h2>
@@ -593,7 +593,7 @@
                 </div>
             </div>
 
-            <!-- ── Staff ID Strip ─────────────────────────────────────────────── -->
+            <!-- -- Staff ID Strip ----------------------------------------------- -->
             <div class="staff-strip">
                 <div class="strip-icon">
                     <i class="bi bi-person-badge"></i>
@@ -808,7 +808,7 @@
     </script>
 
     <script>
-        // ── Delete staff ──────────────────────────────────────────────────────
+        // -- Delete staff ------------------------------------------------------
         $(document).on("click", ".btn-hd-delete", function (e) {
             e.preventDefault();
             let id = $(e.target).closest(".btn-hd-delete").data("id");
@@ -839,7 +839,7 @@
             });
         });
 
-        // ── Building Assignment Modal ─────────────────────────────────────────
+        // -- Building Assignment Modal -----------------------------------------
         $("#btnEditBuildings").on("click", function () {
             const modal = new bootstrap.Modal(document.getElementById("modalBuildings"));
             $("#buildingCheckList").html(`
@@ -914,7 +914,7 @@
             });
         });
 
-        // ── Customer Assignment Modal ─────────────────────────────────────────
+        // -- Customer Assignment Modal -----------------------------------------
         $("#btnEditCustomers").on("click", function () {
             const modal = new bootstrap.Modal(document.getElementById("modalCustomers"));
             $("#customerCheckList").html(`
@@ -991,3 +991,6 @@
 </body>
 
 </html>
+
+
+

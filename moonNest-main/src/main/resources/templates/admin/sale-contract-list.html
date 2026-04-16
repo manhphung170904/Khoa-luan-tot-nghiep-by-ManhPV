@@ -27,7 +27,7 @@
             padding: 1.5rem;
         }
 
-        /* ══ PAGE HEADER ══════════════════════════════════════════════════════ */
+        /* -- PAGE HEADER ------------------------------------------------------ */
         .page-header-bar {
             display: flex;
             align-items: center;
@@ -55,7 +55,7 @@
             flex-shrink: 0;
         }
 
-        /* ══ BUTTONS ══════════════════════════════════════════════════════════ */
+        /* -- BUTTONS ---------------------------------------------------------- */
         .btn-add {
             background: #3b82f6;
             color: white;
@@ -79,7 +79,7 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        /* ══ D-CARD ═══════════════════════════════════════════════════════════ */
+        /* -- D-CARD ----------------------------------------------------------- */
         .d-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -113,7 +113,7 @@
             padding: 0.875rem 1.5rem;
         }
 
-        /* ══ FILTER CARD ══════════════════════════════════════════════════════ */
+        /* -- FILTER CARD ------------------------------------------------------ */
         .filter-header {
             display: flex;
             justify-content: space-between;
@@ -290,7 +290,7 @@
             box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
         }
 
-        /* ══ TABLE ════════════════════════════════════════════════════════════ */
+        /* -- TABLE ------------------------------------------------------------ */
         .dash-table {
             width: 100%;
             border-collapse: collapse;
@@ -329,7 +329,7 @@
             background: #f0f9ff;
         }
 
-        /* ══ TABLE CELL STYLES ════════════════════════════════════════════════ */
+        /* -- TABLE CELL STYLES ------------------------------------------------ */
         .contract-id {
             font-weight: 700;
             color: #111827;
@@ -376,7 +376,7 @@
             color: #9ca3af;
         }
 
-        /* ══ TABLE HEADER ROW ═════════════════════════════════════════════════ */
+        /* -- TABLE HEADER ROW ------------------------------------------------- */
         .table-header-row {
             display: flex;
             align-items: center;
@@ -400,7 +400,7 @@
             color: #3b82f6;
         }
 
-        /* ══ ACTION BUTTONS ═══════════════════════════════════════════════════ */
+        /* -- ACTION BUTTONS --------------------------------------------------- */
         .action-buttons {
             display: flex;
             gap: 0.35rem;
@@ -451,7 +451,7 @@
             color: #dc2626;
         }
 
-        /* ══ EMPTY STATE ══════════════════════════════════════════════════════ */
+        /* -- EMPTY STATE ------------------------------------------------------ */
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
@@ -470,7 +470,7 @@
             margin: 0;
         }
 
-        /* ══ PAGINATION ═══════════════════════════════════════════════════════ */
+        /* -- PAGINATION ------------------------------------------------------- */
         .pagination-wrapper {
             padding: 0.875rem 1.5rem;
         }
@@ -502,7 +502,7 @@
             color: #d1d5db;
         }
 
-        /* ══ STATUS BADGE ═════════════════════════════════════════════════════ */
+        /* -- STATUS BADGE ----------------------------------------------------- */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -524,7 +524,7 @@
             color: #ea580c;
         }
 
-        /* ══ RESPONSIVE ═══════════════════════════════════════════════════════ */
+        /* -- RESPONSIVE ------------------------------------------------------- */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0;
@@ -551,7 +551,7 @@
     <main class="content">
         <div class="detail-body">
 
-            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <!-- -- Page Header ----------------------------------------------- -->
             <div class="page-header-bar">
                 <div>
                     <h2>
@@ -568,7 +568,7 @@
                 </div>
             </div>
 
-            <!-- ── Filter Card ─────────────────────────────────────────────── -->
+            <!-- -- Filter Card ----------------------------------------------- -->
             <div class="d-card">
                 <form th:action="@{/admin/sale-contract/search}" method="get" id="filterForm">
                     <div class="d-card-body">
@@ -661,7 +661,7 @@
                 </form>
             </div>
 
-            <!-- ── Table Card ──────────────────────────────────────────────── -->
+            <!-- -- Table Card ------------------------------------------------ -->
             <div class="d-card">
                 <div class="table-header-row">
                     <div class="thr-title">
@@ -732,7 +732,7 @@
 
         function formatPrice(price) {
             if (price == null) return '—';
-            return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' đ';
+            return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' d';
         }
 
         function loadSaleContracts(page, event) {
@@ -894,3 +894,5 @@
 </body>
 
 </html>
+
+

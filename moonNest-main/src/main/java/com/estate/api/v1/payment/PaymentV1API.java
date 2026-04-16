@@ -1,4 +1,4 @@
-package com.estate.api.payment;
+package com.estate.api.v1.payment;
 
 import com.estate.repository.InvoiceRepository;
 import com.estate.repository.entity.InvoiceEntity;
@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -25,8 +26,9 @@ import java.util.Locale;
 import java.util.Objects;
 
 @Controller
+@RequestMapping("/api/v1/payment")
 @RequiredArgsConstructor
-public class PaymentAPI {
+public class PaymentV1API {
     private final InvoiceRepository invoiceRepository;
     private final InvoiceService invoiceService;
 
@@ -40,7 +42,7 @@ public class PaymentAPI {
     private String accountName;
 
     @ResponseBody
-    @GetMapping(value = "/payment/qr/{invoiceId}", produces = "text/html; charset=UTF-8")
+    @GetMapping(value = "/qr/{invoiceId}", produces = "text/html; charset=UTF-8")
     public String showQrPayment(@PathVariable Long invoiceId,
                                 @AuthenticationPrincipal CustomUserDetails user) {
         InvoiceEntity invoice = getCustomerInvoice(invoiceId, user);
@@ -89,7 +91,7 @@ public class PaymentAPI {
                       </div>
                       <div class="meta">
                         <p><strong>Mã hóa đơn:</strong> #%d</p>
-                        <p><strong>Số tiền:</strong> %s VNĐ</p>
+                        <p><strong>Số tiền:</strong> %s VND</p>
                         <p><strong>Mã ngân hàng:</strong> %s</p>
                         <p><strong>Số tài khoản:</strong> %s</p>
                         <p><strong>Chủ tài khoản:</strong> %s</p>
@@ -97,7 +99,7 @@ public class PaymentAPI {
                       </div>
                       <p class="hint">Sau khi chuyển khoản thành công, bấm "Tôi đã thanh toán" để hệ thống ghi nhận theo chế độ demo.</p>
                       <div class="actions">
-                        <a class="btn btn-primary" href="/payment/qr/confirm/%d">Tôi đã thanh toán</a>
+                        <a class="btn btn-primary" href="/api/v1/payment/qr/confirm/%d">Tôi đã thanh toán</a>
                         <a class="btn btn-secondary" href="/customer/invoice/list">Quay lại</a>
                       </div>
                     </div>
@@ -116,7 +118,7 @@ public class PaymentAPI {
         );
     }
 
-    @GetMapping("/payment/qr/confirm/{invoiceId}")
+    @GetMapping("/qr/confirm/{invoiceId}")
     public String confirmQrPayment(@PathVariable Long invoiceId,
                                    @AuthenticationPrincipal CustomUserDetails user) {
         InvoiceEntity invoice = getCustomerInvoice(invoiceId, user);

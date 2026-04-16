@@ -64,7 +64,7 @@
             color: #111827;
         }
 
-        /* ── Cards ── */
+        /* -- Cards -- */
         .form-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -116,7 +116,7 @@
             font-size: 0.75rem;
         }
 
-        /* ── Form controls ── */
+        /* -- Form controls -- */
         .form-label {
             font-size: 0.8125rem;
             font-weight: 600;
@@ -156,7 +156,7 @@
         }
 
 
-        /* ── Type selector ── */
+        /* -- Type selector -- */
         .type-selector {
             display: flex;
             gap: 0.5rem;
@@ -224,7 +224,7 @@
             border-color: #ea580c;
         }
 
-        /* ── Tag input ── */
+        /* -- Tag input -- */
         .tag-input-wrapper {
             display: flex;
             flex-wrap: wrap;
@@ -281,7 +281,7 @@
             background: transparent;
         }
 
-        /* ── Staff list ── */
+        /* -- Staff list -- */
         .staff-list {
             border: 1px solid #e5e7eb;
             border-radius: 7px;
@@ -359,7 +359,7 @@
             font-weight: 600;
         }
 
-        /* ── Buttons ── */
+        /* -- Buttons -- */
         .btn-geocode {
             height: 36px;
             padding: 0 0.875rem;
@@ -423,19 +423,19 @@
             filter: none;
         }
 
-        /* ── Sections show/hide ── */
+        /* -- Sections show/hide -- */
         .hidden {
             display: none !important;
         }
 
-        /* ── Hint ── */
+        /* -- Hint -- */
         .form-hint {
             font-size: 0.775rem;
             color: #9ca3af;
             margin-top: 0.25rem;
         }
 
-        /* ── Upload ── */
+        /* -- Upload -- */
         .upload-zone {
             border: 2px dashed #e5e7eb;
             border-radius: 8px;
@@ -526,7 +526,7 @@
             color: #6b7280;
         }
 
-        /* ── Map modal autocomplete ── */
+        /* -- Map modal autocomplete -- */
         .ac-item {
             padding: 0.5rem 0.875rem;
             font-size: 0.875rem;
@@ -544,7 +544,7 @@
             color: #1d4ed8;
         }
 
-        /* ══ INFO BOX ═══════════════════════════════════════════════════════ */
+        /* -- INFO BOX ------------------------------------------------------- */
         .info-box {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
@@ -580,7 +580,7 @@
             <a th:href="@{/admin/building/list}" class="btn-back"><i class="bi bi-arrow-left"></i> Danh sách</a>
         </div>
 
-        <!-- ── Info Box ────────────────────────────────────────────────── -->
+        <!-- -- Info Box -------------------------------------------------- -->
         <div class="info-box">
             <i class="bi bi-info-circle"></i>
             <div class="info-box-content">
@@ -602,7 +602,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Loại hình BĐS <span class="required">*</span></label>
                             <div class="type-selector" id="propertyTypeSelector">
-                                <div class="type-btn selected" data-val="OFFICE"><i class="bi bi-building"></i> Văn
+                                <div class="type-btn selected" data-val="OFFICE"><i class="bi bi-building"></i> Van
                                     phòng</div>
                                 <div class="type-btn" data-val="SHOPHOUSE"><i class="bi bi-shop"></i> Nhà phố TM</div>
                                 <div class="type-btn" data-val="APARTMENT"><i class="bi bi-houses"></i> Căn hộ</div>
@@ -771,7 +771,7 @@
                         <div
                             style="display:flex;align-items:center;gap:0.5rem;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:0.5rem 1rem;flex:1;min-width:260px;">
                             <i class="bi bi-geo-alt-fill" style="color:#3b82f6;font-size:1rem;flex-shrink:0;"></i>
-                            <div id="coordDisplay" style="font-size:0.875rem;color:#6b7280;font-family:monospace;">Chưa
+                            <div id="coordDisplay" style="font-size:0.875rem;color:#6b7280;font-family:monospace;">Chua
                                 chọn tọa độ</div>
                         </div>
                         <button type="button" class="btn-geocode" onclick="openMapModal()">
@@ -849,7 +849,7 @@
                     <div class="form-actions">
                         <button type="button" class="btn-form btn-reset-form" onclick="resetForm()"><i
                                 class="bi bi-arrow-clockwise"></i> Đặt lại</button>
-                        <button type="submit" class="btn-form btn-submit"><i class="bi bi-check-circle-fill"></i> Lưu
+                        <button type="submit" class="btn-form btn-submit"><i class="bi bi-check-circle-fill"></i> Luu
                             bất động sản</button>
                     </div>
                 </div>
@@ -865,15 +865,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js"></script>
 
     <script th:inline="javascript">
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // KEYS
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         var MAPTILES_KEY = 'd2vMzWHY7kcxkY1yITDytGLWaIPf9knt8mLMXmkx';
         var GOONG_API_KEY = /*[[${goongApiKey}]]*/ '';
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // TYPE SELECTOR
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         document.querySelectorAll('#propertyTypeSelector .type-btn').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 document.querySelectorAll('#propertyTypeSelector .type-btn').forEach(function (b) { b.classList.remove('selected'); });
@@ -911,9 +911,9 @@
             });
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // TAG INPUT
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         var tagWrapper = document.getElementById('tagWrapper');
         var tagRealInput = document.getElementById('tagRealInput');
         var rentAreaHidden = document.getElementById('rentAreaValuesInput');
@@ -963,9 +963,9 @@
         });
 
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // STAFF
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         function updateStaffCount() {
             var count = document.querySelectorAll('input[name="staffIds"]:checked').length;
             document.getElementById('selectedCount').textContent = count;
@@ -974,9 +974,9 @@
             });
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // UPLOAD
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         function handleImageSelect(input) {
             var file = input.files[0];
             if (!file) return;
@@ -1035,9 +1035,9 @@
             el.className = 'upload-status ' + type;
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // RESET
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         function resetForm() {
             document.getElementById('buildingForm').reset();
             // Type selectors
@@ -1055,9 +1055,9 @@
             document.getElementById('selectedCount').textContent = '0';
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // SUBMIT
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         document.getElementById('buildingForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -1137,9 +1137,9 @@
             }
         });
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // DOM READY
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         document.addEventListener('DOMContentLoaded', function () {
             // Init required state theo loại giao dịch mặc định
             toggleTransactionSections(document.getElementById('transactionTypeVal').value);

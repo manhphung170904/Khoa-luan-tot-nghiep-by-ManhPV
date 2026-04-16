@@ -1,5 +1,6 @@
-import { RoutedCrudFormPage } from "../core/RoutedCrudFormPage";
+﻿import { RoutedCrudFormPage } from "../core/RoutedCrudFormPage";
 
 export class AdminStaffFormPage extends RoutedCrudFormPage {
-  protected readonly addPath = "/admin/staff/add";
+  protected readonly addPath = "/api/v1/admin/staff";
 }
+

@@ -987,7 +987,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Năm</label>
+                        <label class="form-label">Nam</label>
                         <select class="form-select" name="year" id="yearSelect">
                             <option value="">-- Chọn năm --</option>
                         </select>
@@ -1277,7 +1277,7 @@
 
                             <div class="col-md-4">
                                 <label class="form-label">
-                                    Năm
+                                    Nam
                                     <span class="required">*</span>
                                 </label>
                                 <div class="input-group">
@@ -1353,7 +1353,7 @@
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
                                         <span style="font-size: 0.9375rem; font-weight: 600; color: #374151;">Tổng tiền
                                             hóa
-                                            đơn:</span>
+                                            don:</span>
                                         <span style="font-size: 1.5rem; font-weight: 700; color: #111827;"
                                             id="addTotalAmount">0
                                             VNĐ</span>
@@ -1440,7 +1440,7 @@
                 const year = currentYear - i;
                 const option = document.createElement('option');
                 option.value = year;
-                option.textContent = 'Năm ' + year;
+                option.textContent = 'Nam ' + year;
                 yearSelect.appendChild(option);
             }
         });
@@ -1494,7 +1494,7 @@
             if (price == null) return '';
             return new Intl.NumberFormat('vi-VN')
                 .format(price)
-                .replaceAll('.', ',') + ' đ';
+                .replaceAll('.', ',') + ' d';
         }
 
         // Hàm format số
@@ -1885,8 +1885,8 @@
                           <input type="text" class="form-control" value="Tháng ${inv.month}" disabled>
                         </div>
                         <div class="col-md-4">
-                          <label class="form-label">Năm</label>
-                          <input type="text" class="form-control" value="Năm ${inv.year}" disabled>
+                          <label class="form-label">Nam</label>
+                          <input type="text" class="form-control" value="Nam ${inv.year}" disabled>
                         </div>
                         <div class="col-md-4">
                           <label class="form-label">Hạn thanh toán <span class="required">*</span></label>
@@ -2593,7 +2593,7 @@
                 (electricityUsage * Number(addCurrentFees.electricityFee || 0)) +
                 (waterUsage * Number(addCurrentFees.waterFee || 0));
 
-            $('#addTotalAmount').text(formatNumber(total) + ' đ');
+            $('#addTotalAmount').text(formatNumber(total) + ' d');
         }
     </script>
 </body>

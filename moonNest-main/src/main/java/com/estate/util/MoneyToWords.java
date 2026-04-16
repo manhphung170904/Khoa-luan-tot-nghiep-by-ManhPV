@@ -58,7 +58,7 @@ public class MoneyToWords {
         int remainder = (int) (n % 100);
 
         if (hundreds > 0) {
-            sb.append(UNITS[hundreds]).append(" trăm");
+            sb.append(UNITS[hundreds]).append(" tram");
             if (remainder > 0 && remainder < 10) sb.append(" linh");
         } else if (hasHigherGroup && remainder > 0) {
             sb.append("không trăm");
@@ -76,7 +76,7 @@ public class MoneyToWords {
                 int units = remainder % 10;
                 sb.append(TENS[tens]);
                 if (units == 1) sb.append(" mốt");
-                else if (units == 5) sb.append(" lăm");
+                else if (units == 5) sb.append(" lam");
                 else if (units > 0) sb.append(" ").append(UNITS[units]);
             }
         }

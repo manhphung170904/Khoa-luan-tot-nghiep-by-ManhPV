@@ -51,7 +51,7 @@
             margin-top: 0.2rem;
         }
 
-        /* ══ STAT CARDS ══════════════════════════════════════════════════════ */
+        /* -- STAT CARDS ------------------------------------------------------ */
         .stat-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -192,7 +192,7 @@
             padding: 1.5rem;
         }
 
-        /* ══ CHART LEGEND PILLS ══════════════════════════════════════════════ */
+        /* -- CHART LEGEND PILLS ---------------------------------------------- */
         .legend-pills {
             display: flex;
             gap: 0.75rem;
@@ -259,7 +259,7 @@
             color: #1e40af;
         }
 
-        /* ══ RANK BADGES ═════════════════════════════════════════════════════ */
+        /* -- RANK BADGES ----------------------------------------------------- */
         .rank-badge {
             width: 28px;
             height: 28px;
@@ -357,7 +357,7 @@
             text-align: right;
         }
 
-        /* ══ BADGE PILLS ═════════════════════════════════════════════════════ */
+        /* -- BADGE PILLS ----------------------------------------------------- */
         .bc {
             display: inline-flex;
             align-items: center;
@@ -373,7 +373,7 @@
             color: #1d4ed8;
         }
 
-        /* ══ RESPONSIVE: Mobile staff table ══════════════════════════════════ */
+        /* -- RESPONSIVE: Mobile staff table ---------------------------------- */
         @media (max-width: 640px) {
 
             /* Hide Mã NV column on mobile */
@@ -417,7 +417,7 @@
     <main class="content">
         <div class="detail-body">
 
-            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <!-- -- Page Header ----------------------------------------------- -->
             <div class="page-header-bar">
                 <div>
                     <h2><i class="bi bi-grid-1x2 me-2" style="color:#3b82f6;font-size:1.2rem;"></i>Dashboard</h2>
@@ -428,7 +428,7 @@
                 </div>
             </div>
 
-            <!-- ── Stats Overview ──────────────────────────────────────────── -->
+            <!-- -- Stats Overview -------------------------------------------- -->
             <div class="row g-3 mb-4">
                 <div class="col-lg-3 col-md-6">
                     <div class="stat-card primary" onclick="window.location='/admin/building/list'">
@@ -478,12 +478,12 @@
                             <div class="legend-pills ms-auto">
                                 <span class="legend-pill">
                                     <span class="legend-dot" style="background:#3b82f6;"></span>
-                                    Năm <span id="currentYearLabel" th:text="${currentYear}">2024</span>
+                                    Nam <span id="currentYearLabel" th:text="${currentYear}">2024</span>
                                 </span>
                                 <span class="legend-pill">
                                     <span class="legend-dot"
                                         style="background:#fef2f2;border:2px solid #ef4444;"></span>
-                                    Năm <span id="lastYearLabel" th:text="${lastYear}">2023</span>
+                                    Nam <span id="lastYearLabel" th:text="${lastYear}">2023</span>
                                 </span>
                             </div>
                         </div>
@@ -498,7 +498,7 @@
                     <div class="d-card h-100">
                         <div class="d-card-header">
                             <i class="bi bi-bar-chart-line"></i>
-                            <h3>Doanh thu 3 năm</h3>
+                            <h3>Doanh thu 3 nam</h3>
                         </div>
                         <div class="d-card-body">
                             <div style="position:relative;height:280px;">
@@ -749,7 +749,7 @@
                 labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
                 datasets: [
                     {
-                        label: 'Năm ' + currentYear,
+                        label: 'Nam ' + currentYear,
                         data: revenueDataCurrent.map(v => v / 1_000_000_000),
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59,130,246,0.08)',
@@ -761,7 +761,7 @@
                         pointHoverRadius: 6
                     },
                     {
-                        label: 'Năm ' + lastYear,
+                        label: 'Nam ' + lastYear,
                         data: revenueDataLastYear.map(v => v / 1_000_000_000),
                         borderColor: '#ef4444',
                         backgroundColor: 'rgba(239,68,68,0.06)',
@@ -792,7 +792,7 @@
             }
         });
 
-        /* ── District Chart ────────────────────────────────────────────────── */
+        /* -- District Chart -------------------------------------------------- */
         const districtNames = /*[[${districtNames}]]*/[];
         const districtCounts = /*[[${districtCounts}]]*/[];
         new Chart(document.getElementById('districtChart'), {
@@ -819,7 +819,7 @@
             }
         });
 
-        /* ── 3 Year Revenue Chart ───────────────────────────────────────────── */
+        /* -- 3 Year Revenue Chart --------------------------------------------- */
         const revenue3YearLabels = [
     /*[[${yearBeforeLast}]]*/ 2022,
     /*[[${lastYear}]]*/ 2023,
@@ -852,7 +852,7 @@
             }
         });
 
-        /* ── 3 Year Contracts Chart ─────────────────────────────────────────── */
+        /* -- 3 Year Contracts Chart ------------------------------------------- */
         const contractYearLabels = /*[[${contractYearLabels}]]*/[];
         const contractYearCounts = /*[[${contractYearCounts}]]*/[];
         new Chart(document.getElementById('contract3YearChart'), {
@@ -889,7 +889,7 @@
             }
         });
 
-        /* ── Contracts by Building Chart ────────────────────────────────────── */
+        /* -- Contracts by Building Chart -------------------------------------- */
         const buildingNames = /*[[${buildingNames}]]*/[];
         const buildingContractCounts = /*[[${buildingContractCounts}]]*/[];
         new Chart(document.getElementById('contractsByBuildingChart'), {
@@ -922,7 +922,7 @@
             }
         });
 
-        /* ── Sale Rate Doughnut Chart ─────────────────────────────────────────── */
+        /* -- Sale Rate Doughnut Chart ------------------------------------------- */
         const totalSold = /*[[${totalSold}]]*/ 0;
         const totalNotSold = /*[[${totalNotSold}]]*/ 0;
 
@@ -1044,3 +1044,5 @@
 </body>
 
 </html>
+
+

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 import { DatabaseHelper } from '../../../utils/db-client';
 
 test.describe('Public Page API Tests', () => {
@@ -13,14 +13,14 @@ test.describe('Public Page API Tests', () => {
         await db.disconnect();
     });
 
-    test.describe('GET /moonnest/building/search', () => {
+    test.describe('GET /api/v1/public/buildings', () => {
         test('[API_TC_026] [Happy Path] Search public buildings and cross-check DB results', async ({ request }) => {
             const wardRows = await db.query<{ ward: string }>(
                 "SELECT ward FROM building WHERE ward IS NOT NULL AND ward <> '' LIMIT 1"
             );
             const ward = wardRows.length > 0 ? wardRows[0].ward : 'Ward 1';
 
-            const response = await request.get('/moonnest/building/search', {
+            const response = await request.get('/api/v1/public/buildings', {
                 params: {
                     ward: ward,
                     propertyType: 'OFFICE'
@@ -45,7 +45,7 @@ test.describe('Public Page API Tests', () => {
         });
 
         test('[API_TC_027] [Boundary] Search with invalid propertyType returns a valid empty result set', async ({ request }) => {
-            const response = await request.get('/moonnest/building/search', {
+            const response = await request.get('/api/v1/public/buildings', {
                 params: {
                     propertyType: 'INVALID_TYPE'
                 }
@@ -58,3 +58,4 @@ test.describe('Public Page API Tests', () => {
         });
     });
 });
+

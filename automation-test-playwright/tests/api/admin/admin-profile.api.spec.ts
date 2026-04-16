@@ -28,7 +28,7 @@ test.describe('Admin Profile API Tests', () => {
                 newEmail: 'hacked@estate.com',
                 otp: '999999'
             };
-            const response = await request.put('/admin/profile/email', {
+            const response = await request.put('/api/v1/admin/profile/email', {
                 data: payload
             });
             // Backend có thể trả 500 (NullPointerException do thiếu session) hoặc 302/401/403
@@ -41,7 +41,7 @@ test.describe('Admin Profile API Tests', () => {
                 newUsername: 'admin_hacked',
                 otp: '000000'
             };
-            const response = await request.put('/admin/profile/username', {
+            const response = await request.put('/api/v1/admin/profile/username', {
                 data: payload
             });
             expect([200, 302, 401, 403, 500]).toContain(response.status());
@@ -54,7 +54,7 @@ test.describe('Admin Profile API Tests', () => {
                 confirmPassword: 'newpassword',
                 otp: '000000'
             };
-            const response = await request.put('/admin/profile/password', {
+            const response = await request.put('/api/v1/admin/profile/password', {
                 data: payload
             });
             expect([200, 302, 401, 403, 500]).toContain(response.status());
@@ -62,7 +62,7 @@ test.describe('Admin Profile API Tests', () => {
 
         // ── POSITIVE: OTP ─────────────────────────────────────────
         test('[PRF_001] POST /otp/{purpose} - [Positive] Gửi OTP update email', async ({ request }) => {
-            const response = await request.post('/admin/profile/otp/email_update', {
+            const response = await request.post('/api/v1/admin/profile/otp/email_update', {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -71,7 +71,7 @@ test.describe('Admin Profile API Tests', () => {
         });
 
         test('[PRF_008] POST /otp/{purpose} - [Negative] Purpose không hợp lệ', async ({ request }) => {
-            const response = await request.post('/admin/profile/otp/INVALID_PURPOSE', {
+            const response = await request.post('/api/v1/admin/profile/otp/INVALID_PURPOSE', {
                 headers: { Cookie: adminCookies }
             });
             // Backend có thể chấp nhận bất kỳ purpose hoặc reject
@@ -85,7 +85,7 @@ test.describe('Admin Profile API Tests', () => {
                 newUsername: 'admin_updated',
                 otp: 'invalid_otp_00'
             };
-            const response = await request.put('/admin/profile/username', {
+            const response = await request.put('/api/v1/admin/profile/username', {
                 headers: { Cookie: adminCookies },
                 data: payload
             });
@@ -100,7 +100,7 @@ test.describe('Admin Profile API Tests', () => {
                 confirmPassword: '12345678',
                 otp: '123456'
             };
-            const response = await request.put('/admin/profile/password', {
+            const response = await request.put('/api/v1/admin/profile/password', {
                 headers: { Cookie: adminCookies },
                 data: payload
             });
@@ -109,3 +109,4 @@ test.describe('Admin Profile API Tests', () => {
         });
     });
 });
+

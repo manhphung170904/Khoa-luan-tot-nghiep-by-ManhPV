@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -24,12 +24,12 @@
             margin-top: 72px;
         }
 
-        /* ══ PAGE BODY ══════════════════════════════════════════════════════ */
+        /* -- PAGE BODY ------------------------------------------------------ */
         .detail-body {
             padding: 1.5rem;
         }
 
-        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        /* -- PAGE HEADER ---------------------------------------------------- */
         .page-header-bar {
             display: flex;
             align-items: center;
@@ -59,7 +59,7 @@
             margin-top: 0.2rem;
         }
 
-        /* ══ BACK BUTTON ════════════════════════════════════════════════════ */
+        /* -- BACK BUTTON ---------------------------------------------------- */
         .btn-back {
             background: white;
             color: #374151;
@@ -83,7 +83,7 @@
             transform: translateY(-1px);
         }
 
-        /* ══ D-CARD ═════════════════════════════════════════════════════════ */
+        /* -- D-CARD --------------------------------------------------------- */
         .d-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -121,7 +121,7 @@
             padding: 1.25rem 1.5rem;
         }
 
-        /* ══ SECTION TITLE ══════════════════════════════════════════════════ */
+        /* -- SECTION TITLE -------------------------------------------------- */
         .form-section-title {
             font-size: 0.72rem;
             font-weight: 700;
@@ -140,7 +140,7 @@
             font-size: 0.8rem;
         }
 
-        /* ══ FORM CONTROLS ══════════════════════════════════════════════════ */
+        /* -- FORM CONTROLS -------------------------------------------------- */
         .form-label {
             font-size: 0.72rem;
             font-weight: 700;
@@ -178,7 +178,7 @@
             color: #9ca3af;
         }
 
-        /* ══ INPUT GROUP ════════════════════════════════════════════════════ */
+        /* -- INPUT GROUP ---------------------------------------------------- */
         .input-group-text {
             background: #f9fafb;
             border: 1px solid #e5e7eb;
@@ -201,14 +201,14 @@
             color: #3b82f6;
         }
 
-        /* ══ HELPER TEXT ════════════════════════════════════════════════════ */
+        /* -- HELPER TEXT ---------------------------------------------------- */
         .form-text {
             font-size: 0.75rem;
             color: #6b7280;
             margin-top: 0.3rem;
         }
 
-        /* ══ INFO BOX ═══════════════════════════════════════════════════════ */
+        /* -- INFO BOX ------------------------------------------------------- */
         .info-box {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
@@ -232,7 +232,7 @@
             line-height: 1.5;
         }
 
-        /* ══ STATUS BADGE (header) ══════════════════════════════════════════ */
+        /* -- STATUS BADGE (header) ------------------------------------------ */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -288,14 +288,14 @@
             background: #9ca3af;
         }
 
-        /* ══ DIVIDER ════════════════════════════════════════════════════════ */
+        /* -- DIVIDER -------------------------------------------------------- */
         .section-divider {
             border: none;
             border-top: 1px solid #f3f4f6;
             margin: 1.25rem 0;
         }
 
-        /* ══ FORM ACTIONS ═══════════════════════════════════════════════════ */
+        /* -- FORM ACTIONS --------------------------------------------------- */
         .form-actions {
             display: flex;
             gap: 0.5rem;
@@ -337,7 +337,7 @@
             box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
         }
 
-        /* ══ DATE VALIDATION ════════════════════════════════════════════════ */
+        /* -- DATE VALIDATION ------------------------------------------------ */
         .date-validation {
             font-size: 0.75rem;
             margin-top: 0.25rem;
@@ -352,7 +352,7 @@
             color: #ef4444;
         }
 
-        /* ══ EXPIRED LOCK ═══════════════════════════════════════════════════ */
+        /* -- EXPIRED LOCK --------------------------------------------------- */
         .expired-banner {
             background: #fff7ed;
             border: 1px solid #fed7aa;
@@ -390,7 +390,7 @@
             color: #9ca3af;
         }
 
-        /* ══ RESPONSIVE ═════════════════════════════════════════════════════ */
+        /* -- RESPONSIVE ----------------------------------------------------- */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0;
@@ -422,7 +422,7 @@
     <main class="content">
         <div class="detail-body">
 
-            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <!-- -- Page Header ----------------------------------------------- -->
             <div class="page-header-bar">
                 <div>
                     <h2>
@@ -437,7 +437,7 @@
                 </a>
             </div>
 
-            <!-- ── Expired Banner / Info Box ──────────────────────────────── -->
+            <!-- -- Expired Banner / Info Box -------------------------------- -->
             <div class="expired-banner" th:if="${contract.status == 'EXPIRED'}">
                 <i class="bi bi-lock-fill"></i>
                 <div class="expired-banner-content">
@@ -452,7 +452,7 @@
                 </div>
             </div>
 
-            <!-- ── Form Card ───────────────────────────────────────────────── -->
+            <!-- -- Form Card ------------------------------------------------- -->
             <div class="d-card">
                 <div class="d-card-header">
                     <i class="bi bi-file-earmark-text"></i>

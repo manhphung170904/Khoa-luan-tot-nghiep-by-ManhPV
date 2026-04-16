@@ -1,7 +1,7 @@
-import { RoutedCrudFormPage } from "../core/RoutedCrudFormPage";
+﻿import { RoutedCrudFormPage } from "../core/RoutedCrudFormPage";
 
 export class AdminBuildingFormPage extends RoutedCrudFormPage {
-  protected readonly addPath = "/admin/building/add";
+  protected readonly addPath = "/api/v1/admin/buildings";
   protected readonly editPath = "/admin/building/edit";
 
   async fillBuildingBasics(data: {
@@ -22,3 +22,4 @@ export class AdminBuildingFormPage extends RoutedCrudFormPage {
     if (data.transactionType) await this.selectOption("transactionType", data.transactionType);
   }
 }
+

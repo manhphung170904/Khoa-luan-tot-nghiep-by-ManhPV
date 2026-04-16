@@ -22,7 +22,7 @@
             margin-top: 72px;
         }
 
-        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        /* -- PAGE HEADER ---------------------------------------------------- */
         .page-header {
             margin-bottom: 1.25rem;
             display: flex;
@@ -51,7 +51,7 @@
             margin-top: 0.2rem;
         }
 
-        /* ══ BUTTONS ════════════════════════════════════════════════════════ */
+        /* -- BUTTONS -------------------------------------------------------- */
         .btn-back {
             background: white;
             color: #374151;
@@ -74,7 +74,7 @@
             transform: translateY(-1px);
         }
 
-        /* ══ RESULT BADGE ════════════════════════════════════════════════════ */
+        /* -- RESULT BADGE ---------------------------------------------------- */
         .result-badge {
             display: inline-flex;
             align-items: center;
@@ -88,7 +88,7 @@
             margin-bottom: 1.25rem;
         }
 
-        /* ══ TABLE CARD ══════════════════════════════════════════════════════ */
+        /* -- TABLE CARD ------------------------------------------------------ */
         .table-card {
             background: white;
             border: 1px solid #e5e7eb;
@@ -121,7 +121,7 @@
             font-size: 0.9375rem;
         }
 
-        /* ══ TABLE ═══════════════════════════════════════════════════════════ */
+        /* -- TABLE ----------------------------------------------------------- */
         .modern-table {
             width: 100%;
             border-collapse: collapse;
@@ -161,7 +161,7 @@
             background: #f0f9ff;
         }
 
-        /* ══ TABLE CELL STYLES ═══════════════════════════════════════════════ */
+        /* -- TABLE CELL STYLES ----------------------------------------------- */
         .contract-id {
             font-weight: 700;
             color: #111827;
@@ -206,7 +206,7 @@
             margin-right: 3px;
         }
 
-        /* ══ ACTION BUTTONS ══════════════════════════════════════════════════ */
+        /* -- ACTION BUTTONS -------------------------------------------------- */
         .action-buttons {
             display: flex;
             gap: 0.5rem;
@@ -259,7 +259,7 @@
             color: #dc2626;
         }
 
-        /* ══ EMPTY STATE ══════════════════════════════════════════════════════ */
+        /* -- EMPTY STATE ------------------------------------------------------ */
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
@@ -278,7 +278,7 @@
             margin: 0;
         }
 
-        /* ══ PAGINATION ═══════════════════════════════════════════════════════ */
+        /* -- PAGINATION ------------------------------------------------------- */
         .pagination-wrapper {
             margin-top: 1rem;
             padding: 0.75rem 1.5rem;
@@ -323,7 +323,7 @@
             color: #d1d5db;
         }
 
-        /* ══ FILTER CARD ════════════════════════════════════════════════════ */
+        /* -- FILTER CARD ---------------------------------------------------- */
         .filter-card {
             background: white;
             border: 1px solid #e5e7eb;
@@ -509,7 +509,7 @@
             box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
         }
 
-        /* ══ STATUS BADGE ════════════════════════════════════════════════════ */
+        /* -- STATUS BADGE ---------------------------------------------------- */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -531,7 +531,7 @@
             color: #ea580c;
         }
 
-        /* ══ RESPONSIVE ═══════════════════════════════════════════════════════ */
+        /* -- RESPONSIVE ------------------------------------------------------- */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0;
@@ -558,7 +558,7 @@
 
     <main class="content">
 
-        <!-- ── Page Header ─────────────────────────────────────────────────── -->
+        <!-- -- Page Header --------------------------------------------------- -->
         <div class="page-header">
             <div>
                 <h2>
@@ -573,13 +573,13 @@
             </a>
         </div>
 
-        <!-- ── Result Badge ────────────────────────────────────────────────── -->
+        <!-- -- Result Badge -------------------------------------------------- -->
         <div class="result-badge">
             <i class="bi bi-check-circle-fill"></i>
             <span>Tìm thấy <strong id="totalElements">0</strong> hợp đồng mua bán</span>
         </div>
 
-        <!-- ── Table Card ──────────────────────────────────────────────────── -->
+        <!-- -- Table Card ---------------------------------------------------- -->
         <div class="table-card">
             <div class="table-header-row">
                 <div class="thr-title">
@@ -621,7 +621,7 @@
             <div id="pagination"></div>
         </div>
 
-        <!-- ── Filter Card ─────────────────────────────────────────────────── -->
+        <!-- -- Filter Card --------------------------------------------------- -->
         <form class="filter-card" th:action="@{/admin/sale-contract/search}" method="get">
             <div class="filter-header">
                 <div class="filter-title">
@@ -767,7 +767,7 @@
 
         function formatPrice(price) {
             if (price == null) return '—';
-            return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' đ';
+            return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' d';
         }
 
         function loadSaleContracts(page) {

@@ -150,7 +150,7 @@ function renderCustomerInvoice(invoice, totalUnpaidInvoices) {
         </div>
         <div class="info-section">
             <div class="info-section-title">
-                <i class="bi bi-info-circle me-2"></i>Thông Tin Chung
+                <i class="bi bi-info-circle me-2"></i>Thông tin chung
             </div>
             <div class="info-row">
                 <span class="info-label">Ngày tạo hóa đơn</span>
@@ -173,7 +173,7 @@ function renderCustomerInvoice(invoice, totalUnpaidInvoices) {
         </div>
         <div class="info-section">
             <div class="info-section-title">
-                <i class="bi bi-cash-stack me-2"></i>Chi Phí Cố Định
+                <i class="bi bi-cash-stack me-2"></i>Chi phí cố định
             </div>
             <div class="info-row">
                 <span class="info-label">Tiền thuê mặt bằng</span>
@@ -186,7 +186,7 @@ function renderCustomerInvoice(invoice, totalUnpaidInvoices) {
         </div>
         <div class="info-section">
             <div class="info-section-title">
-                <i class="bi bi-car-front me-2"></i>Phí Gửi Xe
+                <i class="bi bi-car-front me-2"></i>Phí gửi xe
             </div>
             <div class="utility-grid">
                 <div class="utility-item">
@@ -201,7 +201,7 @@ function renderCustomerInvoice(invoice, totalUnpaidInvoices) {
         </div>
         <div class="info-section">
             <div class="info-section-title">
-                <i class="bi bi-house me-2"></i>Phí Sinh Hoạt
+                <i class="bi bi-house me-2"></i>Phí sinh hoạt
             </div>
             <div class="utility-grid">
                 <div class="utility-item">
@@ -216,7 +216,7 @@ function renderCustomerInvoice(invoice, totalUnpaidInvoices) {
         </div>
         <div class="info-section">
             <div class="info-section-title">
-                <i class="bi bi-house me-2"></i>Sinh Hoạt
+                <i class="bi bi-house me-2"></i>Sinh hoạt
             </div>
             <div class="meter-reading">
                 <div class="meter-info">

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
 import { expectStatusExact } from "@api/apiContractUtils";
 
@@ -10,8 +10,8 @@ type ReadonlyModule = {
 };
 
 const readOnlyModules: ReadonlyModule[] = [
-  { id: "API-CUS-READ-001", name: "Building", path: "/customer/building/search" },
-  { id: "API-CUS-READ-002", name: "Contract", path: "/customer/contract/search" },
+  { id: "API-CUS-READ-001", name: "Building", path: "/api/v1/customer/buildings" },
+  { id: "API-CUS-READ-002", name: "Contract", path: "/api/v1/customer/contracts" },
   { id: "API-CUS-READ-003", name: "Transaction", path: "/customer/transaction/list/page?page=1&size=5", expectsPage: true }
 ];
 
@@ -56,3 +56,4 @@ test.describe("Customer API Read-only Contract Tests", () => {
     });
   }
 });
+

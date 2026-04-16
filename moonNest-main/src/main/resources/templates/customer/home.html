@@ -714,7 +714,7 @@
             cancelButtonText: "Hủy"
         }).then((result) => {
             if (!result.isConfirmed) return;
-            window.location.href = "/payment/qr/" + invoiceId;
+            window.location.href = "/api/v1/payment/qr/" + invoiceId;
         });
     }
 

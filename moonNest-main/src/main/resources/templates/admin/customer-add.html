@@ -28,7 +28,7 @@
             padding: 1.5rem;
         }
 
-        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        /* -- PAGE HEADER ---------------------------------------------------- */
         .page-header-bar {
             display: flex;
             align-items: center;
@@ -56,7 +56,7 @@
             flex-shrink: 0;
         }
 
-        /* ══ BUTTONS ═════════════════════════════════════════════════════════ */
+        /* -- BUTTONS --------------------------------------------------------- */
         .btn-back {
             background: white;
             color: #374151;
@@ -79,7 +79,7 @@
             transform: translateY(-1px);
         }
 
-        /* ══ D-CARD ══════════════════════════════════════════════════════════ */
+        /* -- D-CARD ---------------------------------------------------------- */
         .d-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -113,7 +113,7 @@
             padding: 1.25rem 1.5rem;
         }
 
-        /* ══ SECTION TITLE ═══════════════════════════════════════════════════ */
+        /* -- SECTION TITLE --------------------------------------------------- */
         .form-section-title {
             font-size: 0.72rem;
             font-weight: 700;
@@ -131,7 +131,7 @@
             font-size: 0.8rem;
         }
 
-        /* ══ FORM CONTROLS ═══════════════════════════════════════════════════ */
+        /* -- FORM CONTROLS --------------------------------------------------- */
         .form-label {
             font-size: 0.72rem;
             font-weight: 700;
@@ -197,7 +197,7 @@
             color: #3b82f6;
         }
 
-        /* ══ INFO BOX ════════════════════════════════════════════════════════ */
+        /* -- INFO BOX -------------------------------------------------------- */
         .info-box {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
@@ -217,7 +217,7 @@
             flex-shrink: 0;
         }
 
-        /* ══ STAFF SELECTION ═════════════════════════════════════════════════ */
+        /* -- STAFF SELECTION ------------------------------------------------- */
         .staff-selection-container {
             border: 1px solid #e5e7eb;
             border-radius: 7px;
@@ -312,7 +312,7 @@
             font-size: 0.8125rem;
         }
 
-        /* ══ PASSWORD STRENGTH ═══════════════════════════════════════════════ */
+        /* -- PASSWORD STRENGTH ----------------------------------------------- */
         .password-strength {
             height: 3px;
             border-radius: 2px;
@@ -361,7 +361,7 @@
             color: #10b981;
         }
 
-        /* ══ FORM ACTIONS ════════════════════════════════════════════════════ */
+        /* -- FORM ACTIONS ---------------------------------------------------- */
         .form-actions {
             display: flex;
             gap: 0.5rem;
@@ -404,7 +404,7 @@
             box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
         }
 
-        /* ══ RESPONSIVE ═══════════════════════════════════════════════════════ */
+        /* -- RESPONSIVE ------------------------------------------------------- */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0;
@@ -437,7 +437,7 @@
     <main class="content">
         <div class="detail-body">
 
-            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <!-- -- Page Header ----------------------------------------------- -->
             <div class="page-header-bar">
                 <div>
                     <h2>
@@ -454,7 +454,7 @@
                 </div>
             </div>
 
-            <!-- ── Form Card ───────────────────────────────────────────────── -->
+            <!-- -- Form Card ------------------------------------------------- -->
             <div class="d-card">
                 <div class="d-card-header">
                     <i class="bi bi-people"></i>
@@ -585,7 +585,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        /* ── Password strength ──────────────────────────────────────────── */
+        /* -- Password strength -------------------------------------------- */
         function checkPasswordStrength(password) {
             const bar = document.getElementById('strengthBar');
             const text = document.getElementById('strengthText');
@@ -624,7 +624,7 @@
             checkPasswordStrength(e.target.value);
         });
 
-        /* ── Staff selection ────────────────────────────────────────────── */
+        /* -- Staff selection ---------------------------------------------- */
         function updateSelectedCount() {
             const checked = document.querySelectorAll('input[name="staffIds"]:checked');
             document.getElementById('selectedCount').textContent = checked.length;
@@ -657,7 +657,7 @@
     </script>
 
     <script>
-        /* ── Form submit ────────────────────────────────────────────────── */
+        /* -- Form submit -------------------------------------------------- */
         $("#customerForm").on("submit", function (e) {
             e.preventDefault();
 

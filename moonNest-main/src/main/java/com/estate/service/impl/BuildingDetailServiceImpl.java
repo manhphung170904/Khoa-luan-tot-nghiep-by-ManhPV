@@ -27,7 +27,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
     private final PlanningMapRepository planningMapRepository;
     private final SupplierRepository supplierRepository;
 
-    // ── Label map cho authority_type ─────────────────────────────────────────
+    // -- Label map cho authority_type -----------------------------------------
     private static final Map<String, String> AUTHORITY_LABELS = Map.of(
             "NOTARY",        "Công chứng",
             "LAND_REGISTRY", "Đăng ký đất đai",
@@ -35,7 +35,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
             "TAX_OFFICE",    "Cơ quan thuế"
     );
 
-    // ── Label map cho amenity_type ────────────────────────────────────────────
+    // -- Label map cho amenity_type --------------------------------------------
     private static final Map<String, String> AMENITY_LABELS = Map.of(
             "SHOPPING",  "Mua sắm",
             "PARK",      "Công viên",
@@ -86,7 +86,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
                 .collect(Collectors.toList());
     }
 
-    // ── Mappers ───────────────────────────────────────────────────────────────
+    // -- Mappers ---------------------------------------------------------------
 
     private SupplierDTO toSupplierDTO(SupplierEntity e) {
         SupplierDTO dto = new SupplierDTO();

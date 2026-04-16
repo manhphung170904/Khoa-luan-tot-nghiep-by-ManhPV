@@ -24,12 +24,12 @@
             margin-top: 72px;
         }
 
-        /* ══ PAGE BODY ══════════════════════════════════════════════════════ */
+        /* -- PAGE BODY ------------------------------------------------------ */
         .detail-body {
             padding: 1.5rem;
         }
 
-        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        /* -- PAGE HEADER ---------------------------------------------------- */
         .page-header-bar {
             display: flex;
             align-items: center;
@@ -59,7 +59,7 @@
             margin-top: 0.2rem;
         }
 
-        /* ══ BACK BUTTON ════════════════════════════════════════════════════ */
+        /* -- BACK BUTTON ---------------------------------------------------- */
         .btn-back {
             background: white;
             color: #374151;
@@ -136,7 +136,7 @@
             font-size: 0.8rem;
         }
 
-        /* ══ FORM CONTROLS ══════════════════════════════════════════════════ */
+        /* -- FORM CONTROLS -------------------------------------------------- */
         .form-label {
             font-size: 0.72rem;
             font-weight: 700;
@@ -181,7 +181,7 @@
             cursor: not-allowed;
         }
 
-        /* ══ INPUT GROUP ════════════════════════════════════════════════════ */
+        /* -- INPUT GROUP ---------------------------------------------------- */
         .input-group-text {
             background: #f9fafb;
             border: 1px solid #e5e7eb;
@@ -204,7 +204,7 @@
             color: #3b82f6;
         }
 
-        /* ══ HELPER TEXT ════════════════════════════════════════════════════ */
+        /* -- HELPER TEXT ---------------------------------------------------- */
         .form-text {
             font-size: 0.75rem;
             color: #6b7280;
@@ -216,7 +216,7 @@
             font-weight: 500;
         }
 
-        /* ══ INFO BOX ═══════════════════════════════════════════════════════ */
+        /* -- INFO BOX ------------------------------------------------------- */
         .info-box {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
@@ -242,7 +242,7 @@
 
 
 
-        /* ══ DATE VALIDATION ════════════════════════════════════════════════ */
+        /* -- DATE VALIDATION ------------------------------------------------ */
         .date-validation {
             font-size: 0.75rem;
             margin-top: 0.25rem;
@@ -257,14 +257,14 @@
             color: #ef4444;
         }
 
-        /* ══ DIVIDER ════════════════════════════════════════════════════════ */
+        /* -- DIVIDER -------------------------------------------------------- */
         .section-divider {
             border: none;
             border-top: 1px solid #f3f4f6;
             margin: 1.25rem 0;
         }
 
-        /* ══ FORM ACTIONS ═══════════════════════════════════════════════════ */
+        /* -- FORM ACTIONS --------------------------------------------------- */
         .form-actions {
             display: flex;
             gap: 0.5rem;
@@ -306,7 +306,7 @@
             box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
         }
 
-        /* ══ RESPONSIVE ═════════════════════════════════════════════════════ */
+        /* -- RESPONSIVE ----------------------------------------------------- */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0;
@@ -338,7 +338,7 @@
     <main class="content">
         <div class="detail-body">
 
-            <!-- ── Page Header ─────────────────────────────────────────────── -->
+            <!-- -- Page Header ----------------------------------------------- -->
             <div class="page-header-bar">
                 <div>
                     <h2>
@@ -362,7 +362,7 @@
                 </div>
             </div>
 
-            <!-- ── Info Box ────────────────────────────────────────────────── -->
+            <!-- -- Info Box -------------------------------------------------- -->
             <div class="info-box">
                 <i class="bi bi-info-circle"></i>
                 <div class="info-box-content">
@@ -371,7 +371,7 @@
                 </div>
             </div>
 
-            <!-- ── Form Card ───────────────────────────────────────────────── -->
+            <!-- -- Form Card ------------------------------------------------- -->
             <div class="d-card">
                 <div class="d-card-header">
                     <i class="bi bi-file-earmark-text"></i>
@@ -783,8 +783,8 @@
 
             try {
                 const [buildingIds, customerIds] = await Promise.all([
-                    $.getJSON(`/admin/staff/${staffId}/assignments/buildings`),
-                    $.getJSON(`/admin/staff/${staffId}/assignments/customers`)
+                    $.getJSON(`/api/v1/admin/staff/${staffId}/assignments/buildings`),
+                    $.getJSON(`/api/v1/admin/staff/${staffId}/assignments/customers`)
                 ]);
 
                 const canManageBuilding = (buildingIds || []).map(String).includes(String(buildingId));
@@ -894,3 +894,5 @@
 </body>
 
 </html>
+
+

@@ -26,7 +26,7 @@
             padding: 1.5rem;
         }
 
-        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        /* -- PAGE HEADER ---------------------------------------------------- */
         .page-header-bar {
             display: flex;
             align-items: center;
@@ -57,7 +57,7 @@
             margin-top: 0.2rem;
         }
 
-        /* ══ CARDS ══════════════════════════════════════════════════════════ */
+        /* -- CARDS ---------------------------------------------------------- */
         .d-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -87,7 +87,7 @@
             font-size: 0.875rem;
         }
 
-        /* ══ AVATAR SECTION ═════════════════════════════════════════════════ */
+        /* -- AVATAR SECTION ------------------------------------------------- */
         .profile-hero {
             display: flex;
             align-items: center;
@@ -146,7 +146,7 @@
             border: 1px solid #bfdbfe;
         }
 
-        /* ══ INFO BOXES ═════════════════════════════════════════════════════ */
+        /* -- INFO BOXES ----------------------------------------------------- */
         .info-box {
             padding: 1rem 1.25rem;
             background: #f9fafb;
@@ -183,7 +183,7 @@
             color: #111827;
         }
 
-        /* ══ SECURITY NOTICE ════════════════════════════════════════════════ */
+        /* -- SECURITY NOTICE ------------------------------------------------ */
         .security-notice {
             display: flex;
             gap: 0.875rem;
@@ -212,7 +212,7 @@
             font-size: 0.8125rem;
         }
 
-        /* ══ ACTION BUTTONS ═════════════════════════════════════════════════ */
+        /* -- ACTION BUTTONS ------------------------------------------------- */
         .btn-hd {
             padding: 0.45rem 0.875rem;
             border-radius: 7px;
@@ -303,7 +303,7 @@
             color: #3b82f6;
         }
 
-        /* ══ MODAL ══════════════════════════════════════════════════════════ */
+        /* -- MODAL ---------------------------------------------------------- */
         .modal-content {
             border: 1px solid #e5e7eb;
             border-radius: 10px;
@@ -435,7 +435,7 @@
             filter: brightness(0.92);
         }
 
-        /* ══ ALERT ══════════════════════════════════════════════════════════ */
+        /* -- ALERT ---------------------------------------------------------- */
         .alert {
             border-radius: 8px;
             border: none;
@@ -455,7 +455,7 @@
             border-left: 3px solid #dc2626;
         }
 
-        /* ══ RESPONSIVE ═════════════════════════════════════════════════════ */
+        /* -- RESPONSIVE ----------------------------------------------------- */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0;
@@ -481,7 +481,7 @@
     <main class="content">
         <div class="list-body">
 
-            <!-- ── Page Header ──────────────────────────────────────────────── -->
+            <!-- -- Page Header ------------------------------------------------ -->
             <div class="page-header-bar">
                 <div>
                     <h2>
@@ -494,7 +494,7 @@
 
             <div class="row g-3">
 
-                <!-- ── Left column: avatar + info ──────────────────────────── -->
+                <!-- -- Left column: avatar + info ---------------------------- -->
                 <div class="col-lg-8">
 
                     <!-- Avatar card -->
@@ -584,7 +584,7 @@
                     </div>
                 </div>
 
-                <!-- ── Right column: actions ────────────────────────────────── -->
+                <!-- -- Right column: actions ---------------------------------- -->
                 <div class="col-lg-4">
                     <div class="d-card">
                         <div class="d-card-body">
@@ -838,7 +838,7 @@
             });
 
             $.ajax({
-                url: `/admin/profile/otp/${purpose}`,
+                url: `/api/v1/admin/profile/otp/${purpose}`,
                 type: 'POST',
                 success: function () {
                     Swal.fire({
@@ -903,15 +903,15 @@
             });
         }
 
-        handleAjax('#usernameForm', '/admin/profile/username', 'PUT',
+        handleAjax('#usernameForm', '/api/v1/admin/profile/username', 'PUT',
             () => ({ newUsername: $('[name="newUsername"]').val(), otp: $('#usernameOtp').val() }),
             'Cập nhật tên đăng nhập thành công!');
 
-        handleAjax('#emailForm', '/admin/profile/email', 'PUT',
+        handleAjax('#emailForm', '/api/v1/admin/profile/email', 'PUT',
             () => ({ newEmail: $('[name="newEmail"]').val(), password: $('#emailPassword').val() }),
             'Cập nhật Email thành công!');
 
-        handleAjax('#phoneForm', '/admin/profile/phoneNumber', 'PUT',
+        handleAjax('#phoneForm', '/api/v1/admin/profile/phone-number', 'PUT',
             () => ({ newPhoneNumber: $('[name="newPhoneNumber"]').val(), otp: $('#phoneOtp').val() }),
             'Cập nhật số điện thoại thành công!');
 
@@ -946,7 +946,7 @@
             }
 
             $.ajax({
-                url: '/admin/profile/password',
+                url: '/api/v1/admin/profile/password',
                 type: 'PUT',
                 contentType: 'application/json',
                 data: JSON.stringify({
@@ -974,3 +974,4 @@
 </body>
 
 </html>
+

@@ -495,7 +495,7 @@
 
         function formatPrice(price) {
             if (price == null) return '—';
-            return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' đ';
+            return new Intl.NumberFormat('vi-VN').format(price).replaceAll('.', ',') + ' d';
         }
 
         function loadSaleContracts(page, event) {

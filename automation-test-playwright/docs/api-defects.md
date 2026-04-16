@@ -1,4 +1,4 @@
-# API Defect Tracking
+﻿# API Defect Tracking
 
 Use this document to record failures where the test script is correct but the backend contract is not.
 
@@ -22,8 +22,8 @@ Use this document to record failures where the test script is correct but the ba
 | --- | --- | --- | --- |
 | Customer readonly APIs | Anonymous and wrong-role requests return `302` | `401` / `403` | backend defect |
 | Staff readonly APIs | Anonymous and wrong-role requests return `302` | `401` / `403` | backend defect |
-| `POST /api/customer/property-request/submit` | Request redirects (`302`) instead of creating a record | `200` and persisted request | backend defect |
-| `GET /staff/customers/search` | Staff happy-path request returned `500` in verification | `200` with paged JSON | backend defect |
+| `POST /api/v1/customer/property-requests` | Request redirects (`302`) instead of creating a record | `200` and persisted request | backend defect |
+| `GET /api/v1/staff/customers` | Staff happy-path request returned `500` in verification | `200` with paged JSON | backend defect |
 
 ## Workflow
 
@@ -31,3 +31,4 @@ Use this document to record failures where the test script is correct but the ba
 2. For each failure, decide `script issue` or `backend defect`.
 3. Fix `script issue` in test code immediately.
 4. Leave `backend defect` tests strict and log the mismatch here or in issue tracking.
+

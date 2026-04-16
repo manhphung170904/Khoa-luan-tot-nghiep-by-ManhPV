@@ -27,7 +27,7 @@
             padding: 1.5rem;
         }
 
-        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        /* -- PAGE HEADER ---------------------------------------------------- */
         .page-header-bar {
             display: flex;
             align-items: center;
@@ -58,7 +58,7 @@
             margin-top: 0.2rem;
         }
 
-        /* ══ HEADER BUTTONS ═════════════════════════════════════════════════ */
+        /* -- HEADER BUTTONS ------------------------------------------------- */
         .btn-hd {
             padding: 0.45rem 0.875rem;
             border-radius: 7px;
@@ -83,7 +83,7 @@
             color: #fff;
         }
 
-        /* ══ FILTER CARD ════════════════════════════════════════════════════ */
+        /* -- FILTER CARD ---------------------------------------------------- */
         .filter-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -208,7 +208,7 @@
             box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
         }
 
-        /* ══ TABLE CARD ═════════════════════════════════════════════════════ */
+        /* -- TABLE CARD ----------------------------------------------------- */
         .table-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -249,7 +249,7 @@
             color: #2563eb;
         }
 
-        /* ══ TABLE ═══════════════════════════════════════════════════════════ */
+        /* -- TABLE ----------------------------------------------------------- */
         .dash-table {
             width: 100%;
             border-collapse: collapse;
@@ -469,7 +469,7 @@
     <main class="content">
         <div class="detail-body">
 
-            <!-- ── Page Header ─────────────────────────────────────────────────── -->
+            <!-- -- Page Header --------------------------------------------------- -->
             <div class="page-header-bar">
                 <div>
                     <h2>
@@ -484,7 +484,7 @@
                 </a>
             </div>
 
-            <!-- ── Filter Card ────────────────────────────────────────────────── -->
+            <!-- -- Filter Card -------------------------------------------------- -->
             <form class="filter-card" th:action="@{/admin/staff/search}" method="get">
                 <div class="filter-header">
                     <div class="filter-title">
@@ -522,7 +522,7 @@
                 </div>
             </form>
 
-            <!-- ── Admin Table ────────────────────────────────────────────────── -->
+            <!-- -- Admin Table -------------------------------------------------- -->
             <div class="table-card">
                 <div class="table-card-header admin-header">
                     <i class="bi bi-shield-check"></i>
@@ -545,7 +545,7 @@
                 <div id="paginationAdmin"></div>
             </div>
 
-            <!-- ── Staff Table ────────────────────────────────────────────────── -->
+            <!-- -- Staff Table -------------------------------------------------- -->
             <div class="table-card">
                 <div class="table-card-header staff-header">
                     <i class="bi bi-people"></i>
@@ -711,3 +711,6 @@
 </body>
 
 </html>
+
+
+

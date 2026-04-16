@@ -38,7 +38,6 @@ public class SecurityConfig {
             "/register",
             "/register/**",
             "/forgot-password",
-            "/api/auth/forgot-password",
             "/api/v1/auth/forgot-password",
             "/api/v1/public/**",
             "/auth/reset-password",
@@ -73,10 +72,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_PATHS).permitAll()
 
-                        .requestMatchers("/payment/qr/**").hasRole("CUSTOMER")
-                        .requestMatchers("/admin/**", "/api/admin/**", "/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/payment/**").hasRole("CUSTOMER")
+                        .requestMatchers("/admin/**", "/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/staff/**", "/api/v1/staff/**").hasRole("STAFF")
-                        .requestMatchers("/customer/**", "/api/customer/**", "/api/v1/customer/**").hasRole("CUSTOMER")
+                        .requestMatchers("/customer/**", "/api/v1/customer/**").hasRole("CUSTOMER")
 
                         .anyRequest().authenticated()
                 )

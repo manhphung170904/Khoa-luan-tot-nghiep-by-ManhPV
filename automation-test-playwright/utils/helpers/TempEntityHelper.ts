@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext, type APIResponse } from "@playwright/test";
+﻿import { expect, type APIRequestContext, type APIResponse } from "@playwright/test";
 import { TestDataFactory } from "./TestDataFactory";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
@@ -66,7 +66,7 @@ export class TempEntityHelper {
   }
 
   static async layMotStaffIdDangTonTai(request: APIRequestContext): Promise<number> {
-    const response = await request.get("/admin/staff/list/page", {
+    const response = await request.get("/api/v1/admin/staff", {
       params: { page: 1, size: 20, role: "STAFF" }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(response);
@@ -84,12 +84,12 @@ export class TempEntityHelper {
     const fullName = String(payload.fullName);
     const username = String(payload.username);
 
-    const taoResponse = await request.post("/admin/staff/add", {
+    const taoResponse = await request.post("/api/v1/admin/staff", {
       data: payload
     });
     expect([200, 201]).toContain(taoResponse.status());
 
-    const timResponse = await request.get("/admin/staff/search/page", {
+    const timResponse = await request.get("/api/v1/admin/staff", {
       params: { page: 1, size: 20, fullName, role }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
@@ -104,7 +104,7 @@ export class TempEntityHelper {
       return;
     }
 
-    const response = await request.delete(`/admin/staff/delete/${id}`);
+    const response = await request.delete(`/api/v1/admin/staff/${id}`);
     expect([200, 204, 404]).toContain(response.status());
   }
 
@@ -114,12 +114,12 @@ export class TempEntityHelper {
     const fullName = String(payload.fullName);
     const username = String(payload.username);
 
-    const taoResponse = await request.post("/admin/customer/add", {
+    const taoResponse = await request.post("/api/v1/admin/customers", {
       data: payload
     });
     expect([200, 201]).toContain(taoResponse.status());
 
-    const timResponse = await request.get("/admin/customer/search/page", {
+    const timResponse = await request.get("/api/v1/admin/customers", {
       params: { page: 1, size: 20, fullName }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
@@ -134,7 +134,7 @@ export class TempEntityHelper {
       return;
     }
 
-    const response = await request.delete(`/admin/customer/delete/${id}`);
+    const response = await request.delete(`/api/v1/admin/customers/${id}`);
     expect([200, 204, 404]).toContain(response.status());
   }
 
@@ -145,10 +145,10 @@ export class TempEntityHelper {
     const payload = TestDataFactory.buildBuildingPayload({}, transactionType);
     const name = String(payload.name);
 
-    const taoResponse = await request.post("/admin/building/add", { data: payload });
+    const taoResponse = await request.post("/api/v1/admin/buildings", { data: payload });
     expect([200, 201]).toContain(taoResponse.status());
 
-    const timResponse = await request.get("/admin/building/search/page", {
+    const timResponse = await request.get("/api/v1/admin/buildings", {
       params: { page: 1, size: 20, name }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
@@ -163,17 +163,17 @@ export class TempEntityHelper {
       return;
     }
 
-    const response = await request.delete(`/admin/building/delete/${id}`);
+    const response = await request.delete(`/api/v1/admin/buildings/${id}`);
     expect([200, 204, 404]).toContain(response.status());
   }
 
   static async capNhatPhanCongBuilding(request: APIRequestContext, staffId: number, buildingIds: number[]): Promise<void> {
-    const response = await request.put(`/admin/staff/${staffId}/assignments/buildings`, { data: buildingIds });
+    const response = await request.put(`/api/v1/admin/staff/${staffId}/assignments/buildings`, { data: buildingIds });
     expect([200, 204]).toContain(response.status());
   }
 
   static async capNhatPhanCongCustomer(request: APIRequestContext, staffId: number, customerIds: number[]): Promise<void> {
-    const response = await request.put(`/admin/staff/${staffId}/assignments/customers`, { data: customerIds });
+    const response = await request.put(`/api/v1/admin/staff/${staffId}/assignments/customers`, { data: customerIds });
     expect([200, 204]).toContain(response.status());
   }
 
@@ -191,10 +191,10 @@ export class TempEntityHelper {
       staffId: staff.id
     });
 
-    const taoResponse = await request.post("/admin/contract/add", { data: payload });
+    const taoResponse = await request.post("/api/v1/admin/contracts", { data: payload });
     expect([200, 201]).toContain(taoResponse.status());
 
-    const timResponse = await request.get("/admin/contract/search/page", {
+    const timResponse = await request.get("/api/v1/admin/contracts", {
       params: { page: 1, size: 20, customerId: customer.id }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
@@ -211,7 +211,7 @@ export class TempEntityHelper {
       return;
     }
 
-    await request.delete(`/admin/contract/delete/${temp.id}`);
+    await request.delete(`/api/v1/admin/contracts/${temp.id}`);
     await this.capNhatPhanCongCustomer(request, temp.staff.id, []);
     await this.capNhatPhanCongBuilding(request, temp.staff.id, []);
     await this.xoaCustomerTam(request, temp.customer.id);
@@ -228,10 +228,10 @@ export class TempEntityHelper {
     const month = Number(payload.month);
     const year = Number(payload.year);
 
-    const taoResponse = await request.post("/admin/invoice/add", { data: payload });
+    const taoResponse = await request.post("/api/v1/admin/invoices", { data: payload });
     expect([200, 201]).toContain(taoResponse.status());
 
-    const timResponse = await request.get("/admin/invoice/search/page", {
+    const timResponse = await request.get("/api/v1/admin/invoices", {
       params: { page: 1, size: 20, customerId: contract.customer.id, month, year }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
@@ -246,7 +246,7 @@ export class TempEntityHelper {
       return;
     }
 
-    await request.delete(`/admin/invoice/delete/${temp.id}`);
+    await request.delete(`/api/v1/admin/invoices/${temp.id}`);
     await this.xoaContractTam(request, temp.contract);
   }
 
@@ -264,10 +264,10 @@ export class TempEntityHelper {
       staffId: staff.id
     });
 
-    const taoResponse = await request.post("/admin/sale-contract/add", { data: payload });
+    const taoResponse = await request.post("/api/v1/admin/sale-contracts", { data: payload });
     expect([200, 201]).toContain(taoResponse.status());
 
-    const timResponse = await request.get("/admin/sale-contract/search/page", {
+    const timResponse = await request.get("/api/v1/admin/sale-contracts", {
       params: { page: 1, size: 20, customerName: customer.fullName }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
@@ -284,7 +284,7 @@ export class TempEntityHelper {
       return;
     }
 
-    await request.delete(`/admin/sale-contract/delete/${temp.id}`);
+    await request.delete(`/api/v1/admin/sale-contracts/${temp.id}`);
     await this.capNhatPhanCongCustomer(request, temp.staff.id, []);
     await this.capNhatPhanCongBuilding(request, temp.staff.id, []);
     await this.xoaCustomerTam(request, temp.customer.id);
@@ -305,7 +305,7 @@ export class TempEntityHelper {
     requestType: "RENT" | "BUY" = "RENT"
   ): Promise<TempPropertyRequest> {
     const payload = TestDataFactory.buildPropertyRequestPayload({ buildingId }, requestType);
-    const submitResponse = await customerRequest.post("/api/customer/property-request/submit", {
+    const submitResponse = await customerRequest.post("/api/v1/customer/property-requests", {
       data: payload,
       failOnStatusCode: false,
       maxRedirects: 0
@@ -336,3 +336,5 @@ export class TempEntityHelper {
     await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [id]);
   }
 }
+
+

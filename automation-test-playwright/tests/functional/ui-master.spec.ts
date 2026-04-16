@@ -1,4 +1,4 @@
-﻿import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { AuthSessionHelper } from "@helpers/AuthSessionHelper";
 import { AssertionHelper } from "@helpers/AssertionHelper";
 import { PageScenarioHelper } from "@helpers/PageScenarioHelper";
@@ -421,7 +421,7 @@ test.describe("UI Master Suite", () => {
     const staffDashboardPage = new StaffDashboardPage(page);
     await AuthSessionHelper.loginAsStaffUi(page);
     await staffDashboardPage.open();
-    await expect(page.locator("body")).toContainText(/dashboard|há»£p Ä‘á»“ng|invoice/i);
+    await expect(page.locator("body")).toContainText(/dashboard|hợp đồng|invoice/i);
   });
 
   test("UI-049 (Trang danh sach toa nha nhan vien)", async ({ page }) => {
@@ -465,7 +465,7 @@ test.describe("UI Master Suite", () => {
     const customerBuildingListPage = new CustomerBuildingListPage(page);
     await AuthSessionHelper.loginAsCustomerUi(page);
     await customerBuildingListPage.open();
-    await expect(page.locator("body")).toContainText(/tÃ²a nhÃ |building/i);
+    await expect(page.locator("body")).toContainText(/tòa nhà|building/i);
   });
 
   test("UI-056 (Trang danh sach hop dong khach hang)", async ({ page }) => {

@@ -64,7 +64,7 @@
             color: #111827;
         }
 
-        /* ── Sold banner ── */
+        /* -- Sold banner -- */
         .sold-banner {
             display: flex;
             align-items: center;
@@ -91,7 +91,7 @@
             margin-top: 0.1rem;
         }
 
-        /* ── Cards ── */
+        /* -- Cards -- */
         .form-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -143,7 +143,7 @@
             font-size: 0.75rem;
         }
 
-        /* ── Form controls ── */
+        /* -- Form controls -- */
         .form-label {
             font-size: 0.75rem;
             font-weight: 600;
@@ -231,7 +231,7 @@
         }
 
 
-        /* ── Type selector (readonly display) ── */
+        /* -- Type selector (readonly display) -- */
         .type-display {
             display: inline-flex;
             align-items: center;
@@ -280,7 +280,7 @@
             border-color: #ea580c;
         }
 
-        /* ── Tag input ── */
+        /* -- Tag input -- */
         .tag-input-wrapper {
             display: flex;
             flex-wrap: wrap;
@@ -337,7 +337,7 @@
             background: transparent;
         }
 
-        /* ── Staff list ── */
+        /* -- Staff list -- */
         .staff-list {
             border: 1px solid #e5e7eb;
             border-radius: 7px;
@@ -415,7 +415,7 @@
             font-weight: 600;
         }
 
-        /* ── Buttons ── */
+        /* -- Buttons -- */
         .form-actions {
             display: flex;
             gap: 0.625rem;
@@ -465,7 +465,7 @@
             opacity: 0.45 !important;
         }
 
-        /* ── Type btn ── */
+        /* -- Type btn -- */
         .type-btn {
             padding: 0.4rem 0.75rem;
             border: 1.5px solid #e5e7eb;
@@ -510,7 +510,7 @@
             margin-top: 0.25rem;
         }
 
-        /* ── Upload ── */
+        /* -- Upload -- */
         .upload-zone {
             border: 2px dashed #e5e7eb;
             border-radius: 8px;
@@ -621,7 +621,7 @@
             color: #374151;
         }
 
-        /* ══ INFO BOX ═══════════════════════════════════════════════════════ */
+        /* -- INFO BOX ------------------------------------------------------- */
         .info-box {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
@@ -978,9 +978,9 @@
 
 
     <script>
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // TRANSACTION TYPE TOGGLE
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         function setTxType(val) {
             document.getElementById('transactionTypeVal').value = val;
             document.querySelectorAll('.type-btn[data-val]').forEach(function (b) {
@@ -1005,12 +1005,12 @@
             if (rentAreaEl) rentAreaEl.dataset.requiredForRent = (val === 'FOR_RENT') ? 'true' : 'false';
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // LOCK FORM — disable toàn bộ fields, buttons khi không được phép sửa
         // Case 1: FOR_RENT + hasActiveContract  → lock
         // Case 2: FOR_SALE + isSold             → lock
         // Case 3: ngược lại                     → cho phép sửa bình thường
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         function lockForm() {
             var form = document.getElementById('buildingForm');
 
@@ -1075,9 +1075,9 @@
             });
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // TAG INPUT (diện tích cho thuê)
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         var tagWrapper = document.getElementById('tagWrapper');
         var tagRealInput = document.getElementById('tagRealInput');
         var rentAreaHidden = document.getElementById('rentAreaValuesInput');
@@ -1129,9 +1129,9 @@
             renderTags();
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // STAFF
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         function updateStaffCount() {
             var count = document.querySelectorAll('input[name="staffIds"]:checked').length;
             var countEl = document.getElementById('selectedCount');
@@ -1142,9 +1142,9 @@
             });
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // RESET FORM
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         function resetForm() {
             document.querySelectorAll('.form-control.editable').forEach(function (el) { el.value = ''; });
             document.querySelectorAll('select.form-select.editable').forEach(function (el) { el.value = ''; });
@@ -1155,9 +1155,9 @@
             removeImage();
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // UPLOAD
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         function handleImageSelect(input) {
             var file = input.files[0];
             if (!file) return;
@@ -1204,9 +1204,9 @@
             el.innerHTML = msg; el.className = 'upload-status ' + type;
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // DOM READY — 1 listener duy nhất, thứ tự: lock → staff init
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         document.addEventListener('DOMContentLoaded', function () {
 
             // ── Đọc flag từ server ──
@@ -1237,9 +1237,9 @@
             updateStaffCount();
         });
 
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         // SUBMIT
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ---------------------------------------------------------------------------
         document.getElementById('buildingForm').addEventListener('submit', function (e) {
             e.preventDefault();
 

@@ -54,7 +54,7 @@ test.describe('Customer Profile API Tests', () => {
     test.describe.serial('Customer Profile - Update flows with DB validation', () => {
         test('[API_TC_011] [Happy Path] Update email with valid password and verify DB change', async ({ request }) => {
             const newEmail = `customer_email_update_${Date.now()}@example.com`;
-            const response = await request.put('/customer/profile/email', {
+            const response = await request.put('/api/v1/customer/profile/email', {
                 headers: {
                     Cookie: customerCookies,
                     'Content-Type': 'application/json'
@@ -76,7 +76,7 @@ test.describe('Customer Profile API Tests', () => {
         });
 
         test('[API_TC_012] [Negative] Reject customer email update with wrong current password', async ({ request }) => {
-            const response = await request.put('/customer/profile/email', {
+            const response = await request.put('/api/v1/customer/profile/email', {
                 headers: {
                     Cookie: customerCookies,
                     'Content-Type': 'application/json'
@@ -91,7 +91,7 @@ test.describe('Customer Profile API Tests', () => {
         });
 
         test('[API_TC_013] [Happy Path] Send OTP for phone update and update phone successfully', async ({ request }) => {
-            const responseOtp = await request.post('/customer/profile/otp/PROFILE_PHONE', {
+            const responseOtp = await request.post('/api/v1/customer/profile/otp/PROFILE_PHONE', {
                 headers: { Cookie: customerCookies }
             });
             expect(responseOtp.status()).toBe(200);
@@ -100,7 +100,7 @@ test.describe('Customer Profile API Tests', () => {
             await resetOtpRow(currentEmail, 'PROFILE_PHONE', staticOtp);
 
             const newPhone = `09${Math.floor(100000000 + Math.random() * 900000000)}`;
-            const responseUpdate = await request.put('/customer/profile/phoneNumber', {
+            const responseUpdate = await request.put('/api/v1/customer/profile/phone-number', {
                 headers: {
                     Cookie: customerCookies,
                     'Content-Type': 'application/json'
@@ -123,7 +123,7 @@ test.describe('Customer Profile API Tests', () => {
                 [customerId]
             ))[0].password;
 
-            const responseOtp = await request.post('/customer/profile/otp/PROFILE_PASSWORD', {
+            const responseOtp = await request.post('/api/v1/customer/profile/otp/PROFILE_PASSWORD', {
                 headers: { Cookie: customerCookies }
             });
             expect(responseOtp.status()).toBe(200);
@@ -131,7 +131,7 @@ test.describe('Customer Profile API Tests', () => {
             const currentEmail = (await db.query<{ email: string }>('SELECT email FROM customer WHERE id = ?', [customerId]))[0].email;
             await resetOtpRow(currentEmail, 'PROFILE_PASSWORD', staticOtp);
 
-            const responseUpdate = await request.put('/customer/profile/password', {
+            const responseUpdate = await request.put('/api/v1/customer/profile/password', {
                 headers: {
                     Cookie: customerCookies,
                     'Content-Type': 'application/json'
@@ -151,7 +151,7 @@ test.describe('Customer Profile API Tests', () => {
         });
 
         test('[API_TC_015] [Negative] Reject password update when confirmation does not match', async ({ request }) => {
-            const responseOtp = await request.post('/customer/profile/otp/PROFILE_PASSWORD', {
+            const responseOtp = await request.post('/api/v1/customer/profile/otp/PROFILE_PASSWORD', {
                 headers: { Cookie: customerCookies }
             });
             expect(responseOtp.status()).toBe(200);
@@ -159,7 +159,7 @@ test.describe('Customer Profile API Tests', () => {
             const currentEmail = (await db.query<{ email: string }>('SELECT email FROM customer WHERE id = ?', [customerId]))[0].email;
             await resetOtpRow(currentEmail, 'PROFILE_PASSWORD', staticOtp);
 
-            const responseUpdate = await request.put('/customer/profile/password', {
+            const responseUpdate = await request.put('/api/v1/customer/profile/password', {
                 headers: {
                     Cookie: customerCookies,
                     'Content-Type': 'application/json'
@@ -176,3 +176,4 @@ test.describe('Customer Profile API Tests', () => {
         });
     });
 });
+

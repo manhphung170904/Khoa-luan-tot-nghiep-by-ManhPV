@@ -1,6 +1,7 @@
-import type { RequestDescriptor } from "@api/adminApiUtils";
+﻿import type { RequestDescriptor } from "@api/adminApiUtils";
 
 export const paymentEndpointCatalog: RequestDescriptor[] = [
-  { id: "PAY-001", method: "GET", path: "/payment/qr/1", roleExpected: "customer", kind: "readonly" },
-  { id: "PAY-002", method: "GET", path: "/payment/qr/confirm/1", roleExpected: "customer", kind: "background-trigger" }
+  { id: "PAY-001", method: "GET", path: "/api/v1/payment/qr/1", roleExpected: "customer", kind: "readonly" },
+  { id: "PAY-002", method: "GET", path: "/api/v1/payment/qr/confirm/1", roleExpected: "customer", kind: "background-trigger" }
 ];
+

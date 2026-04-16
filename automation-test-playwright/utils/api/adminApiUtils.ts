@@ -221,7 +221,7 @@ export async function createTempAdmin(playwright: RequestContextFactory): Promis
   const email = randomEmail(unique);
   const phone = randomPhone();
 
-  const createResponse = await bootstrapAdmin.post("/admin/staff/add", {
+  const createResponse = await bootstrapAdmin.post("/api/v1/admin/staff", {
     failOnStatusCode: false,
     data: {
       username,
@@ -248,7 +248,7 @@ export async function createTempAdmin(playwright: RequestContextFactory): Promis
       await context.dispose();
       const admin = await createRoleContext(playwright, "admin");
       try {
-        await admin.delete(`/admin/staff/delete/${staffId}`, { failOnStatusCode: false });
+        await admin.delete(`/api/v1/admin/staff/${staffId}`, { failOnStatusCode: false });
       } finally {
         await admin.dispose();
       }
@@ -257,3 +257,5 @@ export async function createTempAdmin(playwright: RequestContextFactory): Promis
 }
 
 export { TempEntityHelper };
+
+

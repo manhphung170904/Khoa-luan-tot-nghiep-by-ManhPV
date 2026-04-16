@@ -53,14 +53,14 @@ test.describe('Admin Contract API Tests', () => {
 
         // ── SECURITY ──────────────────────────────────────────────
         test('[CTR_001] POST /add - [Security] Chặn request thiếu Admin Token', async ({ request }) => {
-            const response = await request.post('/admin/contract/add', { data: validPayload });
+            const response = await request.post('/api/v1/admin/contracts', { data: validPayload });
             expect([200, 302, 401, 403]).toContain(response.status());
         });
 
         // ── NEGATIVE ──────────────────────────────────────────────
         test('[CTR_002] POST /add - [Negative] rentPrice < 0', async ({ request }) => {
             const invalidPayload = { ...validPayload, rentPrice: -5 };
-            const response = await request.post('/admin/contract/add', {
+            const response = await request.post('/api/v1/admin/contracts', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -69,7 +69,7 @@ test.describe('Admin Contract API Tests', () => {
 
         test('[CTR_003] POST /add - [Negative] buildingId không tồn tại', async ({ request }) => {
             const invalidPayload = { ...validPayload, buildingId: 999999 };
-            const response = await request.post('/admin/contract/add', {
+            const response = await request.post('/api/v1/admin/contracts', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -78,7 +78,7 @@ test.describe('Admin Contract API Tests', () => {
 
         test('[CTR_004] POST /add - [Negative] customerId không tồn tại', async ({ request }) => {
             const invalidPayload = { ...validPayload, customerId: 999999 };
-            const response = await request.post('/admin/contract/add', {
+            const response = await request.post('/api/v1/admin/contracts', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -91,7 +91,7 @@ test.describe('Admin Contract API Tests', () => {
                 startDate: '2026-01-01',
                 endDate: '2025-01-01'
             };
-            const response = await request.post('/admin/contract/add', {
+            const response = await request.post('/api/v1/admin/contracts', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -108,7 +108,7 @@ test.describe('Admin Contract API Tests', () => {
 
             if (unmanaged.length > 0) {
                 const invalidPayload = { ...validPayload, buildingId: unmanaged[0].id };
-                const response = await request.post('/admin/contract/add', {
+                const response = await request.post('/api/v1/admin/contracts', {
                     headers: { Cookie: adminCookies },
                     data: invalidPayload
                 });
@@ -120,7 +120,7 @@ test.describe('Admin Contract API Tests', () => {
 
         // ── POSITIVE: Create ──────────────────────────────────────
         test('[CTR_006] POST /add - [Positive] Tạo hợp đồng thành công & DB Check', async ({ request }) => {
-            const response = await request.post('/admin/contract/add', {
+            const response = await request.post('/api/v1/admin/contracts', {
                 headers: { Cookie: adminCookies },
                 data: validPayload
             });
@@ -175,7 +175,7 @@ test.describe('Admin Contract API Tests', () => {
                 status: 'EXPIRED'
             };
 
-            const response = await request.put('/admin/contract/edit', {
+            const response = await request.put(`/api/v1/admin/contracts/${createdContractId}`, {
                 headers: { Cookie: adminCookies },
                 data: editPayload
             });
@@ -188,7 +188,7 @@ test.describe('Admin Contract API Tests', () => {
         });
 
         test('[CTR_010] PUT /status - [Positive] Trigger cập nhật status tự động', async ({ request }) => {
-            const response = await request.put('/admin/contract/status', {
+            const response = await request.put('/api/v1/admin/contracts/status', {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -196,14 +196,14 @@ test.describe('Admin Contract API Tests', () => {
 
         // ── DELETE ────────────────────────────────────────────────
         test('[CTR_013] DELETE /delete/{id} - [Negative] ID không tồn tại', async ({ request }) => {
-            const response = await request.delete('/admin/contract/delete/999999', {
+            const response = await request.delete('/api/v1/admin/contracts/999999', {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(400);
         });
 
         test('[CTR_011] DELETE /delete/{id} - [Positive] Xóa hợp đồng & Verify DB', async ({ request }) => {
-            const response = await request.delete(`/admin/contract/delete/${createdContractId}`, {
+            const response = await request.delete(`/api/v1/admin/contracts/${createdContractId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -215,3 +215,4 @@ test.describe('Admin Contract API Tests', () => {
         });
     });
 });
+

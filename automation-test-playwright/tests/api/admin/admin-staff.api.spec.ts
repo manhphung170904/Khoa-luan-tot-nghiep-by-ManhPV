@@ -35,16 +35,16 @@ test.describe('Admin Staff API Tests', () => {
 
     test.describe.serial('Luồng CRUD Staff & Phân Quyền', () => {
 
-        // ── SECURITY ──────────────────────────────────────────────
+        // -- SECURITY ----------------------------------------------
         test('[STF_001] POST /add - [Security] Reject thiếu Admin Token', async ({ request }) => {
-            const response = await request.post('/admin/staff/add', { data: validStaffPayload });
+            const response = await request.post('/api/v1/admin/staff', { data: validStaffPayload });
             expect([200, 302, 401, 403]).toContain(response.status());
         });
 
-        // ── NEGATIVE: DTO Validation ──────────────────────────────
+        // -- NEGATIVE: DTO Validation ------------------------------
         test('[STF_002] POST /add - [Negative] username < 4 ký tự (@Size min=4)', async ({ request }) => {
             const invalidPayload = { ...validStaffPayload, username: 'abc' };
-            const response = await request.post('/admin/staff/add', {
+            const response = await request.post('/api/v1/admin/staff', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -53,7 +53,7 @@ test.describe('Admin Staff API Tests', () => {
 
         test('[STF_017] POST /add - [Negative] password < 6 ký tự (@Size min=6)', async ({ request }) => {
             const invalidPayload = { ...validStaffPayload, password: '12345' };
-            const response = await request.post('/admin/staff/add', {
+            const response = await request.post('/api/v1/admin/staff', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -62,7 +62,7 @@ test.describe('Admin Staff API Tests', () => {
 
         test('[STF_003] POST /add - [Negative] SĐT sai định dạng (không bắt đầu bằng 0)', async ({ request }) => {
             const invalidPayload = { ...validStaffPayload, phone: '1987654321' };
-            const response = await request.post('/admin/staff/add', {
+            const response = await request.post('/api/v1/admin/staff', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
@@ -71,14 +71,14 @@ test.describe('Admin Staff API Tests', () => {
 
         test('[STF_018] POST /add - [Negative] fullName > 100 ký tự (@Size max=100)', async ({ request }) => {
             const invalidPayload = { ...validStaffPayload, fullName: 'A'.repeat(101) };
-            const response = await request.post('/admin/staff/add', {
+            const response = await request.post('/api/v1/admin/staff', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
             expect(response.status()).toBe(400);
         });
 
-        // ── BOUNDARY ──────────────────────────────────────────────
+        // -- BOUNDARY ----------------------------------------------
         test('[STF_015] POST /add - [Boundary] username = 4 ký tự (đúng min)', async ({ request }) => {
             const boundaryPayload = {
                 ...validStaffPayload,
@@ -86,7 +86,7 @@ test.describe('Admin Staff API Tests', () => {
                 email: `bnd4_${uniqueSuffix}@estate.com`,
                 phone: `0800${String(uniqueSuffix).slice(-6)}`
             };
-            const response = await request.post('/admin/staff/add', {
+            const response = await request.post('/api/v1/admin/staff', {
                 headers: { Cookie: adminCookies },
                 data: boundaryPayload
             });
@@ -104,22 +104,22 @@ test.describe('Admin Staff API Tests', () => {
 
         test('[STF_016] POST /add - [Boundary] username = 31 ký tự (vượt max=30)', async ({ request }) => {
             const invalidPayload = { ...validStaffPayload, username: 'a'.repeat(31) };
-            const response = await request.post('/admin/staff/add', {
+            const response = await request.post('/api/v1/admin/staff', {
                 headers: { Cookie: adminCookies },
                 data: invalidPayload
             });
             expect(response.status()).toBe(400);
         });
 
-        // ── POSITIVE: Create ──────────────────────────────────────
+        // -- POSITIVE: Create --------------------------------------
         test('[STF_004] POST /add - [Positive] Tạo nhân viên thành công & DB Check', async ({ request }) => {
-            const response = await request.post('/admin/staff/add', {
+            const response = await request.post('/api/v1/admin/staff', {
                 headers: { Cookie: adminCookies },
                 data: validStaffPayload
             });
             expect(response.status()).toBe(200);
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT * FROM staff WHERE username = ?', [validStaffPayload.username]);
             expect(dbResult.length).toBe(1);
             expect(dbResult[0].email).toBe(validStaffPayload.email);
@@ -129,9 +129,9 @@ test.describe('Admin Staff API Tests', () => {
             expect(createdStaffId).toBeGreaterThan(0);
         });
 
-        // ── NEGATIVE: Duplicate ───────────────────────────────────
+        // -- NEGATIVE: Duplicate -----------------------------------
         test('[STF_005] POST /add - [Negative] Duplicate Username', async ({ request }) => {
-            const response = await request.post('/admin/staff/add', {
+            const response = await request.post('/api/v1/admin/staff', {
                 headers: { Cookie: adminCookies },
                 data: validStaffPayload
             });
@@ -145,7 +145,7 @@ test.describe('Admin Staff API Tests', () => {
                 phone: '0911111111'
                 // email giữ nguyên → trùng
             };
-            const response = await request.post('/admin/staff/add', {
+            const response = await request.post('/api/v1/admin/staff', {
                 headers: { Cookie: adminCookies },
                 data: duplicatePayload
             });
@@ -159,14 +159,14 @@ test.describe('Admin Staff API Tests', () => {
                 email: `unique2_${uniqueSuffix}@estate.com`
                 // phone giữ nguyên → trùng
             };
-            const response = await request.post('/admin/staff/add', {
+            const response = await request.post('/api/v1/admin/staff', {
                 headers: { Cookie: adminCookies },
                 data: duplicatePayload
             });
             expect([400, 409]).toContain(response.status());
         });
 
-        // ── POSITIVE: Read ────────────────────────────────────────
+        // -- POSITIVE: Read ----------------------------------------
         test('[STF_006] GET /list/page - [Positive] Lấy danh sách staff', async ({ request }) => {
             const response = await request.get('/admin/staff/list/page?page=1&size=100', {
                 headers: { Cookie: adminCookies }
@@ -194,7 +194,7 @@ test.describe('Admin Staff API Tests', () => {
         });
 
         test('[STF_022] GET /customers - [Positive] Load danh sách khách hàng', async ({ request }) => {
-            const response = await request.get('/admin/staff/customers', {
+            const response = await request.get('/api/v1/admin/staff/customers', {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -203,7 +203,7 @@ test.describe('Admin Staff API Tests', () => {
         });
 
         test('[STF_008] GET /buildings - [Positive] Load danh sách tòa nhà', async ({ request }) => {
-            const response = await request.get('/admin/staff/buildings', {
+            const response = await request.get('/api/v1/admin/staff/buildings', {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -211,7 +211,7 @@ test.describe('Admin Staff API Tests', () => {
             expect(Array.isArray(data)).toBe(true);
         });
 
-        // ── ASSIGNMENT: Building ──────────────────────────────────
+        // -- ASSIGNMENT: Building ----------------------------------
         test('[STF_009] PUT /{id}/assignments/buildings - [Positive] Phân công & DB Check', async ({ request }) => {
             // Lấy 2 building IDs thực tế từ DB
             const buildings = await db.query('SELECT id FROM building ORDER BY id LIMIT 2');
@@ -221,13 +221,13 @@ test.describe('Admin Staff API Tests', () => {
             }
             const assignedIds = buildings.map((b: any) => b.id);
 
-            const response = await request.put(`/admin/staff/${createdStaffId}/assignments/buildings`, {
+            const response = await request.put(`/api/v1/admin/staff/${createdStaffId}/assignments/buildings`, {
                 headers: { Cookie: adminCookies },
                 data: assignedIds
             });
             expect(response.status()).toBe(200);
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbCheck = await db.query('SELECT building_id FROM assignment_building WHERE staff_id = ?', [createdStaffId]);
             const dbIds = dbCheck.map((row: any) => row.building_id);
             for (const id of assignedIds) {
@@ -236,7 +236,7 @@ test.describe('Admin Staff API Tests', () => {
         });
 
         test('[STF_010] GET /{id}/assignments/buildings - [Positive] Verify assignments qua API', async ({ request }) => {
-            const response = await request.get(`/admin/staff/${createdStaffId}/assignments/buildings`, {
+            const response = await request.get(`/api/v1/admin/staff/${createdStaffId}/assignments/buildings`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
@@ -246,14 +246,14 @@ test.describe('Admin Staff API Tests', () => {
         });
 
         test('[STF_023] PUT /{id}/assignments/buildings - [Negative] Staff ID không tồn tại', async ({ request }) => {
-            const response = await request.put('/admin/staff/999999/assignments/buildings', {
+            const response = await request.put('/api/v1/admin/staff/999999/assignments/buildings', {
                 headers: { Cookie: adminCookies },
                 data: [1]
             });
             expect([400, 404, 500]).toContain(response.status());
         });
 
-        // ── ASSIGNMENT: Customer ──────────────────────────────────
+        // -- ASSIGNMENT: Customer ----------------------------------
         test('[STF_011] PUT /{id}/assignments/customers - [Positive] Phân công khách hàng', async ({ request }) => {
             const customers = await db.query('SELECT id FROM customer ORDER BY id LIMIT 1');
             if (customers.length === 0) {
@@ -262,23 +262,23 @@ test.describe('Admin Staff API Tests', () => {
             }
             const assignedIds = customers.map((c: any) => c.id);
 
-            const response = await request.put(`/admin/staff/${createdStaffId}/assignments/customers`, {
+            const response = await request.put(`/api/v1/admin/staff/${createdStaffId}/assignments/customers`, {
                 headers: { Cookie: adminCookies },
                 data: assignedIds
             });
             expect(response.status()).toBe(200);
         });
 
-        // ── DELETE: Business Rule ─────────────────────────────────
+        // -- DELETE: Business Rule ---------------------------------
         test('[STF_012] DELETE /delete/{id} - [Business Rule] Staff đang có assignment', async ({ request }) => {
-            const response = await request.delete(`/admin/staff/delete/${createdStaffId}`, {
+            const response = await request.delete(`/api/v1/admin/staff/${createdStaffId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(400);
         });
 
         test('[STF_021] DELETE /delete/{id} - [Negative] ID không tồn tại', async ({ request }) => {
-            const response = await request.delete('/admin/staff/delete/999999', {
+            const response = await request.delete('/api/v1/admin/staff/999999', {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(400);
@@ -286,22 +286,22 @@ test.describe('Admin Staff API Tests', () => {
 
         // ── TEARDOWN: Nhả assignments ─────────────────────────────
         test('[STF_013] PUT /{id}/assignments - [TearDown] Hủy quyền quản lý', async ({ request }) => {
-            await request.put(`/admin/staff/${createdStaffId}/assignments/buildings`, {
+            await request.put(`/api/v1/admin/staff/${createdStaffId}/assignments/buildings`, {
                 headers: { Cookie: adminCookies }, data: []
             });
-            await request.put(`/admin/staff/${createdStaffId}/assignments/customers`, {
+            await request.put(`/api/v1/admin/staff/${createdStaffId}/assignments/customers`, {
                 headers: { Cookie: adminCookies }, data: []
             });
         });
 
-        // ── POSITIVE: Delete ──────────────────────────────────────
+        // -- POSITIVE: Delete --------------------------------------
         test('[STF_014] DELETE /delete/{id} - [Positive] Xóa thành công & Verify DB', async ({ request }) => {
-            const response = await request.delete(`/admin/staff/delete/${createdStaffId}`, {
+            const response = await request.delete(`/api/v1/admin/staff/${createdStaffId}`, {
                 headers: { Cookie: adminCookies }
             });
             expect(response.status()).toBe(200);
 
-            // ── DB VALIDATION ──
+            // -- DB VALIDATION --
             const dbResult = await db.query('SELECT * FROM staff WHERE id = ?', [createdStaffId]);
             if (dbResult.length > 0) {
                 // Soft delete
@@ -313,3 +313,5 @@ test.describe('Admin Staff API Tests', () => {
         });
     });
 });
+
+

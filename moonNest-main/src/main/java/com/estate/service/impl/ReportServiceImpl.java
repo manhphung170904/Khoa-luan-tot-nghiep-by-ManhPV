@@ -40,7 +40,7 @@ public class ReportServiceImpl implements ReportService {
         dto.setLastYear(year - 1);
         dto.setYearBeforeLast(year - 2);
 
-        // ── cutoffMonth & cutoffLabel ─────────────────────────────────────────
+        // -- cutoffMonth & cutoffLabel -----------------------------------------
         final int cutoffMonth = (year == currentRealYear) ? currentRealMonth - 1 : 12;
         dto.setCutoffMonth(cutoffMonth);
         if (cutoffMonth == 0) {
@@ -57,7 +57,7 @@ public class ReportServiceImpl implements ReportService {
         List<BigDecimal> monthlyRent = calcMonthlyRentRevenue(year, cutoffMonth, allContracts);
         dto.setMonthlyRentRevenue(monthlyRent);
 
-        // ── 2. Monthly sale revenue ───────────────────────────────────────────
+        // -- 2. Monthly sale revenue -------------------------------------------
         List<BigDecimal> monthlySale = calcMonthlySaleRevenue(year, allSaleContracts);
         dto.setMonthlySaleRevenue(monthlySale);
 
@@ -107,7 +107,7 @@ public class ReportServiceImpl implements ReportService {
         }
         dto.setExpiringContractsCount(expiringCount);
 
-        // ── 8. Yearly revenue (3 năm) ────────────────────────────────────────
+        // -- 8. Yearly revenue (3 nam) ----------------------------------------
         dto.setYearlyRentRevenue(calcYearlyRent(year - 2, year - 1, year,
                 currentRealYear, currentRealMonth, allContracts));
         dto.setYearlySaleRevenue(calcYearlySale(year - 2, year - 1, year, allSaleContracts));
@@ -166,7 +166,7 @@ public class ReportServiceImpl implements ReportService {
         return dto;
     }
 
-    // ── HELPERS ───────────────────────────────────────────────────────────────
+    // -- HELPERS ---------------------------------------------------------------
 
     private boolean isValidContract(ContractEntity c,
                                     LocalDateTime startOfYear,

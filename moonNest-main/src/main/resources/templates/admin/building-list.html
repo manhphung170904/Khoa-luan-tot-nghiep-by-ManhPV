@@ -76,7 +76,7 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        /* ── Filter card ── */
+        /* -- Filter card -- */
         .filter-card {
             background: white;
             border: 1px solid #e5e7eb;
@@ -530,7 +530,7 @@
             color: #d1d5db;
         }
 
-        /* Placeholder row khi đang loading */
+        /* Placeholder row khi dang loading */
         .loading-row td {
             text-align: center;
             color: #9ca3af;
@@ -604,7 +604,7 @@
             }
         }
 
-        /* ── Mobile (≤ 768px) ── */
+        /* -- Mobile (= 768px) -- */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0 !important;
@@ -772,7 +772,7 @@
             }
         }
 
-        /* ── Small mobile (≤ 480px) ── */
+        /* -- Small mobile (= 480px) -- */
         @media (max-width: 480px) {
             main.content {
                 padding: 0.75rem;
@@ -887,7 +887,7 @@
             }
         }
 
-        /* ── Very small mobile (≤ 360px) ── */
+        /* -- Very small mobile (= 360px) -- */
         @media (max-width: 360px) {
             .range-inputs .form-control {
                 min-width: 0;
@@ -901,7 +901,7 @@
         }
 
 
-        /* ── Location search ── */
+        /* -- Location search -- */
         .location-search-wrap {
             position: relative;
         }
@@ -1010,7 +1010,7 @@
             margin-left: 0.5rem;
         }
 
-        /* ── Property type & Transaction badges ── */
+        /* -- Property type & Transaction badges -- */
         .property-type-badge,
         .transaction-badge {
             display: inline-flex;
@@ -1057,7 +1057,7 @@
         }
 
 
-        /* ── ID badge ── */
+        /* -- ID badge -- */
         .id-badge {
             display: inline-block;
             font-size: 0.75rem;
@@ -1413,7 +1413,7 @@
             if (price == null) return '';
             return new Intl.NumberFormat('vi-VN')
                 .format(price)
-                .replaceAll('.', ',') + ' đ';
+                .replaceAll('.', ',') + ' d';
         }
 
         function appendOptions($select, options) {
@@ -1640,7 +1640,7 @@
     </script>
 
     <script th:inline="javascript">
-        // ══ GOONG PLACES AUTOCOMPLETE ══════════════════════════════════════════
+        // -- GOONG PLACES AUTOCOMPLETE ------------------------------------------
         const GOONG_API_KEY = /*[[${goongApiKey}]]*/ '';
         let _autocompleteTimer = null;
         let _selectedLocation = null;
@@ -1760,3 +1760,5 @@
 </body>
 
 </html>
+
+

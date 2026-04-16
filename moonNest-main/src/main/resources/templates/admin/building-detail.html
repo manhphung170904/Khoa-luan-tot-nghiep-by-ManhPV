@@ -21,7 +21,7 @@
             margin-top: 72px;
         }
 
-        /* ══ HERO BANNER ══════════════════════════════════════════════════════ */
+        /* -- HERO BANNER ------------------------------------------------------ */
         .hero {
             position: relative;
             height: 240px;
@@ -147,7 +147,7 @@
             background: #b91c1c;
         }
 
-        /* ══ MAIN LAYOUT ══════════════════════════════════════════════════════ */
+        /* -- MAIN LAYOUT ------------------------------------------------------ */
         .detail-body {
             padding: 1.5rem;
         }
@@ -159,7 +159,7 @@
             margin-top: 1.25rem;
         }
 
-        /* ══ CARD ══════════════════════════════════════════════════════════════ */
+        /* -- CARD -------------------------------------------------------------- */
         .d-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -239,7 +239,7 @@
             font-weight: 400;
         }
 
-        /* ══ BADGES ════════════════════════════════════════════════════════════ */
+        /* -- BADGES ------------------------------------------------------------ */
         .bc {
             display: inline-flex;
             align-items: center;
@@ -327,7 +327,7 @@
             font-weight: 700;
         }
 
-        /* ══ RENT AREA TAGS ═══════════════════════════════════════════════════ */
+        /* -- RENT AREA TAGS --------------------------------------------------- */
         .rent-tags {
             display: flex;
             flex-wrap: wrap;
@@ -344,7 +344,7 @@
             border: 1px solid #dbeafe;
         }
 
-        /* ══ STAFF LIST ═══════════════════════════════════════════════════════ */
+        /* -- STAFF LIST ------------------------------------------------------- */
         .staff-list {
             display: flex;
             flex-direction: column;
@@ -375,7 +375,7 @@
             color: #3b82f6;
         }
 
-        /* ══ DETAIL TABLE (supplier, amenity, legal, planning) ════════════════ */
+        /* -- DETAIL TABLE (supplier, amenity, legal, planning) ---------------- */
         .dt {
             width: 100%;
             border-collapse: collapse;
@@ -574,10 +574,10 @@
 
     <main class="content">
 
-        <!-- ══ BODY ═══════════════════════════════════════════════════════════════ -->
+        <!-- -- BODY --------------------------------------------------------------- -->
         <div class="detail-body">
 
-            <!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
+            <!-- -- HERO -------------------------------------------------------------- -->
             <div class="hero">
                 <!-- Ảnh nếu có -->
                 <img th:if="${not #strings.isEmpty(building.image)}"
@@ -624,7 +624,7 @@
                 </div>
             </div><!-- end hero -->
 
-            <!-- ══ CONTENT ═══════════════════════════════════════════════════════════ -->
+            <!-- -- CONTENT ----------------------------------------------------------- -->
             <div class="detail-layout">
 
                 <!-- Thông tin + Đặc điểm gom chung 1 card -->
@@ -692,7 +692,7 @@
                                     <div class="fee-lbl">Giá thuê / m²</div>
                                     <div class="fee-val">
                                         <span class="bc bc-price" th:if="${building.rentPrice}"
-                                            th:text="${#numbers.formatDecimal(building.rentPrice,0,'COMMA',0,'POINT')}+' đ'"></span>
+                                            th:text="${#numbers.formatDecimal(building.rentPrice,0,'COMMA',0,'POINT')}+' d'"></span>
                                         <span th:unless="${building.rentPrice}" class="empty">—</span>
                                     </div>
                                 </div>
@@ -741,7 +741,7 @@
                                     <div class="fee-lbl">Giá bán</div>
                                     <div class="fee-val">
                                         <span class="bc bc-sale" th:if="${building.salePrice}"
-                                            th:text="${#numbers.formatDecimal(building.salePrice,0,'COMMA',0,'POINT')}+' đ'"></span>
+                                            th:text="${#numbers.formatDecimal(building.salePrice,0,'COMMA',0,'POINT')}+' d'"></span>
                                         <span th:unless="${building.salePrice}" class="empty">—</span>
                                     </div>
                                 </div>
@@ -805,7 +805,7 @@
                     </div>
                 </div>
 
-                <!-- ══ MAP MODAL ═══════════════════════════════════════════════════════ -->
+                <!-- -- MAP MODAL ------------------------------------------------------- -->
                 <div id="mapModal" th:if="${building.latitude!=null}"
                     style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);">
                     <div
@@ -1168,7 +1168,7 @@
                         <thead>
                             <tr>
                                 <th>Loại</th>
-                                <th>Cơ quan</th>
+                                <th>Co quan</th>
                                 <th>Ban hành</th>
                                 <th>Hết hạn</th>
                                 <th>Trạng thái</th>
@@ -1364,7 +1364,7 @@
         });
     </script>
     <script th:if="${building.latitude != null}" th:inline="javascript">
-        // ── Config ────────────────────────────────────────────────────────────────
+        // -- Config ----------------------------------------------------------------
         var MAPTILES_KEY = 'd2vMzWHY7kcxkY1yITDytGLWaIPf9knt8mLMXmkx';
         var GOONG_API_KEY = /*[[${goongApiKey}]]*/ '';
 
@@ -1373,7 +1373,7 @@
         var _mapName = /*[[${building.name}]]*/  '';
         var _mapAddr = /*[[${building.address}]]*/  '';
 
-        // ── State ─────────────────────────────────────────────────────────────────
+        // -- State -----------------------------------------------------------------
         var _mapInstance = null;
         var _originLat = null, _originLng = null;
         var _destLat = _mapLat, _destLng = _mapLng; // default = building
@@ -1383,7 +1383,7 @@
         var _vehicle = 'car'; // 'car' | 'bike' | 'foot'
         var _isCustomDest = false; // đích đã bị thay đổi khỏi building
 
-        // ── Modal ─────────────────────────────────────────────────────────────────
+        // -- Modal -----------------------------------------------------------------
         function openMapModal() {
             document.getElementById('mapModal').style.display = 'block';
             document.body.style.overflow = 'hidden';
@@ -1403,7 +1403,7 @@
             if (e.key === 'Escape') { if (_pickMode) cancelPickMode(); else closeMapModal(); }
         });
 
-        // ── Init Map ──────────────────────────────────────────────────────────────
+        // -- Init Map --------------------------------------------------------------
         function initMap() {
             goongjs.accessToken = MAPTILES_KEY;
             _mapInstance = new goongjs.Map({
@@ -1439,7 +1439,7 @@
                 });
             });
 
-            // ── Click to pick ─────────────────────────────────────────────────────
+            // -- Click to pick -----------------------------------------------------
             _mapInstance.on('click', function (e) {
                 if (!_pickMode) return;
                 var lat = e.lngLat.lat, lng = e.lngLat.lng;
@@ -1468,7 +1468,7 @@
             });
         }
 
-        // ── Set origin / dest coords ──────────────────────────────────────────────
+        // -- Set origin / dest coords ----------------------------------------------
         function setOriginCoords(lat, lng, label) {
             _originLat = lat; _originLng = lng;
             if (label) document.getElementById('originInput').value = label;
@@ -1566,7 +1566,7 @@
             }, { timeout: 10000, enableHighAccuracy: true });
         }
 
-        // ── Clear origin ──────────────────────────────────────────────────────────
+        // -- Clear origin ----------------------------------------------------------
         function clearOrigin() {
             _originLat = null; _originLng = null;
             document.getElementById('originInput').value = '';
@@ -1574,7 +1574,7 @@
             if (_originMarker) { _originMarker.remove(); _originMarker = null; }
         }
 
-        // ── Vehicle selector ──────────────────────────────────────────────────────
+        // -- Vehicle selector ------------------------------------------------------
         function setVehicle(v) {
             _vehicle = v;
             ['car', 'bike', 'foot'].forEach(function (id) {
@@ -1598,7 +1598,7 @@
                 .catch(function () { cb(lat.toFixed(5) + ', ' + lng.toFixed(5)); });
         }
 
-        // ── Origin autocomplete ───────────────────────────────────────────────────
+        // -- Origin autocomplete ---------------------------------------------------
         var originInput = document.getElementById('originInput');
         var originSuggestions = document.getElementById('originSuggestions');
 
@@ -1641,7 +1641,7 @@
                 .catch(function () { originSuggestions.style.display = 'none'; });
         }
 
-        // ── Get Directions ────────────────────────────────────────────────────────
+        // -- Get Directions --------------------------------------------------------
         function getDirections() {
             if (!_originLat || !_originLng) {
                 showRouteError('Vui lòng chọn điểm xuất phát.'); return;
@@ -1729,7 +1729,7 @@
             el.textContent = msg; el.style.display = 'block';
         }
 
-        // ── Helpers ───────────────────────────────────────────────────────────────
+        // -- Helpers ---------------------------------------------------------------
         function getManeuverIcon(type, modifier) {
             if (!type) return 'bi-arrow-up';
             if (type === 'turn') {
@@ -1763,3 +1763,5 @@
 </body>
 
 </html>
+
+

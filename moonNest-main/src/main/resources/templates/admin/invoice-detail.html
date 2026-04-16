@@ -27,7 +27,7 @@
             padding: 1.5rem;
         }
 
-        /* ══ PAGE HEADER ════════════════════════════════════════════════════ */
+        /* -- PAGE HEADER ---------------------------------------------------- */
         .page-header-bar {
             display: flex;
             align-items: center;
@@ -64,7 +64,7 @@
             flex-wrap: wrap;
         }
 
-        /* ══ HEADER BUTTONS ═════════════════════════════════════════════════ */
+        /* -- HEADER BUTTONS ------------------------------------------------- */
         .btn-hd {
             padding: 0.45rem 0.875rem;
             border-radius: 7px;
@@ -133,7 +133,7 @@
             background: #fee2e2;
         }
 
-        /* ══ D-CARD ═════════════════════════════════════════════════════════ */
+        /* -- D-CARD --------------------------------------------------------- */
         .d-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -173,7 +173,7 @@
             padding: 1.25rem 1.5rem;
         }
 
-        /* ══ INVOICE ID BADGE ═══════════════════════════════════════════════ */
+        /* -- INVOICE ID BADGE ----------------------------------------------- */
         .invoice-id-badge {
             display: inline-flex;
             align-items: center;
@@ -187,7 +187,7 @@
             font-size: 0.8125rem;
         }
 
-        /* ══ STATUS BADGE ═══════════════════════════════════════════════════ */
+        /* -- STATUS BADGE --------------------------------------------------- */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -213,7 +213,7 @@
             color: #dc2626;
         }
 
-        /* ══ INFO GRID ══════════════════════════════════════════════════════ */
+        /* -- INFO GRID ------------------------------------------------------ */
         .info-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -277,7 +277,7 @@
             flex-shrink: 0;
         }
 
-        /* ══ ENTITY CARDS ═══════════════════════════════════════════════════ */
+        /* -- ENTITY CARDS --------------------------------------------------- */
         .entity-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -335,7 +335,7 @@
             font-weight: 600;
         }
 
-        /* ══ FEE TABLE ══════════════════════════════════════════════════════ */
+        /* -- FEE TABLE ------------------------------------------------------ */
         .fee-table {
             width: 100%;
             border-collapse: collapse;
@@ -382,7 +382,7 @@
             font-weight: 700;
         }
 
-        /* ══ SUMMARY BOX ════════════════════════════════════════════════════ */
+        /* -- SUMMARY BOX ---------------------------------------------------- */
         .summary-box {
             background: #f9fafb;
             border: 1px solid #e5e7eb;
@@ -432,7 +432,7 @@
             font-weight: 800;
         }
 
-        /* ══ METER GRID ═════════════════════════════════════════════════════ */
+        /* -- METER GRID ----------------------------------------------------- */
         .meter-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -474,7 +474,7 @@
             color: #111827;
         }
 
-        /* ══ RESPONSIVE ═════════════════════════════════════════════════════ */
+        /* -- RESPONSIVE ----------------------------------------------------- */
         @media (max-width: 768px) {
             main.content {
                 margin-left: 0;
@@ -564,10 +564,10 @@
     <main class="content">
         <div class="detail-body">
 
-            <!-- ══════════════════════════════════════════════════════════════
+            <!-- --------------------------------------------------------------
                  PRINT WRAPPER — Toàn bộ nội dung hóa đơn in
                  Chỉ hiển thị khi in (@media print)
-            ═══════════════════════════════════════════════════════════════ -->
+            --------------------------------------------------------------- -->
             <div class="print-invoice-header" style="display:none;">
 
                 <!-- Khung viền ngoài chuẩn hóa đơn -->
@@ -708,8 +708,8 @@
                                 </td>
                                 <td style="border:0.75pt solid #555; padding:4pt 6pt; text-align:center;">1</td>
                                 <td style="border:0.75pt solid #555; padding:4pt 6pt; text-align:right; font-weight:bold;"
-                                    th:text="${#numbers.formatDecimal(detail.amount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                                    15,000,000 đ
+                                    th:text="${#numbers.formatDecimal(detail.amount, 0, 'COMMA', 0, 'POINT')} + ' d'">
+                                    15,000,000 d
                                 </td>
                             </tr>
                             <!-- Đồng hồ điện nước nếu có -->
@@ -739,8 +739,8 @@
                                     style="border:0.75pt solid #555; padding:5pt 8pt; text-align:right; font-weight:bold;">
                                     Tổng phí dịch vụ:</td>
                                 <td style="border:0.75pt solid #555; padding:5pt 8pt; text-align:right; font-weight:bold;"
-                                    th:text="${#numbers.formatDecimal(invoice.totalServiceFeeAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                                    10,500,000 đ
+                                    th:text="${#numbers.formatDecimal(invoice.totalServiceFeeAmount, 0, 'COMMA', 0, 'POINT')} + ' d'">
+                                    10,500,000 d
                                 </td>
                             </tr>
                             <tr style="background:#f0f0f0;">
@@ -749,8 +749,8 @@
                                     Tổng cộng tiền thanh toán:</td>
                                 <td colspan="2"
                                     style="border:0.75pt solid #555; padding:5pt 8pt; text-align:right; font-weight:bold; font-size:11pt;"
-                                    th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                                    25,500,000 đ
+                                    th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' d'">
+                                    25,500,000 d
                                 </td>
                             </tr>
                         </tfoot>
@@ -765,7 +765,7 @@
 
                 </div><!-- /khung viền -->
             </div>
-            <!-- ── END PRINT HEADER ── -->
+            <!-- -- END PRINT HEADER -- -->
             <div class="page-header-bar">
                 <div>
                     <h2>
@@ -858,8 +858,8 @@
                             <div class="info-value price">
                                 <i class="bi bi-cash-stack"></i>
                                 <span
-                                    th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                                    25,500,000 đ
+                                    th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' d'">
+                                    25,500,000 d
                                 </span>
                             </div>
                         </div>
@@ -985,8 +985,8 @@
                                     Tháng
                                 </td>
                                 <td class="text-center fee-amount"
-                                    th:text="${#numbers.formatDecimal(detail.amount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                                    15,000,000 đ
+                                    th:text="${#numbers.formatDecimal(detail.amount, 0, 'COMMA', 0, 'POINT')} + ' d'">
+                                    15,000,000 d
                                 </td>
                             </tr>
                         </tbody>
@@ -996,15 +996,15 @@
                     <div class="summary-row">
                         <span class="summary-label">Tổng phí dịch vụ</span>
                         <span class="summary-value"
-                            th:text="${#numbers.formatDecimal(invoice.totalServiceFeeAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                            10,500,000 đ
+                            th:text="${#numbers.formatDecimal(invoice.totalServiceFeeAmount, 0, 'COMMA', 0, 'POINT')} + ' d'">
+                            10,500,000 d
                         </span>
                     </div>
                     <div class="summary-row">
                         <span class="summary-label">Tổng cộng</span>
                         <span class="summary-value"
-                            th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                            25,500,000 đ
+                            th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' d'">
+                            25,500,000 d
                         </span>
                     </div>
                 </div>
