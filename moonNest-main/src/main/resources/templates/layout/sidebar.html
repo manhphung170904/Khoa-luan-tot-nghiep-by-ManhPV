@@ -50,6 +50,8 @@
             data-tooltip="Yêu cầu thuê/mua">
             <div class="nav-icon"><i class="bi bi-envelope-paper-fill"></i></div>
             <span class="nav-text">Yêu cầu thuê/mua</span>
+            <span class="nav-badge" th:if="${pendingPropertyRequestsCount != null and pendingPropertyRequestsCount > 0}"
+                th:text="${pendingPropertyRequestsCount}">1</span>
         </a>
 
         <div class="sidebar-section-label">Quản lý</div>
