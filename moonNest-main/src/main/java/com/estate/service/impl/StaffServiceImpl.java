@@ -437,4 +437,27 @@ public class StaffServiceImpl implements StaffService {
                 .map(staff -> new StaffSelectDTO(staff.getId(), staff.getFullName()))
                 .toList();
     }
+
+    @Override
+    @Transactional
+    public void quickAssign(Long staffId, Long buildingId, Long customerId) {
+        StaffEntity staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new BusinessException("Nhân viên không tồn tại"));
+
+        // Assign to building
+        BuildingEntity building = buildingRepository.findById(buildingId)
+                .orElseThrow(() -> new BusinessException("Tòa nhà không tồn tại"));
+        if (!building.getStaffs_buildings().contains(staff)) {
+            building.getStaffs_buildings().add(staff);
+            buildingRepository.save(building);
+        }
+
+        // Assign to customer
+        CustomerEntity customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new BusinessException("Khách hàng không tồn tại"));
+        if (!customer.getStaffs_customers().contains(staff)) {
+            customer.getStaffs_customers().add(staff);
+            customerRepository.save(customer);
+        }
+    }
 }

@@ -427,9 +427,10 @@
                                     <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
                                     <select class="form-select" name="staffId" id="staffSelect" required>
                                         <option value="">-- Chọn tòa nhà trước --</option>
-                                        <option th:each="staff : ${staffs}" th:value="${staff.id}"
-                                            th:text="${staff.fullName}"></option>
                                     </select>
+                                    <button class="btn btn-outline-primary" type="button" id="btnQuickAssign" title="Phân công nhanh">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
                                 </div>
                             </div>
 
@@ -489,6 +490,35 @@
 
         </div><!-- /detail-body -->
     </main>
+
+    <!-- Quick Assign Modal -->
+    <div class="modal fade" id="quickAssignModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Phân công nhân viên nhanh</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Nhân viên được chọn sẽ được gán quản lý đồng thời cả tòa nhà và khách hàng hiện tại.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Chọn nhân viên <span class="text-danger">*</span></label>
+                        <select class="form-select" id="allStaffSelect">
+                            <option value="">-- Chọn nhân viên --</option>
+                            <option th:each="staff : ${staffs}" th:value="${staff.id}" th:text="${staff.fullName}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="submitQuickAssign">Xác nhận phân công</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!--Bootstrap-->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -629,6 +659,55 @@
                     }, 500);
                 }
             }
+
+            // ====== QUICK ASSIGN LOGIC ======
+            const quickAssignModal = new bootstrap.Modal(document.getElementById('quickAssignModal'));
+
+            $('#btnQuickAssign').on('click', function() {
+                const bId = $('#buildingSelect').val();
+                const cId = $('[name="customerId"]').val();
+
+                if (!bId || !cId) {
+                    alert('Vui lòng chọn Tòa nhà và Khách hàng trước khi phân công nhanh.');
+                    return;
+                }
+                quickAssignModal.show();
+            });
+
+            $('#submitQuickAssign').on('click', function() {
+                const staffId = $('#allStaffSelect').val();
+                const bId = $('#buildingSelect').val();
+                const cId = $('[name="customerId"]').val();
+
+                if (!staffId) {
+                    alert('Vui lòng chọn nhân viên.');
+                    return;
+                }
+
+                $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Đang xử lý...');
+
+                $.ajax({
+                    url: `/api/v1/admin/staff/${staffId}/quick-assign?buildingId=${bId}&customerId=${cId}`,
+                    type: 'POST',
+                    success: function(response) {
+                        alert(response.message);
+                        quickAssignModal.hide();
+                        // Refresh main staff dropdown
+                        refreshStaffDropdown();
+                        // Set value after refresh (need to wait for AJAX)
+                        setTimeout(() => {
+                            $('#staffSelect').val(staffId);
+                        }, 500);
+                    },
+                    error: function(xhr) {
+                        const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Lỗi phân công';
+                        alert(msg);
+                    },
+                    complete: function() {
+                        $('#submitQuickAssign').prop('disabled', false).text('Xác nhận phân công');
+                    }
+                });
+            });
         });
     </script>
 

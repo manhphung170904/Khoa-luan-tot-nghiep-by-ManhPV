@@ -94,6 +94,16 @@ public class AdminStaffV1API {
         return ApiMessageResponse.of("Cập nhật phân công tòa nhà thành công.");
     }
 
+    @PostMapping("/{id}/quick-assign")
+    public ApiMessageResponse<Void> quickAssign(
+            @PathVariable Long id,
+            @RequestParam Long buildingId,
+            @RequestParam Long customerId
+    ) {
+        staffService.quickAssign(id, buildingId, customerId);
+        return ApiMessageResponse.of("Phân công nhân viên nhanh thành công.");
+    }
+
     private void validate(BindingResult result) {
         if (result.hasErrors()) {
             if (!result.getFieldErrors().isEmpty()) {
