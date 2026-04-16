@@ -258,8 +258,18 @@ public class BuildingRepositoryImpl implements BuildingRepositoryCustom {
             where.append(" AND ra.value <= :rentAreaTo ");
         }
 
-        // ========== Lọc BĐS đã bán ==========
-        where.append(" AND b.id NOT IN (SELECT sc.building.id FROM SaleContractEntity sc) ");
+        // ========== Lọc BĐS chưa mua bán hoặc còn chỗ để thuê ==========
+        where.append("""
+             AND (
+                (b.transactionType = 'FOR_SALE' AND b.id NOT IN (SELECT sc.building.id FROM SaleContractEntity sc))
+                OR
+                (b.transactionType = 'FOR_RENT' AND (
+                    EXISTS (SELECT ra FROM RentAreaEntity ra WHERE ra.building.id = b.id)
+                    OR
+                    EXISTS (SELECT c FROM ContractEntity c WHERE c.building.id = b.id AND c.status = 'EXPIRED')
+                ))
+             )
+        """);
 
         // ========== Add WHERE ==========
         jpql.append(where);
