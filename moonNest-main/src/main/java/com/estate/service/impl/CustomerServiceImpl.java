@@ -117,7 +117,13 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Page<CustomerListDTO> search(String fullName, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<CustomerEntity> customerPage = customerRepository.findByFullNameContainingIgnoreCase(fullName, pageable);
+        Page<CustomerEntity> customerPage;
+
+        if (fullName == null || fullName.isBlank()) {
+            customerPage = customerRepository.findAll(pageable);
+        } else {
+            customerPage = customerRepository.findByFullNameContainingIgnoreCase(fullName, pageable);
+        }
 
         // Tạo list chứa DTO
         List<CustomerListDTO> dtoList = new ArrayList<>();
@@ -130,13 +136,11 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         // Tạo PageImpl giữ nguyên thông tin phân trang gốc
-        Page<CustomerListDTO> result = new PageImpl<>(
+        return new PageImpl<>(
                 dtoList,
                 customerPage.getPageable(),
                 customerPage.getTotalElements()
         );
-
-        return result;
     }
 
     @Override

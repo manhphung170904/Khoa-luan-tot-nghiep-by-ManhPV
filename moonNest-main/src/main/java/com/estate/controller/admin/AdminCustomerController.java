@@ -20,7 +20,7 @@ public class AdminCustomerController {
     private final CustomerService customerService;
 
     @GetMapping("/list")
-    public String listBuildings(
+    public String listCustomers(
             Model model,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
