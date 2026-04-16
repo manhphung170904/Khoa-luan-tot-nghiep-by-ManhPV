@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -67,17 +68,17 @@ public class InvoiceServiceImpl implements InvoiceService {
         long value = amount.longValue();
 
         if (value < 1_000_000_000) {
-            // Nhỏ hơn 1 tỷ → giữ nguyên dạng 1.234.567
+            // Nhá» hÆ¡n 1 tá»· â†’ giá»¯ nguyÃªn dáº¡ng 1.234.567
             return String.format("%,d", value).replace(",", ".");
         } else {
-            // Lớn hơn hoặc bằng 1 tỷ → chia cho 1 tỷ
+            // Lá»›n hÆ¡n hoáº·c báº±ng 1 tá»· â†’ chia cho 1 tá»·
             double ty = value / 1_000_000_000.0;
 
-            // Giữ 1 hoặc 2 số thập phân khi cần
+            // Giá»¯ 1 hoáº·c 2 sá»‘ tháº­p phÃ¢n khi cáº§n
             if (ty % 1 == 0) {
-                return String.format("%.0f tỷ", ty);   // Ví dụ: 3 tỷ
+                return String.format("%.0f tá»·", ty);   // VÃ­ dá»¥: 3 tá»·
             } else {
-                return String.format("%.1f tỷ", ty);   // Ví dụ: 1.2 tỷ
+                return String.format("%.1f tá»·", ty);   // VÃ­ dá»¥: 1.2 tá»·
             }
         }
     }
@@ -119,7 +120,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public InvoiceFormDTO findById(Long invoiceId) {
         InvoiceEntity invoiceEntity = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new BusinessException("Không tìm thấy hóa đơn"));
+                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y hÃ³a Ä‘Æ¡n"));
         InvoiceFormDTO dto = new InvoiceFormDTO();
         invoiceFormConverter.toDTO(invoiceEntity, dto);
         return dto;
@@ -167,10 +168,10 @@ public class InvoiceServiceImpl implements InvoiceService {
                 PageRequest.of(page, size)
         );
 
-        // Tạo list chứa DTO
+        // Táº¡o list chá»©a DTO
         List<InvoiceDetailDTO> dtoList = new ArrayList<>();
 
-        // Duyệt qua từng InvoiceEntity
+        // Duyá»‡t qua tá»«ng InvoiceEntity
         for (InvoiceEntity i : invoicePage) {
             UtilityMeterEntity utilityMeter = utilityMeterService.findByContractIdAndMonthAndYear(
                     i.getContract().getId(), i.getMonth(), i.getYear());
@@ -179,7 +180,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             dtoList.add(dto);
         }
 
-        // Tạo PageImpl giữ nguyên thông tin phân trang gốc
+        // Táº¡o PageImpl giá»¯ nguyÃªn thÃ´ng tin phÃ¢n trang gá»‘c
         Page<InvoiceDetailDTO> result = new PageImpl<>(
                 dtoList,
                 invoicePage.getPageable(),
@@ -193,10 +194,10 @@ public class InvoiceServiceImpl implements InvoiceService {
     public Page<InvoiceListDTO> getInvoices(int page, int size) {
         Page<InvoiceEntity> invoicePage = invoiceRepository.findAll(PageRequest.of(page, size));
 
-        // Tạo list chứa DTO
+        // Táº¡o list chá»©a DTO
         List<InvoiceListDTO> dtoList = new ArrayList<>();
 
-        // Duyệt qua từng InvoiceEntity
+        // Duyá»‡t qua tá»«ng InvoiceEntity
         for (InvoiceEntity i : invoicePage) {
             // Convert entity sang DTO
             InvoiceListDTO dto = invoiceListDTOConverter.toDTO(i);
@@ -204,7 +205,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             dtoList.add(dto);
         }
 
-        // Tạo PageImpl giữ nguyên thông tin phân trang gốc
+        // Táº¡o PageImpl giá»¯ nguyÃªn thÃ´ng tin phÃ¢n trang gá»‘c
         Page<InvoiceListDTO> result = new PageImpl<>(
                 dtoList,
                 invoicePage.getPageable(),
@@ -219,17 +220,17 @@ public class InvoiceServiceImpl implements InvoiceService {
         Pageable pageable = PageRequest.of(page, size);
         Page<InvoiceEntity> invoicePage = invoiceRepository.searchInvoices(filter, pageable);
 
-        // Tạo list chứa DTO
+        // Táº¡o list chá»©a DTO
         List<InvoiceListDTO> dtoList = new ArrayList<>();
 
-        // Duyệt qua từng InvoiceEntity
+        // Duyá»‡t qua tá»«ng InvoiceEntity
         for (InvoiceEntity i : invoicePage) {
             InvoiceListDTO dto = invoiceListDTOConverter.toDTO(i);
 
             dtoList.add(dto);
         }
 
-        // Tạo PageImpl giữ nguyên thông tin phân trang gốc
+        // Táº¡o PageImpl giá»¯ nguyÃªn thÃ´ng tin phÃ¢n trang gá»‘c
         Page<InvoiceListDTO> result = new PageImpl<>(
                 dtoList,
                 invoicePage.getPageable(),
@@ -253,10 +254,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         Pageable pageable = PageRequest.of(page, size);
         Page<InvoiceEntity> invoicePage = invoiceRepository.searchInvoicesByStaff(filter, pageable, contractIds);
 
-        // Tạo list chứa DTO
+        // Táº¡o list chá»©a DTO
         List<InvoiceDetailDTO> dtoList = new ArrayList<>();
 
-        // Duyệt qua từng InvoiceEntity
+        // Duyá»‡t qua tá»«ng InvoiceEntity
         for (InvoiceEntity i : invoicePage) {
             UtilityMeterEntity utilityMeter = utilityMeterService.findByContractIdAndMonthAndYear(
                     i.getContract().getId(), i.getMonth(), i.getYear());
@@ -266,7 +267,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             dtoList.add(dto);
         }
 
-        // Tạo PageImpl giữ nguyên thông tin phân trang gốc
+        // Táº¡o PageImpl giá»¯ nguyÃªn thÃ´ng tin phÃ¢n trang gá»‘c
         Page<InvoiceDetailDTO> result = new PageImpl<>(
                 dtoList,
                 invoicePage.getPageable(),
@@ -279,10 +280,8 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public void delete(Long id) {
         InvoiceEntity invoice = invoiceRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Không tìm thấy hóa đơn để xóa"));
-        invoiceRepository.deleteById(id);
+                .orElseThrow(() -> new BusinessException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y hÃƒÂ³a Ã„â€˜Ã†Â¡n Ã„â€˜Ã¡Â»Æ’ xÃƒÂ³a"));
 
-        // Xóa utility meter tương ứng
         utilityMeterRepository.deleteByContractIdAndMonthAndYear(
                 invoice.getContract().getId(),
                 invoice.getMonth(),
@@ -293,9 +292,17 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    public void deleteForStaff(Long id, Long staffId) {
+        InvoiceEntity invoice = invoiceRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Invoice to delete was not found"));
+        assertStaffOwnsInvoice(invoice, staffId);
+        delete(id);
+    }
+
+    @Override
     public InvoiceDetailDTO viewById(Long invoiceId) {
         InvoiceEntity invoiceEntity = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new BusinessException("Không tìm thấy hóa đơn"));
+                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y hÃ³a Ä‘Æ¡n"));
 
         UtilityMeterEntity utilityMeter = utilityMeterService.findByContractIdAndMonthAndYear(
                 invoiceEntity.getContract().getId(), invoiceEntity.getMonth(), invoiceEntity.getYear());
@@ -309,7 +316,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         if (updated == 0) {
             throw new BusinessException(
-                    "Không tìm thấy hóa đơn hoặc hóa đơn"
+                    "KhÃ´ng tÃ¬m tháº¥y hÃ³a Ä‘Æ¡n hoáº·c hÃ³a Ä‘Æ¡n"
             );
         }
     }
@@ -317,6 +324,23 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional
     public void save(InvoiceFormDTO dto) {
+        validateContractCustomerMatch(dto);
+        saveInternal(dto);
+    }
+
+    @Override
+    public void saveForStaff(InvoiceFormDTO dto, Long staffId) {
+        validateContractCustomerMatch(dto);
+        assertStaffOwnsContract(dto.getContractId(), staffId);
+        if (dto.getId() != null) {
+            InvoiceEntity existingInvoice = invoiceRepository.findById(dto.getId())
+                    .orElseThrow(() -> new BusinessException("Invoice was not found"));
+            assertStaffOwnsInvoice(existingInvoice, staffId);
+        }
+        saveInternal(dto);
+    }
+
+    private void saveInternal(InvoiceFormDTO dto) {
 
         int invoiceMonth = dto.getMonth();
         int invoiceYear = dto.getYear();
@@ -325,51 +349,46 @@ public class InvoiceServiceImpl implements InvoiceService {
         int currentMonth = now.getMonthValue();
         int currentYear = now.getYear();
 
-        // === TÍNH THÁNG TRƯỚC (kể cả khi đang là THÁNG 1) ===
         boolean isLastMonth =
                 (invoiceYear == currentYear && invoiceMonth == currentMonth - 1)
                         || (currentMonth == 1 && invoiceYear == currentYear - 1 && invoiceMonth == 12);
 
-        // ========= VALIDATE THÊM =========
         if (dto.getId() == null) {
 
             if (invoiceRepository.existsByContractIdAndCustomerIdAndMonthAndYear(
                     dto.getContractId(), dto.getCustomerId(), invoiceMonth, invoiceYear)) {
-                throw new BusinessException("Hóa đơn này đã tồn tại, vui lòng chọn Tháng - Năm khác");
+                throw new BusinessException("HÃƒÂ³a Ã„â€˜Ã†Â¡n nÃƒÂ y Ã„â€˜ÃƒÂ£ tÃ¡Â»â€œn tÃ¡ÂºÂ¡i, vui lÃƒÂ²ng chÃ¡Â»Ân ThÃƒÂ¡ng - NÃ„Æ’m khÃƒÂ¡c");
             }
 
             if (!isLastMonth) {
-                throw new BusinessException("Chỉ được phép thêm hóa đơn của THÁNG TRƯỚC");
+                throw new BusinessException("ChÃ¡Â»â€° Ã„â€˜Ã†Â°Ã¡Â»Â£c phÃƒÂ©p thÃƒÂªm hÃƒÂ³a Ã„â€˜Ã†Â¡n cÃ¡Â»Â§a THÃƒÂNG TRÃ†Â¯Ã¡Â»Å¡C");
             }
         }
 
-        // ========= VALIDATE SỬA =========
         InvoiceEntity invoice = (dto.getId() == null)
                 ? new InvoiceEntity()
                 : invoiceRepository.findById(dto.getId())
-                .orElseThrow(() -> new BusinessException("Không tìm thấy hóa đơn"));
+                .orElseThrow(() -> new BusinessException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y hÃƒÂ³a Ã„â€˜Ã†Â¡n"));
 
         if (dto.getId() != null) {
 
             if (!"PENDING".equals(invoice.getStatus())) {
-                throw new BusinessException("Chỉ được phép sửa hóa đơn CHƯA thanh toán");
+                throw new BusinessException("ChÃ¡Â»â€° Ã„â€˜Ã†Â°Ã¡Â»Â£c phÃƒÂ©p sÃ¡Â»Â­a hÃƒÂ³a Ã„â€˜Ã†Â¡n CHÃ†Â¯A thanh toÃƒÂ¡n");
             }
 
             if (!isLastMonth) {
-                throw new BusinessException("Chỉ được phép sửa hóa đơn của THÁNG TRƯỚC");
+                throw new BusinessException("ChÃ¡Â»â€° Ã„â€˜Ã†Â°Ã¡Â»Â£c phÃƒÂ©p sÃ¡Â»Â­a hÃƒÂ³a Ã„â€˜Ã†Â¡n cÃ¡Â»Â§a THÃƒÂNG TRÃ†Â¯Ã¡Â»Å¡C");
             }
         }
 
-        // ========= VALIDATE HẠN TRẢ =========
         LocalDate dueDate = dto.getDueDate();
         LocalDate endOfInvoiceMonth = LocalDate.of(invoiceYear, invoiceMonth, 1)
                 .withDayOfMonth(LocalDate.of(invoiceYear, invoiceMonth, 1).lengthOfMonth());
 
         if (!dueDate.isAfter(endOfInvoiceMonth)) {
-            throw new BusinessException("Hạn trả phải nằm SAU tháng của hóa đơn");
+            throw new BusinessException("HÃ¡ÂºÂ¡n trÃ¡ÂºÂ£ phÃ¡ÂºÂ£i nÃ¡ÂºÂ±m SAU thÃƒÂ¡ng cÃ¡Â»Â§a hÃƒÂ³a Ã„â€˜Ã†Â¡n");
         }
 
-        // ========= MAP =========
         invoiceFormConverter.toEntity(invoice, dto);
 
         invoice.getDetails().clear();
@@ -386,13 +405,38 @@ public class InvoiceServiceImpl implements InvoiceService {
         utilityMeterService.save(invoice, dto);
     }
 
+    private void validateContractCustomerMatch(InvoiceFormDTO dto) {
+        ContractEntity contract = contractRepository.findById(dto.getContractId())
+                .orElseThrow(() -> new BusinessException("Contract was not found"));
+
+        if (contract.getCustomer() == null || !Objects.equals(contract.getCustomer().getId(), dto.getCustomerId())) {
+            throw new BusinessException("Selected customer does not match the selected contract");
+        }
+    }
+
+    private void assertStaffOwnsContract(Long contractId, Long staffId) {
+        ContractEntity contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new BusinessException("Contract was not found"));
+
+        if (contract.getStaff() == null || !Objects.equals(contract.getStaff().getId(), staffId)) {
+            throw new BusinessException("You cannot manage invoices outside your assigned contracts");
+        }
+    }
+
+    private void assertStaffOwnsInvoice(InvoiceEntity invoice, Long staffId) {
+        ContractEntity contract = invoice.getContract();
+        if (contract == null || contract.getStaff() == null || !Objects.equals(contract.getStaff().getId(), staffId)) {
+            throw new BusinessException("You cannot manage invoices outside your assigned contracts");
+        }
+    }
+
     @Override
     public Integer getRentArea(Long id) {
         InvoiceEntity invoice = invoiceRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Không tìm thấy hóa đơn"));
+                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y hÃ³a Ä‘Æ¡n"));
 
         ContractEntity contract = contractRepository.findById(invoice.getContract().getId())
-                .orElseThrow(() -> new BusinessException("Không tìm thấy hợp đồng"));
+                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
 
         return contract.getRentArea();
     }

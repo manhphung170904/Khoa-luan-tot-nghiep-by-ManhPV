@@ -95,21 +95,21 @@ public class ContractServiceImpl implements ContractService {
 
             BigDecimal monthlyPrice = c.getRentPrice().multiply(BigDecimal.valueOf(c.getRentArea()));
 
-            // Xác định tháng bắt đầu trong năm
+            // XÃƒÂ¡c Ã„â€˜Ã¡Â»â€¹nh thÃƒÂ¡ng bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u trong nÃ„Æ’m
             int startMonth = start.getYear() < year ? 1 : start.getMonthValue();
 
-            // Xác định tháng kết thúc trong năm
+            // XÃƒÂ¡c Ã„â€˜Ã¡Â»â€¹nh thÃƒÂ¡ng kÃ¡ÂºÂ¿t thÃƒÂºc trong nÃ„Æ’m
             int endMonth = end.getYear() > year ? 12 : end.getMonthValue();
 
-            // Loại bỏ tháng chưa diễn ra nếu là năm hiện tại
+            // LoÃ¡ÂºÂ¡i bÃ¡Â»Â thÃƒÂ¡ng chÃ†Â°a diÃ¡Â»â€¦n ra nÃ¡ÂºÂ¿u lÃƒÂ  nÃ„Æ’m hiÃ¡Â»â€¡n tÃ¡ÂºÂ¡i
             if (year == currentYear) {
                 endMonth = Math.min(endMonth, currentMonth - 1);
             }
 
-            // Bỏ qua hợp đồng nếu không còn tháng hợp lệ (Ví dụ: Tháng hiện tại là 1 thì endMonth = 0)
+            // BÃ¡Â»Â qua hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng nÃ¡ÂºÂ¿u khÃƒÂ´ng cÃƒÂ²n thÃƒÂ¡ng hÃ¡Â»Â£p lÃ¡Â»â€¡ (VÃƒÂ­ dÃ¡Â»Â¥: ThÃƒÂ¡ng hiÃ¡Â»â€¡n tÃ¡ÂºÂ¡i lÃƒÂ  1 thÃƒÂ¬ endMonth = 0)
             if (startMonth > endMonth) continue;
 
-            // Cộng tiền vào danh sách
+            // CÃ¡Â»â„¢ng tiÃ¡Â»Ân vÃƒÂ o danh sÃƒÂ¡ch
             for (int m = startMonth; m <= endMonth; m++) {
                 revenue.set(m - 1, revenue.get(m - 1).add(monthlyPrice));
             }
@@ -182,17 +182,17 @@ public class ContractServiceImpl implements ContractService {
     public Page<ContractListDTO> getContracts(int page, int size) {
         Page<ContractEntity> contractPage = contractRepository.findAll(PageRequest.of(page, size));
 
-        // Tạo list chứa DTO
+        // TÃ¡ÂºÂ¡o list chÃ¡Â»Â©a DTO
         List<ContractListDTO> dtoList = new ArrayList<>();
 
-        // Duyệt qua từng ContractEntity
+        // DuyÃ¡Â»â€¡t qua tÃ¡Â»Â«ng ContractEntity
         for (ContractEntity c : contractPage) {
             // Convert entity sang DTO
             ContractListDTO dto = contractListConverter.toDto(c);
             dtoList.add(dto);
         }
 
-        // Tạo PageImpl giữ nguyên thông tin phân trang gốc
+        // TÃ¡ÂºÂ¡o PageImpl giÃ¡Â»Â¯ nguyÃƒÂªn thÃƒÂ´ng tin phÃƒÂ¢n trang gÃ¡Â»â€˜c
         Page<ContractListDTO> result = new PageImpl<>(dtoList, contractPage.getPageable(), contractPage.getTotalElements());
 
         return result;
@@ -203,10 +203,10 @@ public class ContractServiceImpl implements ContractService {
         Pageable pageable = PageRequest.of(page, size);
         Page<ContractEntity> contractPage = contractRepository.searchContracts(filter, pageable);
 
-        // Tạo list chứa DTO
+        // TÃ¡ÂºÂ¡o list chÃ¡Â»Â©a DTO
         List<ContractListDTO> dtoList = new ArrayList<>();
 
-        // Duyệt qua từng ContractEntity
+        // DuyÃ¡Â»â€¡t qua tÃ¡Â»Â«ng ContractEntity
         for (ContractEntity c : contractPage) {
             // Convert entity sang DTO
             ContractListDTO dto = contractListConverter.toDto(c);
@@ -214,7 +214,7 @@ public class ContractServiceImpl implements ContractService {
             dtoList.add(dto);
         }
 
-        // Tạo PageImpl giữ nguyên thông tin phân trang gốc
+        // TÃ¡ÂºÂ¡o PageImpl giÃ¡Â»Â¯ nguyÃƒÂªn thÃƒÂ´ng tin phÃƒÂ¢n trang gÃ¡Â»â€˜c
         Page<ContractListDTO> result = new PageImpl<>(dtoList, contractPage.getPageable(), contractPage.getTotalElements());
 
         return result;
@@ -225,10 +225,10 @@ public class ContractServiceImpl implements ContractService {
         Pageable pageable = PageRequest.of(page, size);
         Page<ContractEntity> contractPage = contractRepository.searchContracts(filter, pageable);
 
-        // Tạo list chứa DTO
+        // TÃ¡ÂºÂ¡o list chÃ¡Â»Â©a DTO
         List<ContractDetailDTO> dtoList = new ArrayList<>();
 
-        // Duyệt qua từng ContractEntity
+        // DuyÃ¡Â»â€¡t qua tÃ¡Â»Â«ng ContractEntity
         for (ContractEntity c : contractPage) {
             // Convert entity sang DTO
             ContractDetailDTO dto = contractDetailConverter.toDto(c);
@@ -236,7 +236,7 @@ public class ContractServiceImpl implements ContractService {
             dtoList.add(dto);
         }
 
-        // Tạo PageImpl giữ nguyên thông tin phân trang gốc
+        // TÃ¡ÂºÂ¡o PageImpl giÃ¡Â»Â¯ nguyÃƒÂªn thÃƒÂ´ng tin phÃƒÂ¢n trang gÃ¡Â»â€˜c
         Page<ContractDetailDTO> result = new PageImpl<>(dtoList, contractPage.getPageable(), contractPage.getTotalElements());
 
         return result;
@@ -246,37 +246,51 @@ public class ContractServiceImpl implements ContractService {
     public void save(ContractFormDTO dto) {
         ContractEntity entity;
 
-        StaffEntity staff = staffRepository.findById(dto.getStaffId()).orElseThrow(() -> new BusinessException("Không tìm thấy nhân viên"));
-        // Kiểm tra nhân viên có quản lý tòa nhà không
+        StaffEntity staff = staffRepository.findById(dto.getStaffId()).orElseThrow(() -> new BusinessException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y nhÃƒÂ¢n viÃƒÂªn"));
+        // KiÃ¡Â»Æ’m tra nhÃƒÂ¢n viÃƒÂªn cÃƒÂ³ quÃ¡ÂºÂ£n lÃƒÂ½ tÃƒÂ²a nhÃƒÂ  khÃƒÂ´ng
         if (!staffRepository.existsByStaffIdAndBuildingId(dto.getStaffId(), dto.getBuildingId())) {
-            BuildingEntity building = buildingRepository.findById(dto.getBuildingId()).orElseThrow(() -> new BusinessException("Không tìm thấy tòa nhà"));
-            throw new BusinessException("Nhân viên " + staff.getFullName() + " hiện không quản lý tòa nhà " + building.getName());
+            BuildingEntity building = buildingRepository.findById(dto.getBuildingId()).orElseThrow(() -> new BusinessException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y tÃƒÂ²a nhÃƒÂ "));
+            throw new BusinessException("NhÃƒÂ¢n viÃƒÂªn " + staff.getFullName() + " hiÃ¡Â»â€¡n khÃƒÂ´ng quÃ¡ÂºÂ£n lÃƒÂ½ tÃƒÂ²a nhÃƒÂ  " + building.getName());
         }
 
-        // Kiểm tra nhân viên có quản lý khách hàng không
+        // KiÃ¡Â»Æ’m tra nhÃƒÂ¢n viÃƒÂªn cÃƒÂ³ quÃ¡ÂºÂ£n lÃƒÂ½ khÃƒÂ¡ch hÃƒÂ ng khÃƒÂ´ng
         if (!staffRepository.existsByStaffIdAndCustomerId(dto.getStaffId(), dto.getCustomerId())) {
-            CustomerEntity customer = customerRepository.findById(dto.getCustomerId()).orElseThrow(() -> new BusinessException("Không tìm thấy khách hàng"));
-            throw new BusinessException("Nhân viên " + staff.getFullName() + " hiện không quản lý khách hàng " + customer.getFullName());
+            CustomerEntity customer = customerRepository.findById(dto.getCustomerId()).orElseThrow(() -> new BusinessException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y khÃƒÂ¡ch hÃƒÂ ng"));
+            throw new BusinessException("NhÃƒÂ¢n viÃƒÂªn " + staff.getFullName() + " hiÃ¡Â»â€¡n khÃƒÂ´ng quÃ¡ÂºÂ£n lÃƒÂ½ khÃƒÂ¡ch hÃƒÂ ng " + customer.getFullName());
         }
 
         if (dto.getId() != null) {
             // Update
-            entity = contractRepository.findById(dto.getId()).orElseThrow(() -> new BusinessException("Không tìm thấy hợp đồng để sửa"));
+            entity = contractRepository.findById(dto.getId()).orElseThrow(() -> new BusinessException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng Ã„â€˜Ã¡Â»Æ’ sÃ¡Â»Â­a"));
         } else {
-            // Thêm mới
+            // ThÃƒÂªm mÃ¡Â»â€ºi
             entity = new ContractEntity();
         }
 
         contractFormConverter.toEntity(entity, dto);
 
-        // Lưu hợp đồng
+        // LÃ†Â°u hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng
         contractRepository.save(entity);
 
-        // Cập nhật trạng thái yêu cầu
+        // CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trÃ¡ÂºÂ¡ng thÃƒÂ¡i yÃƒÂªu cÃ¡ÂºÂ§u
         if (dto.getFromRequestId() != null) {
             PropertyRequestEntity request = propertyRequestRepository.findById(dto.getFromRequestId())
-                    .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu"));
+                    .orElseThrow(() -> new BusinessException("Property request was not found"));
+            if (!"PENDING".equals(request.getStatus())) {
+                throw new BusinessException("Only pending requests can be converted into a contract");
+            }
+            if (!"RENT".equals(request.getRequestType())) {
+                throw new BusinessException("Only RENT requests can be converted into a rental contract");
+            }
+            if (!request.getBuilding().getId().equals(dto.getBuildingId())
+                    || !request.getCustomer().getId().equals(dto.getCustomerId())) {
+                throw new BusinessException("Contract data does not match the selected request");
+            }
             request.setStatus("APPROVED");
+            request.setProcessedBy(staff);
+            request.setAdminNote(null);
+            request.setContract(entity);
+            request.setSaleContract(null);
             propertyRequestRepository.save(request);
         }
     }
@@ -284,20 +298,20 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public void delete(Long id) {
         if (!contractRepository.existsById(id)) {
-            throw new BusinessException("Không tìm thấy hợp đồng để xóa");
+            throw new BusinessException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng Ã„â€˜Ã¡Â»Æ’ xÃƒÂ³a");
         }
         contractRepository.deleteById(id);
     }
 
     @Override
     public ContractFormDTO findById(Long id) {
-        ContractEntity contractEntity = contractRepository.findById(id).orElseThrow(() -> new BusinessException("Không tìm thấy hợp đồng"));
+        ContractEntity contractEntity = contractRepository.findById(id).orElseThrow(() -> new BusinessException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng"));
         return contractFormConverter.toDTO(contractEntity);
     }
 
     @Override
     public ContractDetailDTO viewById(Long id) {
-        ContractEntity contractEntity = contractRepository.findById(id).orElseThrow(() -> new BusinessException("Không tìm thấy hợp đồng"));
+        ContractEntity contractEntity = contractRepository.findById(id).orElseThrow(() -> new BusinessException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng"));
         return contractDetailConverter.toDto(contractEntity);
     }
 

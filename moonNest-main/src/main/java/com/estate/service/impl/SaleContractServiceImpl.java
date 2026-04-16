@@ -125,39 +125,53 @@ public class SaleContractServiceImpl implements SaleContractService {
         }
     }
 
-    /** ADD: validate đầy đủ 3 điều kiện, rồi tạo entity mới */
+    /** ADD: validate Ã„â€˜Ã¡ÂºÂ§y Ã„â€˜Ã¡Â»Â§ 3 Ã„â€˜iÃ¡Â»Âu kiÃ¡Â»â€¡n, rÃ¡Â»â€œi tÃ¡ÂºÂ¡o entity mÃ¡Â»â€ºi */
     private void saveNew(SaleContractFormDTO dto) {
-        // 1. Building phải FOR_SALE
+        // 1. Building phÃ¡ÂºÂ£i FOR_SALE
         BuildingEntity building = buildingRepository.findById(dto.getBuildingId())
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bất động sản"));
+                .orElseThrow(() -> new EntityNotFoundException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃ¡ÂºÂ¥t Ã„â€˜Ã¡Â»â„¢ng sÃ¡ÂºÂ£n"));
 
         if (!"FOR_SALE".equals(building.getTransactionType().toString())) {
             throw new SaleContractValidationException(
-                    "Bất động sản \"" + building.getName() + "\" không phải loại mua bán");
+                    "BÃ¡ÂºÂ¥t Ã„â€˜Ã¡Â»â„¢ng sÃ¡ÂºÂ£n \"" + building.getName() + "\" khÃƒÂ´ng phÃ¡ÂºÂ£i loÃ¡ÂºÂ¡i mua bÃƒÂ¡n");
         }
 
-        // 2. Building chưa có hợp đồng mua bán nào
+        // 2. Building chÃ†Â°a cÃƒÂ³ hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng mua bÃƒÂ¡n nÃƒÂ o
         if (saleContractRepository.existsByBuilding_Id(dto.getBuildingId())) {
             throw new SaleContractValidationException(
-                    "Bất động sản \"" + building.getName() + "\" đã được bán");
+                    "BÃ¡ÂºÂ¥t Ã„â€˜Ã¡Â»â„¢ng sÃ¡ÂºÂ£n \"" + building.getName() + "\" Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c bÃƒÂ¡n");
         }
 
-        // 3. Staff phải quản lý cả building lẫn customer
+        // 3. Staff phÃ¡ÂºÂ£i quÃ¡ÂºÂ£n lÃƒÂ½ cÃ¡ÂºÂ£ building lÃ¡ÂºÂ«n customer
         validateStaffAssignment(dto.getBuildingId(), dto.getCustomerId(), dto.getStaffId());
 
         SaleContractEntity entity = saleContractFormConverter.toEntity(dto);
         saleContractRepository.save(entity);
 
-        // Cập nhật trạng thái yêu cầu
+        // CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trÃ¡ÂºÂ¡ng thÃƒÂ¡i yÃƒÂªu cÃ¡ÂºÂ§u
         if (dto.getFromRequestId() != null) {
             PropertyRequestEntity request = propertyRequestRepository.findById(dto.getFromRequestId())
-                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy yêu cầu"));
+                    .orElseThrow(() -> new EntityNotFoundException("Property request was not found"));
+            if (!"PENDING".equals(request.getStatus())) {
+                throw new SaleContractValidationException("Only pending requests can be converted into a sale contract");
+            }
+            if (!"BUY".equals(request.getRequestType())) {
+                throw new SaleContractValidationException("Only BUY requests can be converted into a sale contract");
+            }
+            if (!request.getBuilding().getId().equals(dto.getBuildingId())
+                    || !request.getCustomer().getId().equals(dto.getCustomerId())) {
+                throw new SaleContractValidationException("Sale contract data does not match the selected request");
+            }
             request.setStatus("APPROVED");
+            request.setProcessedBy(entity.getStaff());
+            request.setAdminNote(null);
+            request.setContract(null);
+            request.setSaleContract(entity);
             propertyRequestRepository.save(request);
         }
     }
 
-    /** EDIT: chỉ cho phép cập nhật transferDate */
+    /** EDIT: chÃ¡Â»â€° cho phÃƒÂ©p cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t transferDate */
     private void saveEdit(SaleContractFormDTO dto) {
         SaleContractEntity entity = findEntityById(dto.getId());
 
@@ -165,7 +179,7 @@ public class SaleContractServiceImpl implements SaleContractService {
             LocalDate signedDate = entity.getCreatedDate().toLocalDate();
             if (!dto.getTransferDate().isAfter(signedDate)) {
                 throw new SaleContractValidationException(
-                        "Ngày bàn giao phải sau ngày ký hợp đồng ("
+                        "NgÃƒÂ y bÃƒÂ n giao phÃ¡ÂºÂ£i sau ngÃƒÂ y kÃƒÂ½ hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng ("
                                 + signedDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")");
             }
         }
@@ -190,18 +204,18 @@ public class SaleContractServiceImpl implements SaleContractService {
     private void validateStaffAssignment(Long buildingId, Long customerId, Long staffId) {
         if (!staffRepository.existsByStaffIdAndBuildingId(staffId, buildingId)) {
             throw new SaleContractValidationException(
-                    "Nhân viên được chọn không quản lý bất động sản này");
+                    "NhÃƒÂ¢n viÃƒÂªn Ã„â€˜Ã†Â°Ã¡Â»Â£c chÃ¡Â»Ân khÃƒÂ´ng quÃ¡ÂºÂ£n lÃƒÂ½ bÃ¡ÂºÂ¥t Ã„â€˜Ã¡Â»â„¢ng sÃ¡ÂºÂ£n nÃƒÂ y");
         }
         if (!staffRepository.existsByStaffIdAndCustomerId(staffId, customerId)) {
             throw new SaleContractValidationException(
-                    "Nhân viên được chọn không quản lý khách hàng này");
+                    "NhÃƒÂ¢n viÃƒÂªn Ã„â€˜Ã†Â°Ã¡Â»Â£c chÃ¡Â»Ân khÃƒÂ´ng quÃ¡ÂºÂ£n lÃƒÂ½ khÃƒÂ¡ch hÃƒÂ ng nÃƒÂ y");
         }
     }
 
     private SaleContractEntity findEntityById(Long id) {
         return saleContractRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Không tìm thấy hợp đồng mua bán với id: " + id));
+                        "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng mua bÃƒÂ¡n vÃ¡Â»â€ºi id: " + id));
     }
 
     private Page<SaleContractListDTO> toPageDTO(Page<SaleContractEntity> entityPage) {

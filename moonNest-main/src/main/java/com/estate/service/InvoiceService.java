@@ -21,9 +21,11 @@ public interface InvoiceService {
     Page<InvoiceListDTO> search(InvoiceFilterDTO filter, int page, int size);
     Page<InvoiceDetailDTO> searchByStaff(InvoiceFilterDTO filter, int page, int size, Long staffId);
     void delete(Long id);
+    void deleteForStaff(Long id, Long staffId);
     InvoiceDetailDTO viewById(Long invoiceId);
     void invoiceConfirm(Long id);
     void save(InvoiceFormDTO dto);
+    void saveForStaff(InvoiceFormDTO dto, Long staffId);
     Integer getRentArea(Long id);
     Map<Long, Integer> getRentAreaByContract();
     void markPaid(Long invoiceId, String method, String txnRef);

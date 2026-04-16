@@ -3,6 +3,7 @@ package com.estate.api.v1.payment;
 import com.estate.repository.InvoiceRepository;
 import com.estate.repository.entity.InvoiceEntity;
 import com.estate.security.CustomUserDetails;
+import com.estate.security.jwt.JwtProperties;
 import com.estate.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,17 +12,23 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HexFormat;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -31,6 +38,7 @@ import java.util.Objects;
 public class PaymentV1API {
     private final InvoiceRepository invoiceRepository;
     private final InvoiceService invoiceService;
+    private final JwtProperties jwtProperties;
 
     @Value("${payment.qr.bank-bin:970422}")
     private String bankBin;
@@ -51,6 +59,7 @@ public class PaymentV1API {
         String amountValue = amount.stripTrailingZeros().toPlainString().replace(".", "");
         String transferContent = "MOONNEST INV " + invoiceId;
         String formattedAmount = formatMoney(amount);
+        String confirmToken = buildConfirmToken(invoice, user);
 
         String qrUrl = "https://img.vietqr.io/image/%s-%s-compact2.png?amount=%s&addInfo=%s&accountName=%s"
                 .formatted(
@@ -62,11 +71,11 @@ public class PaymentV1API {
                 );
 
         return """
-                <html lang="vi">
+                <html lang=\"vi\">
                   <head>
-                    <meta charset="utf-8"/>
-                    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-                    <title>Thanh toán QR</title>
+                    <meta charset=\"utf-8\"/>
+                    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>
+                    <title>Thanh toan QR</title>
                     <style>
                       body { font-family: Arial, sans-serif; background: #f4f6fb; margin: 0; padding: 24px; color: #1f2937; }
                       .wrap { max-width: 520px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
@@ -83,24 +92,27 @@ public class PaymentV1API {
                     </style>
                   </head>
                   <body>
-                    <div class="wrap">
-                      <h1>Thanh toán bằng QR</h1>
-                      <p>Quét mã bằng ứng dụng ngân hàng để thanh toán hóa đơn.</p>
-                      <div class="qr">
-                        <img src="%s" alt="QR thanh toán hóa đơn %d"/>
+                    <div class=\"wrap\">
+                      <h1>Thanh toan bang QR</h1>
+                      <p>Quet ma bang ung dung ngan hang de thanh toan hoa don.</p>
+                      <div class=\"qr\">
+                        <img src=\"%s\" alt=\"QR thanh toan hoa don %d\"/>
                       </div>
-                      <div class="meta">
-                        <p><strong>Mã hóa đơn:</strong> #%d</p>
-                        <p><strong>Số tiền:</strong> %s VND</p>
-                        <p><strong>Mã ngân hàng:</strong> %s</p>
-                        <p><strong>Số tài khoản:</strong> %s</p>
-                        <p><strong>Chủ tài khoản:</strong> %s</p>
-                        <p><strong>Nội dung CK:</strong> %s</p>
+                      <div class=\"meta\">
+                        <p><strong>Ma hoa don:</strong> #%d</p>
+                        <p><strong>So tien:</strong> %s VND</p>
+                        <p><strong>Ma ngan hang:</strong> %s</p>
+                        <p><strong>So tai khoan:</strong> %s</p>
+                        <p><strong>Chu tai khoan:</strong> %s</p>
+                        <p><strong>Noi dung CK:</strong> %s</p>
                       </div>
-                      <p class="hint">Sau khi chuyển khoản thành công, bấm "Tôi đã thanh toán" để hệ thống ghi nhận theo chế độ demo.</p>
-                      <div class="actions">
-                        <a class="btn btn-primary" href="/api/v1/payment/qr/confirm/%d">Tôi đã thanh toán</a>
-                        <a class="btn btn-secondary" href="/customer/invoice/list">Quay lại</a>
+                      <p class=\"hint\">Sau khi chuyen khoan thanh cong, bam \"Toi da thanh toan\" de he thong ghi nhan theo che do demo.</p>
+                      <div class=\"actions\">
+                        <form style=\"flex: 1; margin: 0;\" method=\"post\" action=\"/api/v1/payment/qr/confirm/%d\">
+                          <input type=\"hidden\" name=\"token\" value=\"%s\"/>
+                          <button class=\"btn btn-primary\" style=\"width: 100%%; border: 0; cursor: pointer;\" type=\"submit\">Toi da thanh toan</button>
+                        </form>
+                        <a class=\"btn btn-secondary\" href=\"/customer/invoice/list\">Quay lai</a>
                       </div>
                     </div>
                   </body>
@@ -114,18 +126,31 @@ public class PaymentV1API {
                 accountNo,
                 accountName,
                 transferContent,
-                invoiceId
+                invoiceId,
+                confirmToken
         );
     }
 
     @GetMapping("/qr/confirm/{invoiceId}")
+    public String rejectLegacyConfirm() {
+        return "redirect:/customer/invoice/list?payFail";
+    }
+
+    @PostMapping("/qr/confirm/{invoiceId}")
     public String confirmQrPayment(@PathVariable Long invoiceId,
-                                   @AuthenticationPrincipal CustomUserDetails user) {
+                                   @AuthenticationPrincipal CustomUserDetails user,
+                                   @RequestParam String token) {
         InvoiceEntity invoice = getCustomerInvoice(invoiceId, user);
+        if (!MessageDigest.isEqual(
+                token.getBytes(StandardCharsets.UTF_8),
+                buildConfirmToken(invoice, user).getBytes(StandardCharsets.UTF_8)
+        )) {
+            return "redirect:/customer/invoice/list?payFail";
+        }
 
         if (!"PAID".equalsIgnoreCase(invoice.getStatus())) {
-            String transactionCode = "QR-" + invoiceId + "-" +
-                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            String transactionCode = "QR-" + invoiceId + "-"
+                    + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
             invoiceService.markPaid(invoiceId, "BANK_QR", transactionCode);
         }
 
@@ -157,5 +182,17 @@ public class PaymentV1API {
         symbols.setDecimalSeparator('.');
         DecimalFormat format = new DecimalFormat("#,##0.##", symbols);
         return format.format(amount);
+    }
+
+    private String buildConfirmToken(InvoiceEntity invoice, CustomUserDetails user) {
+        String payload = invoice.getId() + ":" + user.getUserId() + ":" + invoice.getTotalAmount() + ":" + invoice.getStatus();
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] signature = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(signature);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Unable to generate payment confirmation token", ex);
+        }
     }
 }

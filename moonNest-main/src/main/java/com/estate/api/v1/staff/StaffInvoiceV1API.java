@@ -38,22 +38,26 @@ public class StaffInvoiceV1API {
     }
 
     @PostMapping
-    public ResponseEntity<ApiMessageResponse<Void>> addInvoice(@RequestBody InvoiceFormDTO dto) {
-        invoiceService.save(dto);
+    public ResponseEntity<ApiMessageResponse<Void>> addInvoice(@RequestBody InvoiceFormDTO dto,
+                                                               @AuthenticationPrincipal CustomUserDetails user) {
+        invoiceService.saveForStaff(dto, user.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiMessageResponse.of("Tạo hóa đơn thành công."));
     }
 
     @PutMapping("/{id}")
-    public ApiMessageResponse<Void> editInvoice(@PathVariable Long id, @RequestBody InvoiceFormDTO dto) {
+    public ApiMessageResponse<Void> editInvoice(@PathVariable Long id,
+                                                @RequestBody InvoiceFormDTO dto,
+                                                @AuthenticationPrincipal CustomUserDetails user) {
         dto.setId(id);
-        invoiceService.save(dto);
+        invoiceService.saveForStaff(dto, user.getUserId());
         return ApiMessageResponse.of("Cập nhật hóa đơn thành công.");
     }
 
     @DeleteMapping("/{id}")
-    public ApiMessageResponse<Void> deleteInvoice(@PathVariable Long id) {
-        invoiceService.delete(id);
+    public ApiMessageResponse<Void> deleteInvoice(@PathVariable Long id,
+                                                  @AuthenticationPrincipal CustomUserDetails user) {
+        invoiceService.deleteForStaff(id, user.getUserId());
         return ApiMessageResponse.of("Xóa hóa đơn thành công.");
     }
 }
