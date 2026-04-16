@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
-    <title>MoonNest | Dashboard</title>
+    <title>MoonNest | Bảng điều khiển</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Bootstrap + Icons -->
@@ -420,7 +420,7 @@
             <!-- -- Page Header ----------------------------------------------- -->
             <div class="page-header-bar">
                 <div>
-                    <h2><i class="bi bi-grid-1x2 me-2" style="color:#3b82f6;font-size:1.2rem;"></i>Dashboard</h2>
+                    <h2><i class="bi bi-grid-1x2 me-2" style="color:#3b82f6;font-size:1.2rem;"></i>Bảng điều khiển</h2>
                     <div class="update-time">
                         Cập nhật lần cuối:
                         <span id="dashboardUpdatedAt" th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}"></span>
@@ -478,12 +478,12 @@
                             <div class="legend-pills ms-auto">
                                 <span class="legend-pill">
                                     <span class="legend-dot" style="background:#3b82f6;"></span>
-                                    Nam <span id="currentYearLabel" th:text="${currentYear}">2024</span>
+                                    Năm <span id="currentYearLabel" th:text="${currentYear}">2024</span>
                                 </span>
                                 <span class="legend-pill">
                                     <span class="legend-dot"
                                         style="background:#fef2f2;border:2px solid #ef4444;"></span>
-                                    Nam <span id="lastYearLabel" th:text="${lastYear}">2023</span>
+                                    Năm <span id="lastYearLabel" th:text="${lastYear}">2023</span>
                                 </span>
                             </div>
                         </div>
@@ -498,7 +498,7 @@
                     <div class="d-card h-100">
                         <div class="d-card-header">
                             <i class="bi bi-bar-chart-line"></i>
-                            <h3>Doanh thu 3 nam</h3>
+                            <h3>Doanh thu 3 năm</h3>
                         </div>
                         <div class="d-card-body">
                             <div style="position:relative;height:280px;">
@@ -749,7 +749,7 @@
                 labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
                 datasets: [
                     {
-                        label: 'Nam ' + currentYear,
+                        label: 'Năm ' + currentYear,
                         data: revenueDataCurrent.map(v => v / 1_000_000_000),
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59,130,246,0.08)',
@@ -761,7 +761,7 @@
                         pointHoverRadius: 6
                     },
                     {
-                        label: 'Nam ' + lastYear,
+                        label: 'Năm ' + lastYear,
                         data: revenueDataLastYear.map(v => v / 1_000_000_000),
                         borderColor: '#ef4444',
                         backgroundColor: 'rgba(239,68,68,0.06)',
@@ -1044,5 +1044,7 @@
 </body>
 
 </html>
+
+
 
 

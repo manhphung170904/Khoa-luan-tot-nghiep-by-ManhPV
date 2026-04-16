@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -977,12 +977,12 @@
                     </div>
                 </div>
 
-                <!-- FOR_RENT vs FOR_SALE + trạng thái -->
+                <!-- Cho thuê và mua bán + trạng thái -->
                 <div class="col-lg-4">
                     <div class="d-card h-100">
                         <div class="d-card-header">
                             <i class="bi bi-house-gear-fill"></i>
-                            <h3>FOR_RENT vs FOR_SALE</h3>
+                            <h3>Cho thuê và mua bán</h3>
                         </div>
                         <div class="d-card-body">
                             <!-- Occupancy strip FOR_RENT -->
@@ -1319,7 +1319,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Cho thuê (FOR_RENT)</td>
+                                <td>Cho thuê</td>
                                 <td class="r" th:text="${report.forRentCount}">0</td>
                                 <td class="r" th:text="${report.forRentActiveCount}">0</td>
                                 <td class="r" th:text="${report.forRentCount - report.forRentActiveCount}">0</td>
@@ -1328,7 +1328,7 @@
                                     —</td>
                             </tr>
                             <tr>
-                                <td>Mua bán (FOR_SALE)</td>
+                                <td>Mua bán</td>
                                 <td class="r" th:text="${report.forSaleCount}">0</td>
                                 <td class="r" th:text="${report.forSaleActiveCount}">0</td>
                                 <td class="r" th:text="${report.forSaleCount - report.forSaleActiveCount}">0</td>
@@ -1739,7 +1739,7 @@
         // Năm quá khứ: cutoffMonth = 12 (đủ 12 tháng)
         // Tháng 1 năm hiện tại: cutoffMonth = 0 (chưa có tháng nào hoàn chỉnh)
 
-        /* -- Nam labels -------------------------------------------------------- */
+        /* -- N?m labels -------------------------------------------------------- */
         const yearLabels = [yearBeforeLast, lastYear, currentYear];
         const allMonthLabels = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
 

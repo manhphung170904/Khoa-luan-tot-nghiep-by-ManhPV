@@ -8,7 +8,6 @@ import com.estate.security.CustomUserDetails;
 import com.estate.service.PropertyRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
@@ -41,8 +40,7 @@ public class CustomerPropertyRequestV1API {
         }
 
         propertyRequestService.submit(dto, user.getUserId());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Yêu cầu của bạn đã được gửi thành công."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Gửi yêu cầu thành công."));
     }
 
     @GetMapping
@@ -55,6 +53,6 @@ public class CustomerPropertyRequestV1API {
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails user) {
         propertyRequestService.cancel(id, user.getUserId());
-        return ApiMessageResponse.of("Yêu cầu của bạn đã bị hủy.");
+        return ApiMessageResponse.of("Hủy yêu cầu thành công.");
     }
 }

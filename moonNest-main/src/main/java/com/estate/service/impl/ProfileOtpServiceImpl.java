@@ -22,7 +22,6 @@ import java.util.Locale;
 public class ProfileOtpServiceImpl implements ProfileOtpService {
     private static final String STATUS_PENDING = "PENDING";
     private static final String STATUS_USED = "USED";
-    private static final int OTP_LENGTH = 6;
     private static final int OTP_EXPIRE_MINUTES = 10;
 
     private final EmailVerificationRepository emailVerificationRepository;
@@ -33,10 +32,10 @@ public class ProfileOtpServiceImpl implements ProfileOtpService {
     public void sendOtp(String email, String purpose) {
         String normalizedEmail = normalizeEmail(email);
         if (!StringUtils.hasText(normalizedEmail)) {
-            throw new BusinessException("Email không hợp lệ");
+            throw new BusinessException("Email is invalid");
         }
         if (!StringUtils.hasText(purpose)) {
-            throw new BusinessException("Mục đích xác thực không hợp lệ");
+            throw new BusinessException("OTP purpose is invalid");
         }
 
         emailVerificationRepository.deleteByEmailAndPurposeAndStatus(normalizedEmail, purpose, STATUS_PENDING);
@@ -52,12 +51,12 @@ public class ProfileOtpServiceImpl implements ProfileOtpService {
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(normalizedEmail);
-        message.setSubject("MoonNest - Mã xác nhận");
+        message.setSubject("MoonNest - Verification code");
         message.setText(
-                "Xin chào,\n\n" +
-                "Mã xác nhận của bạn là: " + otp + "\n\n" +
-                "Mã có hiệu lực trong 10 phút.\n" +
-                "Nếu bạn không yêu cầu, hãy bỏ qua email này."
+                "Hello,\n\n" +
+                "Your verification code is: " + otp + "\n\n" +
+                "This code will expire in 10 minutes.\n" +
+                "If you did not request this code, you can ignore this email."
         );
         mailSender.send(message);
     }
@@ -67,17 +66,17 @@ public class ProfileOtpServiceImpl implements ProfileOtpService {
         String normalizedEmail = normalizeEmail(email);
         EmailVerificationEntity entity = emailVerificationRepository
                 .findTopByEmailAndPurposeAndStatusOrderByCreatedAtDesc(normalizedEmail, purpose, STATUS_PENDING)
-                .orElseThrow(() -> new BusinessException("Mã xác nhận không tồn tại hoặc đã hết hạn"));
+                .orElseThrow(() -> new BusinessException("Verification code was not found or has expired"));
 
         if (entity.getExpiresAt().isBefore(LocalDateTime.now())) {
             entity.setStatus(STATUS_USED);
             entity.setUsedAt(LocalDateTime.now());
             emailVerificationRepository.save(entity);
-            throw new BusinessException("Mã xác nhận đã hết hạn");
+            throw new BusinessException("Verification code has expired");
         }
 
         if (!hash(otp).equals(entity.getOtpHash())) {
-            throw new BusinessException("Mã xác nhận không đúng");
+            throw new BusinessException("Verification code is invalid");
         }
 
         entity.setStatus(STATUS_USED);

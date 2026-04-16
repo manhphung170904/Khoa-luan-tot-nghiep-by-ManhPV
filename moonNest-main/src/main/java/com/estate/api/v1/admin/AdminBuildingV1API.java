@@ -1,19 +1,26 @@
 package com.estate.api.v1.admin;
 
-import com.estate.dto.*;
+import com.estate.dto.AdminBuildingFilterMetadataDTO;
+import com.estate.dto.ApiMessageResponse;
+import com.estate.dto.ApiOptionDTO;
+import com.estate.dto.BuildingFilterDTO;
+import com.estate.dto.BuildingFormDTO;
+import com.estate.dto.BuildingListDTO;
 import com.estate.dto.FileUploadResponseDTO;
 import com.estate.dto.PageResponse;
+import com.estate.dto.StaffSelectDTO;
 import com.estate.enums.Direction;
 import com.estate.enums.Level;
 import com.estate.enums.PropertyType;
 import com.estate.enums.TransactionType;
 import com.estate.exception.InputValidationException;
+import com.estate.exception.PayloadTooLargeException;
+import com.estate.exception.UnsupportedMediaTypeApiException;
 import com.estate.service.BuildingService;
 import com.estate.service.StaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,7 +41,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -80,8 +86,7 @@ public class AdminBuildingV1API {
     ) {
         validate(result);
         buildingService.save(dto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Tạo tòa nhà thành công."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Thêm bất động sản thành công."));
     }
 
     @PutMapping("/{id}")
@@ -93,69 +98,33 @@ public class AdminBuildingV1API {
         validate(result);
         dto.setId(id);
         buildingService.save(dto);
-        return ApiMessageResponse.of("Cập nhật tòa nhà thành công.");
+        return ApiMessageResponse.of("Cập nhật bất động sản thành công.");
     }
 
     @DeleteMapping("/{id}")
-    public ApiMessageResponse<Void> deleteBuilding(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteBuilding(@PathVariable Long id) {
         buildingService.delete(id);
-        return ApiMessageResponse.of("Xóa tòa nhà thành công.");
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/image")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
-        boolean useUnifiedContract = true;
-        if (useUnifiedContract) {
-            if (file.isEmpty()) {
-                throw new InputValidationException("Vui lòng chọn một tệp hình ảnh.");
-            }
-            if (file.getSize() > MAX_SIZE_BYTES) {
-                throw new InputValidationException("Tệp quá lớn. Kích thước tối đa cho phép là 5 MB.");
-            }
-
-            String contentType = file.getContentType();
-            if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
-                throw new InputValidationException("Loại tệp không hợp lệ. Chỉ hỗ trợ JPG, PNG và WEBP.");
-            }
-
-            String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
-            boolean validExt = ALLOWED_EXTS.stream().anyMatch(originalName::endsWith);
-            if (!validExt) {
-                throw new InputValidationException("Phần mở rộng tệp không hợp lệ. Chỉ hỗ trợ .jpg, .png và .webp.");
-            }
-
-            String ext = originalName.substring(originalName.lastIndexOf('.'));
-            String newFilename = UUID.randomUUID().toString().replace("-", "") + ext;
-
-            try {
-                Path uploadPath = Paths.get(uploadDir).toAbsolutePath();
-                Files.createDirectories(uploadPath);
-                Path targetPath = uploadPath.resolve(newFilename);
-                Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-
-                return ResponseEntity.status(HttpStatus.CREATED).body(
-                        ApiMessageResponse.of("Tải lên hoàn tất thành công.", FileUploadResponseDTO.of(newFilename))
-                );
-            } catch (IOException e) {
-                throw new IllegalStateException("Không thể lưu tệp đã tải lên.", e);
-            }
-        }
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Vui lòng chọn file ảnh."));
+            throw new InputValidationException("Please select an image file");
         }
         if (file.getSize() > MAX_SIZE_BYTES) {
-            return ResponseEntity.badRequest().body(Map.of("message", "File quá lớn. Dung lượng tối đa cho phép là 5 MB."));
+            throw new PayloadTooLargeException("Image size must not exceed 5 MB");
         }
 
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Định dạng không hợp lệ. Chỉ chấp nhận JPG, PNG, WEBP."));
+            throw new UnsupportedMediaTypeApiException("Only JPG, PNG and WEBP files are supported");
         }
 
         String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
         boolean validExt = ALLOWED_EXTS.stream().anyMatch(originalName::endsWith);
         if (!validExt) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Định dạng file không hợp lệ. Chỉ chấp nhận .jpg, .png, .webp."));
+            throw new UnsupportedMediaTypeApiException("Only .jpg, .jpeg, .png and .webp extensions are supported");
         }
 
         String ext = originalName.substring(originalName.lastIndexOf('.'));
@@ -167,12 +136,11 @@ public class AdminBuildingV1API {
             Path targetPath = uploadPath.resolve(newFilename);
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                    "filename", newFilename,
-                    "message", "Upload thành công"
-            ));
+            return ResponseEntity.ok(
+                    ApiMessageResponse.of("Tải tệp lên thành công", FileUploadResponseDTO.of(newFilename))
+            );
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().body(Map.of("message", "Lỗi lưu file: " + e.getMessage()));
+            throw new IllegalStateException("Unable to store uploaded file", e);
         }
     }
 

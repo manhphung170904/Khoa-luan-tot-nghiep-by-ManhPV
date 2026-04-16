@@ -8,7 +8,6 @@ import com.estate.dto.PageResponse;
 import com.estate.security.CustomUserDetails;
 import com.estate.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,8 +40,7 @@ public class StaffInvoiceV1API {
     public ResponseEntity<ApiMessageResponse<Void>> addInvoice(@RequestBody InvoiceFormDTO dto,
                                                                @AuthenticationPrincipal CustomUserDetails user) {
         invoiceService.saveForStaff(dto, user.getUserId());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Tạo hóa đơn thành công."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Tạo hóa đơn thành công."));
     }
 
     @PutMapping("/{id}")
@@ -55,9 +53,9 @@ public class StaffInvoiceV1API {
     }
 
     @DeleteMapping("/{id}")
-    public ApiMessageResponse<Void> deleteInvoice(@PathVariable Long id,
-                                                  @AuthenticationPrincipal CustomUserDetails user) {
+    public ResponseEntity<Void> deleteInvoice(@PathVariable Long id,
+                                              @AuthenticationPrincipal CustomUserDetails user) {
         invoiceService.deleteForStaff(id, user.getUserId());
-        return ApiMessageResponse.of("Xóa hóa đơn thành công.");
+        return ResponseEntity.ok().build();
     }
 }

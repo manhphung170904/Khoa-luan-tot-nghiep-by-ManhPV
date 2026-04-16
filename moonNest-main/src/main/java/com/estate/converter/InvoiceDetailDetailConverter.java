@@ -1,9 +1,8 @@
 package com.estate.converter;
 
 import com.estate.dto.InvoiceDetailDetailDTO;
-import com.estate.exception.BusinessException;
+import com.estate.exception.ResourceNotFoundException;
 import com.estate.repository.InvoiceRepository;
-import com.estate.repository.entity.CustomerEntity;
 import com.estate.repository.entity.InvoiceDetailEntity;
 import com.estate.repository.entity.InvoiceEntity;
 import org.modelmapper.ModelMapper;
@@ -18,16 +17,15 @@ public class InvoiceDetailDetailConverter {
     @Autowired
     private InvoiceRepository invoiceRepository;
 
-    public InvoiceDetailDetailDTO toDTO (InvoiceDetailEntity entity) {
-        InvoiceDetailDetailDTO dto = modelMapper.map(entity, InvoiceDetailDetailDTO.class);
-        return dto;
+    public InvoiceDetailDetailDTO toDTO(InvoiceDetailEntity entity) {
+        return modelMapper.map(entity, InvoiceDetailDetailDTO.class);
     }
 
-    public void toEntity (InvoiceDetailDetailDTO dto, InvoiceDetailEntity entity) {
+    public void toEntity(InvoiceDetailDetailDTO dto, InvoiceDetailEntity entity) {
         modelMapper.map(dto, entity);
 
         InvoiceEntity invoice = invoiceRepository.findById(dto.getInvoiceId())
-                .orElseThrow(() -> new BusinessException("Không tìm thấy hóa đơn"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
         entity.setInvoice(invoice);
     }
 }

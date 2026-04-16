@@ -1,7 +1,7 @@
 package com.estate.converter;
 
 import com.estate.dto.UtilityMeterDetailDTO;
-import com.estate.exception.BusinessException;
+import com.estate.exception.ResourceNotFoundException;
 import com.estate.repository.ContractRepository;
 import com.estate.repository.entity.ContractEntity;
 import com.estate.repository.entity.UtilityMeterEntity;
@@ -17,16 +17,15 @@ public class UtilityMeterDetailConverter {
     @Autowired
     private ContractRepository contractRepository;
 
-    public UtilityMeterDetailDTO toDTO (UtilityMeterEntity entity) {
-        UtilityMeterDetailDTO dto = modelMapper.map(entity, UtilityMeterDetailDTO.class);
-        return dto;
+    public UtilityMeterDetailDTO toDTO(UtilityMeterEntity entity) {
+        return modelMapper.map(entity, UtilityMeterDetailDTO.class);
     }
 
-    public void toEntity (UtilityMeterDetailDTO dto, UtilityMeterEntity entity) {
+    public void toEntity(UtilityMeterDetailDTO dto, UtilityMeterEntity entity) {
         modelMapper.map(dto, entity);
 
         ContractEntity contract = contractRepository.findById(dto.getContractId())
-                .orElseThrow(() -> new BusinessException("Không tìm thấy hợp đồng"));
+                .orElseThrow(() -> new ResourceNotFoundException("Contract was not found"));
         entity.setContract(contract);
     }
 }

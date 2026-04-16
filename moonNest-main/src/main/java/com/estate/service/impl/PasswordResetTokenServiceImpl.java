@@ -1,8 +1,9 @@
 package com.estate.service.impl;
 
+import com.estate.exception.BusinessException;
+import com.estate.service.PasswordResetTokenService;
 import com.estate.repository.PasswordResetTokenRepository;
 import com.estate.repository.entity.PasswordResetTokenEntity;
-import com.estate.service.PasswordResetTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,11 +32,14 @@ public class PasswordResetTokenServiceImpl implements PasswordResetTokenService 
     @Override
     public PasswordResetTokenEntity validate(String tokenValue) {
         PasswordResetTokenEntity token = tokenRepo.findByToken(tokenValue)
-                .orElseThrow(() -> new RuntimeException("Token không hợp lệ"));
+                .orElseThrow(() -> new BusinessException("Reset token is invalid"));
 
-        if (token.isUsed()) throw new RuntimeException("Token đã dùng");
-        if (token.getExpiresAt().isBefore(LocalDateTime.now()))
-            throw new RuntimeException("Token hết hạn");
+        if (token.isUsed()) {
+            throw new BusinessException("Reset token has already been used");
+        }
+        if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BusinessException("Reset token has expired");
+        }
 
         return token;
     }

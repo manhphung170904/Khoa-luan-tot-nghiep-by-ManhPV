@@ -1,10 +1,25 @@
 package com.estate.service.impl;
 
-import com.estate.dto.*;
+import com.estate.dto.ContractFormDTO;
+import com.estate.dto.PropertyRequestDetailDTO;
+import com.estate.dto.PropertyRequestFormDTO;
+import com.estate.dto.PropertyRequestListDTO;
+import com.estate.dto.SaleContractFormDTO;
 import com.estate.enums.TransactionType;
 import com.estate.exception.BusinessException;
-import com.estate.repository.*;
-import com.estate.repository.entity.*;
+import com.estate.exception.ForbiddenOperationException;
+import com.estate.exception.ResourceNotFoundException;
+import com.estate.repository.BuildingRepository;
+import com.estate.repository.ContractRepository;
+import com.estate.repository.CustomerRepository;
+import com.estate.repository.PropertyRequestRepository;
+import com.estate.repository.SaleContractRepository;
+import com.estate.repository.StaffRepository;
+import com.estate.repository.entity.BuildingEntity;
+import com.estate.repository.entity.ContractEntity;
+import com.estate.repository.entity.CustomerEntity;
+import com.estate.repository.entity.PropertyRequestEntity;
+import com.estate.repository.entity.SaleContractEntity;
 import com.estate.service.PropertyRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional
@@ -39,52 +55,25 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
     @Autowired
     private SaleContractRepository saleContractRepository;
 
-    // ======================== CUSTOMER ========================
-
     @Override
     public void submit(PropertyRequestFormDTO dto, Long customerId) {
-        // Validate building tá»“n táº¡i
         BuildingEntity building = buildingRepository.findById(dto.getBuildingId())
-                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y báº¥t Ä‘á»™ng sáº£n"));
+                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
 
-        // RÃ ng buá»™c #1: request_type pháº£i match transaction_type
-        if ("RENT".equals(dto.getRequestType()) && building.getTransactionType() != TransactionType.FOR_RENT) {
-            throw new BusinessException("Báº¥t Ä‘á»™ng sáº£n nÃ y khÃ´ng cho thuÃª");
-        }
-        if ("BUY".equals(dto.getRequestType()) && building.getTransactionType() != TransactionType.FOR_SALE) {
-            throw new BusinessException("Báº¥t Ä‘á»™ng sáº£n nÃ y khÃ´ng bÃ¡n");
-        }
+        validateRequestTypeAgainstBuilding(dto, building);
+        validateNoDuplicatePendingRequest(customerId, dto.getBuildingId());
+        validateDateRange(dto);
 
-        // RÃ ng buá»™c #3: Building FOR_SALE chÆ°a cÃ³ sale_contract
-        if ("BUY".equals(dto.getRequestType()) && saleContractRepository.existsByBuilding_Id(building.getId())) {
-            throw new BusinessException("Báº¥t Ä‘á»™ng sáº£n nÃ y Ä‘Ã£ cÃ³ há»£p Ä‘á»“ng mua bÃ¡n");
-        }
-
-        // RÃ ng buá»™c #4: KhÃ´ng trÃ¹ng request (cÃ¹ng KH + cÃ¹ng building + PENDING)
-        if (propertyRequestRepository.existsByCustomerIdAndBuildingIdAndStatus(customerId, dto.getBuildingId(), "PENDING")) {
-            throw new BusinessException("Báº¡n Ä‘Ã£ gá»­i yÃªu cáº§u cho báº¥t Ä‘á»™ng sáº£n nÃ y rá»“i, vui lÃ²ng chá» xá»­ lÃ½");
-        }
-
-        // Validate ngÃ y (cho RENT)
-        if ("RENT".equals(dto.getRequestType())) {
-            if (dto.getDesiredStartDate() != null && dto.getDesiredEndDate() != null) {
-                if (!dto.getDesiredEndDate().isAfter(dto.getDesiredStartDate())) {
-                    throw new BusinessException("NgÃ y káº¿t thÃºc pháº£i sau ngÃ y báº¯t Ä‘áº§u");
-                }
-            }
-        }
-
-        // Táº¡o entity
         CustomerEntity customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y khÃ¡ch hÃ ng"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer was not found"));
 
         PropertyRequestEntity entity = new PropertyRequestEntity();
         entity.setCustomer(customer);
         entity.setBuilding(building);
         entity.setRequestType(dto.getRequestType());
-        entity.setFullName(customer.getFullName()); // Láº¥y tá»« thÃ´ng tin khÃ¡ch hÃ ng
-        entity.setPhone(customer.getPhone());             // Láº¥y tá»« form ngÆ°á»i dÃ¹ng nháº­p
-        entity.setEmail(customer.getEmail());             // Láº¥y tá»« form ngÆ°á»i dÃ¹ng nháº­p
+        entity.setFullName(customer.getFullName());
+        entity.setPhone(customer.getPhone());
+        entity.setEmail(customer.getEmail());
         entity.setDesiredArea(dto.getDesiredArea());
         entity.setDesiredStartDate(dto.getDesiredStartDate());
         entity.setDesiredEndDate(dto.getDesiredEndDate());
@@ -99,96 +88,78 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
     public List<PropertyRequestListDTO> getRequestsByCustomer(Long customerId) {
         List<PropertyRequestEntity> entities = propertyRequestRepository.findByCustomerIdOrderByCreatedDateDesc(customerId);
         List<PropertyRequestListDTO> result = new ArrayList<>();
-        for (PropertyRequestEntity e : entities) {
-            result.add(toListDTO(e));
+        for (PropertyRequestEntity entity : entities) {
+            result.add(toListDTO(entity));
         }
         return result;
     }
 
     @Override
     public void cancel(Long requestId, Long customerId) {
-        PropertyRequestEntity entity = propertyRequestRepository.findById(requestId)
-                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u"));
+        PropertyRequestEntity entity = requireRequest(requestId);
 
-        if (!entity.getCustomer().getId().equals(customerId)) {
-            throw new BusinessException("Báº¡n khÃ´ng cÃ³ quyá»n há»§y yÃªu cáº§u nÃ y");
+        if (!Objects.equals(entity.getCustomer().getId(), customerId)) {
+            throw new ForbiddenOperationException("You cannot cancel another customer's request");
         }
-
-        if (!"PENDING".equals(entity.getStatus())) {
-            throw new BusinessException("Chá»‰ cÃ³ thá»ƒ há»§y yÃªu cáº§u Ä‘ang chá» xá»­ lÃ½");
-        }
+        ensurePending(entity, "Only pending requests can be cancelled");
 
         entity.setStatus("CANCELLED");
         propertyRequestRepository.save(entity);
     }
 
-    // ======================== ADMIN ========================
-
     @Override
     public Page<PropertyRequestListDTO> getRequests(String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<PropertyRequestEntity> entityPage;
-
-        if (status != null && !status.isBlank()) {
-            entityPage = propertyRequestRepository.findByStatusOrderByCreatedDateDesc(status, pageable);
-        } else {
-            entityPage = propertyRequestRepository.findAllByOrderByCreatedDateDesc(pageable);
-        }
+        Page<PropertyRequestEntity> entityPage = status != null && !status.isBlank()
+                ? propertyRequestRepository.findByStatusOrderByCreatedDateDesc(status, pageable)
+                : propertyRequestRepository.findAllByOrderByCreatedDateDesc(pageable);
 
         List<PropertyRequestListDTO> dtoList = new ArrayList<>();
-        for (PropertyRequestEntity e : entityPage) {
-            dtoList.add(toListDTO(e));
+        for (PropertyRequestEntity entity : entityPage) {
+            dtoList.add(toListDTO(entity));
         }
-
         return new PageImpl<>(dtoList, entityPage.getPageable(), entityPage.getTotalElements());
     }
 
     @Override
     public PropertyRequestDetailDTO getRequestDetail(Long id) {
-        PropertyRequestEntity entity = propertyRequestRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u"));
-
-        return toDetailDTO(entity);
+        return toDetailDTO(requireRequest(id));
     }
 
     @Override
     public void reject(Long requestId, Long staffId, String reason) {
-        PropertyRequestEntity entity = propertyRequestRepository.findById(requestId)
-                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u"));
-
-        if (!"PENDING".equals(entity.getStatus())) {
-            throw new BusinessException("YÃªu cáº§u nÃ y Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½ rá»“i");
-        }
-
-        StaffEntity staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y nhÃ¢n viÃªn"));
+        PropertyRequestEntity entity = requireRequest(requestId);
+        ensurePending(entity, "Only pending requests can be rejected");
 
         entity.setStatus("REJECTED");
-        entity.setAdminNote(reason);
-        entity.setProcessedBy(staff);
+        entity.setAdminNote(reason == null ? "" : reason.trim());
+        staffRepository.findById(staffId).ifPresent(entity::setProcessedBy);
         propertyRequestRepository.save(entity);
     }
 
     @Override
     public void markApproved(Long requestId, Long staffId, Long contractId, Long saleContractId) {
-        PropertyRequestEntity entity = propertyRequestRepository.findById(requestId)
-                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u"));
-
-        StaffEntity staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y nhÃ¢n viÃªn"));
+        PropertyRequestEntity entity = requireRequest(requestId);
+        ensurePending(entity, "Only pending requests can be approved");
+        validateApprovalPayload(entity, contractId, saleContractId);
 
         entity.setStatus("APPROVED");
-        entity.setProcessedBy(staff);
+        entity.setAdminNote(null);
+        staffRepository.findById(staffId).ifPresent(entity::setProcessedBy);
+        entity.setContract(null);
+        entity.setSaleContract(null);
 
         if (contractId != null) {
             ContractEntity contract = contractRepository.findById(contractId)
-                    .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Contract was not found"));
+            validateContractMatchesRequest(entity, contract);
             entity.setContract(contract);
         }
 
         if (saleContractId != null) {
             SaleContractEntity saleContract = saleContractRepository.findById(saleContractId)
-                    .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng mua bÃ¡n"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Sale contract was not found"));
+            validateSaleContractMatchesRequest(entity, saleContract);
             entity.setSaleContract(saleContract);
         }
 
@@ -200,72 +171,117 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
         return propertyRequestRepository.countByStatus("PENDING");
     }
 
-    // ======================== AUTO-FILL ========================
-
     @Override
     public ContractFormDTO toContractForm(Long requestId) {
-        PropertyRequestEntity req = propertyRequestRepository.findById(requestId)
-                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u"));
-
-        validateRequestReadyForContract(req);
+        PropertyRequestEntity request = requireRequest(requestId);
+        validateRequestReadyForContract(request);
 
         ContractFormDTO form = new ContractFormDTO();
-        form.setBuildingId(req.getBuilding().getId());
-        form.setCustomerId(req.getCustomer().getId());
-        form.setRentArea(req.getDesiredArea());
-
-        // GiÃ¡: dÃ¹ng giÃ¡ KH Ä‘á» xuáº¥t náº¿u cÃ³, náº¿u khÃ´ng dÃ¹ng giÃ¡ building
-        form.setRentPrice(req.getOfferedPrice() != null
-                ? req.getOfferedPrice()
-                : req.getBuilding().getRentPrice());
-
-        form.setStartDate(req.getDesiredStartDate());
-        form.setEndDate(req.getDesiredEndDate());
+        form.setBuildingId(request.getBuilding().getId());
+        form.setCustomerId(request.getCustomer().getId());
+        form.setRentArea(request.getDesiredArea());
+        form.setRentPrice(request.getOfferedPrice() != null ? request.getOfferedPrice() : request.getBuilding().getRentPrice());
+        form.setStartDate(request.getDesiredStartDate());
+        form.setEndDate(request.getDesiredEndDate());
         form.setStatus("ACTIVE");
-
         return form;
     }
 
     @Override
     public SaleContractFormDTO toSaleContractForm(Long requestId) {
-        PropertyRequestEntity req = propertyRequestRepository.findById(requestId)
-                .orElseThrow(() -> new BusinessException("KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u"));
-
-        validateRequestReadyForSaleContract(req);
+        PropertyRequestEntity request = requireRequest(requestId);
+        validateRequestReadyForSaleContract(request);
 
         SaleContractFormDTO form = new SaleContractFormDTO();
-        form.setBuildingId(req.getBuilding().getId());
-        form.setCustomerId(req.getCustomer().getId());
-
-        // GiÃ¡: dÃ¹ng giÃ¡ KH Ä‘á» xuáº¥t náº¿u cÃ³, náº¿u khÃ´ng dÃ¹ng giÃ¡ building
-        form.setSalePrice(req.getOfferedPrice() != null
-                ? req.getOfferedPrice()
-                : req.getBuilding().getSalePrice());
-
-        form.setNote("Táº¡o tá»« yÃªu cáº§u #" + req.getId());
-
+        form.setBuildingId(request.getBuilding().getId());
+        form.setCustomerId(request.getCustomer().getId());
+        form.setSalePrice(request.getOfferedPrice() != null ? request.getOfferedPrice() : request.getBuilding().getSalePrice());
+        form.setNote("Created from property request #" + request.getId());
         return form;
     }
 
-    private void validateRequestReadyForContract(PropertyRequestEntity req) {
-        if (!"PENDING".equals(req.getStatus())) {
-            throw new BusinessException("Only pending requests can be converted into a contract");
+    private PropertyRequestEntity requireRequest(Long requestId) {
+        return propertyRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Property request was not found"));
+    }
+
+    private void validateRequestTypeAgainstBuilding(PropertyRequestFormDTO dto, BuildingEntity building) {
+        if ("RENT".equals(dto.getRequestType()) && building.getTransactionType() != TransactionType.FOR_RENT) {
+            throw new BusinessException("This building is not available for rent");
         }
-        if (!"RENT".equals(req.getRequestType())) {
+        if ("BUY".equals(dto.getRequestType()) && building.getTransactionType() != TransactionType.FOR_SALE) {
+            throw new BusinessException("This building is not available for sale");
+        }
+        if ("BUY".equals(dto.getRequestType()) && saleContractRepository.existsByBuilding_Id(building.getId())) {
+            throw new BusinessException("This building already has a sale contract");
+        }
+    }
+
+    private void validateNoDuplicatePendingRequest(Long customerId, Long buildingId) {
+        if (propertyRequestRepository.existsByCustomerIdAndBuildingIdAndStatus(customerId, buildingId, "PENDING")) {
+            throw new BusinessException("A pending request already exists for this building");
+        }
+    }
+
+    private void validateDateRange(PropertyRequestFormDTO dto) {
+        if (!"RENT".equals(dto.getRequestType())) {
+            return;
+        }
+        if (dto.getDesiredStartDate() != null
+                && dto.getDesiredEndDate() != null
+                && !dto.getDesiredEndDate().isAfter(dto.getDesiredStartDate())) {
+            throw new BusinessException("Desired end date must be after desired start date");
+        }
+    }
+
+    private void ensurePending(PropertyRequestEntity entity, String message) {
+        if (!"PENDING".equals(entity.getStatus())) {
+            throw new BusinessException(message);
+        }
+    }
+
+    private void validateApprovalPayload(PropertyRequestEntity entity, Long contractId, Long saleContractId) {
+        boolean hasContract = contractId != null;
+        boolean hasSaleContract = saleContractId != null;
+
+        if (hasContract == hasSaleContract) {
+            throw new BusinessException("Approval requires exactly one downstream contract reference");
+        }
+        if ("RENT".equals(entity.getRequestType()) && !hasContract) {
+            throw new BusinessException("RENT requests must be linked to a rental contract");
+        }
+        if ("BUY".equals(entity.getRequestType()) && !hasSaleContract) {
+            throw new BusinessException("BUY requests must be linked to a sale contract");
+        }
+    }
+
+    private void validateContractMatchesRequest(PropertyRequestEntity request, ContractEntity contract) {
+        if (!Objects.equals(contract.getBuilding().getId(), request.getBuilding().getId())
+                || !Objects.equals(contract.getCustomer().getId(), request.getCustomer().getId())) {
+            throw new BusinessException("Contract does not match the selected property request");
+        }
+    }
+
+    private void validateSaleContractMatchesRequest(PropertyRequestEntity request, SaleContractEntity saleContract) {
+        if (!Objects.equals(saleContract.getBuilding().getId(), request.getBuilding().getId())
+                || !Objects.equals(saleContract.getCustomer().getId(), request.getCustomer().getId())) {
+            throw new BusinessException("Sale contract does not match the selected property request");
+        }
+    }
+
+    private void validateRequestReadyForContract(PropertyRequestEntity request) {
+        ensurePending(request, "Only pending requests can be converted into a contract");
+        if (!"RENT".equals(request.getRequestType())) {
             throw new BusinessException("Only RENT requests can be converted into a rental contract");
         }
     }
 
-    private void validateRequestReadyForSaleContract(PropertyRequestEntity req) {
-        if (!"PENDING".equals(req.getStatus())) {
-            throw new BusinessException("Only pending requests can be converted into a sale contract");
-        }
-        if (!"BUY".equals(req.getRequestType())) {
+    private void validateRequestReadyForSaleContract(PropertyRequestEntity request) {
+        ensurePending(request, "Only pending requests can be converted into a sale contract");
+        if (!"BUY".equals(request.getRequestType())) {
             throw new BusinessException("Only BUY requests can be converted into a sale contract");
         }
     }
-
-    // ======================== CONVERTER HELPERS ========================
 
     private PropertyRequestListDTO toListDTO(PropertyRequestEntity entity) {
         PropertyRequestListDTO dto = new PropertyRequestListDTO();
@@ -283,23 +299,19 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
     private PropertyRequestDetailDTO toDetailDTO(PropertyRequestEntity entity) {
         PropertyRequestDetailDTO dto = new PropertyRequestDetailDTO();
         dto.setId(entity.getId());
-
-        // KH info
         dto.setCustomerId(entity.getCustomer().getId());
         dto.setCustomerName(entity.getCustomer().getFullName());
         dto.setPhone(entity.getPhone());
         dto.setEmail(entity.getEmail());
 
-        // Building info
-        BuildingEntity b = entity.getBuilding();
-        dto.setBuildingId(b.getId());
-        dto.setBuildingName(b.getName());
-        dto.setBuildingAddress(buildAddress(b));
-        dto.setTransactionType(b.getTransactionType().name());
-        dto.setBuildingRentPrice(b.getRentPrice());
-        dto.setBuildingSalePrice(b.getSalePrice());
+        BuildingEntity building = entity.getBuilding();
+        dto.setBuildingId(building.getId());
+        dto.setBuildingName(building.getName());
+        dto.setBuildingAddress(buildAddress(building));
+        dto.setTransactionType(building.getTransactionType().name());
+        dto.setBuildingRentPrice(building.getRentPrice());
+        dto.setBuildingSalePrice(building.getSalePrice());
 
-        // Request details
         dto.setRequestType(entity.getRequestType());
         dto.setRequestTypeLabel(getRequestTypeLabel(entity.getRequestType()));
         dto.setDesiredArea(entity.getDesiredArea());
@@ -307,8 +319,6 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
         dto.setDesiredEndDate(entity.getDesiredEndDate());
         dto.setOfferedPrice(entity.getOfferedPrice());
         dto.setMessage(entity.getMessage());
-
-        // Processing
         dto.setStatus(entity.getStatus());
         dto.setStatusLabel(getStatusLabel(entity.getStatus()));
         dto.setAdminNote(entity.getAdminNote());
@@ -321,30 +331,34 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
         if (entity.getSaleContract() != null) {
             dto.setSaleContractId(entity.getSaleContract().getId());
         }
-
         dto.setCreatedDate(entity.getCreatedDate());
         dto.setModifiedDate(entity.getModifiedDate());
-
         return dto;
     }
 
-    private String buildAddress(BuildingEntity b) {
+    private String buildAddress(BuildingEntity building) {
         StringBuilder address = new StringBuilder();
-        if (b.getStreet() != null) address.append(b.getStreet());
-        if (b.getWard() != null) {
-            if (!address.isEmpty()) address.append(", ");
-            address.append(b.getWard());
+        if (building.getStreet() != null) {
+            address.append(building.getStreet());
         }
-        if (b.getDistrict() != null) {
-            if (!address.isEmpty()) address.append(", ");
-            address.append(b.getDistrict().getName());
+        if (building.getWard() != null) {
+            if (!address.isEmpty()) {
+                address.append(", ");
+            }
+            address.append(building.getWard());
+        }
+        if (building.getDistrict() != null) {
+            if (!address.isEmpty()) {
+                address.append(", ");
+            }
+            address.append(building.getDistrict().getName());
         }
         return address.toString();
     }
 
     private String getRequestTypeLabel(String type) {
         return switch (type) {
-            case "RENT" -> "ThuÃª";
+            case "RENT" -> "Thuê";
             case "BUY" -> "Mua";
             default -> type;
         };
@@ -352,10 +366,10 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
 
     private String getStatusLabel(String status) {
         return switch (status) {
-            case "PENDING" -> "Chá» xá»­ lÃ½";
-            case "APPROVED" -> "ÄÃ£ duyá»‡t";
-            case "REJECTED" -> "ÄÃ£ tá»« chá»‘i";
-            case "CANCELLED" -> "ÄÃ£ há»§y";
+            case "PENDING" -> "Chờ xử lý";
+            case "APPROVED" -> "Đã duyệt";
+            case "REJECTED" -> "Đã từ chối";
+            case "CANCELLED" -> "Đã hủy";
             default -> status;
         };
     }

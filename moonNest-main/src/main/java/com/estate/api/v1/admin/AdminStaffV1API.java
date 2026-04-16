@@ -10,7 +10,6 @@ import com.estate.exception.InputValidationException;
 import com.estate.service.StaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -52,14 +51,13 @@ public class AdminStaffV1API {
     ) {
         validate(result);
         staffService.save(dto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Tạo nhân viên thành công."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Thêm nhân viên thành công."));
     }
 
     @DeleteMapping("/{id}")
-    public ApiMessageResponse<Void> deleteStaff(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteStaff(@PathVariable Long id) {
         staffService.delete(id);
-        return ApiMessageResponse.of("Xóa nhân viên thành công.");
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/customers")
@@ -101,7 +99,7 @@ public class AdminStaffV1API {
             @RequestParam Long customerId
     ) {
         staffService.quickAssign(id, buildingId, customerId);
-        return ApiMessageResponse.of("Phân công nhân viên nhanh thành công.");
+        return ApiMessageResponse.of("Phân công nhanh thành công.");
     }
 
     private void validate(BindingResult result) {

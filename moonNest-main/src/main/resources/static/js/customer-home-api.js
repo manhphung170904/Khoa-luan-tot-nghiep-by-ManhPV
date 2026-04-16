@@ -1,8 +1,8 @@
-let currentInvoiceId = null;
+﻿let currentInvoiceId = null;
 
 function formatDashboardCurrency(value) {
     const amount = Number(value || 0);
-    return amount.toLocaleString('vi-VN') + ' VNĐ';
+    return `${amount.toLocaleString('vi-VN')} VNĐ`;
 }
 
 function getDashboardInvoiceDetailAmount(invoice, index) {
@@ -18,6 +18,17 @@ function escapeDashboardHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+function getContractStatusLabel(status) {
+    switch (status) {
+        case 'ACTIVE':
+            return 'Đang hiệu lực';
+        case 'EXPIRED':
+            return 'Đã hết hạn';
+        default:
+            return status || '--';
+    }
 }
 
 function renderCustomerContracts(contracts) {
@@ -45,7 +56,7 @@ function renderCustomerContracts(contracts) {
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <span class="contract-id">Mã hợp đồng: ${escapeDashboardHtml(contract.id)}</span>
                 <span class="badge rounded-pill px-3 py-2 ${contract.status === 'ACTIVE' ? 'badge-active' : 'badge-expired'}">
-                    ${escapeDashboardHtml(contract.status || '')}
+                    ${escapeDashboardHtml(getContractStatusLabel(contract.status))}
                 </span>
             </div>
             <div class="row g-3">
@@ -109,7 +120,7 @@ function renderCustomerInvoice(invoice, totalUnpaidInvoices) {
                         Hóa đơn tháng ${escapeDashboardHtml(invoice.month)}/${escapeDashboardHtml(invoice.year)}
                     </h5>
                     <p class="text-muted mb-0 small">Hạn thanh toán: ${escapeDashboardHtml(invoice.dueDate || '--')}</p>
-                    <p class="text-muted mb-0 small">Tòa ${escapeDashboardHtml(invoice.contract?.building?.name || '--')} - Thuê ${escapeDashboardHtml(invoice.contract?.rentArea || 0)}m²</p>
+                    <p class="text-muted mb-0 small">Tòa ${escapeDashboardHtml(invoice.contract?.building?.name || '--')} - Thuê ${escapeDashboardHtml(invoice.contract?.rentArea || 0)} m²</p>
                 </div>
                 <span class="badge bg-warning text-dark rounded-pill px-3 py-2" style="font-size: 11px;">Chờ thanh toán</span>
             </div>
@@ -161,7 +172,7 @@ function renderCustomerInvoice(invoice, totalUnpaidInvoices) {
                 <span class="info-value text-danger">${escapeDashboardHtml(invoice.dueDate || '--')}</span>
             </div>
             <div class="info-row">
-                <p class="text-muted mb-0 small">Tòa ${escapeDashboardHtml(invoice.contract?.building?.name || '--')} - Thuê ${escapeDashboardHtml(invoice.contract?.rentArea || 0)}m²</p>
+                <p class="text-muted mb-0 small">Tòa ${escapeDashboardHtml(invoice.contract?.building?.name || '--')} - Thuê ${escapeDashboardHtml(invoice.contract?.rentArea || 0)} m²</p>
             </div>
             <div class="info-row">
                 <span class="info-label">Trạng thái</span>
@@ -225,7 +236,7 @@ function renderCustomerInvoice(invoice, totalUnpaidInvoices) {
                     </div>
                     <div class="meter-details">
                         <span class="meter-label">Điện</span>
-                        <span class="meter-values">${escapeDashboardHtml(invoice.utilityMeter?.electricityOld || 0)} → ${escapeDashboardHtml(invoice.utilityMeter?.electricityNew || 0)} kWh</span>
+                        <span class="meter-values">${escapeDashboardHtml(invoice.utilityMeter?.electricityOld || 0)} -> ${escapeDashboardHtml(invoice.utilityMeter?.electricityNew || 0)} kWh</span>
                     </div>
                 </div>
                 <div class="text-end">
@@ -240,7 +251,7 @@ function renderCustomerInvoice(invoice, totalUnpaidInvoices) {
                     </div>
                     <div class="meter-details">
                         <span class="meter-label">Nước</span>
-                        <span class="meter-values">${escapeDashboardHtml(invoice.utilityMeter?.waterOld || 0)} → ${escapeDashboardHtml(invoice.utilityMeter?.waterNew || 0)} m³</span>
+                        <span class="meter-values">${escapeDashboardHtml(invoice.utilityMeter?.waterOld || 0)} -> ${escapeDashboardHtml(invoice.utilityMeter?.waterNew || 0)} m³</span>
                     </div>
                 </div>
                 <div class="text-end">

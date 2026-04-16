@@ -7,7 +7,6 @@ import com.estate.dto.InvoiceListDTO;
 import com.estate.dto.PageResponse;
 import com.estate.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,8 +37,7 @@ public class AdminInvoiceV1API {
     @PostMapping
     public ResponseEntity<ApiMessageResponse<Void>> addInvoice(@RequestBody InvoiceFormDTO dto) {
         invoiceService.save(dto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Tạo hóa đơn thành công."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Tạo hóa đơn thành công."));
     }
 
     @PutMapping("/{id}")
@@ -50,9 +48,9 @@ public class AdminInvoiceV1API {
     }
 
     @DeleteMapping("/{id}")
-    public ApiMessageResponse<Void> deleteInvoice(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteInvoice(@PathVariable Long id) {
         invoiceService.delete(id);
-        return ApiMessageResponse.of("Xóa hóa đơn thành công.");
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/confirm")

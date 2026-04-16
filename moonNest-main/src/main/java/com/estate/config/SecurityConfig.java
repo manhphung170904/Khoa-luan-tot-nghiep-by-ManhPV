@@ -112,7 +112,7 @@ public class SecurityConfig {
                                         response,
                                         objectMapper,
                                         HttpStatus.FORBIDDEN,
-                                        ApiErrorResponses.of("FORBIDDEN", "Forbidden", request.getRequestURI())
+                                        ApiErrorResponses.of("FORBIDDEN", "Forbidden", HttpStatus.FORBIDDEN, request.getRequestURI())
                                 );
                                 return;
                             }
@@ -133,7 +133,7 @@ public class SecurityConfig {
                     response,
                     objectMapper,
                     HttpStatus.UNAUTHORIZED,
-                    ApiErrorResponses.of("UNAUTHORIZED", "Unauthorized", request.getRequestURI())
+                    ApiErrorResponses.of("UNAUTHORIZED", "Unauthorized", HttpStatus.UNAUTHORIZED, request.getRequestURI())
             );
         };
     }

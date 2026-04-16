@@ -7,6 +7,7 @@ import com.estate.dto.SaleContractDetailDTO;
 import com.estate.dto.SaleContractFilterDTO;
 import com.estate.dto.SaleContractFormDTO;
 import com.estate.dto.SaleContractListDTO;
+import com.estate.exception.ResourceNotFoundException;
 import com.estate.exception.SaleContractValidationException;
 import com.estate.repository.BuildingRepository;
 import com.estate.repository.PropertyRequestRepository;
@@ -16,7 +17,10 @@ import com.estate.repository.entity.BuildingEntity;
 import com.estate.repository.entity.PropertyRequestEntity;
 import com.estate.repository.entity.SaleContractEntity;
 import com.estate.service.SaleContractService;
-import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -25,14 +29,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
 @Transactional
 public class SaleContractServiceImpl implements SaleContractService {
-
     @Autowired
     private SaleContractRepository saleContractRepository;
 
@@ -53,10 +52,6 @@ public class SaleContractServiceImpl implements SaleContractService {
 
     @Autowired
     private PropertyRequestRepository propertyRequestRepository;
-
-    // -------------------------------------------------------------------------
-    // READ
-    // -------------------------------------------------------------------------
 
     @Override
     public Long countByBuildingId(Long buildingId) {
@@ -84,12 +79,10 @@ public class SaleContractServiceImpl implements SaleContractService {
     public Page<SaleContractDetailDTO> searchDetails(SaleContractFilterDTO filter, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<SaleContractEntity> entityPage = saleContractRepository.searchSaleContracts(filter, pageable);
-        
         List<SaleContractDetailDTO> dtoList = new ArrayList<>();
         for (SaleContractEntity entity : entityPage) {
             dtoList.add(saleContractDetailConverter.toDto(entity));
         }
-        
         return new PageImpl<>(dtoList, pageable, entityPage.getTotalElements());
     }
 
@@ -106,15 +99,11 @@ public class SaleContractServiceImpl implements SaleContractService {
         dto.setSalePrice(entity.getSalePrice());
         dto.setTransferDate(entity.getTransferDate());
         dto.setNote(entity.getNote());
-        if (entity.getBuilding() != null)  dto.setBuildingId(entity.getBuilding().getId());
-        if (entity.getCustomer() != null)  dto.setCustomerId(entity.getCustomer().getId());
-        if (entity.getStaff() != null)     dto.setStaffId(entity.getStaff().getId());
+        if (entity.getBuilding() != null) dto.setBuildingId(entity.getBuilding().getId());
+        if (entity.getCustomer() != null) dto.setCustomerId(entity.getCustomer().getId());
+        if (entity.getStaff() != null) dto.setStaffId(entity.getStaff().getId());
         return dto;
     }
-
-    // -------------------------------------------------------------------------
-    // SAVE (ADD + EDIT)
-    // -------------------------------------------------------------------------
 
     @Override
     public void save(SaleContractFormDTO dto) {
@@ -125,33 +114,30 @@ public class SaleContractServiceImpl implements SaleContractService {
         }
     }
 
-    /** ADD: validate Ã„â€˜Ã¡ÂºÂ§y Ã„â€˜Ã¡Â»Â§ 3 Ã„â€˜iÃ¡Â»Âu kiÃ¡Â»â€¡n, rÃ¡Â»â€œi tÃ¡ÂºÂ¡o entity mÃ¡Â»â€ºi */
     private void saveNew(SaleContractFormDTO dto) {
-        // 1. Building phÃ¡ÂºÂ£i FOR_SALE
         BuildingEntity building = buildingRepository.findById(dto.getBuildingId())
-                .orElseThrow(() -> new EntityNotFoundException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃ¡ÂºÂ¥t Ã„â€˜Ã¡Â»â„¢ng sÃ¡ÂºÂ£n"));
+                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
 
         if (!"FOR_SALE".equals(building.getTransactionType().toString())) {
             throw new SaleContractValidationException(
-                    "BÃ¡ÂºÂ¥t Ã„â€˜Ã¡Â»â„¢ng sÃ¡ÂºÂ£n \"" + building.getName() + "\" khÃƒÂ´ng phÃ¡ÂºÂ£i loÃ¡ÂºÂ¡i mua bÃƒÂ¡n");
+                    "Building \"" + building.getName() + "\" is not a sale property"
+            );
         }
 
-        // 2. Building chÃ†Â°a cÃƒÂ³ hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng mua bÃƒÂ¡n nÃƒÂ o
         if (saleContractRepository.existsByBuilding_Id(dto.getBuildingId())) {
             throw new SaleContractValidationException(
-                    "BÃ¡ÂºÂ¥t Ã„â€˜Ã¡Â»â„¢ng sÃ¡ÂºÂ£n \"" + building.getName() + "\" Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c bÃƒÂ¡n");
+                    "Building \"" + building.getName() + "\" has already been sold"
+            );
         }
 
-        // 3. Staff phÃ¡ÂºÂ£i quÃ¡ÂºÂ£n lÃƒÂ½ cÃ¡ÂºÂ£ building lÃ¡ÂºÂ«n customer
         validateStaffAssignment(dto.getBuildingId(), dto.getCustomerId(), dto.getStaffId());
 
         SaleContractEntity entity = saleContractFormConverter.toEntity(dto);
         saleContractRepository.save(entity);
 
-        // CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trÃ¡ÂºÂ¡ng thÃƒÂ¡i yÃƒÂªu cÃ¡ÂºÂ§u
         if (dto.getFromRequestId() != null) {
             PropertyRequestEntity request = propertyRequestRepository.findById(dto.getFromRequestId())
-                    .orElseThrow(() -> new EntityNotFoundException("Property request was not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Property request was not found"));
             if (!"PENDING".equals(request.getStatus())) {
                 throw new SaleContractValidationException("Only pending requests can be converted into a sale contract");
             }
@@ -171,57 +157,48 @@ public class SaleContractServiceImpl implements SaleContractService {
         }
     }
 
-    /** EDIT: chÃ¡Â»â€° cho phÃƒÂ©p cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t transferDate */
     private void saveEdit(SaleContractFormDTO dto) {
         SaleContractEntity entity = findEntityById(dto.getId());
-
         if (dto.getTransferDate() != null && entity.getCreatedDate() != null) {
             LocalDate signedDate = entity.getCreatedDate().toLocalDate();
             if (!dto.getTransferDate().isAfter(signedDate)) {
                 throw new SaleContractValidationException(
-                        "NgÃƒÂ y bÃƒÂ n giao phÃ¡ÂºÂ£i sau ngÃƒÂ y kÃƒÂ½ hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng ("
-                                + signedDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")");
+                        "Transfer date must be after the contract date ("
+                                + signedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")"
+                );
             }
         }
-
         entity.setTransferDate(dto.getTransferDate());
         saleContractRepository.save(entity);
     }
-
-    // -------------------------------------------------------------------------
-    // DELETE
-    // -------------------------------------------------------------------------
 
     @Override
     public void delete(Long id) {
         saleContractRepository.deleteById(id);
     }
 
-    // -------------------------------------------------------------------------
-    // HELPERS
-    // -------------------------------------------------------------------------
-
     private void validateStaffAssignment(Long buildingId, Long customerId, Long staffId) {
         if (!staffRepository.existsByStaffIdAndBuildingId(staffId, buildingId)) {
             throw new SaleContractValidationException(
-                    "NhÃƒÂ¢n viÃƒÂªn Ã„â€˜Ã†Â°Ã¡Â»Â£c chÃ¡Â»Ân khÃƒÂ´ng quÃ¡ÂºÂ£n lÃƒÂ½ bÃ¡ÂºÂ¥t Ã„â€˜Ã¡Â»â„¢ng sÃ¡ÂºÂ£n nÃƒÂ y");
+                    "Selected staff does not manage the target building"
+            );
         }
         if (!staffRepository.existsByStaffIdAndCustomerId(staffId, customerId)) {
             throw new SaleContractValidationException(
-                    "NhÃƒÂ¢n viÃƒÂªn Ã„â€˜Ã†Â°Ã¡Â»Â£c chÃ¡Â»Ân khÃƒÂ´ng quÃ¡ÂºÂ£n lÃƒÂ½ khÃƒÂ¡ch hÃƒÂ ng nÃƒÂ y");
+                    "Selected staff does not manage the target customer"
+            );
         }
     }
 
     private SaleContractEntity findEntityById(Long id) {
         return saleContractRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â€œng mua bÃƒÂ¡n vÃ¡Â»â€ºi id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Sale contract was not found"));
     }
 
     private Page<SaleContractListDTO> toPageDTO(Page<SaleContractEntity> entityPage) {
         List<SaleContractListDTO> dtoList = new ArrayList<>();
-        for (SaleContractEntity sc : entityPage) {
-            dtoList.add(saleContractListConverter.toDto(sc));
+        for (SaleContractEntity saleContract : entityPage) {
+            dtoList.add(saleContractListConverter.toDto(saleContract));
         }
         return new PageImpl<>(dtoList, entityPage.getPageable(), entityPage.getTotalElements());
     }

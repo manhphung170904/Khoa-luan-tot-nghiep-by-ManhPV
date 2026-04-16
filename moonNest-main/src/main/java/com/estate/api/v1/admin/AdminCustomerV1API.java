@@ -8,7 +8,6 @@ import com.estate.exception.InputValidationException;
 import com.estate.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,14 +41,13 @@ public class AdminCustomerV1API {
     ) {
         validate(result);
         customerService.save(dto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Tạo khách hàng thành công."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Thêm khách hàng thành công."));
     }
 
     @DeleteMapping("/{id}")
-    public ApiMessageResponse<Void> deleteCustomer(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
         customerService.delete(id);
-        return ApiMessageResponse.of("Xóa khách hàng thành công.");
+        return ResponseEntity.ok().build();
     }
 
     private void validate(BindingResult result) {

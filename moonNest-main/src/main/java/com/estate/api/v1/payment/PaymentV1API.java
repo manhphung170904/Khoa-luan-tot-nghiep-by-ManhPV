@@ -1,5 +1,7 @@
 package com.estate.api.v1.payment;
 
+import com.estate.exception.ForbiddenOperationException;
+import com.estate.exception.ResourceNotFoundException;
 import com.estate.repository.InvoiceRepository;
 import com.estate.repository.entity.InvoiceEntity;
 import com.estate.security.CustomUserDetails;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -159,14 +160,14 @@ public class PaymentV1API {
 
     private InvoiceEntity getCustomerInvoice(Long invoiceId, CustomUserDetails user) {
         if (user == null || !"CUSTOMER".equalsIgnoreCase(user.getRole())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized payment access");
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized payment access");
         }
 
         InvoiceEntity invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
 
         if (invoice.getCustomer() == null || !Objects.equals(invoice.getCustomer().getId(), user.getUserId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot access this invoice");
+            throw new ForbiddenOperationException("You cannot access this invoice");
         }
 
         return invoice;

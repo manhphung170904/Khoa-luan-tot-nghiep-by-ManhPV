@@ -7,9 +7,10 @@ import com.estate.dto.NearbyAmenityDTO;
 import com.estate.dto.PlanningMapDTO;
 import com.estate.dto.SupplierDTO;
 import com.estate.exception.InputValidationException;
+import com.estate.exception.PayloadTooLargeException;
+import com.estate.exception.UnsupportedMediaTypeApiException;
 import com.estate.service.BuildingDetailService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -46,7 +46,7 @@ public class AdminBuildingAdditionalInformationV1API {
 
     @PostMapping("/legal-authorities")
     public ResponseEntity<LegalAuthorityDTO> createLegalAuthority(@RequestBody LegalAuthorityDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(buildingDetailService.createLegalAuthority(dto));
+        return ResponseEntity.ok(buildingDetailService.createLegalAuthority(dto));
     }
 
     @PutMapping("/legal-authorities/{id}")
@@ -57,7 +57,7 @@ public class AdminBuildingAdditionalInformationV1API {
     @DeleteMapping("/legal-authorities/{id}")
     public ResponseEntity<Void> deleteLegalAuthority(@PathVariable Long id) {
         buildingDetailService.deleteLegalAuthority(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/nearby-amenities/{buildingId}")
@@ -67,7 +67,7 @@ public class AdminBuildingAdditionalInformationV1API {
 
     @PostMapping("/nearby-amenities")
     public ResponseEntity<NearbyAmenityDTO> createNearbyAmenity(@RequestBody NearbyAmenityDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(buildingDetailService.createNearbyAmenity(dto));
+        return ResponseEntity.ok(buildingDetailService.createNearbyAmenity(dto));
     }
 
     @PutMapping("/nearby-amenities/{id}")
@@ -78,7 +78,7 @@ public class AdminBuildingAdditionalInformationV1API {
     @DeleteMapping("/nearby-amenities/{id}")
     public ResponseEntity<Void> deleteNearbyAmenity(@PathVariable Long id) {
         buildingDetailService.deleteNearbyAmenity(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/suppliers/{buildingId}")
@@ -88,7 +88,7 @@ public class AdminBuildingAdditionalInformationV1API {
 
     @PostMapping("/suppliers")
     public ResponseEntity<SupplierDTO> createSupplier(@RequestBody SupplierDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(buildingDetailService.createSupplier(dto));
+        return ResponseEntity.ok(buildingDetailService.createSupplier(dto));
     }
 
     @PutMapping("/suppliers/{id}")
@@ -99,7 +99,7 @@ public class AdminBuildingAdditionalInformationV1API {
     @DeleteMapping("/suppliers/{id}")
     public ResponseEntity<Void> deleteSupplier(@PathVariable Long id) {
         buildingDetailService.deleteSupplier(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/planning-maps/{buildingId}")
@@ -109,7 +109,7 @@ public class AdminBuildingAdditionalInformationV1API {
 
     @PostMapping("/planning-maps")
     public ResponseEntity<PlanningMapDTO> createPlanningMap(@RequestBody PlanningMapDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(buildingDetailService.createPlanningMap(dto));
+        return ResponseEntity.ok(buildingDetailService.createPlanningMap(dto));
     }
 
     @PutMapping("/planning-maps/{id}")
@@ -120,46 +120,20 @@ public class AdminBuildingAdditionalInformationV1API {
     @DeleteMapping("/planning-maps/{id}")
     public ResponseEntity<Void> deletePlanningMap(@PathVariable Long id) {
         buildingDetailService.deletePlanningMap(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/planning-maps/image")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
-        boolean useUnifiedContract = true;
-        if (useUnifiedContract) {
-            String contentType = file.getContentType();
-            if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png") && !contentType.equals("image/webp"))) {
-                throw new InputValidationException("Định dạng không hợp lệ. Chỉ chấp nhận JPG, PNG, WEBP.");
-            }
-            if (file.getSize() > 5 * 1024 * 1024) {
-                throw new InputValidationException("File quá lớn. Tối đa 5MB.");
-            }
-
-            try {
-                String originalFilename = file.getOriginalFilename();
-                String ext = "";
-                if (originalFilename != null && originalFilename.contains(".")) {
-                    ext = originalFilename.substring(originalFilename.lastIndexOf("."));
-                }
-                String filename = "planning_" + UUID.randomUUID().toString().replace("-", "") + ext;
-
-                Path uploadPath = Paths.get(UPLOAD_DIR);
-                Files.createDirectories(uploadPath);
-                Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
-
-                return ResponseEntity.status(HttpStatus.CREATED).body(
-                        ApiMessageResponse.of("Tải lên thành công.", FileUploadResponseDTO.of(filename))
-                );
-            } catch (IOException e) {
-                throw new IllegalStateException("Không thể lưu tệp đã tải lên.", e);
-            }
+        if (file.isEmpty()) {
+            throw new InputValidationException("Please select an image file");
         }
         String contentType = file.getContentType();
         if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png") && !contentType.equals("image/webp"))) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Định dạng không hợp lệ. Chỉ chấp nhận JPG, PNG, WEBP."));
+            throw new UnsupportedMediaTypeApiException("Only JPG, PNG and WEBP files are supported");
         }
         if (file.getSize() > 5 * 1024 * 1024) {
-            return ResponseEntity.badRequest().body(Map.of("message", "File quá lớn. Tối đa 5MB."));
+            throw new PayloadTooLargeException("Image size must not exceed 5 MB");
         }
 
         try {
@@ -174,9 +148,11 @@ public class AdminBuildingAdditionalInformationV1API {
             Files.createDirectories(uploadPath);
             Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("filename", filename));
+            return ResponseEntity.ok(
+                    ApiMessageResponse.of("Tải tệp lên thành công", FileUploadResponseDTO.of(filename))
+            );
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().body(Map.of("message", "Lỗi lưu file: " + e.getMessage()));
+            throw new IllegalStateException("Unable to store uploaded file", e);
         }
     }
 }

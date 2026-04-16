@@ -1,6 +1,7 @@
 package com.estate.service.impl;
 
 import com.estate.dto.*;
+import com.estate.exception.ResourceNotFoundException;
 import com.estate.repository.*;
 import com.estate.repository.entity.*;
 import com.estate.service.BuildingDetailService;
@@ -17,41 +18,58 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BuildingDetailServiceImpl implements BuildingDetailService {
 
-    private final SupplierRepository        supplierRepo;
-    private final PlanningMapRepository     planningMapRepo;
-    private final LegalAuthorityRepository  legalAuthorityRepo;
-    private final NearbyAmenityRepository   nearbyAmenityRepo;
+    private final SupplierRepository supplierRepo;
+    private final PlanningMapRepository planningMapRepo;
+    private final LegalAuthorityRepository legalAuthorityRepo;
+    private final NearbyAmenityRepository nearbyAmenityRepo;
     private final BuildingRepository buildingRepository;
     private final LegalAuthorityRepository legalAuthorityRepository;
     private final NearbyAmenityRepository nearbyAmenityRepository;
     private final PlanningMapRepository planningMapRepository;
     private final SupplierRepository supplierRepository;
 
-    // -- Label map cho authority_type -----------------------------------------
     private static final Map<String, String> AUTHORITY_LABELS = Map.of(
-            "NOTARY",        "Công chứng",
-            "LAND_REGISTRY", "Đăng ký đất đai",
-            "LAW_FIRM",      "Văn phòng luật",
-            "TAX_OFFICE",    "Cơ quan thuế"
+            "NOTARY", "Notary",
+            "LAND_REGISTRY", "Land registry",
+            "LAW_FIRM", "Law firm",
+            "TAX_OFFICE", "Tax office"
     );
 
-    // -- Label map cho amenity_type --------------------------------------------
     private static final Map<String, String> AMENITY_LABELS = Map.of(
-            "SHOPPING",  "Mua sắm",
-            "PARK",      "Công viên",
-            "HOSPITAL",  "Bệnh viện",
-            "SCHOOL",    "Trường học",
-            "RESTAURANT","Nhà hàng",
-            "BANK",      "Ngân hàng",
-            "GYM",       "Thể dục",
-            "TRANSPORT", "Giao thông",
-            "OTHER",     "Khác"
+            "SHOPPING", "Shopping",
+            "PARK", "Park",
+            "HOSPITAL", "Hospital",
+            "SCHOOL", "School",
+            "RESTAURANT", "Restaurant",
+            "BANK", "Bank",
+            "GYM", "Gym",
+            "TRANSPORT", "Transport",
+            "OTHER", "Other"
     );
 
-    // ================== HELPERS ==================
     private BuildingEntity requireBuilding(Long buildingId) {
         return buildingRepository.findById(buildingId)
-                .orElseThrow(() -> new RuntimeException("Building not found: " + buildingId));
+                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
+    }
+
+    private LegalAuthorityEntity requireLegalAuthority(Long id) {
+        return legalAuthorityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Legal authority was not found"));
+    }
+
+    private NearbyAmenityEntity requireNearbyAmenity(Long id) {
+        return nearbyAmenityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Nearby amenity was not found"));
+    }
+
+    private PlanningMapEntity requirePlanningMap(Long id) {
+        return planningMapRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Planning map was not found"));
+    }
+
+    private SupplierEntity requireSupplier(Long id) {
+        return supplierRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier was not found"));
     }
 
     @Override
@@ -86,8 +104,6 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
                 .collect(Collectors.toList());
     }
 
-    // -- Mappers ---------------------------------------------------------------
-
     private SupplierDTO toSupplierDTO(SupplierEntity e) {
         SupplierDTO dto = new SupplierDTO();
         dto.setId(e.getId());
@@ -112,9 +128,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
         dto.setImageUrl(e.getImageUrl());
         dto.setNote(e.getNote());
         dto.setCreatedDate(e.getCreatedDate());
-        // Đánh dấu hết hạn để Thymeleaf hiển thị cảnh báo
-        dto.setExpired(e.getExpiredDate() != null
-                && e.getExpiredDate().isBefore(LocalDate.now()));
+        dto.setExpired(e.getExpiredDate() != null && e.getExpiredDate().isBefore(LocalDate.now()));
         return dto;
     }
 
@@ -123,8 +137,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
         dto.setId(e.getId());
         dto.setAuthorityName(e.getAuthorityName());
         dto.setAuthorityType(e.getAuthorityType());
-        dto.setAuthorityTypeLabel(
-                AUTHORITY_LABELS.getOrDefault(e.getAuthorityType(), e.getAuthorityType()));
+        dto.setAuthorityTypeLabel(AUTHORITY_LABELS.getOrDefault(e.getAuthorityType(), e.getAuthorityType()));
         dto.setAddress(e.getAddress());
         dto.setPhone(e.getPhone());
         dto.setEmail(e.getEmail());
@@ -138,8 +151,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
         dto.setId(e.getId());
         dto.setName(e.getName());
         dto.setAmenityType(e.getAmenityType());
-        dto.setAmenityTypeLabel(
-                AMENITY_LABELS.getOrDefault(e.getAmenityType(), e.getAmenityType()));
+        dto.setAmenityTypeLabel(AMENITY_LABELS.getOrDefault(e.getAmenityType(), e.getAmenityType()));
         dto.setDistanceMeter(e.getDistanceMeter());
         dto.setAddress(e.getAddress());
         dto.setLatitude(e.getLatitude());
@@ -148,7 +160,6 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
         return dto;
     }
 
-    // ================ LEGAL AUTHORITY ================
     @Override
     public List<LegalAuthorityDTO> getLegalAuthoritiesByBuilding(Long buildingId) {
         return legalAuthorityRepository.findByBuildingId(buildingId)
@@ -157,8 +168,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
 
     @Override
     public LegalAuthorityDTO getLegalAuthorityById(Long id) {
-        return toDto(legalAuthorityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("LegalAuthority not found: " + id)));
+        return toDto(requireLegalAuthority(id));
     }
 
     @Override
@@ -172,15 +182,14 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
 
     @Override
     public LegalAuthorityDTO updateLegalAuthority(Long id, LegalAuthorityDTO dto) {
-        LegalAuthorityEntity e = legalAuthorityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("LegalAuthority not found: " + id));
+        LegalAuthorityEntity e = requireLegalAuthority(id);
         mapToEntity(dto, e);
         return toDto(legalAuthorityRepository.save(e));
     }
 
     @Override
     public void deleteLegalAuthority(Long id) {
-        legalAuthorityRepository.deleteById(id);
+        legalAuthorityRepository.delete(requireLegalAuthority(id));
     }
 
     private void mapToEntity(LegalAuthorityDTO dto, LegalAuthorityEntity e) {
@@ -207,7 +216,6 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
         return dto;
     }
 
-    // ================ NEARBY AMENITY ================
     @Override
     public List<NearbyAmenityDTO> getNearbyAmenitiesByBuilding(Long buildingId) {
         return nearbyAmenityRepository.findByBuildingId(buildingId)
@@ -216,8 +224,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
 
     @Override
     public NearbyAmenityDTO getNearbyAmenityById(Long id) {
-        return toDto(nearbyAmenityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("NearbyAmenity not found: " + id)));
+        return toDto(requireNearbyAmenity(id));
     }
 
     @Override
@@ -231,15 +238,14 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
 
     @Override
     public NearbyAmenityDTO updateNearbyAmenity(Long id, NearbyAmenityDTO dto) {
-        NearbyAmenityEntity e = nearbyAmenityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("NearbyAmenity not found: " + id));
+        NearbyAmenityEntity e = requireNearbyAmenity(id);
         mapToEntity(dto, e);
         return toDto(nearbyAmenityRepository.save(e));
     }
 
     @Override
     public void deleteNearbyAmenity(Long id) {
-        nearbyAmenityRepository.deleteById(id);
+        nearbyAmenityRepository.delete(requireNearbyAmenity(id));
     }
 
     private void mapToEntity(NearbyAmenityDTO dto, NearbyAmenityEntity e) {
@@ -266,7 +272,6 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
         return dto;
     }
 
-    // ================ PLANNING MAP ================
     @Override
     public List<PlanningMapDTO> getPlanningMapsByBuilding(Long buildingId) {
         return planningMapRepository.findByBuildingId(buildingId)
@@ -275,8 +280,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
 
     @Override
     public PlanningMapDTO getPlanningMapById(Long id) {
-        return toDto(planningMapRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("PlanningMap not found: " + id)));
+        return toDto(requirePlanningMap(id));
     }
 
     @Override
@@ -290,15 +294,14 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
 
     @Override
     public PlanningMapDTO updatePlanningMap(Long id, PlanningMapDTO dto) {
-        PlanningMapEntity e = planningMapRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("PlanningMap not found: " + id));
+        PlanningMapEntity e = requirePlanningMap(id);
         mapToEntity(dto, e);
         return toDto(planningMapRepository.save(e));
     }
 
     @Override
     public void deletePlanningMap(Long id) {
-        planningMapRepository.deleteById(id);
+        planningMapRepository.delete(requirePlanningMap(id));
     }
 
     private void mapToEntity(PlanningMapDTO dto, PlanningMapEntity e) {
@@ -325,7 +328,6 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
         return dto;
     }
 
-    // ================ SUPPLIER ================
     @Override
     public List<SupplierDTO> getSuppliersByBuilding(Long buildingId) {
         return supplierRepository.findByBuildingId(buildingId)
@@ -334,8 +336,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
 
     @Override
     public SupplierDTO getSupplierById(Long id) {
-        return toDto(supplierRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Supplier not found: " + id)));
+        return toDto(requireSupplier(id));
     }
 
     @Override
@@ -350,8 +351,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
 
     @Override
     public SupplierDTO updateSupplier(Long id, SupplierDTO dto) {
-        SupplierEntity e = supplierRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Supplier not found: " + id));
+        SupplierEntity e = requireSupplier(id);
         mapToEntity(dto, e);
         e.setModifiedDate(LocalDateTime.now());
         return toDto(supplierRepository.save(e));
@@ -359,7 +359,7 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
 
     @Override
     public void deleteSupplier(Long id) {
-        supplierRepository.deleteById(id);
+        supplierRepository.delete(requireSupplier(id));
     }
 
     private void mapToEntity(SupplierDTO dto, SupplierEntity e) {

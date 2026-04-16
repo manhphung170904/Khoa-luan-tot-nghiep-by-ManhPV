@@ -1,8 +1,7 @@
 package com.estate.converter;
 
-import com.estate.dto.BuildingFormDTO;
 import com.estate.dto.ContractFormDTO;
-import com.estate.exception.BusinessException;
+import com.estate.exception.ResourceNotFoundException;
 import com.estate.repository.BuildingRepository;
 import com.estate.repository.CustomerRepository;
 import com.estate.repository.StaffRepository;
@@ -13,8 +12,6 @@ import com.estate.repository.entity.StaffEntity;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.stream.Collectors;
 
 @Component
 public class ContractFormConverter {
@@ -34,15 +31,15 @@ public class ContractFormConverter {
         modelMapper.map(dto, entity);
 
         BuildingEntity building = buildingRepository.findById(dto.getBuildingId())
-                .orElseThrow(() -> new BusinessException("Không tìm thấy tòa nhà"));
+                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
         entity.setBuilding(building);
 
         StaffEntity staff = staffRepository.findById(dto.getStaffId())
-                .orElseThrow(() -> new BusinessException("Không tìm thấy nhân viên"));
+                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
         entity.setStaff(staff);
 
         CustomerEntity customer = customerRepository.findById(dto.getCustomerId())
-                .orElseThrow(() -> new BusinessException("Không tìm thấy khách hàng"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer was not found"));
         entity.setCustomer(customer);
 
         return entity;

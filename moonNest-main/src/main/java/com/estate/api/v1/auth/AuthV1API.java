@@ -17,6 +17,6 @@ public class AuthV1API {
     @PostMapping("/forgot-password")
     public ApiMessageResponse<Void> forgotPassword(@RequestParam String email) {
         authService.forgotPassword(email);
-        return ApiMessageResponse.of("Nếu email hợp lệ, một liên kết đặt lại mật khẩu đã được gửi.");
+        return ApiMessageResponse.of("Nếu tài khoản tồn tại, mã đặt lại mật khẩu đã được gửi.");
     }
 }

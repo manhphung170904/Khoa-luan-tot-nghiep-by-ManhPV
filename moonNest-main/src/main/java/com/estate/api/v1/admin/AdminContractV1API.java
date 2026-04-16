@@ -1,20 +1,19 @@
 package com.estate.api.v1.admin;
 
+import com.estate.dto.AdminContractMetadataDTO;
 import com.estate.dto.ApiMessageResponse;
 import com.estate.dto.ApiOptionDTO;
-import com.estate.dto.AdminContractMetadataDTO;
 import com.estate.dto.ContractFilterDTO;
 import com.estate.dto.ContractFormDTO;
 import com.estate.dto.ContractListDTO;
 import com.estate.dto.PageResponse;
-import com.estate.service.BuildingService;
 import com.estate.exception.InputValidationException;
+import com.estate.service.BuildingService;
 import com.estate.service.ContractService;
 import com.estate.service.CustomerService;
 import com.estate.service.StaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -64,8 +63,7 @@ public class AdminContractV1API {
     ) {
         validate(result);
         contractService.save(dto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Tạo hợp đồng thành công."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Tạo hợp đồng thành công."));
     }
 
     @PutMapping("/{id}")
@@ -81,9 +79,9 @@ public class AdminContractV1API {
     }
 
     @DeleteMapping("/{id}")
-    public ApiMessageResponse<Void> deleteContract(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteContract(@PathVariable Long id) {
         contractService.delete(id);
-        return ApiMessageResponse.of("Xóa hợp đồng thành công.");
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/status")

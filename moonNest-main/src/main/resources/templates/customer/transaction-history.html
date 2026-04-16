@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MoonNest - LÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch SÃƒÂ¡Ã‚Â»Ã‚Â­ Giao DÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch</title>
+    <title>MoonNest - Lịch sử Giao dịch</title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -765,14 +765,13 @@
                     <div class="d-flex align-items-center gap-3">
                         <div class="d-flex align-items-center gap-3">
                             <div class="text-end">
-                                <small class="d-block opacity-85">Xin chÃƒÆ’Ã‚Â o,</small>
-                                <strong th:text="${#authentication.name}">NguyÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¦n VÃƒâ€žÃ†â€™n A</strong>
+                                <small class="d-block opacity-85">Xin chào,</small>
+                                <strong th:text="${#authentication.name}">Nguyễn Văn A</strong>
                             </div>
-                            <span class="badge-custom">KHÃƒÆ’Ã‚ÂCH HÃƒÆ’Ã¢â€šÂ¬NG</span>
+                            <span class="badge-custom">KHÁCH HÀNG</span>
                         </div>
                         <a href="#" class="btn btn-logout"
-                            onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Ãƒâ€žÃ‚ÂÃƒâ€žÃ†â€™ng
-                            xuÃƒÂ¡Ã‚ÂºÃ‚Â¥t</a>
+                            onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Đăng xuất</a>
                         <form id="logoutForm" th:action="@{/auth/logout}" method="post" style="display:none;"></form>
                     </div>
                 </div>
@@ -785,50 +784,50 @@
                 <ul class="nav">
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/customer/home}">
-                            <i class="bi bi-house-door me-1"></i>Trang chÃƒÂ¡Ã‚Â»Ã‚Â§
+                            <i class="bi bi-house-door me-1"></i>Trang chủ
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/customer/contract/list}">
-                            <i class="bi bi-file-text me-1"></i>HÃƒÂ¡Ã‚Â»Ã‚Â£p Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã¢â‚¬Å“ng
+                            <i class="bi bi-file-text me-1"></i>Hợp đồng
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/customer/invoice/list}">
-                            <i class="bi bi-credit-card me-1"></i>Thanh toÃƒÆ’Ã‚Â¡n
+                            <i class="bi bi-credit-card me-1"></i>Thanh toán
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/customer/building/list}">
-                            <i class="bi bi-building me-1"></i>TÃƒÆ’Ã‚Â²a nhÃƒÆ’Ã‚Â 
+                            <i class="bi bi-building me-1"></i>Tòa nhà
                         </a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="bi bi-grid-3x3-gap me-1"></i>TiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n ÃƒÆ’Ã‚Â­ch
+                            <i class="bi bi-grid-3x3-gap me-1"></i>Tiện ích
                         </a>
                         <ul class="dropdown-menu dropdown-menu-custom">
                             <li>
                                 <a class="dropdown-item" th:href="@{/customer/transaction/history}">
-                                    <i class="bi bi-clock-history me-2"></i>LÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch sÃƒÂ¡Ã‚Â»Ã‚Â­ giao dÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch
+                                    <i class="bi bi-clock-history me-2"></i>Lịch sử giao dịch
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" th:href="@{/customer/service}">
-                                    <i class="bi bi-clipboard-check me-2"></i>DÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch vÃƒÂ¡Ã‚Â»Ã‚Â¥
+                                    <i class="bi bi-clipboard-check me-2"></i>Dịch vụ
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" th:href="@{/customer/property-request/list}">
-                                    <i class="bi bi-envelope-paper me-2"></i>YÃƒÆ’Ã‚Âªu cÃƒÂ¡Ã‚ÂºÃ‚Â§u cÃƒÂ¡Ã‚Â»Ã‚Â§a tÃƒÆ’Ã‚Â´i
+                                    <i class="bi bi-envelope-paper me-2"></i>Yêu cầu của tôi
                                 </a>
                             </li>
                         </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/customer/profile}">
-                            <i class="bi bi-person-circle me-1"></i>TÃƒÆ’Ã‚Â i khoÃƒÂ¡Ã‚ÂºÃ‚Â£n
+                            <i class="bi bi-person-circle me-1"></i>Tài khoản
                         </a>
                     </li>
                 </ul>
@@ -842,9 +841,9 @@
         <div class="welcome-section p-4 rounded mb-4">
             <h1 class="h3 mb-2">
                 <i class="bi bi-clock-history me-2"></i>
-                LÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch SÃƒÂ¡Ã‚Â»Ã‚Â­ Giao DÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch
+                Lịch Sử Giao Dịch
             </h1>
-            <p class="text-muted mb-0">Xem lÃƒÂ¡Ã‚ÂºÃ‚Â¡i toÃƒÆ’Ã‚Â n bÃƒÂ¡Ã‚Â»Ã¢â€žÂ¢ lÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch sÃƒÂ¡Ã‚Â»Ã‚Â­ thanh toÃƒÆ’Ã‚Â¡n hÃƒÆ’Ã‚Â³a Ãƒâ€žÃ¢â‚¬ËœÃƒâ€ Ã‚Â¡n cÃƒÂ¡Ã‚Â»Ã‚Â§a bÃƒÂ¡Ã‚ÂºÃ‚Â¡n</p>
+            <p class="text-muted mb-0">Xem lại toàn bộ lịch sử thanh toán hóa đơn của bạn</p>
         </div>
 
         <!-- Statistics Bar -->
@@ -855,15 +854,15 @@
                         0
                     </span>
                 </div>
-                <div class="stat-label">TÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¢ng giao dÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch</div>
+                <div class="stat-label">Tổng giao dịch</div>
             </div>
             <div class="stat-item">
                 <div class="stat-number">
-                    <span th:text="${totalPaidAmount} + ' VNÃƒâ€žÃ‚Â'">
-                        0 VNÃƒâ€žÃ‚Â
+                    <span th:text="${totalPaidAmount} + ' VNĐ'">
+                        0 VNĐ 
                     </span>
                 </div>
-                <div class="stat-label">TÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¢ng sÃƒÂ¡Ã‚Â»Ã¢â‚¬Ëœ tiÃƒÂ¡Ã‚Â»Ã‚Ân</div>
+                <div class="stat-label">Tổng số tiền</div>
             </div>
         </div>
 
@@ -874,45 +873,45 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="filter-title">
                             <i class="bi bi-funnel"></i>
-                            BÃƒÂ¡Ã‚Â»Ã¢â€žÂ¢ lÃƒÂ¡Ã‚Â»Ã‚Âc tÃƒÆ’Ã‚Â¬m kiÃƒÂ¡Ã‚ÂºÃ‚Â¿m
+                            Bộ lọc tìm kiếm
                         </div>
                     </div>
                 </div>
                 <div class="row g-3 align-items-end">
                     <div class="col-md-4">
-                        <label class="form-label">ThÃƒÆ’Ã‚Â¡ng</label>
+                        <label class="form-label">Tháng</label>
                         <select class="form-select" name="month">
-                            <option value="">-- ChÃƒÂ¡Ã‚Â»Ã‚Ân thÃƒÆ’Ã‚Â¡ng --</option>
-                            <option value="1">ThÃƒÆ’Ã‚Â¡ng 1</option>
-                            <option value="2">ThÃƒÆ’Ã‚Â¡ng 2</option>
-                            <option value="3">ThÃƒÆ’Ã‚Â¡ng 3</option>
-                            <option value="4">ThÃƒÆ’Ã‚Â¡ng 4</option>
-                            <option value="5">ThÃƒÆ’Ã‚Â¡ng 5</option>
-                            <option value="6">ThÃƒÆ’Ã‚Â¡ng 6</option>
-                            <option value="7">ThÃƒÆ’Ã‚Â¡ng 7</option>
-                            <option value="8">ThÃƒÆ’Ã‚Â¡ng 8</option>
-                            <option value="9">ThÃƒÆ’Ã‚Â¡ng 9</option>
-                            <option value="10">ThÃƒÆ’Ã‚Â¡ng 10</option>
-                            <option value="11">ThÃƒÆ’Ã‚Â¡ng 11</option>
-                            <option value="12">ThÃƒÆ’Ã‚Â¡ng 12</option>
+                            <option value="">-- Chọn tháng --</option>
+                            <option value="1">Tháng 1</option>
+                            <option value="2">Tháng 2</option>
+                            <option value="3">Tháng 3</option>
+                            <option value="4">Tháng 4</option>
+                            <option value="5">Tháng 5</option>
+                            <option value="6">Tháng 6</option>
+                            <option value="7">Tháng 7</option>
+                            <option value="8">Tháng 8</option>
+                            <option value="9">Tháng 9</option>
+                            <option value="10">Tháng 10</option>
+                            <option value="11">Tháng 11</option>
+                            <option value="12">Tháng 12</option>
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">NÃƒâ€žÃ†â€™m</label>
+                        <label class="form-label">Năm</label>
                         <select class="form-select" name="year">
-                            <option value="">-- ChÃƒÂ¡Ã‚Â»Ã‚Ân nÃƒâ€žÃ†â€™m --</option>
-                            <!-- Ãƒâ€žÃ‚ÂÃƒÂ¡Ã‚Â»Ã¢â€žÂ¢ng tÃƒÂ¡Ã‚Â»Ã‚Â« server hoÃƒÂ¡Ã‚ÂºÃ‚Â·c JS -->
+                            <option value="">-- Chọn năm --</option>
+                            <!-- Động từ server hoặc JS -->
                         </select>
                     </div>
                     <div class="col-md-4">
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-filter flex-grow-1">
                                 <i class="bi bi-search"></i>
-                                TÃƒÆ’Ã‚Â¬m kiÃƒÂ¡Ã‚ÂºÃ‚Â¿m
+                                Tìm kiếm
                             </button>
                             <button type="button" class="btn-reset" onclick="resetFilter()">
                                 <i class="bi bi-arrow-counterclockwise"></i>
-                                Ãƒâ€žÃ‚ÂÃƒÂ¡Ã‚ÂºÃ‚Â·t lÃƒÂ¡Ã‚ÂºÃ‚Â¡i
+                                Đặt lại
                             </button>
                         </div>
                     </div>
@@ -928,11 +927,11 @@
             <table class="table table-custom">
                 <thead>
                     <tr>
-                        <th><i class="bi bi-calendar-check me-2"></i>HÃƒÆ’Ã‚Â³a Ãƒâ€žÃ¢â‚¬ËœÃƒâ€ Ã‚Â¡n thÃƒÆ’Ã‚Â¡ng</th>
-                        <th><i class="bi bi-building me-2"></i>TÃƒÆ’Ã‚Â²a nhÃƒÆ’Ã‚Â </th>
-                        <th><i class="bi bi-rulers me-2"></i>DiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n tÃƒÆ’Ã‚Â­ch thuÃƒÆ’Ã‚Âª</th>
-                        <th><i class="bi bi-clock me-2"></i>NgÃƒÆ’Ã‚Â y thanh toÃƒÆ’Ã‚Â¡n</th>
-                        <th><i class="bi bi-currency-dollar me-2"></i>TÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¢ng thanh toÃƒÆ’Ã‚Â¡n</th>
+                        <th><i class="bi bi-calendar-check me-2"></i>Hóa đơn tháng</th>
+                        <th><i class="bi bi-building me-2"></i>Tòa nhà</th>
+                        <th><i class="bi bi-rulers me-2"></i>Diện tích thuê</th>
+                        <th><i class="bi bi-clock me-2"></i>Ngày thanh toán</th>
+                        <th><i class="bi bi-currency-dollar me-2"></i>Tổng thanh toán</th>
                     </tr>
                 </thead>
                 <tbody id="transactionTableBody">
@@ -944,7 +943,7 @@
         <!-- Pagination -->
         <div id="transactionPagination"></div>
 
-        <!-- Modal Chi TiÃƒÂ¡Ã‚ÂºÃ‚Â¿t HÃƒÆ’Ã‚Â³a Ãƒâ€žÃ‚ÂÃƒâ€ Ã‚Â¡n -->
+        <!-- Modal Chi Tiết Hóa Đơn -->
         <div id="modalContainer">
         </div>
 
@@ -954,7 +953,7 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
         <script>
-            // KhÃƒÂ¡Ã‚Â»Ã…Â¸i tÃƒÂ¡Ã‚ÂºÃ‚Â¡o danh sÃƒÆ’Ã‚Â¡ch nÃƒâ€žÃ†â€™m
+            // Khởi tạo danh sách năm
             function initYearSelect() {
                 const currentYear = new Date().getFullYear();
                 const yearSelect = $("[name='year']");
@@ -991,8 +990,8 @@
                             <td colspan="5">
                                 <div class="empty-state">
                                     <i class="bi bi-inbox"></i>
-                                    <h3>KhÃƒÆ’Ã‚Â´ng cÃƒÆ’Ã‚Â³ giao dÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch nÃƒÆ’Ã‚Â o</h3>
-                                    <p>ChÃƒâ€ Ã‚Â°a cÃƒÆ’Ã‚Â³ lÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch sÃƒÂ¡Ã‚Â»Ã‚Â­ giao dÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch theo Ãƒâ€žÃ¢â‚¬ËœiÃƒÂ¡Ã‚Â»Ã‚Âu kiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n tÃƒÆ’Ã‚Â¬m kiÃƒÂ¡Ã‚ÂºÃ‚Â¿m</p>
+                                    <h3>Không có giao dịch nào</h3>
+                                    <p>Chưa có lịch sử giao dịch theo điều kiện tìm kiếm</p>
                                 </div>
                             </td>
                         </tr>
@@ -1002,7 +1001,7 @@
                             return;
                         }
 
-                        searchResult.html(`KÃƒÂ¡Ã‚ÂºÃ‚Â¿t quÃƒÂ¡Ã‚ÂºÃ‚Â£ tÃƒÆ’Ã‚Â¬m kiÃƒÂ¡Ã‚ÂºÃ‚Â¿m: <strong>${data.totalElements}</strong> giao dÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch`).show();
+                        searchResult.html(`Kết quả tìm kiếm: <strong>${data.totalElements}</strong> giao dịch`).show();
 
                         $.each(data.content, function (i, t) {
                             const totalPaidAmount = (Number(t.totalAmount))
@@ -1022,7 +1021,7 @@
                                 </td>
                                 <td>
                                     <span class="area-badge">
-                                        ${t.contract.rentArea} mÃƒâ€šÃ‚Â²
+                                        ${t.contract.rentArea} m²
                                     </span>
                                 </td>
                                 <td>
@@ -1032,7 +1031,7 @@
                                 </td>
                                 <td>
                                     <span class="amount-badge">
-                                        ${totalPaidAmount} Ãƒâ€žÃ¢â‚¬Ëœ
+                                        ${totalPaidAmount} đ
                                     </span>
                                 </td>
                             </tr>
@@ -1044,137 +1043,137 @@
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h5 class="modal-title" id="invoiceModalLabel-${i}">
-                                                <i class="bi bi-file-earmark-text me-2"></i>Chi TiÃƒÂ¡Ã‚ÂºÃ‚Â¿t HÃƒÆ’Ã‚Â³a Ãƒâ€žÃ‚ÂÃƒâ€ Ã‚Â¡n
+                                                <i class="bi bi-file-earmark-text me-2"></i>Chi Tiết Hóa Đơn
                                             </h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                                         </div>
                                         <div class="modal-body">
                                             <!-- Invoice Header -->
                                             <div class="invoice-header">
                                                 <div class="invoice-id">
                                                     <i class="bi bi-receipt me-2"></i>
-                                                    <span>MÃƒÆ’Ã‚Â£ hÃƒÆ’Ã‚Â³a Ãƒâ€žÃ¢â‚¬ËœÃƒâ€ Ã‚Â¡n: ${t.id}</span>
+                                                    <span>Mã hóa đơn: ${t.id}</span>
                                                 </div>
                                                 <div class="invoice-period">
                                                     <i class="bi bi-calendar-month me-2"></i>
                                                     <span>
-                                                        ThÃƒÆ’Ã‚Â¡ng ${t.month}/${t.year}
+                                                        Tháng ${t.month}/${t.year}
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            <!-- ThÃƒÆ’Ã‚Â´ng tin chung -->
+                                            <!-- Thông tin chung -->
                                             <div class="info-section">
                                                 <div class="info-section-title">
-                                                    <i class="bi bi-info-circle me-2"></i>ThÃƒÆ’Ã‚Â´ng Tin Chung
+                                                    <i class="bi bi-info-circle me-2"></i>Thông Tin Chung
                                                 </div>
                                                 <div class="info-row">
-                                                    <span class="info-label">NgÃƒÆ’Ã‚Â y tÃƒÂ¡Ã‚ÂºÃ‚Â¡o hÃƒÆ’Ã‚Â³a Ãƒâ€žÃ¢â‚¬ËœÃƒâ€ Ã‚Â¡n</span>
+                                                    <span class="info-label">Ngày tạo hóa đơn</span>
                                                     <span class="info-value">${t.createdDate}</span>
                                                 </div>
                                                 <div class="info-row">
-                                                    <span class="info-label">HÃƒÂ¡Ã‚ÂºÃ‚Â¡n thanh toÃƒÆ’Ã‚Â¡n</span>
+                                                    <span class="info-label">Hạn thanh toán</span>
                                                     <span class="info-value text-danger">${t.dueDate}</span>
                                                 </div>
                                                 <div class="info-row">
                                                     <p class="text-muted mb-0 small">
-                                                        TÃƒÆ’Ã‚Â²a ${t.contract.building.name} - ThuÃƒÆ’Ã‚Âª ${t.contract.rentArea} mÃƒâ€šÃ‚Â²
+                                                        Tòa ${t.contract.building.name} - Thuê ${t.contract.rentArea} m²
                                                     </p>
                                                 </div>
                                                 <div class="info-row">
-                                                    <span class="info-label">TrÃƒÂ¡Ã‚ÂºÃ‚Â¡ng thÃƒÆ’Ã‚Â¡i</span>
+                                                    <span class="info-label">Trạng thái</span>
                                                     <span class="status-badge status-unpaid">
                                                         <i class="bi bi-exclamation-circle"></i>
-                                                        ChÃƒâ€ Ã‚Â°a thanh toÃƒÆ’Ã‚Â¡n
+                                                        Chưa thanh toán
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            <!-- Chi phÃƒÆ’Ã‚Â­ cÃƒÂ¡Ã‚Â»Ã¢â‚¬Ëœ Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹nh -->
+                                            <!-- Chi phí cố định -->
                                             <div class="info-section">
                                                 <div class="info-section-title">
-                                                    <i class="bi bi-cash-stack me-2"></i>Chi PhÃƒÆ’Ã‚Â­ CÃƒÂ¡Ã‚Â»Ã¢â‚¬Ëœ Ãƒâ€žÃ‚ÂÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹nh
+                                                    <i class="bi bi-cash-stack me-2"></i>Chi Phí Cố Định
                                                 </div>
                                                 <div class="info-row">
-                                                    <span class="info-label">TiÃƒÂ¡Ã‚Â»Ã‚Ân thuÃƒÆ’Ã‚Âª mÃƒÂ¡Ã‚ÂºÃ‚Â·t bÃƒÂ¡Ã‚ÂºÃ‚Â±ng</span>
+                                                    <span class="info-label">Tiền thuê mặt bằng</span>
                                                     <span class="info-value">
-                                                        ${Number(t.contract.rentPrice).toLocaleString("vi-VN").replace(/\./g, ",")} VNÃƒâ€žÃ‚Â
+                                                        ${Number(t.contract.rentPrice).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
                                                         </span>
                                                 </div>
                                                 <div class="info-row">
-                                                    <span class="info-label">PhÃƒÆ’Ã‚Â­ dÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch vÃƒÂ¡Ã‚Â»Ã‚Â¥</span>
+                                                    <span class="info-label">Phí dịch vụ</span>
                                                     <span class="info-value" >
-                                                        ${Number(t.details[1].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNÃƒâ€žÃ‚Â
+                                                        ${Number(t.details[1].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            <!-- Chi phÃƒÆ’Ã‚Â­ phÃƒâ€ Ã‚Â°Ãƒâ€ Ã‚Â¡ng tiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n -->
+                                            <!-- Chi phí phương tiện -->
                                             <div class="info-section">
                                                 <div class="info-section-title">
-                                                    <i class="bi bi-car-front me-2"></i>PhÃƒÆ’Ã‚Â­ GÃƒÂ¡Ã‚Â»Ã‚Â­i Xe
+                                                    <i class="bi bi-car-front me-2"></i>Phí Gửi Xe
                                                 </div>
                                                 <div class="utility-grid">
                                                     <div class="utility-item">
                                                         <div class="utility-label">
-                                                            <i class="bi bi-car-front-fill me-1"></i>ÃƒÆ’Ã¢â‚¬Â tÃƒÆ’Ã‚Â´
+                                                            <i class="bi bi-car-front-fill me-1"></i>Ô tô
                                                         </div>
                                                         <div class="utility-value">
-                                                            ${Number(t.details[2].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNÃƒâ€žÃ‚Â
+                                                            ${Number(t.details[2].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
                                                         </div>
                                                     </div>
                                                     <div class="utility-item">
                                                         <div class="utility-label">
-                                                            <i class="bi bi-bicycle me-1"></i>Xe mÃƒÆ’Ã‚Â¡y
+                                                            <i class="bi bi-bicycle me-1"></i>Xe máy
                                                         </div>
                                                         <div class="utility-value">
-                                                            ${Number(t.details[3].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNÃƒâ€žÃ‚Â
+                                                            ${Number(t.details[3].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <!-- Chi phÃƒÆ’Ã‚Â­ sinh hoÃƒÂ¡Ã‚ÂºÃ‚Â¡t -->
+                                            <!-- Chi phí sinh hoạt -->
                                             <div class="info-section">
                                                 <div class="info-section-title">
-                                                    <i class="bi bi-house"></i> PhÃƒÆ’Ã‚Â­ sinh hoÃƒÂ¡Ã‚ÂºÃ‚Â¡t
+                                                    <i class="bi bi-house"></i> Phí sinh hoạt
                                                 </div>
                                                 <div class="utility-grid">
                                                     <div class="utility-item">
                                                         <div class="utility-label">
-                                                            <i class="bi bi-lightning-charge"></i> Ãƒâ€žÃ‚ÂiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n
+                                                            <i class="bi bi-lightning-charge"></i> Điện
                                                         </div>
                                                         <div class="utility-value">
-                                                            ${Number(t.contract.building.electricityFee).toLocaleString("vi-VN").replace(/\./g, ",")} VNÃƒâ€žÃ‚Â
+                                                            ${Number(t.contract.building.electricityFee).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
                                                         </div>
                                                     </div>
                                                     <div class="utility-item">
                                                         <div class="utility-label">
-                                                            <i class="bi bi-droplet"></i> NÃƒâ€ Ã‚Â°ÃƒÂ¡Ã‚Â»Ã¢â‚¬Âºc
+                                                            <i class="bi bi-droplet"></i> Nước
                                                         </div>
                                                         <div class="utility-value">
-                                                            ${Number(t.contract.building.waterFee).toLocaleString("vi-VN").replace(/\./g, ",")} VNÃƒâ€žÃ‚Â
+                                                            ${Number(t.contract.building.waterFee).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <!-- TiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n ÃƒÆ’Ã‚Â­ch (Ãƒâ€žÃ‚ÂiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n & NÃƒâ€ Ã‚Â°ÃƒÂ¡Ã‚Â»Ã¢â‚¬Âºc) -->
+                                            <!-- Tiện ích (Điện & Nước) -->
                                             <div class="info-section">
                                                 <div class="info-section-title">
-                                                    <i class="bi bi-house"></i> Sinh hoÃƒÂ¡Ã‚ÂºÃ‚Â¡t
+                                                    <i class="bi bi-house"></i> Sinh hoạt
                                                 </div>
 
-                                                <!-- Ãƒâ€žÃ‚ÂiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n -->
+                                                <!-- Điện -->
                                                 <div class="meter-reading">
                                                     <div class="meter-info">
                                                         <div class="meter-icon">
                                                             <i class="bi bi-lightning-charge-fill"></i>
                                                         </div>
                                                         <div class="meter-details">
-                                                            <span class="meter-label">Ãƒâ€žÃ‚ÂiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n</span>
+                                                            <span class="meter-label">Điện</span>
                                                             <span class="meter-values">
-                                                                <span>${t.utilityMeter.electricityOld}</span> ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+                                                                <span>${t.utilityMeter.electricityOld}</span> →
                                                                 <span>${t.utilityMeter.electricityNew}</span> kWh
                                                             </span>
                                                         </div>
@@ -1185,52 +1184,52 @@
                                                             kWh
                                                         </div>
                                                         <div class="info-value mt-1">
-                                                            ${Number(t.details[4].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNÃƒâ€žÃ‚Â
+                                                            ${Number(t.details[4].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <!-- NÃƒâ€ Ã‚Â°ÃƒÂ¡Ã‚Â»Ã¢â‚¬Âºc -->
+                                                <!-- Nước -->
                                                 <div class="meter-reading">
                                                     <div class="meter-info">
                                                         <div class="meter-icon">
                                                             <i class="bi bi-droplet-fill"></i>
                                                         </div>
                                                         <div class="meter-details">
-                                                            <span class="meter-label">NÃƒâ€ Ã‚Â°ÃƒÂ¡Ã‚Â»Ã¢â‚¬Âºc</span>
+                                                            <span class="meter-label">Nước</span>
                                                             <span class="meter-values">
-                                                                <span>${t.utilityMeter.waterOld}</span> ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
-                                                                <span>${t.utilityMeter.waterNew}</span> mÃƒâ€šÃ‚Â³
+                                                                <span>${t.utilityMeter.waterOld}</span> →
+                                                                <span>${t.utilityMeter.waterNew}</span> m³
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div class="text-end">
                                                         <div class="usage-badge">
                                                             <span>${t.utilityMeter.waterNew - t.utilityMeter.waterOld}</span>
-                                                            mÃƒâ€šÃ‚Â³
+                                                            m³
                                                         </div>
                                                         <div class="info-value mt-1">
-                                                            ${Number(t.details[5].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNÃƒâ€žÃ‚Â
+                                                            ${Number(t.details[5].amount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <!-- TÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¢ng cÃƒÂ¡Ã‚Â»Ã¢â€žÂ¢ng -->
+                                            <!-- Tổng cộng -->
                                             <div class="total-section">
                                                 <div class="total-row">
                                                     <span class="total-label">
-                                                        <i class="bi bi-cash-coin me-2"></i>TÃƒÂ¡Ã‚Â»Ã¢â‚¬ÂNG CÃƒÂ¡Ã‚Â»Ã‹Å“NG
+                                                        <i class="bi bi-cash-coin me-2"></i>TỔNG CỘNG
                                                     </span>
                                                     <span class="total-amount">
-                                                        ${Number(t.totalAmount).toLocaleString("vi-VN").replace(/\./g, ",")} VNÃƒâ€žÃ‚Â
+                                                        ${Number(t.totalAmount).toLocaleString("vi-VN").replace(/\./g, ",")} VNĐ
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                <i class="bi bi-check-circle me-2"></i> Dong</button>
+                                                <i class="bi bi-check-circle me-2"></i> Đóng</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1241,7 +1240,7 @@
                         renderTransactionPagination(data.totalPages, page);
                     },
                     error: function () {
-                        alert("KhÃƒÆ’Ã‚Â´ng tÃƒÂ¡Ã‚ÂºÃ‚Â£i Ãƒâ€žÃ¢â‚¬ËœÃƒâ€ Ã‚Â°ÃƒÂ¡Ã‚Â»Ã‚Â£c dÃƒÂ¡Ã‚Â»Ã‚Â¯ liÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡u!");
+                        alert("Không tải được dữ liệu!");
                     }
                 });
             }
@@ -1261,7 +1260,7 @@
                 // --- First ---
                 html += `
             <li class="page-item ${current === 1 ? 'disabled' : ''}">
-                <a href="#" class="page-link" onclick="loadTransactions(1, event)" title="Trang Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚ÂºÃ‚Â§u">
+                <a href="#" class="page-link" onclick="loadTransactions(1, event)" title="Trang đầu">
                     <i class="bi bi-chevron-bar-left"></i>
                 </a>
             </li>
@@ -1270,7 +1269,7 @@
                 // --- Prev ---
                 html += `
             <li class="page-item ${current === 1 ? 'disabled' : ''}">
-                <a href="#" class="page-link" onclick="loadTransactions(${current - 1}, event)" title="Trang trÃƒâ€ Ã‚Â°ÃƒÂ¡Ã‚Â»Ã¢â‚¬Âºc">
+                <a href="#" class="page-link" onclick="loadTransactions(${current - 1}, event)" title="Trang trước">
                     <i class="bi bi-chevron-left"></i>
                 </a>
             </li>
@@ -1302,7 +1301,7 @@
                 // --- Last ---
                 html += `
             <li class="page-item ${current === totalPages ? 'disabled' : ''}">
-                <a href="#" class="page-link" onclick="loadTransactions(${totalPages}, event)" title="Trang cuÃƒÂ¡Ã‚Â»Ã¢â‚¬Ëœi">
+                <a href="#" class="page-link" onclick="loadTransactions(${totalPages}, event)" title="Trang cuối">
                     <i class="bi bi-chevron-bar-right"></i>
                 </a>
             </li>
@@ -1328,7 +1327,7 @@
                 }, 10);
             }
 
-            // LÃƒÂ¡Ã‚ÂºÃ‚Â¯ng nghe sÃƒÂ¡Ã‚Â»Ã‚Â± kiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n input/change Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã†â€™ highlight real-time
+            // Lắng nghe sự kiện input/change để highlight real-time
             $('.filter-section .form-select').on('input change', function () {
                 const $this = $(this);
                 if ($this.val() && $this.val().trim() !== '') {
@@ -1352,3 +1351,4 @@
 </body>
 
 </html>
+

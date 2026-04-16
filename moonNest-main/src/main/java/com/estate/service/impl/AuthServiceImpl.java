@@ -55,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
     public void forgotPassword(String email) {
         String normalizedEmail = normalizeEmail(email);
         if (!StringUtils.hasText(normalizedEmail) || !isLocalAccount(normalizedEmail)) {
-            throw new BusinessException("Tài khoản không tồn tại");
+            return;
         }
 
         emailVerificationRepository.deleteByEmailAndPurposeAndStatus(normalizedEmail, PURPOSE_RESET_PASSWORD, STATUS_PENDING);
@@ -76,30 +76,30 @@ public class AuthServiceImpl implements AuthService {
     public void resetPassword(String email, String otp, String newPassword, String confirmPassword) {
         String normalizedEmail = normalizeEmail(email);
         if (!StringUtils.hasText(normalizedEmail) || !isLocalAccount(normalizedEmail)) {
-            throw new BusinessException("Tài khoản không tồn tại");
+            throw new BusinessException("Account was not found");
         }
 
         if (newPassword == null || newPassword.length() < MIN_PASSWORD_LENGTH) {
-            throw new BusinessException("Mật khẩu phải có ít nhất 8 ký tự");
+            throw new BusinessException("Password must be at least 8 characters long");
         }
 
         if (!StringUtils.hasText(confirmPassword) || !newPassword.equals(confirmPassword)) {
-            throw new BusinessException("Mật khẩu xác nhận không khớp");
+            throw new BusinessException("Password confirmation does not match");
         }
 
         EmailVerificationEntity verification = emailVerificationRepository
                 .findTopByEmailAndPurposeAndStatusOrderByCreatedAtDesc(normalizedEmail, PURPOSE_RESET_PASSWORD, STATUS_PENDING)
-                .orElseThrow(() -> new BusinessException("Tài khoản không tồn tại"));
+                .orElseThrow(() -> new BusinessException("Reset code was not found or has expired"));
 
         if (verification.getExpiresAt().isBefore(LocalDateTime.now())) {
             verification.setStatus(STATUS_USED);
             verification.setUsedAt(LocalDateTime.now());
             emailVerificationRepository.save(verification);
-            throw new BusinessException("Mã xác nhận hết hạn");
+            throw new BusinessException("Reset code has expired");
         }
 
         if (!hash(otp).equals(verification.getOtpHash())) {
-            throw new BusinessException("Mã xác nhận sai");
+            throw new BusinessException("Reset code is invalid");
         }
 
         Optional<StaffEntity> staff = staffRepository.findByEmail(normalizedEmail)
@@ -112,7 +112,7 @@ public class AuthServiceImpl implements AuthService {
         } else {
             CustomerEntity customer = customerRepository.findByEmail(normalizedEmail)
                     .filter(customerEntity -> isLocalAccount(customerEntity.getEmail()))
-                    .orElseThrow(() -> new BusinessException("Tài khoản không tồn tại"));
+                    .orElseThrow(() -> new BusinessException("Account was not found"));
             customer.setPassword(passwordEncoder.encode(newPassword));
             customerRepository.save(customer);
             refreshTokenService.revokeAllForUser("CUSTOMER", customer.getId());
@@ -126,14 +126,12 @@ public class AuthServiceImpl implements AuthService {
     public void sendResetEmail(String toEmail, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
-        message.setSubject("MoonNest - Mã xác nhận đặt lại mật khẩu");
+        message.setSubject("MoonNest - Password reset code");
         message.setText(
-                "Xin chào" +
-                "Mã xác nhận đặt lại mật khẩu của bạn là: " +
-                otp +
-                " " +
-                "Mã có hiệu lực trong 10 phút. " +
-                "Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email này."
+                "Hello,\n\n" +
+                "Your password reset code is: " + otp + "\n\n" +
+                "This code will expire in 10 minutes.\n" +
+                "If you did not request this action, you can ignore this email."
         );
 
         mailSender.send(message);

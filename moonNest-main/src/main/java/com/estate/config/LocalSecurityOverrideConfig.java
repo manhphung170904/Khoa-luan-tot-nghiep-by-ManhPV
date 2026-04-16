@@ -1,5 +1,7 @@
 package com.estate.config;
 
+import com.estate.api.common.ApiErrorResponses;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.estate.security.jwt.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
@@ -43,7 +45,8 @@ public class LocalSecurityOverrideConfig {
 
     @Bean("filterChain")
     SecurityFilterChain localFilterChain(HttpSecurity http,
-                                         JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+                                         JwtAuthenticationFilter jwtAuthenticationFilter,
+                                         ObjectMapper objectMapper) throws Exception {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -59,7 +62,7 @@ public class LocalSecurityOverrideConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             if (isApiRequest(request)) {
-                                apiAuthenticationEntryPoint().commence(request, response, authException);
+                                apiAuthenticationEntryPoint(objectMapper).commence(request, response, authException);
                                 return;
                             }
 
@@ -67,9 +70,7 @@ public class LocalSecurityOverrideConfig {
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             if (isApiRequest(request)) {
-                                response.setStatus(HttpStatus.FORBIDDEN.value());
-                                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                                response.getWriter().write("{\"message\":\"Forbidden\"}");
+                                writeApiError(response, objectMapper, HttpStatus.FORBIDDEN, request.getRequestURI());
                                 return;
                             }
 
@@ -83,12 +84,13 @@ public class LocalSecurityOverrideConfig {
         return http.build();
     }
 
-    private AuthenticationEntryPoint apiAuthenticationEntryPoint() {
-        return (request, response, authException) -> {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.getWriter().write("{\"message\":\"Unauthorized\"}");
-        };
+    private AuthenticationEntryPoint apiAuthenticationEntryPoint(ObjectMapper objectMapper) {
+        return (request, response, authException) -> writeApiError(
+                response,
+                objectMapper,
+                HttpStatus.UNAUTHORIZED,
+                request.getRequestURI()
+        );
     }
 
     private boolean isApiRequest(HttpServletRequest request) {
@@ -115,5 +117,20 @@ public class LocalSecurityOverrideConfig {
     private boolean isAjaxRequest(HttpServletRequest request) {
         String requestedWith = request.getHeader("X-Requested-With");
         return "XMLHttpRequest".equalsIgnoreCase(requestedWith);
+    }
+
+    private void writeApiError(jakarta.servlet.http.HttpServletResponse response,
+                               ObjectMapper objectMapper,
+                               HttpStatus status,
+                               String path) throws java.io.IOException {
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        objectMapper.writeValue(
+                response.getWriter(),
+                ApiErrorResponses.of(status == HttpStatus.UNAUTHORIZED ? "UNAUTHORIZED" : "FORBIDDEN",
+                        status == HttpStatus.UNAUTHORIZED ? "Unauthorized" : "Forbidden",
+                        status,
+                        path)
+        );
     }
 }

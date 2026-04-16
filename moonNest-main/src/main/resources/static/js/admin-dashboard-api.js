@@ -1,4 +1,4 @@
-let adminDashboardCharts = [];
+﻿let adminDashboardCharts = [];
 
 function destroyAdminDashboardCharts() {
     adminDashboardCharts.forEach(chart => chart.destroy());
@@ -134,7 +134,7 @@ function createAdminDashboardCharts(dashboard) {
             labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
             datasets: [
                 {
-                    label: 'Nam ' + dashboard.currentYear,
+                    label: 'Năm ' + dashboard.currentYear,
                     data: (dashboard.monthlyRevenue || []).map(formatAdminDashboardBillions),
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59,130,246,0.08)',
@@ -146,7 +146,7 @@ function createAdminDashboardCharts(dashboard) {
                     pointHoverRadius: 6
                 },
                 {
-                    label: 'Nam ' + dashboard.lastYear,
+                    label: 'Năm ' + dashboard.lastYear,
                     data: (dashboard.monthlyRevenueLastYear || []).map(formatAdminDashboardBillions),
                     borderColor: '#ef4444',
                     backgroundColor: 'rgba(239,68,68,0.06)',

@@ -1,5 +1,5 @@
-<aside class="sidebar" id="sidebar" th:fragment="sidebar">
-    <button class="sidebar-toggle" id="sidebarToggle" title="Thu gọn/mở sidebar">
+﻿<aside class="sidebar" id="sidebar" th:fragment="sidebar">
+    <button class="sidebar-toggle" id="sidebarToggle" title="Thu gọn/mở thanh bên">
         <i class="bi bi-chevron-left" id="toggleIcon"></i>
     </button>
 
@@ -7,9 +7,9 @@
         <div class="sidebar-section-label">Menu chính</div>
 
         <a href="/admin/dashboard" th:classappend="${page == 'dashboard'} ? 'active'" class="nav-link"
-            data-tooltip="Dashboard">
+            data-tooltip="Bảng điều khiển">
             <div class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></div>
-            <span class="nav-text">Dashboard</span>
+            <span class="nav-text">Bảng điều khiển</span>
         </a>
 
         <a href="/admin/building/list" th:classappend="${page == 'building'} ? 'active'" class="nav-link"
@@ -157,4 +157,3 @@
         window.addEventListener('resize', onResize);
     })();
 </script>
-

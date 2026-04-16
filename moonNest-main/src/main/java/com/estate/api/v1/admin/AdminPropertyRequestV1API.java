@@ -2,8 +2,8 @@ package com.estate.api.v1.admin;
 
 import com.estate.dto.ApiMessageResponse;
 import com.estate.dto.ContractFormDTO;
-import com.estate.dto.PendingCountResponseDTO;
 import com.estate.dto.PageResponse;
+import com.estate.dto.PendingCountResponseDTO;
 import com.estate.dto.PropertyRequestApprovalDTO;
 import com.estate.dto.PropertyRequestDetailDTO;
 import com.estate.dto.PropertyRequestListDTO;
@@ -49,7 +49,7 @@ public class AdminPropertyRequestV1API {
     ) {
         String reason = body == null || body.getReason() == null ? "" : body.getReason();
         propertyRequestService.reject(id, user.getUserId(), reason);
-        return ApiMessageResponse.of("Yêu cầu của bạn đã bị từ chối.");
+        return ApiMessageResponse.of("Từ chối yêu cầu thành công.");
     }
 
     @PostMapping("/{id}/approve")
@@ -61,7 +61,7 @@ public class AdminPropertyRequestV1API {
         Long contractId = body == null ? null : body.getContractId();
         Long saleContractId = body == null ? null : body.getSaleContractId();
         propertyRequestService.markApproved(id, user.getUserId(), contractId, saleContractId);
-        return ApiMessageResponse.of("Yêu cầu của bạn đã được chấp thuận.");
+        return ApiMessageResponse.of("Duyệt yêu cầu thành công.");
     }
 
     @GetMapping("/{id}/contract-data")

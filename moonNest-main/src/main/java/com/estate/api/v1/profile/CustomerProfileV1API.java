@@ -29,33 +29,38 @@ public class CustomerProfileV1API {
     private final OAuthIdentityRepository oauthIdentityRepository;
 
     @PutMapping("/username")
-    public ApiMessageResponse<Void> updateUsername(@RequestBody UsernameChangeDTO dto, @AuthenticationPrincipal CustomUserDetails user) {
+    public ApiMessageResponse<Void> updateUsername(@RequestBody UsernameChangeDTO dto,
+                                                   @AuthenticationPrincipal CustomUserDetails user) {
         customerService.usernameUpdate(dto, user.getUserId());
-        return ApiMessageResponse.of("Tên người dùng đã được cập nhật thành công.");
+        return ApiMessageResponse.of("Cập nhật tên đăng nhập thành công.");
     }
 
     @PutMapping("/email")
-    public ApiMessageResponse<Void> updateEmail(@RequestBody EmailChangeDTO dto, @AuthenticationPrincipal CustomUserDetails user) {
+    public ApiMessageResponse<Void> updateEmail(@RequestBody EmailChangeDTO dto,
+                                                @AuthenticationPrincipal CustomUserDetails user) {
         customerService.emailUpdate(dto, user.getUserId());
-        return ApiMessageResponse.of("Email đã được cập nhật thành công.");
+        return ApiMessageResponse.of("Cập nhật email thành công.");
     }
 
     @PutMapping("/phone-number")
-    public ApiMessageResponse<Void> updatePhoneNumber(@RequestBody PhoneNumberChangeDTO dto, @AuthenticationPrincipal CustomUserDetails user) {
+    public ApiMessageResponse<Void> updatePhoneNumber(@RequestBody PhoneNumberChangeDTO dto,
+                                                      @AuthenticationPrincipal CustomUserDetails user) {
         customerService.phoneNumberUpdate(dto, user.getUserId());
-        return ApiMessageResponse.of("Số điện thoại đã được cập nhật thành công.");
+        return ApiMessageResponse.of("Cập nhật số điện thoại thành công.");
     }
 
     @PutMapping("/password")
-    public ApiMessageResponse<Void> updatePassword(@RequestBody PasswordChangeDTO dto, @AuthenticationPrincipal CustomUserDetails user) {
+    public ApiMessageResponse<Void> updatePassword(@RequestBody PasswordChangeDTO dto,
+                                                   @AuthenticationPrincipal CustomUserDetails user) {
         customerService.passwordUpdate(dto, user.getUserId());
-        return ApiMessageResponse.of("Mật khẩu đã được cập nhật thành công.");
+        return ApiMessageResponse.of("Cập nhật mật khẩu thành công.");
     }
 
     @PostMapping("/otp/{purpose}")
-    public ApiMessageResponse<Void> sendOtp(@PathVariable String purpose, @AuthenticationPrincipal CustomUserDetails user) {
+    public ApiMessageResponse<Void> sendOtp(@PathVariable String purpose,
+                                            @AuthenticationPrincipal CustomUserDetails user) {
         profileOtpService.sendOtp(resolveOtpEmail(user.getUserId()), purpose);
-        return ApiMessageResponse.of("Mã OTP đã được gửi thành công.");
+        return ApiMessageResponse.of("Gửi mã OTP thành công.");
     }
 
     private String resolveOtpEmail(Long customerId) {
