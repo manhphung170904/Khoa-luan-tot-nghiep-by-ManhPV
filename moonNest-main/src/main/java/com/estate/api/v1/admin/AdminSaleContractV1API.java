@@ -9,6 +9,7 @@ import com.estate.exception.InputValidationException;
 import com.estate.service.SaleContractService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -44,7 +45,7 @@ public class AdminSaleContractV1API {
     ) {
         validate(result);
         saleContractService.save(dto);
-        return ResponseEntity.ok(ApiMessageResponse.of("Tạo hợp đồng mua bán thành công."));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiMessageResponse.of("T?o h?p ??ng mua b?n th?nh c?ng."));
     }
 
     @PutMapping("/{id}")
@@ -56,13 +57,13 @@ public class AdminSaleContractV1API {
         validate(result);
         dto.setId(id);
         saleContractService.save(dto);
-        return ApiMessageResponse.of("Cập nhật hợp đồng mua bán thành công.");
+        return ApiMessageResponse.of("C?p nh?t h?p ??ng mua b?n th?nh c?ng.");
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSaleContract(@PathVariable Long id) {
+    public ApiMessageResponse<Void> deleteSaleContract(@PathVariable Long id) {
         saleContractService.delete(id);
-        return ResponseEntity.ok().build();
+        return ApiMessageResponse.of("X?a h?p ??ng mua b?n th?nh c?ng.");
     }
 
     private void validate(BindingResult result) {

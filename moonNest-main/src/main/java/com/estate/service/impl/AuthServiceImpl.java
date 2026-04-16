@@ -7,6 +7,7 @@ import com.estate.repository.StaffRepository;
 import com.estate.repository.entity.CustomerEntity;
 import com.estate.repository.entity.EmailVerificationEntity;
 import com.estate.repository.entity.StaffEntity;
+import com.estate.security.CustomUserDetails;
 import com.estate.security.jwt.RefreshTokenService;
 import com.estate.service.AuthService;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -123,6 +124,29 @@ public class AuthServiceImpl implements AuthService {
         emailVerificationRepository.save(verification);
     }
 
+    @Override
+    public CustomUserDetails authenticate(String identifier, String password) {
+        String normalizedIdentifier = identifier == null ? "" : identifier.trim();
+        if (!StringUtils.hasText(normalizedIdentifier)) {
+            throw new BusinessException("Username is required");
+        }
+
+        CustomUserDetails user = resolveLoginUser(normalizedIdentifier);
+        if (user == null || user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new BusinessException("Invalid username or password");
+        }
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BusinessException("Invalid username or password");
+        }
+
+        return user;
+    }
+
+    @Override
+    public void logout(String refreshToken) {
+        refreshTokenService.revokeRawToken(refreshToken);
+    }
+
     public void sendResetEmail(String toEmail, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
@@ -158,6 +182,74 @@ public class AuthServiceImpl implements AuthService {
 
     private String hash(String value) {
         return DigestUtils.sha256Hex(value);
+    }
+
+    private CustomUserDetails resolveLoginUser(String identifier) {
+        boolean looksLikeEmail = identifier.contains("@");
+        if (!looksLikeEmail) {
+            CustomUserDetails byUsername = resolveByUsername(identifier);
+            if (byUsername != null) {
+                return byUsername;
+            }
+        }
+
+        CustomerEntity customerByEmail = customerRepository.findByEmail(identifier).orElse(null);
+        if (customerByEmail != null) {
+            return new CustomUserDetails(
+                    customerByEmail.getId(),
+                    customerByEmail.getUsername(),
+                    customerByEmail.getPassword(),
+                    customerByEmail.getRole(),
+                    "CUSTOMER",
+                    customerByEmail.getAuthOrigin() == null ? "LOCAL" : customerByEmail.getAuthOrigin()
+            );
+        }
+
+        StaffEntity staffByEmail = staffRepository.findByEmail(identifier).orElse(null);
+        if (staffByEmail != null) {
+            return new CustomUserDetails(
+                    staffByEmail.getId(),
+                    staffByEmail.getUsername(),
+                    staffByEmail.getPassword(),
+                    staffByEmail.getRole(),
+                    "STAFF",
+                    staffByEmail.getAuthOrigin() == null ? "LOCAL" : staffByEmail.getAuthOrigin()
+            );
+        }
+
+        if (looksLikeEmail) {
+            return null;
+        }
+
+        return resolveByUsername(identifier);
+    }
+
+    private CustomUserDetails resolveByUsername(String identifier) {
+        StaffEntity staff = staffRepository.findByUsername(identifier).orElse(null);
+        if (staff != null) {
+            return new CustomUserDetails(
+                    staff.getId(),
+                    staff.getUsername(),
+                    staff.getPassword(),
+                    staff.getRole(),
+                    "STAFF",
+                    staff.getAuthOrigin() == null ? "LOCAL" : staff.getAuthOrigin()
+            );
+        }
+
+        CustomerEntity customer = customerRepository.findByUsername(identifier);
+        if (customer != null) {
+            return new CustomUserDetails(
+                    customer.getId(),
+                    customer.getUsername(),
+                    customer.getPassword(),
+                    customer.getRole(),
+                    "CUSTOMER",
+                    customer.getAuthOrigin() == null ? "LOCAL" : customer.getAuthOrigin()
+            );
+        }
+
+        return null;
     }
 
     private String normalizeEmail(String email) {

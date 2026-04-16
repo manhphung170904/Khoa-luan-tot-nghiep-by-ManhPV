@@ -133,7 +133,10 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
 
         entity.setStatus("REJECTED");
         entity.setAdminNote(reason == null ? "" : reason.trim());
-        staffRepository.findById(staffId).ifPresent(entity::setProcessedBy);
+        entity.setProcessedBy(
+                staffRepository.findById(staffId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Processing staff was not found"))
+        );
         propertyRequestRepository.save(entity);
     }
 
@@ -145,7 +148,10 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
 
         entity.setStatus("APPROVED");
         entity.setAdminNote(null);
-        staffRepository.findById(staffId).ifPresent(entity::setProcessedBy);
+        entity.setProcessedBy(
+                staffRepository.findById(staffId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Processing staff was not found"))
+        );
         entity.setContract(null);
         entity.setSaleContract(null);
 

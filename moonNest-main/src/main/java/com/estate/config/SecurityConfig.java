@@ -9,6 +9,7 @@ import com.estate.security.oauth2.OAuth2LoginSuccessHandler;
 import com.estate.security.oauth2.PromptSelectAccountAuthorizationRequestResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 
 
 @Configuration
+@Profile("!local-nooauth")
 public class SecurityConfig {
     private static final String[] PUBLIC_PATHS = {
             "/moonnest",
@@ -38,6 +40,7 @@ public class SecurityConfig {
             "/register",
             "/register/**",
             "/forgot-password",
+            "/api/v1/auth/login",
             "/api/v1/auth/forgot-password",
             "/api/v1/public/**",
             "/auth/reset-password",
@@ -72,7 +75,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_PATHS).permitAll()
 
-                        .requestMatchers("/api/v1/payment/**").hasRole("CUSTOMER")
+                        .requestMatchers("/payment-demo/**").hasRole("CUSTOMER")
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/staff/**", "/api/v1/staff/**").hasRole("STAFF")
                         .requestMatchers("/customer/**", "/api/v1/customer/**").hasRole("CUSTOMER")

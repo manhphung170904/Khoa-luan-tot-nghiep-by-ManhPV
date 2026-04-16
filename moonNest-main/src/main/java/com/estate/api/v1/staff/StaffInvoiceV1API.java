@@ -8,6 +8,7 @@ import com.estate.dto.PageResponse;
 import com.estate.security.CustomUserDetails;
 import com.estate.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,7 +41,7 @@ public class StaffInvoiceV1API {
     public ResponseEntity<ApiMessageResponse<Void>> addInvoice(@RequestBody InvoiceFormDTO dto,
                                                                @AuthenticationPrincipal CustomUserDetails user) {
         invoiceService.saveForStaff(dto, user.getUserId());
-        return ResponseEntity.ok(ApiMessageResponse.of("Tạo hóa đơn thành công."));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiMessageResponse.of("Invoice created successfully."));
     }
 
     @PutMapping("/{id}")
@@ -49,13 +50,13 @@ public class StaffInvoiceV1API {
                                                 @AuthenticationPrincipal CustomUserDetails user) {
         dto.setId(id);
         invoiceService.saveForStaff(dto, user.getUserId());
-        return ApiMessageResponse.of("Cập nhật hóa đơn thành công.");
+        return ApiMessageResponse.of("Invoice updated successfully.");
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteInvoice(@PathVariable Long id,
-                                              @AuthenticationPrincipal CustomUserDetails user) {
+    public ApiMessageResponse<Void> deleteInvoice(@PathVariable Long id,
+                                                  @AuthenticationPrincipal CustomUserDetails user) {
         invoiceService.deleteForStaff(id, user.getUserId());
-        return ResponseEntity.ok().build();
+        return ApiMessageResponse.of("Invoice deleted successfully.");
     }
 }

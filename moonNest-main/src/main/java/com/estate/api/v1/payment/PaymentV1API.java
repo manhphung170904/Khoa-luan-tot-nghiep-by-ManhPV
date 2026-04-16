@@ -34,7 +34,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 @Controller
-@RequestMapping("/api/v1/payment")
+@RequestMapping("/payment-demo")
 @RequiredArgsConstructor
 public class PaymentV1API {
     private final InvoiceRepository invoiceRepository;
@@ -109,7 +109,7 @@ public class PaymentV1API {
                       </div>
                       <p class=\"hint\">Sau khi chuyen khoan thanh cong, bam \"Toi da thanh toan\" de he thong ghi nhan theo che do demo.</p>
                       <div class=\"actions\">
-                        <form style=\"flex: 1; margin: 0;\" method=\"post\" action=\"/api/v1/payment/qr/confirm/%d\">
+                        <form style=\"flex: 1; margin: 0;\" method=\"post\" action=\"/payment-demo/qr/confirm/%d\">
                           <input type=\"hidden\" name=\"token\" value=\"%s\"/>
                           <button class=\"btn btn-primary\" style=\"width: 100%%; border: 0; cursor: pointer;\" type=\"submit\">Toi da thanh toan</button>
                         </form>

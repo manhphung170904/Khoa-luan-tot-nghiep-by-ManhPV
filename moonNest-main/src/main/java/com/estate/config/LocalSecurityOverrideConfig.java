@@ -29,6 +29,7 @@ public class LocalSecurityOverrideConfig {
             "/register",
             "/register/**",
             "/forgot-password",
+            "/api/v1/auth/login",
             "/api/v1/auth/forgot-password",
             "/api/v1/public/**",
             "/auth/reset-password",
@@ -53,7 +54,7 @@ public class LocalSecurityOverrideConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_PATHS).permitAll()
-                        .requestMatchers("/api/v1/payment/**").hasRole("CUSTOMER")
+                        .requestMatchers("/payment-demo/**").hasRole("CUSTOMER")
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/staff/**", "/api/v1/staff/**").hasRole("STAFF")
                         .requestMatchers("/customer/**", "/api/v1/customer/**").hasRole("CUSTOMER")

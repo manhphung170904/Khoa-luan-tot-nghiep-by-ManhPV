@@ -14,6 +14,7 @@ import com.estate.service.CustomerService;
 import com.estate.service.StaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -63,7 +64,7 @@ public class AdminContractV1API {
     ) {
         validate(result);
         contractService.save(dto);
-        return ResponseEntity.ok(ApiMessageResponse.of("Tạo hợp đồng thành công."));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiMessageResponse.of("T?o h?p ??ng th?nh c?ng."));
     }
 
     @PutMapping("/{id}")
@@ -75,19 +76,19 @@ public class AdminContractV1API {
         validate(result);
         dto.setId(id);
         contractService.save(dto);
-        return ApiMessageResponse.of("Cập nhật hợp đồng thành công.");
+        return ApiMessageResponse.of("C?p nh?t h?p ??ng th?nh c?ng.");
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteContract(@PathVariable Long id) {
+    public ApiMessageResponse<Void> deleteContract(@PathVariable Long id) {
         contractService.delete(id);
-        return ResponseEntity.ok().build();
+        return ApiMessageResponse.of("X?a h?p ??ng th?nh c?ng.");
     }
 
     @PutMapping("/status")
     public ApiMessageResponse<Void> updateStatuses() {
         contractService.statusUpdate();
-        return ApiMessageResponse.of("Cập nhật trạng thái hợp đồng thành công.");
+        return ApiMessageResponse.of("C?p nh?t tr?ng th?i h?p ??ng th?nh c?ng.");
     }
 
     private void validate(BindingResult result) {

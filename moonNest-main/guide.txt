@@ -1,48 +1,101 @@
-*** Thông tin tài khoản mật khẩu lưu trong bảng staff ***
-- Tài khoản admin: 
-+ manh1709
-+ ntn162/ 12345678
-- Tài khoản staff:
-+ tmq0102
-+ lth2105
-+ pvd1208
-+ nha0401
-+ vnb2511
-+ dhc2307
-+ ltm1905
-+ nta1212
-+ hdk1311
-+ ttt1612
-+ nvt1503
-+ pth2807
-+ tqd0211
-+ lmn3006
-+ dth1708
-+ nqk0404
-+ vtl2210
-- Tài khoản customer:
-+ abcVietNam
-+ VietATMCP
-+ SaigonTech
-+ DaNangMedia
-+ PhoHuongViet
-+ AoVietFashion
-+ ExpatsHCM
-+ HoangGiaTM
-+ NoiThatGoDat
-+ SXDongNai
-+ APHoldings
-+ VRS
-+ CPLuxuryViet
-+ DTNamCuong
-+ NMK
-+ XDMinhPhat
-+ CPLogisticsDD
-- Mật khẩu: 12345678
+﻿MoonNest local setup guide
 
-*** URL ***
-- Trang đăng nhập: http://localhost:8080/login
-- Trang public: http://localhost:8080/moonnest
+1. Yeu cau moi truong
+- Java 21
+- MySQL
+- Maven Wrapper (`mvnw`, `mvnw.cmd`) da co san trong repo
 
-*** Tạo cơ sở dữ liệu ***
-Mở folder "estate_db_generator"
+2. Cau hinh du an
+- Du an doc bien moi truong tu file `.env`
+- Co the tao file `.env` moi tu `.env.example`
+- Profile mac dinh trong bo cau hinh hien tai la `mysql`
+- Co them profile `local-nooauth` de chay local khi chua cau hinh OAuth
+- Co them profile `test` dung H2 in-memory cho integration test
+
+3. Tao co so du lieu
+- Mo thu muc `estate_db_generator`
+- Su dung file `sql_estate.sql` de tao schema/du lieu nen
+- Neu can bo du lieu bo sung cho hoa don, xem `generate_invoice_data.py`
+
+4. Chay ung dung
+- Mo terminal tai thu muc `moonNest-main`
+- Neu may chua dat `JAVA_HOME`, cau hinh truoc khi chay:
+  `$env:JAVA_HOME="C:\Program Files\Java\jdk-21"`
+- Chay lenh:
+  `.\mvnw.cmd spring-boot:run`
+- Neu muon bo qua OAuth khi chay local:
+  `$env:SPRING_PROFILES_ACTIVE="mysql,local-nooauth"`
+  `.\mvnw.cmd spring-boot:run`
+
+5. Chay test
+- Chay toan bo test:
+  `.\mvnw.cmd test`
+- Test profile hien tai dung H2 in-memory qua file `src/main/resources/application-test.properties`
+- Profile `test` tu dong gom `local-nooauth`
+- Tai khoan seed cho test auth API:
+  - `api_admin` / `12345678`
+  - `api_staff` / `12345678`
+  - `api_customer` / `12345678`
+- Integration test auth hien co trong:
+  `src/test/java/com/estate/api/AuthV1ApiIntegrationTest.java`
+
+6. URL chinh
+- Trang public: `http://localhost:8080/moonnest`
+- Trang dang nhap: `http://localhost:8080/login`
+- Trang admin: `http://localhost:8080/admin/dashboard`
+- Trang staff: `http://localhost:8080/staff/dashboard`
+- Trang customer: `http://localhost:8080/customer/home`
+
+7. API auth moi
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/forgot-password`
+- Dang nhap API se cap cookie:
+  - `estate_access_token`
+  - `estate_refresh_token`
+
+8. Tai khoan mau trong du lieu local
+- Admin:
+  - `manh1709`
+  - `ntn162`
+- Staff:
+  - `tmq0102`
+  - `lth2105`
+  - `pvd1208`
+  - `nha0401`
+  - `vnb2511`
+  - `dhc2307`
+  - `ltm1905`
+  - `nta1212`
+  - `hdk1311`
+  - `ttt1612`
+  - `nvt1503`
+  - `pth2807`
+  - `tqd0211`
+  - `lmn3006`
+  - `dth1708`
+  - `nqk0404`
+  - `vtl2210`
+- Customer:
+  - `abcVietNam`
+  - `VietATMCP`
+  - `SaigonTech`
+  - `DaNangMedia`
+  - `PhoHuongViet`
+  - `AoVietFashion`
+  - `ExpatsHCM`
+  - `HoangGiaTM`
+  - `NoiThatGoDat`
+  - `SXDongNai`
+  - `APHoldings`
+  - `VRS`
+  - `CPLuxuryViet`
+  - `DTNamCuong`
+  - `NMK`
+  - `XDMinhPhat`
+  - `CPLogisticsDD`
+
+9. Mat khau mac dinh
+- Mat khau seed local hien tai: `12345678`
+- Neu du lieu seed duoc thay doi, hay cap nhat lai danh sach nay cho khop voi database thuc te

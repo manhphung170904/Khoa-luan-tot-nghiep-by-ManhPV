@@ -21,6 +21,7 @@ import com.estate.service.StaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -86,7 +87,7 @@ public class AdminBuildingV1API {
     ) {
         validate(result);
         buildingService.save(dto);
-        return ResponseEntity.ok(ApiMessageResponse.of("Thêm bất động sản thành công."));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiMessageResponse.of("Building created successfully."));
     }
 
     @PutMapping("/{id}")
@@ -98,13 +99,13 @@ public class AdminBuildingV1API {
         validate(result);
         dto.setId(id);
         buildingService.save(dto);
-        return ApiMessageResponse.of("Cập nhật bất động sản thành công.");
+        return ApiMessageResponse.of("Building updated successfully.");
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBuilding(@PathVariable Long id) {
+    public ApiMessageResponse<Void> deleteBuilding(@PathVariable Long id) {
         buildingService.delete(id);
-        return ResponseEntity.ok().build();
+        return ApiMessageResponse.of("Building deleted successfully.");
     }
 
     @PostMapping("/image")
@@ -137,7 +138,7 @@ public class AdminBuildingV1API {
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
             return ResponseEntity.ok(
-                    ApiMessageResponse.of("Tải tệp lên thành công", FileUploadResponseDTO.of(newFilename))
+                    ApiMessageResponse.of("File uploaded successfully.", FileUploadResponseDTO.of(newFilename))
             );
         } catch (IOException e) {
             throw new IllegalStateException("Unable to store uploaded file", e);
