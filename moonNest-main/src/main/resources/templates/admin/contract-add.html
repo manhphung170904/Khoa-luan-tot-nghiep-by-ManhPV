@@ -428,7 +428,8 @@
                                     <select class="form-select" name="staffId" id="staffSelect" required>
                                         <option value="">-- Chọn tòa nhà trước --</option>
                                     </select>
-                                    <button class="btn btn-outline-primary" type="button" id="btnQuickAssign" title="Phân công nhanh">
+                                    <button class="btn btn-primary btn-sm rounded-circle ms-2" type="button" id="btnQuickAssign" 
+                                            title="Phân công nhanh" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,123,255,0.3);">
                                         <i class="bi bi-plus-lg"></i>
                                     </button>
                                 </div>
@@ -668,7 +669,11 @@
                 const cId = $('[name="customerId"]').val();
 
                 if (!bId || !cId) {
-                    alert('Vui lòng chọn Tòa nhà và Khách hàng trước khi phân công nhanh.');
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Thiếu thông tin',
+                        text: 'Vui lòng chọn Tòa nhà và Khách hàng trước khi phân công nhanh.'
+                    });
                     return;
                 }
                 quickAssignModal.show();
@@ -680,7 +685,11 @@
                 const cId = $('[name="customerId"]').val();
 
                 if (!staffId) {
-                    alert('Vui lòng chọn nhân viên.');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Thông báo',
+                        text: 'Vui lòng chọn nhân viên.'
+                    });
                     return;
                 }
 
@@ -690,7 +699,13 @@
                     url: `/api/v1/admin/staff/${staffId}/quick-assign?buildingId=${bId}&customerId=${cId}`,
                     type: 'POST',
                     success: function(response) {
-                        alert(response.message);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công',
+                            text: response.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
                         quickAssignModal.hide();
                         // Refresh main staff dropdown
                         refreshStaffDropdown();
@@ -701,7 +716,11 @@
                     },
                     error: function(xhr) {
                         const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Lỗi phân công';
-                        alert(msg);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: msg
+                        });
                     },
                     complete: function() {
                         $('#submitQuickAssign').prop('disabled', false).text('Xác nhận phân công');
