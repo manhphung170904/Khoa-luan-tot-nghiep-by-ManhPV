@@ -39,31 +39,31 @@ public class AdminInvoiceV1API {
     public ResponseEntity<ApiMessageResponse<Void>> addInvoice(@RequestBody InvoiceFormDTO dto) {
         invoiceService.save(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Invoice created successfully."));
+                .body(ApiMessageResponse.of("Tạo hóa đơn thành công."));
     }
 
     @PutMapping("/{id}")
     public ApiMessageResponse<Void> editInvoice(@PathVariable Long id, @RequestBody InvoiceFormDTO dto) {
         dto.setId(id);
         invoiceService.save(dto);
-        return ApiMessageResponse.of("Invoice updated successfully.");
+        return ApiMessageResponse.of("Cập nhật hóa đơn thành công.");
     }
 
     @DeleteMapping("/{id}")
     public ApiMessageResponse<Void> deleteInvoice(@PathVariable Long id) {
         invoiceService.delete(id);
-        return ApiMessageResponse.of("Invoice deleted successfully.");
+        return ApiMessageResponse.of("Xóa hóa đơn thành công.");
     }
 
     @PostMapping("/{id}/confirm")
     public ApiMessageResponse<Void> confirmInvoice(@PathVariable Long id) {
         invoiceService.invoiceConfirm(id);
-        return ApiMessageResponse.of("Invoice confirmed successfully.");
+        return ApiMessageResponse.of("Xác nhận hóa đơn thành công.");
     }
 
     @PutMapping("/status")
     public ApiMessageResponse<Void> updateStatuses() {
         invoiceService.statusUpdate();
-        return ApiMessageResponse.of("Invoice statuses updated successfully.");
+        return ApiMessageResponse.of("Cập nhật trạng thái hóa đơn thành công.");
     }
 }

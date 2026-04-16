@@ -31,31 +31,31 @@ public class StaffProfileV1API {
     @PutMapping("/username")
     public ApiMessageResponse<Void> updateUsername(@RequestBody UsernameChangeDTO dto, @AuthenticationPrincipal CustomUserDetails user) {
         staffService.usernameUpdate(dto, user.getUserId());
-        return ApiMessageResponse.of("Username updated successfully.");
+        return ApiMessageResponse.of("Tên người dùng đã được cập nhật thành công.");
     }
 
     @PutMapping("/email")
     public ApiMessageResponse<Void> updateEmail(@RequestBody EmailChangeDTO dto, @AuthenticationPrincipal CustomUserDetails user) {
         staffService.emailUpdate(dto, user.getUserId());
-        return ApiMessageResponse.of("Email updated successfully.");
+        return ApiMessageResponse.of("Email đã được cập nhật thành công.");
     }
 
     @PutMapping("/phone-number")
     public ApiMessageResponse<Void> updatePhoneNumber(@RequestBody PhoneNumberChangeDTO dto, @AuthenticationPrincipal CustomUserDetails user) {
         staffService.phoneNumberUpdate(dto, user.getUserId());
-        return ApiMessageResponse.of("Phone number updated successfully.");
+        return ApiMessageResponse.of("Số điện thoại đã được cập nhật thành công.");
     }
 
     @PutMapping("/password")
     public ApiMessageResponse<Void> updatePassword(@RequestBody PasswordChangeDTO dto, @AuthenticationPrincipal CustomUserDetails user) {
         staffService.passwordUpdate(dto, user.getUserId());
-        return ApiMessageResponse.of("Password updated successfully.");
+        return ApiMessageResponse.of("Mật khẩu đã được cập nhật thành công.");
     }
 
     @PostMapping("/otp/{purpose}")
     public ApiMessageResponse<Void> sendOtp(@PathVariable String purpose, @AuthenticationPrincipal CustomUserDetails user) {
         profileOtpService.sendOtp(resolveOtpEmail(user.getUserId()), purpose);
-        return ApiMessageResponse.of("OTP sent successfully.");
+        return ApiMessageResponse.of("Mã OTP đã được gửi thành công.");
     }
 
     private String resolveOtpEmail(Long staffId) {

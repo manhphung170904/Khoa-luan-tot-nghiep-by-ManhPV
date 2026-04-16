@@ -43,13 +43,13 @@ public class AdminCustomerV1API {
         validate(result);
         customerService.save(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Customer created successfully."));
+                .body(ApiMessageResponse.of("Tạo khách hàng thành công."));
     }
 
     @DeleteMapping("/{id}")
     public ApiMessageResponse<Void> deleteCustomer(@PathVariable Long id) {
         customerService.delete(id);
-        return ApiMessageResponse.of("Customer deleted successfully.");
+        return ApiMessageResponse.of("Xóa khách hàng thành công.");
     }
 
     private void validate(BindingResult result) {

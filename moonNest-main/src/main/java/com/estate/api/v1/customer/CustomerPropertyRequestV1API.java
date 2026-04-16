@@ -32,8 +32,7 @@ public class CustomerPropertyRequestV1API {
     public ResponseEntity<ApiMessageResponse<Void>> submitRequest(
             @Valid @RequestBody PropertyRequestFormDTO dto,
             BindingResult result,
-            @AuthenticationPrincipal CustomUserDetails user
-    ) {
+            @AuthenticationPrincipal CustomUserDetails user) {
         if (result.hasErrors()) {
             String message = result.getFieldErrors().isEmpty()
                     ? result.getAllErrors().getFirst().getDefaultMessage()
@@ -43,7 +42,7 @@ public class CustomerPropertyRequestV1API {
 
         propertyRequestService.submit(dto, user.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Property request submitted successfully."));
+                .body(ApiMessageResponse.of("Yêu cầu của bạn đã được gửi thành công."));
     }
 
     @GetMapping
@@ -54,9 +53,8 @@ public class CustomerPropertyRequestV1API {
     @DeleteMapping("/{id}")
     public ApiMessageResponse<Void> cancelRequest(
             @PathVariable Long id,
-            @AuthenticationPrincipal CustomUserDetails user
-    ) {
+            @AuthenticationPrincipal CustomUserDetails user) {
         propertyRequestService.cancel(id, user.getUserId());
-        return ApiMessageResponse.of("Property request cancelled.");
+        return ApiMessageResponse.of("Yêu cầu của bạn đã bị hủy.");
     }
 }

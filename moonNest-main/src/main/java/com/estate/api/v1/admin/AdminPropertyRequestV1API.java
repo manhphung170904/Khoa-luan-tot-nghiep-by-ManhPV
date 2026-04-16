@@ -49,7 +49,7 @@ public class AdminPropertyRequestV1API {
     ) {
         String reason = body == null || body.getReason() == null ? "" : body.getReason();
         propertyRequestService.reject(id, user.getUserId(), reason);
-        return ApiMessageResponse.of("Property request rejected.");
+        return ApiMessageResponse.of("Yêu cầu của bạn đã bị từ chối.");
     }
 
     @PostMapping("/{id}/approve")
@@ -61,7 +61,7 @@ public class AdminPropertyRequestV1API {
         Long contractId = body == null ? null : body.getContractId();
         Long saleContractId = body == null ? null : body.getSaleContractId();
         propertyRequestService.markApproved(id, user.getUserId(), contractId, saleContractId);
-        return ApiMessageResponse.of("Property request approved.");
+        return ApiMessageResponse.of("Yêu cầu của bạn đã được chấp thuận.");
     }
 
     @GetMapping("/{id}/contract-data")
