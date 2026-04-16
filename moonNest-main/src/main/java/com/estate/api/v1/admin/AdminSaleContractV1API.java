@@ -46,7 +46,7 @@ public class AdminSaleContractV1API {
         validate(result);
         saleContractService.save(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Sale contract created successfully."));
+                .body(ApiMessageResponse.of("Tạo hợp đồng mua bán thành công."));
     }
 
     @PutMapping("/{id}")
@@ -58,13 +58,13 @@ public class AdminSaleContractV1API {
         validate(result);
         dto.setId(id);
         saleContractService.save(dto);
-        return ApiMessageResponse.of("Sale contract updated successfully.");
+        return ApiMessageResponse.of("Cập nhật hợp đồng mua bán thành công.");
     }
 
     @DeleteMapping("/{id}")
     public ApiMessageResponse<Void> deleteSaleContract(@PathVariable Long id) {
         saleContractService.delete(id);
-        return ApiMessageResponse.of("Sale contract deleted successfully.");
+        return ApiMessageResponse.of("Xóa hợp đồng mua bán thành công.");
     }
 
     private void validate(BindingResult result) {

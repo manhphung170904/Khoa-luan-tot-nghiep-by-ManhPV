@@ -129,10 +129,10 @@ public class AdminBuildingAdditionalInformationV1API {
         if (useUnifiedContract) {
             String contentType = file.getContentType();
             if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png") && !contentType.equals("image/webp"))) {
-                throw new InputValidationException("Invalid file type. Only JPG, PNG, and WEBP are supported.");
+                throw new InputValidationException("Định dạng không hợp lệ. Chỉ chấp nhận JPG, PNG, WEBP.");
             }
             if (file.getSize() > 5 * 1024 * 1024) {
-                throw new InputValidationException("File is too large. Maximum allowed size is 5 MB.");
+                throw new InputValidationException("File quá lớn. Tối đa 5MB.");
             }
 
             try {
@@ -148,10 +148,10 @@ public class AdminBuildingAdditionalInformationV1API {
                 Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 
                 return ResponseEntity.status(HttpStatus.CREATED).body(
-                        ApiMessageResponse.of("Upload completed successfully.", FileUploadResponseDTO.of(filename))
+                        ApiMessageResponse.of("Tải lên thành công.", FileUploadResponseDTO.of(filename))
                 );
             } catch (IOException e) {
-                throw new IllegalStateException("Unable to store uploaded file.", e);
+                throw new IllegalStateException("Không thể lưu tệp đã tải lên.", e);
             }
         }
         String contentType = file.getContentType();

@@ -53,13 +53,13 @@ public class AdminStaffV1API {
         validate(result);
         staffService.save(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Staff created successfully."));
+                .body(ApiMessageResponse.of("Tạo nhân viên thành công."));
     }
 
     @DeleteMapping("/{id}")
     public ApiMessageResponse<Void> deleteStaff(@PathVariable Long id) {
         staffService.delete(id);
-        return ApiMessageResponse.of("Staff deleted successfully.");
+        return ApiMessageResponse.of("Xóa nhân viên thành công.");
     }
 
     @GetMapping("/customers")
@@ -75,7 +75,7 @@ public class AdminStaffV1API {
     @PutMapping("/{id}/assignments/customers")
     public ApiMessageResponse<Void> updateCustomerAssignments(@PathVariable Long id, @RequestBody List<Long> customerIds) {
         staffService.updateCustomerAssignments(id, customerIds);
-        return ApiMessageResponse.of("Customer assignments updated successfully.");
+        return ApiMessageResponse.of("Cập nhật phân công khách hàng thành công.");
     }
 
     @GetMapping("/buildings")
@@ -91,7 +91,7 @@ public class AdminStaffV1API {
     @PutMapping("/{id}/assignments/buildings")
     public ApiMessageResponse<Void> updateBuildingAssignments(@PathVariable Long id, @RequestBody List<Long> buildingIds) {
         staffService.updateBuildingAssignments(id, buildingIds);
-        return ApiMessageResponse.of("Building assignments updated successfully.");
+        return ApiMessageResponse.of("Cập nhật phân công tòa nhà thành công.");
     }
 
     private void validate(BindingResult result) {

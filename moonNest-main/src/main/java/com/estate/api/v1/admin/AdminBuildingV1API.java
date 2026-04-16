@@ -81,7 +81,7 @@ public class AdminBuildingV1API {
         validate(result);
         buildingService.save(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiMessageResponse.of("Building created successfully."));
+                .body(ApiMessageResponse.of("Tạo tòa nhà thành công."));
     }
 
     @PutMapping("/{id}")
@@ -93,13 +93,13 @@ public class AdminBuildingV1API {
         validate(result);
         dto.setId(id);
         buildingService.save(dto);
-        return ApiMessageResponse.of("Building updated successfully.");
+        return ApiMessageResponse.of("Cập nhật tòa nhà thành công.");
     }
 
     @DeleteMapping("/{id}")
     public ApiMessageResponse<Void> deleteBuilding(@PathVariable Long id) {
         buildingService.delete(id);
-        return ApiMessageResponse.of("Building deleted successfully.");
+        return ApiMessageResponse.of("Xóa tòa nhà thành công.");
     }
 
     @PostMapping("/image")
@@ -107,21 +107,21 @@ public class AdminBuildingV1API {
         boolean useUnifiedContract = true;
         if (useUnifiedContract) {
             if (file.isEmpty()) {
-                throw new InputValidationException("Please select an image file.");
+                throw new InputValidationException("Vui lòng chọn một tệp hình ảnh.");
             }
             if (file.getSize() > MAX_SIZE_BYTES) {
-                throw new InputValidationException("File is too large. Maximum allowed size is 5 MB.");
+                throw new InputValidationException("Tệp quá lớn. Kích thước tối đa cho phép là 5 MB.");
             }
 
             String contentType = file.getContentType();
             if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
-                throw new InputValidationException("Invalid file type. Only JPG, PNG, and WEBP are supported.");
+                throw new InputValidationException("Loại tệp không hợp lệ. Chỉ hỗ trợ JPG, PNG và WEBP.");
             }
 
             String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
             boolean validExt = ALLOWED_EXTS.stream().anyMatch(originalName::endsWith);
             if (!validExt) {
-                throw new InputValidationException("Invalid file extension. Only .jpg, .png, and .webp are supported.");
+                throw new InputValidationException("Phần mở rộng tệp không hợp lệ. Chỉ hỗ trợ .jpg, .png và .webp.");
             }
 
             String ext = originalName.substring(originalName.lastIndexOf('.'));
@@ -134,10 +134,10 @@ public class AdminBuildingV1API {
                 Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
                 return ResponseEntity.status(HttpStatus.CREATED).body(
-                        ApiMessageResponse.of("Upload completed successfully.", FileUploadResponseDTO.of(newFilename))
+                        ApiMessageResponse.of("Tải lên hoàn tất thành công.", FileUploadResponseDTO.of(newFilename))
                 );
             } catch (IOException e) {
-                throw new IllegalStateException("Unable to store uploaded file.", e);
+                throw new IllegalStateException("Không thể lưu tệp đã tải lên.", e);
             }
         }
         if (file.isEmpty()) {
