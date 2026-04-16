@@ -381,9 +381,15 @@ public class AuthController {
         if ("CUSTOMER".equalsIgnoreCase(user.getUserType())) {
             return "/customer/home";
         }
+
+        if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+            return "/admin/dashboard";
+        }
+
         if ("STAFF".equalsIgnoreCase(user.getUserType())) {
             return "/staff/dashboard";
         }
+
         return "/admin/dashboard";
     }
 
