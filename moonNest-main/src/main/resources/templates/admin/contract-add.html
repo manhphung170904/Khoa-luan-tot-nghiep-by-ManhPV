@@ -413,7 +413,7 @@
                                 <label class="form-label">Khách hàng <span class="required">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                    <select class="form-select" name="customerId" required>
+                                    <select class="form-select" name="customerId" id="customerSelect" required>
                                         <option value="">-- Chọn khách hàng --</option>
                                         <option th:each="customer : ${customers}" th:value="${customer.value}"
                                             th:text="${customer.key}"></option>
@@ -425,8 +425,8 @@
                                 <label class="form-label">Nhân viên phụ trách <span class="required">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
-                                    <select class="form-select" name="staffId" required>
-                                        <option value="">-- Chọn nhân viên --</option>
+                                    <select class="form-select" name="staffId" id="staffSelect" required>
+                                        <option value="">-- Chọn tòa nhà trước --</option>
                                         <option th:each="staff : ${staffs}" th:value="${staff.id}"
                                             th:text="${staff.fullName}"></option>
                                     </select>
@@ -518,6 +518,7 @@
                     $rentAreaSelect.append('<option value="">-- Chọn tòa nhà trước --</option>');
                     $rentAreaSelect.prop('disabled', true);
                     $rentAreaSelect.removeClass('has-value');
+                    refreshStaffDropdown();
                     return;
                 }
 
@@ -528,6 +529,7 @@
                     $rentAreaSelect.append('<option value="">-- Không có diện tích khả dụng --</option>');
                     $rentAreaSelect.prop('disabled', true);
                     $rentAreaInfo.text('Bất động sản này chưa có diện tích nào khả dụng');
+                    refreshStaffDropdown();
                     return;
                 }
 
@@ -539,22 +541,74 @@
 
                 $rentAreaSelect.prop('disabled', false);
                 $rentAreaInfo.text(`Có ${areas.length} diện tích khả dụng cho tòa nhà này`);
+                
+                refreshStaffDropdown();
             });
+
+            $('#customerSelect').on('change', function () {
+                refreshStaffDropdown();
+            });
+
+            function refreshStaffDropdown() {
+                const buildingId = $('#buildingSelect').val();
+                const customerId = $('[name="customerId"]').val(); // Lấy từ cả select hoặc hidden input (khi disabled)
+                const $staffSelect = $('#staffSelect');
+
+                if (!buildingId || !customerId) {
+                    $staffSelect.html('<option value="">-- Chọn đủ tòa nhà và khách hàng --</option>');
+                    return;
+                }
+
+                $staffSelect.html('<option value="">-- Đang tải nhân viên... --</option>');
+
+                $.getJSON(`/api/v1/admin/buildings/${buildingId}/staffs?customerId=${customerId}`, function (staffs) {
+                    $staffSelect.empty();
+                    $staffSelect.append('<option value="">-- Chọn nhân viên --</option>');
+                    if (staffs.length === 0) {
+                        $staffSelect.append('<option value="">-- Không có nhân viên phụ trách chung --</option>');
+                    } else {
+                        staffs.forEach(function (staff) {
+                            const isSelected = (prefillData && prefillData.staffId == staff.id) ? 'selected' : '';
+                            $staffSelect.append(`<option value="${staff.id}" ${isSelected}>${staff.fullName}</option>`);
+                        });
+                    }
+                }).fail(function() {
+                    $staffSelect.html('<option value="">-- Lỗi tải nhân viên --</option>');
+                });
+            }
 
             // Trigger highlight khi chọn diện tích
             $('#rentAreaSelect').on('change', function () {
-                // no-op: has-value removed
+                // no-op
             });
 
             // ====== AUTO-FILL từ yêu cầu thuê/mua ======
             if (prefillData) {
-                // Set building → trigger change → load rent areas
+                // Set building → trigger change → load rent areas & staffs
                 if (prefillData.buildingId) {
-                    $('[name="buildingId"]').val(prefillData.buildingId).trigger('change');
+                    $('#buildingSelect').val(prefillData.buildingId).trigger('change');
                 }
                 // Set customer
                 if (prefillData.customerId) {
-                    $('[name="customerId"]').val(prefillData.customerId);
+                    const $customerSelect = $('#customerSelect');
+                    $customerSelect.val(prefillData.customerId);
+                    
+                    if (fromRequestId) {
+                        // Khóa khách hàng nếu tạo từ yêu cầu
+                        $customerSelect.find('option').each(function() {
+                            if ($(this).val() && $(this).val() != prefillData.customerId) {
+                                $(this).remove();
+                            }
+                        });
+                        $customerSelect.prop('disabled', true);
+                        $customerSelect.after(`<input type="hidden" name="customerId" value="${prefillData.customerId}">`);
+                        $customerSelect.attr('name', 'customerId_disabled');
+                        
+                        // Force refresh staff after setting customer
+                        setTimeout(refreshStaffDropdown, 200);
+                    } else {
+                        $customerSelect.trigger('change');
+                    }
                 }
                 // Set price
                 if (prefillData.rentPrice) {

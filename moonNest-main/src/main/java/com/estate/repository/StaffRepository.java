@@ -124,4 +124,12 @@ public interface StaffRepository extends JpaRepository<StaffEntity, Long> {
             "JOIN s.customers c " +
             "WHERE s.id = :staffId")
     List<Long> findAssignedCustomerIds(@Param("staffId") Long staffId);
+
+    @Query("""
+        SELECT s FROM StaffEntity s
+        JOIN s.buildings b
+        JOIN s.customers c
+        WHERE b.id = :buildingId AND c.id = :customerId
+    """)
+    List<StaffEntity> findByBuildingIdAndCustomerId(@Param("buildingId") Long buildingId, @Param("customerId") Long customerId);
 }

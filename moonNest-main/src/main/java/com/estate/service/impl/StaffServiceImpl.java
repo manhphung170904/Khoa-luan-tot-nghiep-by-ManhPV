@@ -427,4 +427,14 @@ public class StaffServiceImpl implements StaffService {
             });
         }
     }
+
+    @Override
+    public List<StaffSelectDTO> getStaffsByAssignment(Long buildingId, Long customerId) {
+        if (buildingId == null || customerId == null) {
+            return new ArrayList<>();
+        }
+        return staffRepository.findByBuildingIdAndCustomerId(buildingId, customerId).stream()
+                .map(staff -> new StaffSelectDTO(staff.getId(), staff.getFullName()))
+                .toList();
+    }
 }

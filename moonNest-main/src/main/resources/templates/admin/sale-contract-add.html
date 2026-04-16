@@ -363,7 +363,7 @@
 
                             <div class="col-md-4">
                                 <label for="customerId" class="form-label">Khách hàng</label>
-                                <select class="form-select" id="customerId" name="customerId">
+                                <select class="form-select" id="customerSelect" name="customerId">
                                     <option value="">--- Chọn khách hàng ---</option>
                                     <option th:each="customer : ${customers}"
                                             th:value="${customer.value}"
@@ -377,8 +377,8 @@
                                 <label class="form-label">Nhân viên phụ trách <span class="required">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
-                                    <select class="form-select" name="staffId" required>
-                                        <option value="">-- Chọn nhân viên --</option>
+                                    <select class="form-select" name="staffId" id="staffSelect" required>
+                                        <option value="">-- Chọn tòa nhà trước --</option>
                                         <option th:each="s : ${staffs}" th:value="${s.id}" th:text="${s.fullName}">
                                         </option>
                                     </select>
@@ -447,6 +447,70 @@
 
     <script th:inline="javascript">
         const fromRequestId = /*[[${fromRequestId}]]*/ null;
+        const prefillData = /*[[${prefill}]]*/ null;
+
+        $(document).ready(function () {
+            // Xử lý thay đổi tòa nhà
+            $('#buildingId').on('change', function () {
+                refreshStaffDropdown();
+            });
+
+            // Xử lý thay đổi khách hàng
+            $('#customerSelect').on('change', function () {
+                refreshStaffDropdown();
+            });
+
+            function refreshStaffDropdown() {
+                const buildingId = $('#buildingId').val();
+                const customerId = $('[name="customerId"]').val(); // Lấy từ cả select hoặc hidden input (khi disabled)
+                const $staffSelect = $('#staffSelect');
+
+                if (!buildingId || !customerId) {
+                    $staffSelect.html('<option value="">-- Chọn đủ tòa nhà và khách hàng --</option>');
+                    return;
+                }
+
+                $staffSelect.html('<option value="">-- Đang tải nhân viên... --</option>');
+
+                $.getJSON(`/api/v1/admin/buildings/${buildingId}/staffs?customerId=${customerId}`, function (staffs) {
+                    $staffSelect.empty();
+                    $staffSelect.append('<option value="">-- Chọn nhân viên --</option>');
+                    if (staffs.length === 0) {
+                        $staffSelect.append('<option value="">-- Không có nhân viên phụ trách chung --</option>');
+                    } else {
+                        staffs.forEach(function (staff) {
+                            const isSelected = (prefillData && prefillData.staffId == staff.id) ? 'selected' : '';
+                            $staffSelect.append(`<option value="${staff.id}" ${isSelected}>${staff.fullName}</option>`);
+                        });
+                    }
+                }).fail(function() {
+                    $staffSelect.html('<option value="">-- Lỗi tải nhân viên --</option>');
+                });
+            }
+
+            // Nếu có prefill buildingId, trigger change để load staff
+            if (prefillData && prefillData.buildingId) {
+                $('#buildingId').trigger('change');
+            }
+
+            // Xử lý khóa khách hàng nếu tạo từ yêu cầu
+            if (fromRequestId && prefillData && prefillData.customerId) {
+                const $customerSelect = $('#customerSelect');
+                $customerSelect.val(prefillData.customerId);
+                
+                $customerSelect.find('option').each(function() {
+                    if ($(this).val() && $(this).val() != prefillData.customerId) {
+                        $(this).remove();
+                    }
+                });
+                $customerSelect.prop('disabled', true);
+                $customerSelect.after(`<input type="hidden" name="customerId" value="${prefillData.customerId}">`);
+                $customerSelect.attr('name', 'customerId_disabled');
+                
+                // Force refresh staff after setting customer
+                setTimeout(refreshStaffDropdown, 200);
+            }
+        });
 
         // Hiển thị giá bán dạng đọc được khi nhập
         const salePriceInput = document.getElementById('salePrice');

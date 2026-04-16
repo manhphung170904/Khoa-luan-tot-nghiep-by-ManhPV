@@ -30,4 +30,5 @@ public interface StaffService {
     List<Long> getAssignedCustomerIds(Long staffId);
     void updateBuildingAssignments(Long staffId, List<Long> buildingIds);
     void updateCustomerAssignments(Long staffId, List<Long> customerIds);
+    List<StaffSelectDTO> getStaffsByAssignment(Long buildingId, Long customerId);
 }

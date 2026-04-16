@@ -1,11 +1,6 @@
 package com.estate.api.v1.admin;
 
-import com.estate.dto.ApiMessageResponse;
-import com.estate.dto.ApiOptionDTO;
-import com.estate.dto.AdminBuildingFilterMetadataDTO;
-import com.estate.dto.BuildingFilterDTO;
-import com.estate.dto.BuildingFormDTO;
-import com.estate.dto.BuildingListDTO;
+import com.estate.dto.*;
 import com.estate.dto.FileUploadResponseDTO;
 import com.estate.dto.PageResponse;
 import com.estate.enums.Direction;
@@ -188,6 +183,14 @@ public class AdminBuildingV1API {
             }
             throw new InputValidationException(result.getAllErrors().getFirst().getDefaultMessage());
         }
+    }
+
+    @GetMapping("/{id}/staffs")
+    public List<StaffSelectDTO> getStaffs(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long customerId
+    ) {
+        return staffService.getStaffsByAssignment(id, customerId);
     }
 
     private List<ApiOptionDTO> toOptions(Direction[] values) {
