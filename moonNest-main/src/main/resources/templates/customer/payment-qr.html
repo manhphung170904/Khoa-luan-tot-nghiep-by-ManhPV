@@ -1,0 +1,227 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoonNest - Thanh toán QR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2d3e8f;
+            --primary-light: #4a5fc1;
+            --surface-color: #ffffff;
+            --background-color: #f4f6fb;
+            --muted-color: #6b7280;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(74, 95, 193, 0.16), transparent 28%),
+                linear-gradient(180deg, #eef2ff 0%, var(--background-color) 100%);
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .payment-card {
+            width: 100%;
+            max-width: 580px;
+            background: var(--surface-color);
+            border-radius: 24px;
+            box-shadow: 0 24px 60px rgba(45, 62, 143, 0.16);
+            overflow: hidden;
+        }
+
+        .payment-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 28px 28px 22px;
+        }
+
+        .payment-header h1 {
+            margin: 0 0 8px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .payment-header p {
+            margin: 0;
+            opacity: 0.92;
+        }
+
+        .payment-body {
+            padding: 28px;
+        }
+
+        .invoice-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #e8edff;
+            color: var(--primary-color);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        .amount-box {
+            text-align: center;
+            background: #f8faff;
+            border: 1px solid #dbe4ff;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 24px;
+        }
+
+        .amount-box .label {
+            color: var(--muted-color);
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+
+        .amount-box .value {
+            color: #d32f2f;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .qr-box {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .qr-box img {
+            width: min(320px, 100%);
+            border-radius: 18px;
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            background: white;
+        }
+
+        .meta-grid {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .meta-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 14px 16px;
+        }
+
+        .meta-item .label {
+            color: var(--muted-color);
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .meta-item .value {
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .hint {
+            background: #fff8e6;
+            color: #7c5a00;
+            border: 1px solid #f5d98e;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .actions .btn {
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 576px) {
+            .payment-header,
+            .payment-body {
+                padding: 20px;
+            }
+
+            .payment-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .amount-box .value {
+                font-size: 1.6rem;
+            }
+
+            .actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="payment-card">
+    <div class="payment-header">
+        <h1>Thanh toán bằng QR</h1>
+        <p>Quét mã bằng ứng dụng ngân hàng để thanh toán hóa đơn của bạn.</p>
+    </div>
+
+    <div class="payment-body">
+        <div class="invoice-pill">
+            <span>Hóa đơn</span>
+            <strong th:text="'#' + ${invoiceId}">#1</strong>
+        </div>
+
+        <div class="amount-box">
+            <div class="label">Số tiền cần thanh toán</div>
+            <div class="value" th:text="${formattedAmount} + ' VND'">1,500,000 VND</div>
+        </div>
+
+        <div class="qr-box">
+            <img th:src="${qrUrl}" th:alt="'QR thanh toán hóa đơn #' + ${invoiceId}" alt="QR thanh toán hóa đơn">
+        </div>
+
+        <div class="meta-grid">
+            <div class="meta-item">
+                <div class="label">Mã ngân hàng</div>
+                <div class="value" th:text="${bankBin}">970422</div>
+            </div>
+            <div class="meta-item">
+                <div class="label">Số tài khoản</div>
+                <div class="value" th:text="${accountNo}">123456789</div>
+            </div>
+            <div class="meta-item">
+                <div class="label">Chủ tài khoản</div>
+                <div class="value" th:text="${accountName}">MOONNEST</div>
+            </div>
+            <div class="meta-item">
+                <div class="label">Nội dung chuyển khoản</div>
+                <div class="value" th:text="${transferContent}">MOONNEST INV 1</div>
+            </div>
+        </div>
+
+        <div class="hint">
+            Sau khi chuyển khoản thành công, bấm <strong>Tôi đã thanh toán</strong> để hệ thống ghi nhận ở chế độ demo.
+        </div>
+
+        <div class="actions">
+            <form method="post" th:action="@{'/payment-demo/qr/confirm/' + ${invoiceId}}">
+                <input type="hidden" name="token" th:value="${confirmToken}">
+                <button class="btn btn-primary w-100" type="submit">Tôi đã thanh toán</button>
+            </form>
+            <a class="btn btn-outline-secondary w-100" th:href="@{/customer/invoice/list}">Quay lại danh sách hóa đơn</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

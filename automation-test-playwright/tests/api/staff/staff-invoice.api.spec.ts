@@ -1,6 +1,7 @@
 ﻿import { test, expect, type APIRequestContext } from "@playwright/test";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
-import { expectStatusExact, expectSuccessStatus } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
@@ -43,7 +44,11 @@ test.describe("Staff Invoice CRUD API Tests", () => {
         maxRedirects: 0,
         data: validPayload
       });
-      expectStatusExact(response, 401, "Staff invoice create must reject anonymous access");
+      await expectApiErrorBody(response, {
+        status: 401,
+        code: "UNAUTHORIZED",
+        path: "/api/v1/staff/invoices"
+      });
     } finally {
       await anonymous.dispose();
     }
@@ -56,7 +61,11 @@ test.describe("Staff Invoice CRUD API Tests", () => {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(response, 403, "Customer role must be forbidden from staff invoice search");
+      await expectApiErrorBody(response, {
+        status: 403,
+        code: "FORBIDDEN",
+        path: "/api/v1/staff/invoices"
+      });
     } finally {
       await customer.dispose();
     }
@@ -69,7 +78,11 @@ test.describe("Staff Invoice CRUD API Tests", () => {
         maxRedirects: 0,
         data: validPayload
       });
-      expectSuccessStatus(response, "Staff invoice creation should succeed");
+      await expectApiMessage(response, {
+        status: 200,
+        message: apiExpectedMessages.staff.invoices.create,
+        dataMode: "null"
+      });
 
       const rows = await MySqlDbClient.query<{ id: number }>(
         "SELECT id FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
@@ -84,10 +97,7 @@ test.describe("Staff Invoice CRUD API Tests", () => {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(response, 200, "Staff invoice search should succeed");
-
-      const payload = (await response.json()) as { content?: Array<{ id: number }> };
-      expect(Array.isArray(payload.content)).toBeTruthy();
+      const payload = await expectPageBody<{ content?: Array<{ id: number }> }>(response, { status: 200 });
       expect(payload.content?.some((item) => item.id === createdInvoiceId)).toBeTruthy();
     });
 
@@ -101,7 +111,11 @@ test.describe("Staff Invoice CRUD API Tests", () => {
           totalAmount: 9999
         }
       });
-      expectStatusExact(response, 200, "Staff invoice edit should succeed");
+      await expectApiMessage(response, {
+        status: 200,
+        message: apiExpectedMessages.staff.invoices.update,
+        dataMode: "null"
+      });
 
       const rows = await MySqlDbClient.query<{ total_amount: number }>(
         "SELECT total_amount FROM invoice WHERE id = ?",
@@ -116,15 +130,17 @@ test.describe("Staff Invoice CRUD API Tests", () => {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(response, 200, "Staff invoice delete should succeed");
+      await expectApiMessage(response, {
+        status: 200,
+        message: apiExpectedMessages.staff.invoices.delete,
+        dataMode: "null"
+      });
 
       const searchResponse = await staffContext.get("/api/v1/staff/invoices?page=1&size=20", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(searchResponse, 200, "Staff invoice search after delete should succeed");
-
-      const payload = (await searchResponse.json()) as { content?: Array<{ id: number }> };
+      const payload = await expectPageBody<{ content?: Array<{ id: number }> }>(searchResponse, { status: 200 });
       expect(payload.content?.some((item) => item.id === createdInvoiceId)).toBeFalsy();
       createdInvoiceId = 0;
     });

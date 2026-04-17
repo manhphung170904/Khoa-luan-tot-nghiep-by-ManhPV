@@ -1,4 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
@@ -21,7 +23,11 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload()
     });
-    expect(response.status()).toBe(401);
+    await expectApiErrorBody(response, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/admin/customers"
+    });
   });
 
   test("[CUS_002] POST /customers rejects empty staffIds", async () => {
@@ -29,7 +35,11 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload({ staffIds: [] })
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/customers"
+    });
   });
 
   test("[CUS_009] POST /customers rejects username shorter than 4", async () => {
@@ -37,7 +47,11 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload({ username: "abc" })
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/customers"
+    });
   });
 
   test("[CUS_003] POST /customers rejects password shorter than 6", async () => {
@@ -45,7 +59,11 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload({ password: "123" })
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/customers"
+    });
   });
 
   test("[CUS_010] POST /customers rejects oversized email", async () => {
@@ -53,7 +71,11 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload({ email: `${"a".repeat(95)}@b.com` })
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/customers"
+    });
   });
 
   test("[CUS_011] POST /customers rejects invalid phone format", async () => {
@@ -61,7 +83,11 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload({ phone: "9999999999" })
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/customers"
+    });
   });
 
   test("[CUS_004] POST /customers creates customer and supports list/search/delete flow", async () => {
@@ -74,9 +100,11 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
         failOnStatusCode: false,
         data: customerPayload
       });
-      expect(createResponse.status()).toBe(200);
-      const createBody = (await createResponse.json()) as { message?: string };
-      expect(createBody.message).toBeTruthy();
+      await expectApiMessage(createResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.customers.create,
+        dataMode: "null"
+      });
 
       const customerRows = await MySqlDbClient.query<{
         id: number;
@@ -93,18 +121,20 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
         failOnStatusCode: false,
         data: customerPayload
       });
-      expect(duplicateResponse.status()).toBe(400);
+      await expectApiErrorBody(duplicateResponse, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/customers"
+      });
 
       const listResponse = await admin.get("/api/v1/admin/customers", {
         failOnStatusCode: false,
         params: { page: 1, size: 50, fullName: String(customerPayload.fullName) }
       });
-      expect(listResponse.status()).toBe(200);
-      const listBody = (await listResponse.json()) as {
+      const listBody = await expectPageBody<{
         content?: Array<{ id: number; fullName?: string; email?: string }>;
         totalElements?: number;
-      };
-      expect(typeof listBody.totalElements).toBe("number");
+      }>(listResponse, { status: 200 });
       expect(listBody.content?.some((item) => item.id === createdCustomerId)).toBeTruthy();
       const createdItem = listBody.content?.find((item) => item.id === createdCustomerId);
       expect(createdItem?.fullName).toBe(customerPayload.fullName);
@@ -115,7 +145,11 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
         const deleteWithContract = await admin.delete(`/api/v1/admin/customers/${customerWithContract.customer.id}`, {
           failOnStatusCode: false
         });
-        expect(deleteWithContract.status()).toBe(400);
+        await expectApiErrorBody(deleteWithContract, {
+          status: 400,
+          code: "BAD_REQUEST",
+          path: `/api/v1/admin/customers/${customerWithContract.customer.id}`
+        });
       } finally {
         await TempEntityHelper.xoaContractTam(admin, customerWithContract);
       }
@@ -123,16 +157,20 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
       const missingDelete = await admin.delete("/api/v1/admin/customers/999999", {
         failOnStatusCode: false
       });
-      expect(missingDelete.status()).toBe(400);
-      const missingDeleteBody = (await missingDelete.json()) as { message?: string };
-      expect(missingDeleteBody.message).toBeTruthy();
+      await expectApiErrorBody(missingDelete, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/customers/999999"
+      });
 
       const deleteResponse = await admin.delete(`/api/v1/admin/customers/${createdCustomerId}`, {
         failOnStatusCode: false
       });
-      expect(deleteResponse.status()).toBe(200);
-      const deleteBody = (await deleteResponse.json()) as { message?: string };
-      expect(deleteBody.message).toBeTruthy();
+      await expectApiMessage(deleteResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.customers.delete,
+        dataMode: "null"
+      });
 
       const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM customer WHERE id = ?", [createdCustomerId]);
       expect(deletedRows.length).toBe(0);

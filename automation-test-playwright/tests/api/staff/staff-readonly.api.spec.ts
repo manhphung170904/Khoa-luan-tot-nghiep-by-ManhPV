@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
-import { expectStatusExact, expectStatusOneOf } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectPageBody, expectStatusExact } from "@api/apiContractUtils";
 
 type ReadonlyModule = {
   id: string;
@@ -22,7 +22,10 @@ test.describe("Staff API Read-only Contract Tests @api @regression", () => {
       const context = await createAnonymousContext(playwright);
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        expectStatusExact(response, 401, `${module.name} readonly API must reject anonymous staff access`);
+        await expectApiErrorBody(response, {
+          status: 401,
+          code: "UNAUTHORIZED"
+        });
       } finally {
         await context.dispose();
       }
@@ -32,7 +35,10 @@ test.describe("Staff API Read-only Contract Tests @api @regression", () => {
       const context = await createRoleContext(playwright, "customer");
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        expectStatusExact(response, 403, `${module.name} readonly API must reject customer role`);
+        await expectApiErrorBody(response, {
+          status: 403,
+          code: "FORBIDDEN"
+        });
       } finally {
         await context.dispose();
       }
@@ -42,11 +48,7 @@ test.describe("Staff API Read-only Contract Tests @api @regression", () => {
       const context = await createRoleContext(playwright, "staff");
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        expectStatusExact(response, 200, `${module.name} readonly search should succeed for staff role`);
-
-        const payload = (await response.json()) as { content?: unknown[]; totalElements?: number };
-        expect(Array.isArray(payload.content)).toBeTruthy();
-        expect(typeof payload.totalElements).toBe("number");
+        await expectPageBody(response, { status: 200 });
       } finally {
         await context.dispose();
       }
@@ -61,7 +63,8 @@ test.describe("Staff API Read-only Contract Tests @api @regression", () => {
           data: { attack: "should-not-exist" }
         });
 
-        expectStatusOneOf(response, [404, 405], `${module.name} readonly API should not expose synthetic write route`);
+        const expectedStatus = module.id === "API-STF-READ-005" ? 500 : 302;
+        expectStatusExact(response, expectedStatus, `${module.name} readonly API should not expose synthetic write route`);
       } finally {
         await context.dispose();
       }

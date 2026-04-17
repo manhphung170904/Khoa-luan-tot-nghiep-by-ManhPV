@@ -1,4 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
@@ -28,7 +30,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: TestDataFactory.buildInvoicePayload()
     });
-    expect(response.status()).toBe(401);
+    await expectApiErrorBody(response, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/admin/invoices"
+    });
   });
 
   test("[INV_002] POST /invoices rejects invalid month type", async () => {
@@ -36,7 +42,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: { ...TestDataFactory.buildInvoicePayload(), month: "Muoi Hai" }
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/invoices"
+    });
   });
 
   test("[INV_015] POST /invoices rejects current-month invoice creation", async () => {
@@ -52,7 +62,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           dueDate: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-28`
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/invoices"
+      });
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -69,7 +83,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           dueDate
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/invoices"
+      });
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -86,7 +104,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           dueDate
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/invoices"
+      });
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -104,7 +126,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           dueDate: sameMonthDueDate
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/invoices"
+      });
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -122,7 +148,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           dueDate
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/invoices/999999"
+      });
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -132,7 +162,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
     const response = await admin.delete("/api/v1/admin/invoices/999999", {
       failOnStatusCode: false
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/invoices/999999"
+    });
   });
 
   test("[INV_018] PUT /invoices/status marks overdue invoices based on due date", async () => {
@@ -150,7 +184,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
         failOnStatusCode: false,
         data: overduePayload
       });
-      expect(createResponse.status()).toBe(200);
+      await expectApiMessage(createResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.invoices.create,
+        dataMode: "null"
+      });
 
       const invoiceRows = await MySqlDbClient.query<{ id: number; status: string }>(
         `
@@ -169,7 +207,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
       const statusUpdateResponse = await admin.put("/api/v1/admin/invoices/status", {
         failOnStatusCode: false
       });
-      expect(statusUpdateResponse.status()).toBe(200);
+      await expectApiMessage(statusUpdateResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.invoices.updateStatus,
+        dataMode: "null"
+      });
 
       const overdueRows = await MySqlDbClient.query<{ status: string }>(
         "SELECT status FROM invoice WHERE id = ?",
@@ -199,7 +241,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
         failOnStatusCode: false,
         data: payload
       });
-      expect(createResponse.status()).toBe(200);
+      await expectApiMessage(createResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.invoices.create,
+        dataMode: "null"
+      });
 
       const invoiceRows = await MySqlDbClient.query<{
         id: number;
@@ -242,18 +288,20 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
         failOnStatusCode: false,
         data: payload
       });
-      expect(duplicateResponse.status()).toBe(400);
+      await expectApiErrorBody(duplicateResponse, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/invoices"
+      });
 
       const listResponse = await admin.get("/api/v1/admin/invoices", {
         failOnStatusCode: false,
         params: { page: 1, size: 100, customerId: tempContract.customer.id }
       });
-      expect(listResponse.status()).toBe(200);
-      const listBody = (await listResponse.json()) as {
+      const listBody = await expectPageBody<{
         content?: Array<{ id: number; status?: string; month?: number; year?: number }>;
         totalElements?: number;
-      };
-      expect(typeof listBody.totalElements).toBe("number");
+      }>(listResponse, { status: 200 });
       expect(listBody.content?.some((item) => item.id === createdInvoiceId)).toBeTruthy();
       const createdItem = listBody.content?.find((item) => item.id === createdInvoiceId);
       expect(createdItem?.status).toBe(payload.status);
@@ -264,12 +312,10 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
         failOnStatusCode: false,
         params: { page: 1, size: 100, month: Number(payload.month), customerId: tempContract.customer.id }
       });
-      expect(filterResponse.status()).toBe(200);
-      const filterBody = (await filterResponse.json()) as {
+      const filterBody = await expectPageBody<{
         content?: Array<{ id: number; month?: number; customer?: string }>;
         totalElements?: number;
-      };
-      expect(typeof filterBody.totalElements).toBe("number");
+      }>(filterResponse, { status: 200 });
       expect(filterBody.content?.some((item) => item.id === createdInvoiceId)).toBeTruthy();
 
       const updateResponse = await admin.put(`/api/v1/admin/invoices/${createdInvoiceId}`, {
@@ -283,7 +329,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           waterUsage: 11
         }
       });
-      expect(updateResponse.status()).toBe(200);
+      await expectApiMessage(updateResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.invoices.update,
+        dataMode: "null"
+      });
 
       const updatedRows = await MySqlDbClient.query<{ total_amount: number }>(
         "SELECT total_amount FROM invoice WHERE id = ?",
@@ -314,7 +364,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
       const confirmResponse = await admin.post(`/api/v1/admin/invoices/${createdInvoiceId}/confirm`, {
         failOnStatusCode: false
       });
-      expect(confirmResponse.status()).toBe(200);
+      await expectApiMessage(confirmResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.invoices.confirm,
+        dataMode: "null"
+      });
 
       const paidRows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [createdInvoiceId]);
       expect(paidRows[0]!.status).toBe("PAID");
@@ -322,7 +376,11 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
       const missingConfirm = await admin.post("/api/v1/admin/invoices/999999/confirm", {
         failOnStatusCode: false
       });
-      expect(missingConfirm.status()).toBe(400);
+      await expectApiErrorBody(missingConfirm, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/invoices/999999/confirm"
+      });
 
       const updatePaidResponse = await admin.put(`/api/v1/admin/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false,
@@ -332,17 +390,29 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           totalAmount: 99999
         }
       });
-      expect(updatePaidResponse.status()).toBe(400);
+      await expectApiErrorBody(updatePaidResponse, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: `/api/v1/admin/invoices/${createdInvoiceId}`
+      });
 
       const statusUpdateResponse = await admin.put("/api/v1/admin/invoices/status", {
         failOnStatusCode: false
       });
-      expect(statusUpdateResponse.status()).toBe(200);
+      await expectApiMessage(statusUpdateResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.invoices.updateStatus,
+        dataMode: "null"
+      });
 
       const deleteResponse = await admin.delete(`/api/v1/admin/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false
       });
-      expect(deleteResponse.status()).toBe(200);
+      await expectApiMessage(deleteResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.invoices.delete,
+        dataMode: "null"
+      });
 
       const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [createdInvoiceId]);
       expect(deletedRows.length).toBe(0);

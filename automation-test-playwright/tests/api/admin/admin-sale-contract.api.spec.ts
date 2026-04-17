@@ -1,4 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
@@ -21,7 +23,11 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: TestDataFactory.buildSaleContractPayload()
     });
-    expect(response.status()).toBe(401);
+    await expectApiErrorBody(response, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/admin/sale-contracts"
+    });
   });
 
   test("[SC_002] POST /sale-contracts rejects zero salePrice", async () => {
@@ -29,7 +35,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: TestDataFactory.buildSaleContractPayload({ salePrice: 0 })
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
   });
 
   test("[SC_012] POST /sale-contracts rejects negative salePrice", async () => {
@@ -37,7 +43,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: TestDataFactory.buildSaleContractPayload({ salePrice: -1 })
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
   });
 
   test("[SC_010] POST /sale-contracts rejects missing buildingId", async () => {
@@ -47,7 +53,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: invalidPayload
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
   });
 
   test("[SC_011] POST /sale-contracts rejects missing customerId", async () => {
@@ -57,7 +63,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: invalidPayload
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
   });
 
   test("[SC_003] POST /sale-contracts rejects nonexistent buildingId", async () => {
@@ -71,7 +77,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           staffId: temp.staff.id
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
     } finally {
       await TempEntityHelper.xoaSaleContractTam(admin, temp);
     }
@@ -88,7 +94,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           staffId: -1
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
     } finally {
       await TempEntityHelper.xoaSaleContractTam(admin, temp);
     }
@@ -110,7 +116,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           staffId: outsiderStaff.id
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
     } finally {
       await TempEntityHelper.capNhatPhanCongCustomer(admin, outsiderStaff.id, []);
       await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id);
@@ -136,7 +142,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           staffId: outsiderStaff.id
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
     } finally {
       await TempEntityHelper.capNhatPhanCongBuilding(admin, outsiderStaff.id, []);
       await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id);
@@ -162,7 +168,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           staffId: tempStaff.id
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
     } finally {
       await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []);
       await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []);
@@ -183,7 +189,11 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           staffId: temp.staff.id
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/sale-contracts"
+      });
     } finally {
       await TempEntityHelper.xoaSaleContractTam(admin, temp);
     }
@@ -210,9 +220,11 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
         failOnStatusCode: false,
         data: payload
       });
-      expect(createResponse.status()).toBe(200);
-      const createBody = (await createResponse.json()) as { message?: string };
-      expect(createBody.message).toBeTruthy();
+      await expectApiMessage(createResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.saleContracts.create,
+        dataMode: "null"
+      });
 
       const saleRows = await MySqlDbClient.query<{
         id: number;
@@ -237,8 +249,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
         failOnStatusCode: false,
         params: { page: 1, size: 100, customerName: tempCustomer.fullName }
       });
-      expect(listResponse.status()).toBe(200);
-      const listBody = (await listResponse.json()) as {
+      const listBody = await expectPageBody<{
         content?: Array<{
           id: number;
           building?: string;
@@ -247,8 +258,7 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           salePrice?: number | string;
         }>;
         totalElements?: number;
-      };
-      expect(typeof listBody.totalElements).toBe("number");
+      }>(listResponse, { status: 200 });
       const listedItem = listBody.content?.find((item) => item.id === createdSaleContractId);
       expect(listedItem).toBeDefined();
       expect(listedItem?.building).toBe(tempBuilding.name);
@@ -260,12 +270,10 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
         failOnStatusCode: false,
         params: { buildingId: tempBuilding.id, page: 1, size: 10 }
       });
-      expect(filterResponse.status()).toBe(200);
-      const filterBody = (await filterResponse.json()) as {
+      const filterBody = await expectPageBody<{
         content?: Array<{ id: number; building?: string }>;
         totalElements?: number;
-      };
-      expect(typeof filterBody.totalElements).toBe("number");
+      }>(filterResponse, { status: 200 });
       const filteredItem = filterBody.content?.find((item) => item.id === createdSaleContractId);
       expect(filteredItem).toBeDefined();
       expect(filteredItem?.building).toBe(tempBuilding.name);
@@ -280,9 +288,11 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           note: "Updated note"
         }
       });
-      expect(updateResponse.status()).toBe(200);
-      const updateBody = (await updateResponse.json()) as { message?: string };
-      expect(updateBody.message).toBeTruthy();
+      await expectApiMessage(updateResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.saleContracts.update,
+        dataMode: "null"
+      });
 
       const updatedRows = await MySqlDbClient.query<{
         sale_price: number;
@@ -300,9 +310,11 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       const deleteResponse = await admin.delete(`/api/v1/admin/sale-contracts/${createdSaleContractId}`, {
         failOnStatusCode: false
       });
-      expect(deleteResponse.status()).toBe(200);
-      const deleteBody = (await deleteResponse.json()) as { message?: string };
-      expect(deleteBody.message).toBeTruthy();
+      await expectApiMessage(deleteResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.saleContracts.delete,
+        dataMode: "null"
+      });
 
       const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM sale_contract WHERE id = ?", [createdSaleContractId]);
       expect(deletedRows.length).toBe(0);
@@ -330,9 +342,11 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       })
     });
 
-    expect(response.status()).toBe(400);
-    const body = (await response.json()) as { message?: string };
-    expect(body.message).toBeTruthy();
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/sale-contracts/999999999"
+    });
   });
 
   test("[SC_018] DELETE /sale-contracts/{id} should reject nonexistent id", async () => {
@@ -342,8 +356,10 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       failOnStatusCode: false
     });
 
-    expect(response.status()).toBe(400);
-    const body = (await response.json()) as { message?: string };
-    expect(body.message).toBeTruthy();
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/sale-contracts/999999999"
+    });
   });
 });

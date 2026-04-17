@@ -1,4 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expectApiErrorBody, expectApiMessage } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { env } from "@config/env";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
@@ -27,7 +29,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
       failOnStatusCode: false,
       data: payload
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.admin.customers.create,
+      dataMode: "null"
+    });
 
     const rows = await MySqlDbClient.query<TempCustomer>(
       `
@@ -47,7 +53,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
     const response = await customerContext.post(`/api/v1/customer/profile/otp/${purpose}`, {
       failOnStatusCode: false
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.customer.profile.otp,
+      dataMode: "null"
+    });
   };
 
   test.beforeAll(async ({ playwright }) => {
@@ -77,7 +87,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp: "000000"
       }
     });
-    expect(usernameResponse.status()).toBe(401);
+    await expectApiErrorBody(usernameResponse, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/customer/profile/username"
+    });
 
     const emailResponse = await request.put("/api/v1/customer/profile/email", {
       failOnStatusCode: false,
@@ -86,7 +100,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         password: "wrong-password"
       }
     });
-    expect(emailResponse.status()).toBe(401);
+    await expectApiErrorBody(emailResponse, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/customer/profile/email"
+    });
 
     const passwordResponse = await request.put("/api/v1/customer/profile/password", {
       failOnStatusCode: false,
@@ -97,12 +115,20 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp: "000000"
       }
     });
-    expect(passwordResponse.status()).toBe(401);
+    await expectApiErrorBody(passwordResponse, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/customer/profile/password"
+    });
 
     const otpResponse = await request.post("/api/v1/customer/profile/otp/PROFILE_PHONE", {
       failOnStatusCode: false
     });
-    expect(otpResponse.status()).toBe(401);
+    await expectApiErrorBody(otpResponse, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/customer/profile/otp/PROFILE_PHONE"
+    });
   });
 
   test("[CUS-PRO-001A] sends OTP for phone update and marks row pending", async () => {
@@ -122,7 +148,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp
       }
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/customer/profile/username"
+    });
   });
 
   test("[CUS-PRO-002] updates email with valid current password", async () => {
@@ -134,7 +164,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         password: currentPassword
       }
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.customer.profile.email,
+      dataMode: "null"
+    });
 
     const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.email).toBe(newEmail);
@@ -149,7 +183,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         password: "wrong-password-123"
       }
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/customer/profile/email"
+    });
   });
 
   test("[CUS-PRO-004] updates phone with valid OTP", async () => {
@@ -164,7 +202,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp
       }
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.customer.profile.phone,
+      dataMode: "null"
+    });
 
     const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.phone).toBe(newPhone);
@@ -179,7 +221,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp: "111111"
       }
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/customer/profile/phone-number"
+    });
   });
 
   test("[CUS-PRO-005] updates password with valid OTP and changes DB hash", async ({ playwright }) => {
@@ -199,7 +245,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp
       }
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.customer.profile.password,
+      dataMode: "null"
+    });
 
     const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(newHashRows[0]!.password).not.toBe(oldHash);
@@ -210,7 +260,7 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
     const newLoginContext = await ApiSessionHelper.newContext(playwright);
     try {
       const oldLogin = await ApiSessionHelper.login(oldLoginContext, tempCustomer.username, currentPassword);
-      expect([400, 401]).toContain(oldLogin.status());
+      expect(oldLogin.status()).toBe(400);
 
       const newLogin = await ApiSessionHelper.login(newLoginContext, tempCustomer.username, newPassword);
       expect(newLogin.status()).toBe(200);
@@ -235,7 +285,11 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp
       }
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/customer/profile/password"
+    });
   });
 
   test("[CUS-PRO-007] rejects password update with invalid OTP", async () => {
@@ -248,6 +302,10 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp: "111111"
       }
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/customer/profile/password"
+    });
   });
 });

@@ -1,11 +1,11 @@
 package com.estate.service.impl;
 
-import com.estate.dto.ContractRentAreaView;
 import com.estate.converter.ExpiringInvoiceConverter;
 import com.estate.converter.InvoiceDetailConverter;
 import com.estate.converter.InvoiceFormConverter;
 import com.estate.converter.InvoiceListDTOConverter;
 import com.estate.converter.OverdueInvoiceListConverter;
+import com.estate.dto.ContractRentAreaView;
 import com.estate.dto.ExpiringInvoiceDTO;
 import com.estate.dto.InvoiceDetailDTO;
 import com.estate.dto.InvoiceDetailDetailDTO;
@@ -65,7 +65,9 @@ public class InvoiceServiceImpl implements InvoiceService {
             return String.format("%,d", value).replace(",", ".");
         }
         double billion = value / 1_000_000_000.0;
-        return billion % 1 == 0 ? String.format("%.0f tỷ", billion) : String.format("%.1f tỷ", billion);
+        return billion % 1 == 0
+                ? String.format("%.0f t\u1ef7", billion)
+                : String.format("%.1f t\u1ef7", billion);
     }
 
     @Override
@@ -95,7 +97,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public InvoiceFormDTO findById(Long invoiceId) {
         InvoiceEntity invoiceEntity = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
+                .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u00f3a \u0111\u01a1n."));
         InvoiceFormDTO dto = new InvoiceFormDTO();
         invoiceFormConverter.toDTO(invoiceEntity, dto);
         return dto;
@@ -181,7 +183,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public void delete(Long id) {
         InvoiceEntity invoice = invoiceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
+                .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u00f3a \u0111\u01a1n."));
         utilityMeterRepository.deleteByContractIdAndMonthAndYear(invoice.getContract().getId(), invoice.getMonth(), invoice.getYear());
         invoiceRepository.deleteById(id);
     }
@@ -189,7 +191,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public void deleteForStaff(Long id, Long staffId) {
         InvoiceEntity invoice = invoiceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
+                .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u00f3a \u0111\u01a1n."));
         assertStaffOwnsInvoice(invoice, staffId);
         delete(id);
     }
@@ -197,7 +199,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public InvoiceDetailDTO viewById(Long invoiceId) {
         InvoiceEntity invoiceEntity = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
+                .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u00f3a \u0111\u01a1n."));
         UtilityMeterEntity utilityMeter = utilityMeterService.findByContractIdAndMonthAndYear(
                 invoiceEntity.getContract().getId(), invoiceEntity.getMonth(), invoiceEntity.getYear());
         return invoiceDetailConverter.toDTO(invoiceEntity, utilityMeter);
@@ -207,7 +209,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     public void invoiceConfirm(Long id) {
         int updated = invoiceRepository.confirmInvoice(id);
         if (updated == 0) {
-            throw new BusinessException("Không thể xác nhận hóa đơn.");
+            throw new BusinessException("Kh\u00f4ng th\u1ec3 x\u00e1c nh\u1eadn h\u00f3a \u0111\u01a1n.");
         }
     }
 
@@ -224,7 +226,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         assertStaffOwnsContract(dto.getContractId(), staffId);
         if (dto.getId() != null) {
             InvoiceEntity existingInvoice = invoiceRepository.findById(dto.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
+                    .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u00f3a \u0111\u01a1n."));
             assertStaffOwnsInvoice(existingInvoice, staffId);
         }
         saveInternal(dto);
@@ -243,24 +245,24 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (dto.getId() == null) {
             if (invoiceRepository.existsByContractIdAndCustomerIdAndMonthAndYear(
                     dto.getContractId(), dto.getCustomerId(), invoiceMonth, invoiceYear)) {
-                throw new BusinessException("Hóa đơn của tháng và năm đã chọn đã tồn tại.");
+                throw new BusinessException("H\u00f3a \u0111\u01a1n c\u1ee7a th\u00e1ng v\u00e0 n\u0103m \u0111\u00e3 ch\u1ecdn \u0111\u00e3 t\u1ed3n t\u1ea1i.");
             }
             if (!isLastMonth) {
-                throw new BusinessException("Chỉ được tạo hóa đơn cho tháng liền trước.");
+                throw new BusinessException("Ch\u1ec9 \u0111\u01b0\u1ee3c t\u1ea1o h\u00f3a \u0111\u01a1n cho th\u00e1ng li\u1ec1n tr\u01b0\u1edbc.");
             }
         }
 
         InvoiceEntity invoice = dto.getId() == null
                 ? new InvoiceEntity()
                 : invoiceRepository.findById(dto.getId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
+                        .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u00f3a \u0111\u01a1n."));
 
         if (dto.getId() != null) {
             if (!"PENDING".equals(invoice.getStatus())) {
-                throw new BusinessException("Chỉ có thể cập nhật hóa đơn đang chờ xử lý.");
+                throw new BusinessException("Ch\u1ec9 c\u00f3 th\u1ec3 c\u1eadp nh\u1eadt h\u00f3a \u0111\u01a1n \u0111ang ch\u1edd x\u1eed l\u00fd.");
             }
             if (!isLastMonth) {
-                throw new BusinessException("Chỉ được cập nhật hóa đơn của tháng liền trước.");
+                throw new BusinessException("Ch\u1ec9 \u0111\u01b0\u1ee3c c\u1eadp nh\u1eadt h\u00f3a \u0111\u01a1n c\u1ee7a th\u00e1ng li\u1ec1n tr\u01b0\u1edbc.");
             }
         }
 
@@ -268,7 +270,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         LocalDate endOfInvoiceMonth = LocalDate.of(invoiceYear, invoiceMonth, 1)
                 .withDayOfMonth(LocalDate.of(invoiceYear, invoiceMonth, 1).lengthOfMonth());
         if (!dueDate.isAfter(endOfInvoiceMonth)) {
-            throw new BusinessException("Hạn thanh toán phải sau tháng lập hóa đơn.");
+            throw new BusinessException("H\u1ea1n thanh to\u00e1n ph\u1ea3i sau th\u00e1ng l\u1eadp h\u00f3a \u0111\u01a1n.");
         }
 
         invoiceFormConverter.toEntity(invoice, dto);
@@ -287,33 +289,37 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private void validateContractCustomerMatch(InvoiceFormDTO dto) {
         ContractEntity contract = contractRepository.findById(dto.getContractId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."));
+                .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u1ee3p \u0111\u1ed3ng."));
         if (contract.getCustomer() == null || !Objects.equals(contract.getCustomer().getId(), dto.getCustomerId())) {
-            throw new BusinessException("Khách hàng đã chọn không khớp với hợp đồng đã chọn.");
+            throw new BusinessException("Kh\u00e1ch h\u00e0ng \u0111\u00e3 ch\u1ecdn kh\u00f4ng kh\u1edbp v\u1edbi h\u1ee3p \u0111\u1ed3ng \u0111\u00e3 ch\u1ecdn.");
         }
     }
 
     private void assertStaffOwnsContract(Long contractId, Long staffId) {
         ContractEntity contract = contractRepository.findById(contractId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."));
+                .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u1ee3p \u0111\u1ed3ng."));
         if (contract.getStaff() == null || !Objects.equals(contract.getStaff().getId(), staffId)) {
-            throw new ForbiddenOperationException("Bạn không có quyền quản lý hóa đơn ngoài các hợp đồng được phân công.");
+            throw new ForbiddenOperationException(
+                    "B\u1ea1n kh\u00f4ng c\u00f3 quy\u1ec1n qu\u1ea3n l\u00fd h\u00f3a \u0111\u01a1n ngo\u00e0i c\u00e1c h\u1ee3p \u0111\u1ed3ng \u0111\u01b0\u1ee3c ph\u00e2n c\u00f4ng."
+            );
         }
     }
 
     private void assertStaffOwnsInvoice(InvoiceEntity invoice, Long staffId) {
         ContractEntity contract = invoice.getContract();
         if (contract == null || contract.getStaff() == null || !Objects.equals(contract.getStaff().getId(), staffId)) {
-            throw new ForbiddenOperationException("Bạn không có quyền quản lý hóa đơn ngoài các hợp đồng được phân công.");
+            throw new ForbiddenOperationException(
+                    "B\u1ea1n kh\u00f4ng c\u00f3 quy\u1ec1n qu\u1ea3n l\u00fd h\u00f3a \u0111\u01a1n ngo\u00e0i c\u00e1c h\u1ee3p \u0111\u1ed3ng \u0111\u01b0\u1ee3c ph\u00e2n c\u00f4ng."
+            );
         }
     }
 
     @Override
     public Integer getRentArea(Long id) {
         InvoiceEntity invoice = invoiceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
+                .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u00f3a \u0111\u01a1n."));
         ContractEntity contract = contractRepository.findById(invoice.getContract().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."));
+                .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u1ee3p \u0111\u1ed3ng."));
         return contract.getRentArea();
     }
 
@@ -327,12 +333,12 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public void markPaid(Long invoiceId, String method, String txnRef) {
         InvoiceEntity invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
+                .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u00f3a \u0111\u01a1n."));
         if ("PAID".equalsIgnoreCase(invoice.getStatus())) {
             return;
         }
         if (!"PENDING".equalsIgnoreCase(invoice.getStatus()) && !"OVERDUE".equalsIgnoreCase(invoice.getStatus())) {
-            throw new BusinessException("Chỉ có thể đánh dấu đã thanh toán với hóa đơn đến hạn thanh toán.");
+            throw new BusinessException("Ch\u1ec9 c\u00f3 th\u1ec3 \u0111\u00e1nh d\u1ea5u \u0111\u00e3 thanh to\u00e1n v\u1edbi h\u00f3a \u0111\u01a1n \u0111\u1ebfn h\u1ea1n thanh to\u00e1n.");
         }
         invoice.setStatus("PAID");
         invoice.setPaidDate(LocalDateTime.now());

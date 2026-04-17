@@ -1,23 +1,22 @@
 package com.estate.api.v1.payment;
 
+import com.estate.exception.BusinessException;
 import com.estate.exception.ForbiddenOperationException;
 import com.estate.exception.ResourceNotFoundException;
 import com.estate.repository.InvoiceRepository;
 import com.estate.repository.entity.InvoiceEntity;
 import com.estate.security.CustomUserDetails;
-import com.estate.security.jwt.JwtProperties;
 import com.estate.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -39,7 +38,6 @@ import java.util.Objects;
 public class PaymentV1API {
     private final InvoiceRepository invoiceRepository;
     private final InvoiceService invoiceService;
-    private final JwtProperties jwtProperties;
 
     @Value("${payment.qr.bank-bin:970422}")
     private String bankBin;
@@ -50,19 +48,114 @@ public class PaymentV1API {
     @Value("${payment.qr.account-name:MOONNEST}")
     private String accountName;
 
-    @ResponseBody
-    @GetMapping(value = "/qr/{invoiceId}", produces = "text/html; charset=UTF-8")
+    @Value("${payment.qr.confirm-secret}")
+    private String paymentConfirmSecret;
+
+    @GetMapping("/qr/{invoiceId}")
     public String showQrPayment(@PathVariable Long invoiceId,
-                                @AuthenticationPrincipal CustomUserDetails user) {
-        InvoiceEntity invoice = getCustomerInvoice(invoiceId, user);
+                                @AuthenticationPrincipal CustomUserDetails user,
+                                Model model) {
+        if (!isCustomer(user)) {
+            return "redirect:/login";
+        }
 
-        BigDecimal amount = invoice.getTotalAmount() == null ? BigDecimal.ZERO : invoice.getTotalAmount();
-        String amountValue = amount.stripTrailingZeros().toPlainString().replace(".", "");
-        String transferContent = "MOONNEST INV " + invoiceId;
-        String formattedAmount = formatMoney(amount);
-        String confirmToken = buildConfirmToken(invoice, user);
+        try {
+            InvoiceEntity invoice = getCustomerInvoice(invoiceId, user);
 
-        String qrUrl = "https://img.vietqr.io/image/%s-%s-compact2.png?amount=%s&addInfo=%s&accountName=%s"
+            if ("PAID".equalsIgnoreCase(invoice.getStatus())) {
+                return redirectToInvoiceList("payAlreadyPaid");
+            }
+
+            if (!isPayableStatus(invoice.getStatus())) {
+                return redirectToInvoiceList("payInvalidStatus");
+            }
+
+            BigDecimal amount = invoice.getTotalAmount() == null ? BigDecimal.ZERO : invoice.getTotalAmount();
+            String amountValue = amount.stripTrailingZeros().toPlainString().replace(".", "");
+            String transferContent = "MOONNEST INV " + invoiceId;
+
+            model.addAttribute("invoiceId", invoiceId);
+            model.addAttribute("formattedAmount", formatMoney(amount));
+            model.addAttribute("bankBin", bankBin);
+            model.addAttribute("accountNo", accountNo);
+            model.addAttribute("accountName", accountName);
+            model.addAttribute("transferContent", transferContent);
+            model.addAttribute("confirmToken", buildConfirmToken(invoice, user));
+            model.addAttribute("qrUrl", buildQrUrl(amountValue, transferContent));
+
+            return "customer/payment-qr";
+        } catch (ResourceNotFoundException ex) {
+            return redirectToInvoiceList("payNotFound");
+        } catch (ForbiddenOperationException ex) {
+            return redirectToInvoiceList("payForbidden");
+        }
+    }
+
+    @GetMapping("/qr/confirm/{invoiceId}")
+    public String rejectLegacyConfirm() {
+        return redirectToInvoiceList("payFail");
+    }
+
+    @PostMapping("/qr/confirm/{invoiceId}")
+    public String confirmQrPayment(@PathVariable Long invoiceId,
+                                   @AuthenticationPrincipal CustomUserDetails user,
+                                   @RequestParam String token) {
+        if (!isCustomer(user)) {
+            return "redirect:/login";
+        }
+
+        try {
+            InvoiceEntity invoice = getCustomerInvoice(invoiceId, user);
+
+            if (!MessageDigest.isEqual(
+                    token.getBytes(StandardCharsets.UTF_8),
+                    buildConfirmToken(invoice, user).getBytes(StandardCharsets.UTF_8)
+            )) {
+                return redirectToInvoiceList("payFail");
+            }
+
+            if ("PAID".equalsIgnoreCase(invoice.getStatus())) {
+                return redirectToInvoiceList("payAlreadyPaid");
+            }
+
+            if (!isPayableStatus(invoice.getStatus())) {
+                return redirectToInvoiceList("payInvalidStatus");
+            }
+
+            String transactionCode = "QR-" + invoiceId + "-"
+                    + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            invoiceService.markPaid(invoiceId, "BANK_QR", transactionCode);
+            return redirectToInvoiceList("paySuccess");
+        } catch (ResourceNotFoundException ex) {
+            return redirectToInvoiceList("payNotFound");
+        } catch (ForbiddenOperationException ex) {
+            return redirectToInvoiceList("payForbidden");
+        } catch (BusinessException ex) {
+            return redirectToInvoiceList("payInvalidStatus");
+        }
+    }
+
+    private InvoiceEntity getCustomerInvoice(Long invoiceId, CustomUserDetails user) {
+        InvoiceEntity invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kh\u00f4ng t\u00ecm th\u1ea5y h\u00f3a \u0111\u01a1n."));
+
+        if (invoice.getCustomer() == null || !Objects.equals(invoice.getCustomer().getId(), user.getUserId())) {
+            throw new ForbiddenOperationException("B\u1ea1n kh\u00f4ng c\u00f3 quy\u1ec1n truy c\u1eadp h\u00f3a \u0111\u01a1n n\u00e0y.");
+        }
+
+        return invoice;
+    }
+
+    private boolean isCustomer(CustomUserDetails user) {
+        return user != null && "CUSTOMER".equalsIgnoreCase(user.getRole());
+    }
+
+    private boolean isPayableStatus(String status) {
+        return "PENDING".equalsIgnoreCase(status) || "OVERDUE".equalsIgnoreCase(status);
+    }
+
+    private String buildQrUrl(String amountValue, String transferContent) {
+        return "https://img.vietqr.io/image/%s-%s-compact2.png?amount=%s&addInfo=%s&accountName=%s"
                 .formatted(
                         bankBin,
                         accountNo,
@@ -70,107 +163,10 @@ public class PaymentV1API {
                         urlEncode(transferContent),
                         urlEncode(accountName)
                 );
-
-        return """
-                <html lang=\"vi\">
-                  <head>
-                    <meta charset=\"utf-8\"/>
-                    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>
-                    <title>Thanh toán QR</title>
-                    <style>
-                      body { font-family: Arial, sans-serif; background: #f4f6fb; margin: 0; padding: 24px; color: #1f2937; }
-                      .wrap { max-width: 520px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
-                      h1 { font-size: 28px; margin: 0 0 8px; }
-                      p { margin: 6px 0; line-height: 1.5; }
-                      .qr { text-align: center; margin: 24px 0; }
-                      .qr img { width: 280px; max-width: 100%%; border-radius: 12px; border: 1px solid #e5e7eb; }
-                      .meta { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
-                      .actions { display: flex; gap: 12px; margin-top: 20px; }
-                      .btn { flex: 1; text-align: center; padding: 12px 16px; border-radius: 10px; text-decoration: none; font-weight: 700; }
-                      .btn-primary { background: #1d4ed8; color: #fff; }
-                      .btn-secondary { background: #e5e7eb; color: #111827; }
-                      .hint { font-size: 13px; color: #6b7280; }
-                    </style>
-                  </head>
-                  <body>
-                    <div class=\"wrap\">
-                      <h1>Thanh toán bằng QR</h1>
-                      <p>Quét mã bằng ứng dụng ngân hàng để thanh toán hóa đơn.</p>
-                      <div class=\"qr\">
-                        <img src=\"%s\" alt=\"QR thanh toán hóa đơn %d\"/>
-                      </div>
-                      <div class=\"meta\">
-                        <p><strong>Mã hóa đơn:</strong> #%d</p>
-                        <p><strong>Số tiền:</strong> %s VND</p>
-                        <p><strong>Mã ngân hàng:</strong> %s</p>
-                        <p><strong>Số tài khoản:</strong> %s</p>
-                        <p><strong>Chủ tài khoản:</strong> %s</p>
-                        <p><strong>Nội dung CK:</strong> %s</p>
-                      </div>
-                      <p class=\"hint\">Sau khi chuyển khoản thành công, bấm \"Tôi đã thanh toán\" để hệ thống ghi nhận theo chế độ demo.</p>
-                      <div class=\"actions\">
-                        <form style=\"flex: 1; margin: 0;\" method=\"post\" action=\"/payment-demo/qr/confirm/%d\">
-                          <input type=\"hidden\" name=\"token\" value=\"%s\"/>
-                          <button class=\"btn btn-primary\" style=\"width: 100%%; border: 0; cursor: pointer;\" type=\"submit\">Tôi đã thanh toán</button>
-                        </form>
-                        <a class=\"btn btn-secondary\" href=\"/customer/invoice/list\">Quay lại</a>
-                      </div>
-                    </div>
-                  </body>
-                </html>
-                """.formatted(
-                qrUrl,
-                invoiceId,
-                invoiceId,
-                formattedAmount,
-                bankBin,
-                accountNo,
-                accountName,
-                transferContent,
-                invoiceId,
-                confirmToken
-        );
     }
 
-    @GetMapping("/qr/confirm/{invoiceId}")
-    public String rejectLegacyConfirm() {
-        return "redirect:/customer/invoice/list?payFail";
-    }
-
-    @PostMapping("/qr/confirm/{invoiceId}")
-    public String confirmQrPayment(@PathVariable Long invoiceId,
-                                   @AuthenticationPrincipal CustomUserDetails user,
-                                   @RequestParam String token) {
-        InvoiceEntity invoice = getCustomerInvoice(invoiceId, user);
-        if (!MessageDigest.isEqual(
-                token.getBytes(StandardCharsets.UTF_8),
-                buildConfirmToken(invoice, user).getBytes(StandardCharsets.UTF_8)
-        )) {
-            return "redirect:/customer/invoice/list?payFail";
-        }
-
-        if (!"PAID".equalsIgnoreCase(invoice.getStatus())) {
-            String transactionCode = "QR-" + invoiceId + "-"
-                    + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-            invoiceService.markPaid(invoiceId, "BANK_QR", transactionCode);
-        }
-
-        return "redirect:/customer/invoice/list?paySuccess";
-    }
-
-    private InvoiceEntity getCustomerInvoice(Long invoiceId, CustomUserDetails user) {
-        if (user == null || !"CUSTOMER".equalsIgnoreCase(user.getRole())) {
-            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized payment access");
-        }
-
-        InvoiceEntity invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
-
-        if (invoice.getCustomer() == null || !Objects.equals(invoice.getCustomer().getId(), user.getUserId())) {
-            throw new ForbiddenOperationException("Bạn không có quyền truy cập hóa đơn này.");
-        }
-
-        return invoice;
+    private String redirectToInvoiceList(String queryFlag) {
+        return "redirect:/customer/invoice/list?" + queryFlag;
     }
 
     private String urlEncode(String value) {
@@ -186,10 +182,10 @@ public class PaymentV1API {
     }
 
     private String buildConfirmToken(InvoiceEntity invoice, CustomUserDetails user) {
-        String payload = invoice.getId() + ":" + user.getUserId() + ":" + invoice.getTotalAmount() + ":" + invoice.getStatus();
+        String payload = invoice.getId() + ":" + user.getUserId() + ":" + invoice.getTotalAmount();
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            mac.init(new SecretKeySpec(paymentConfirmSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             byte[] signature = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(signature);
         } catch (Exception ex) {

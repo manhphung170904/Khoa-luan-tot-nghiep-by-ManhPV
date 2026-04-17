@@ -1,6 +1,8 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { ApiFileFixtures } from "@api/apiFileFixtures";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
+import { expectApiErrorBody, expectApiMessage, expectArrayBody, expectObjectBody } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
@@ -31,7 +33,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
         failOnStatusCode: false,
         data: { buildingId: tempBuilding.id, authorityName: "Anonymous", authorityType: "NOTARY" }
       });
-      expect(anonymousLegalAuthority.status()).toBe(401);
+      await expectApiErrorBody(anonymousLegalAuthority, {
+        status: 401,
+        code: "UNAUTHORIZED",
+        path: "/api/v1/admin/building-additional-information/legal-authorities"
+      });
 
       const invalidAuthorityName = await admin.post("/api/v1/admin/building-additional-information/legal-authorities", {
         failOnStatusCode: false,
@@ -41,7 +47,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
           authorityType: "NOTARY"
         }
       });
-      expect(invalidAuthorityName.status()).toBe(400);
+      await expectApiErrorBody(invalidAuthorityName, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/building-additional-information/legal-authorities"
+      });
 
       const createLegalAuthority = await admin.post("/api/v1/admin/building-additional-information/legal-authorities", {
         failOnStatusCode: false,
@@ -55,10 +65,12 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
           note: "Auto test"
         }
       });
-      expect(createLegalAuthority.status()).toBe(200);
-      const legalAuthorityBody = (await createLegalAuthority.json()) as { id: number; authorityName?: string; buildingId?: number };
+      const legalAuthorityBody = await expectObjectBody<{ id: number; authorityName?: string; buildingId?: number }>(
+        createLegalAuthority,
+        200,
+        ["id", "authorityName", "buildingId"]
+      );
       legalAuthorityId = legalAuthorityBody.id;
-      expect(legalAuthorityBody.id).toBeTruthy();
       expect(legalAuthorityBody.authorityName).toBe("Auto Notary Office");
       expect(legalAuthorityBody.buildingId).toBe(tempBuilding.id);
 
@@ -66,8 +78,7 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
         `/api/v1/admin/building-additional-information/legal-authorities/${tempBuilding.id}`,
         { failOnStatusCode: false }
       );
-      expect(listLegalAuthorities.status()).toBe(200);
-      const legalAuthorityList = (await listLegalAuthorities.json()) as Array<{ id: number; authorityName?: string }>;
+      const legalAuthorityList = await expectArrayBody<{ id: number; authorityName?: string }>(listLegalAuthorities, 200);
       expect(legalAuthorityList.some((item) => item.id === legalAuthorityId && item.authorityName === "Auto Notary Office")).toBeTruthy();
 
       const updateLegalAuthority = await admin.put(
@@ -85,8 +96,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
           }
         }
       );
-      expect(updateLegalAuthority.status()).toBe(200);
-      const updateLegalAuthorityBody = (await updateLegalAuthority.json()) as { id?: number; authorityName?: string };
+      const updateLegalAuthorityBody = await expectObjectBody<{ id?: number; authorityName?: string }>(
+        updateLegalAuthority,
+        200,
+        ["id", "authorityName"]
+      );
       expect(updateLegalAuthorityBody.id).toBe(legalAuthorityId);
       expect(updateLegalAuthorityBody.authorityName).toBe("Auto Law Office Updated");
 
@@ -117,18 +131,15 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
           longitude: 106.66
         }
       });
-      expect(createAmenity.status()).toBe(200);
-      const amenityBody = (await createAmenity.json()) as { id: number; name?: string };
+      const amenityBody = await expectObjectBody<{ id: number; name?: string }>(createAmenity, 200, ["id", "name"]);
       amenityId = amenityBody.id;
-      expect(amenityBody.id).toBeTruthy();
       expect(amenityBody.name).toBe("Auto Test Park");
 
       const listAmenities = await admin.get(
         `/api/v1/admin/building-additional-information/nearby-amenities/${tempBuilding.id}`,
         { failOnStatusCode: false }
       );
-      expect(listAmenities.status()).toBe(200);
-      const amenityList = (await listAmenities.json()) as Array<{ id: number }>;
+      const amenityList = await expectArrayBody<{ id: number }>(listAmenities, 200);
       expect(amenityList.some((item) => item.id === amenityId)).toBeTruthy();
 
       const updateAmenity = await admin.put(
@@ -146,8 +157,7 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
           }
         }
       );
-      expect(updateAmenity.status()).toBe(200);
-      const updateAmenityBody = (await updateAmenity.json()) as { id?: number; name?: string };
+      const updateAmenityBody = await expectObjectBody<{ id?: number; name?: string }>(updateAmenity, 200, ["id", "name"]);
       expect(updateAmenityBody.id).toBe(amenityId);
       expect(updateAmenityBody.name).toBe("Auto Test Park Updated");
 
@@ -178,18 +188,15 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
           note: "Auto test"
         }
       });
-      expect(createSupplier.status()).toBe(200);
-      const supplierBody = (await createSupplier.json()) as { id: number; name?: string };
+      const supplierBody = await expectObjectBody<{ id: number; name?: string }>(createSupplier, 200, ["id", "name"]);
       supplierId = supplierBody.id;
-      expect(supplierBody.id).toBeTruthy();
       expect(supplierBody.name).toBe("Auto Cleaning Co");
 
       const listSuppliers = await admin.get(
         `/api/v1/admin/building-additional-information/suppliers/${tempBuilding.id}`,
         { failOnStatusCode: false }
       );
-      expect(listSuppliers.status()).toBe(200);
-      const supplierList = (await listSuppliers.json()) as Array<{ id: number }>;
+      const supplierList = await expectArrayBody<{ id: number }>(listSuppliers, 200);
       expect(supplierList.some((item) => item.id === supplierId)).toBeTruthy();
 
       const updateSupplier = await admin.put(
@@ -207,8 +214,7 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
           }
         }
       );
-      expect(updateSupplier.status()).toBe(200);
-      const updateSupplierBody = (await updateSupplier.json()) as { id?: number; name?: string };
+      const updateSupplierBody = await expectObjectBody<{ id?: number; name?: string }>(updateSupplier, 200, ["id", "name"]);
       expect(updateSupplierBody.id).toBe(supplierId);
       expect(updateSupplierBody.name).toBe("Auto Cleaning Co Updated");
 
@@ -235,18 +241,19 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
           note: "Auto test"
         }
       });
-      expect(createPlanningMap.status()).toBe(200);
-      const planningMapBody = (await createPlanningMap.json()) as { id: number; mapType?: string };
+      const planningMapBody = await expectObjectBody<{ id: number; mapType?: string }>(
+        createPlanningMap,
+        200,
+        ["id", "mapType"]
+      );
       planningMapId = planningMapBody.id;
-      expect(planningMapBody.id).toBeTruthy();
       expect(planningMapBody.mapType).toBe("Planning Auto");
 
       const listPlanningMaps = await admin.get(
         `/api/v1/admin/building-additional-information/planning-maps/${tempBuilding.id}`,
         { failOnStatusCode: false }
       );
-      expect(listPlanningMaps.status()).toBe(200);
-      const planningMapList = (await listPlanningMaps.json()) as Array<{ id: number }>;
+      const planningMapList = await expectArrayBody<{ id: number }>(listPlanningMaps, 200);
       expect(planningMapList.some((item) => item.id === planningMapId)).toBeTruthy();
 
       const updatePlanningMap = await admin.put(
@@ -264,8 +271,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
           }
         }
       );
-      expect(updatePlanningMap.status()).toBe(200);
-      const updatePlanningMapBody = (await updatePlanningMap.json()) as { id?: number; mapType?: string };
+      const updatePlanningMapBody = await expectObjectBody<{ id?: number; mapType?: string }>(
+        updatePlanningMap,
+        200,
+        ["id", "mapType"]
+      );
       expect(updatePlanningMapBody.id).toBe(planningMapId);
       expect(updatePlanningMapBody.mapType).toBe("Planning Auto Updated");
 
@@ -314,7 +324,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
         file: ApiFileFixtures.planningMapJpg()
       }
     });
-    expect(anonymousUpload.status()).toBe(401);
+    await expectApiErrorBody(anonymousUpload, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/admin/building-additional-information/planning-maps/image"
+    });
 
     const invalidMime = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -322,9 +336,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
         file: ApiFileFixtures.invalidText()
       }
     });
-    expect(invalidMime.status()).toBe(400);
-    const invalidMimeBody = (await invalidMime.json()) as { message?: string };
-    expect(invalidMimeBody.message).toBeTruthy();
+    await expectApiErrorBody(invalidMime, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/building-additional-information/planning-maps/image"
+    });
 
     const invalidExtension = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -336,9 +352,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
         }
       }
     });
-    expect(invalidExtension.status()).toBe(400);
-    const invalidExtensionBody = (await invalidExtension.json()) as { message?: string };
-    expect(invalidExtensionBody.message).toBeTruthy();
+    await expectApiErrorBody(invalidExtension, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/building-additional-information/planning-maps/image"
+    });
 
     const oversizedUpload = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -351,9 +369,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
       }
     });
     test.fail(true, "Backend/runtime currently accepts oversized planning-map upload instead of returning 400.");
-    expect(oversizedUpload.status()).toBe(400);
-    const oversizedBody = (await oversizedUpload.json()) as { message?: string };
-    expect(oversizedBody.message).toBeTruthy();
+    await expectApiErrorBody(oversizedUpload, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/building-additional-information/planning-maps/image"
+    });
 
     const validUpload = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -361,12 +381,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
         file: ApiFileFixtures.planningMapJpg()
       }
     });
-    expect(validUpload.status()).toBe(200);
-    const validUploadBody = (await validUpload.json()) as {
-      message?: string;
-      data?: { filename?: string };
-    };
-    expect(validUploadBody.message).toBeTruthy();
+    const validUploadBody = await expectApiMessage<{ message?: string; data?: { filename?: string } }>(validUpload, {
+      status: 200,
+      message: apiExpectedMessages.admin.buildingAdditionalInformation.upload,
+      dataMode: "object"
+    });
     expect(validUploadBody.data?.filename).toMatch(/^planning_.*\.jpg$/);
   });
 
@@ -378,31 +397,39 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
         data: { buildingId: 999999, authorityName: "Missing", authorityType: "NOTARY" }
       }
     );
-    expect(missingLegalAuthority.status()).toBe(400);
-    const missingLegalAuthorityBody = (await missingLegalAuthority.json()) as { message?: string };
-    expect(missingLegalAuthorityBody.message).toBeTruthy();
+    await expectApiErrorBody(missingLegalAuthority, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/building-additional-information/legal-authorities/999999"
+    });
 
     const missingAmenity = await admin.delete(
       "/api/v1/admin/building-additional-information/nearby-amenities/999999",
       { failOnStatusCode: false }
     );
-    expect(missingAmenity.status()).toBe(400);
-    const missingAmenityBody = (await missingAmenity.json()) as { message?: string };
-    expect(missingAmenityBody.message).toBeTruthy();
+    await expectApiErrorBody(missingAmenity, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/building-additional-information/nearby-amenities/999999"
+    });
 
     const missingSupplier = await admin.delete("/api/v1/admin/building-additional-information/suppliers/999999", {
       failOnStatusCode: false
     });
-    expect(missingSupplier.status()).toBe(400);
-    const missingSupplierBody = (await missingSupplier.json()) as { message?: string };
-    expect(missingSupplierBody.message).toBeTruthy();
+    await expectApiErrorBody(missingSupplier, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/building-additional-information/suppliers/999999"
+    });
 
     const missingPlanningMap = await admin.delete(
       "/api/v1/admin/building-additional-information/planning-maps/999999",
       { failOnStatusCode: false }
     );
-    expect(missingPlanningMap.status()).toBe(400);
-    const missingPlanningMapBody = (await missingPlanningMap.json()) as { message?: string };
-    expect(missingPlanningMapBody.message).toBeTruthy();
+    await expectApiErrorBody(missingPlanningMap, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/building-additional-information/planning-maps/999999"
+    });
   });
 });

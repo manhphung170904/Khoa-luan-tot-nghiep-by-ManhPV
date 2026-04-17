@@ -1,4 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expectApiErrorBody, expectApiMessage } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { env } from "@config/env";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
@@ -25,7 +27,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
       failOnStatusCode: false,
       data: payload
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.admin.staff.create,
+      dataMode: "null"
+    });
 
     const rows = await MySqlDbClient.query<TempStaff>(
       `
@@ -45,7 +51,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
     const response = await staffContext.post(`/api/v1/staff/profile/otp/${purpose}`, {
       failOnStatusCode: false
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.staff.profile.otp,
+      dataMode: "null"
+    });
   };
 
   test.beforeAll(async ({ playwright }) => {
@@ -72,7 +82,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp: "000000"
       }
     });
-    expect(usernameResponse.status()).toBe(401);
+    await expectApiErrorBody(usernameResponse, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/staff/profile/username"
+    });
 
     const emailResponse = await request.put("/api/v1/staff/profile/email", {
       failOnStatusCode: false,
@@ -81,7 +95,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         password: "wrong-password"
       }
     });
-    expect(emailResponse.status()).toBe(401);
+    await expectApiErrorBody(emailResponse, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/staff/profile/email"
+    });
 
     const phoneResponse = await request.put("/api/v1/staff/profile/phone-number", {
       failOnStatusCode: false,
@@ -90,12 +108,20 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp: "000000"
       }
     });
-    expect(phoneResponse.status()).toBe(401);
+    await expectApiErrorBody(phoneResponse, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/staff/profile/phone-number"
+    });
 
     const otpResponse = await request.post("/api/v1/staff/profile/otp/PROFILE_USERNAME", {
       failOnStatusCode: false
     });
-    expect(otpResponse.status()).toBe(401);
+    await expectApiErrorBody(otpResponse, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/staff/profile/otp/PROFILE_USERNAME"
+    });
   });
 
   test("[STF-PRO-002] sends OTP for username update and marks row pending", async () => {
@@ -112,7 +138,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp: "111111"
       }
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/staff/profile/username"
+    });
   });
 
   test("[STF-PRO-004] updates username with valid OTP", async () => {
@@ -127,7 +157,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp
       }
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.staff.profile.username,
+      dataMode: "null"
+    });
 
     const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.username).toBe(nextUsername);
@@ -142,7 +176,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         password: "wrong-password"
       }
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/staff/profile/email"
+    });
   });
 
   test("[STF-PRO-006] updates email with valid current password", async () => {
@@ -154,7 +192,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         password: currentPassword
       }
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.staff.profile.email,
+      dataMode: "null"
+    });
 
     const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.email).toBe(newEmail);
@@ -173,7 +215,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp
       }
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.staff.profile.phone,
+      dataMode: "null"
+    });
 
     const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.phone).toBe(nextPhone);
@@ -188,7 +234,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp: "111111"
       }
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/staff/profile/phone-number"
+    });
   });
 
   test("[STF-PRO-008] rejects password update when new password is too short", async () => {
@@ -204,7 +254,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp
       }
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/staff/profile/password"
+    });
   });
 
   test("[STF-PRO-009] updates password with valid OTP", async ({ playwright }) => {
@@ -224,7 +278,11 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp
       }
     });
-    expect(response.status()).toBe(200);
+    await expectApiMessage(response, {
+      status: 200,
+      message: apiExpectedMessages.staff.profile.password,
+      dataMode: "null"
+    });
 
     const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
     expect(newHashRows[0]!.password).not.toBe(oldHash);
@@ -235,7 +293,7 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
     const newLoginContext = await ApiSessionHelper.newContext(playwright);
     try {
       const oldLogin = await ApiSessionHelper.login(oldLoginContext, tempStaff.username, currentPassword);
-      expect([400, 401]).toContain(oldLogin.status());
+      expect(oldLogin.status()).toBe(400);
 
       const newLogin = await ApiSessionHelper.login(newLoginContext, tempStaff.username, newPassword);
       expect(newLogin.status()).toBe(200);

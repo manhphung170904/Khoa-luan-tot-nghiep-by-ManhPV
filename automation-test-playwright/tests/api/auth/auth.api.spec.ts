@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { env } from "@config/env";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
+import { expectStatusExact } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
 test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @otp @regression", () => {
@@ -49,7 +50,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         maxRedirects: 0
       });
 
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "Valid login should redirect to login-success");
       expect(response.headers().location).toContain("/login-success");
 
       const cookies = response.headersArray().filter((header) => header.name.toLowerCase() === "set-cookie");
@@ -68,7 +69,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         maxRedirects: 0
       });
 
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "Blank login should redirect with error");
       expect(response.headers().location).toContain("errorMessage");
     });
 
@@ -79,7 +80,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         maxRedirects: 0
       });
 
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "Wrong-credential login should redirect with error");
       expect(response.headers().location).toContain("errorMessage");
     });
   });
@@ -94,7 +95,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         maxRedirects: 0
       });
 
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "Registration OTP send should redirect to verify");
       expect(response.headers().location).toContain("/register/verify");
       expect(response.headers().location).toContain("email=");
 
@@ -114,7 +115,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         maxRedirects: 0
       });
 
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "Registration OTP verify should redirect to complete");
       expect(response.headers().location).toContain("/register/complete");
       expect(response.headers().location).toContain("ticket=");
       expect(response.headers().location).toContain("email=");
@@ -143,7 +144,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         maxRedirects: 0
       });
 
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "Registration complete should redirect to login-success");
       expect(response.headers().location).toContain("/login-success");
       const cookies = response.headersArray().filter((header) => header.name.toLowerCase() === "set-cookie");
       expect(cookies.length).toBeGreaterThan(0);
@@ -171,7 +172,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         maxRedirects: 0
       });
 
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "Registration complete mismatch should redirect with error");
       expect(response.headers().location).toContain("/register/complete");
       expect(response.headers().location).toContain("errorMessage");
     });
@@ -189,7 +190,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "MVC forgot-password currently redirects");
       expect(response.headers().location).toContain("/auth/reset-password");
 
       const rows = await MySqlDbClient.query<{ id: number; email: string; purpose: string; status: string }>(
@@ -225,7 +226,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         maxRedirects: 0
       });
 
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "Reset password with invalid OTP should redirect with error");
       expect(response.headers().location).toContain("/auth/reset-password");
       expect(response.headers().location).toContain("errorMessage");
     });
@@ -240,7 +241,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expect(forgotPasswordResponse.status()).toBe(200);
+      expectStatusExact(forgotPasswordResponse, 200, "API forgot-password should succeed");
 
       const otp = await ApiOtpAccessHelper.latestOtp(request, validUser.email, "RESET_PASSWORD");
 
@@ -255,7 +256,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         maxRedirects: 0
       });
 
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "Reset password success should redirect to login");
       expect(response.headers().location).toContain("/login");
       expect(response.headers().location).toContain("successMessage");
 
@@ -264,7 +265,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expect(oldLogin.status()).toBe(302);
+      expectStatusExact(oldLogin, 302, "Old password login should redirect with error");
       expect(oldLogin.headers().location).toContain("errorMessage");
 
       const newLogin = await request.post("/login", {
@@ -272,7 +273,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expect(newLogin.status()).toBe(302);
+      expectStatusExact(newLogin, 302, "New password login should redirect to success");
       expect(newLogin.headers().location).toContain("/login-success");
 
       validUser.password = nextPassword;
@@ -288,13 +289,13 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expect(loginResponse.status()).toBe(302);
+      expectStatusExact(loginResponse, 302, "Pre-logout login should redirect");
 
       const response = await request.post("/auth/logout", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expect(response.status()).toBe(302);
+      expectStatusExact(response, 302, "Logout should redirect to login");
       expect(response.headers().location).toContain("/login?logout");
 
       const cookies = response.headersArray().filter((header) => header.name.toLowerCase() === "set-cookie");

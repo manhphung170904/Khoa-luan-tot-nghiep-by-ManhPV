@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectArrayBody, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
 test.describe("Public Page API Tests @api @api-read @regression", () => {
@@ -20,10 +21,7 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
           ward
         }
       });
-      expect(response.status()).toBe(200);
-
-      const data = (await response.json()) as Array<Record<string, unknown>>;
-      expect(Array.isArray(data)).toBeTruthy();
+      const data = await expectArrayBody<Record<string, unknown>>(response, 200);
 
       if (data.length > 0) {
         expect(data[0]).toHaveProperty("id");
@@ -50,10 +48,7 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
           propertyType: "INVALID_TYPE"
         }
       });
-      expect(response.status()).toBe(200);
-
-      const data = (await response.json()) as unknown[];
-      expect(Array.isArray(data)).toBeTruthy();
+      const data = await expectArrayBody(response, 200);
       expect(data.length).toBeGreaterThanOrEqual(0);
     });
 
@@ -64,11 +59,7 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
           size: 5
         }
       });
-      expect(response.status()).toBe(200);
-
-      const data = (await response.json()) as { content?: unknown[]; totalElements?: number };
-      expect(Array.isArray(data.content)).toBeTruthy();
-      expect(typeof data.totalElements).toBe("number");
+      const data = await expectPageBody(response, { status: 200 });
       if ((data.content?.length ?? 0) > 0) {
         const first = data.content?.[0] as Record<string, unknown>;
         expect(first.id).toBeTruthy();
@@ -79,15 +70,13 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
 
     test("[API_TC_029] [Happy Path] Filters endpoint exposes public metadata @regression", async ({ request }) => {
       const response = await request.get("/api/v1/public/buildings/filters");
-      expect(response.status()).toBe(200);
-
-      const data = (await response.json()) as {
+      const data = await expectObjectBody<{
         districts?: unknown[];
         wards?: unknown[];
         streets?: unknown[];
         directions?: unknown[];
         levels?: unknown[];
-      };
+      }>(response, 200, ["districts", "wards", "streets", "directions", "levels"]);
       expect(Array.isArray(data.districts)).toBeTruthy();
       expect(Array.isArray(data.wards)).toBeTruthy();
       expect(Array.isArray(data.streets)).toBeTruthy();

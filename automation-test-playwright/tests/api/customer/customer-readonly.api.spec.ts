@@ -1,6 +1,6 @@
 ﻿import { test, expect } from "@playwright/test";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
-import { expectStatusExact } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectArrayBody, expectPageBody } from "@api/apiContractUtils";
 
 type ReadonlyModule = {
   id: string;
@@ -21,7 +21,10 @@ test.describe("Customer API Read-only Contract Tests @api @regression", () => {
       const context = await createAnonymousContext(playwright);
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        expectStatusExact(response, 401, `${module.name} readonly API must reject anonymous customer access`);
+        await expectApiErrorBody(response, {
+          status: 401,
+          code: "UNAUTHORIZED"
+        });
       } finally {
         await context.dispose();
       }
@@ -31,7 +34,10 @@ test.describe("Customer API Read-only Contract Tests @api @regression", () => {
       const context = await createRoleContext(playwright, "staff");
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        expectStatusExact(response, 403, `${module.name} readonly API must reject staff role`);
+        await expectApiErrorBody(response, {
+          status: 403,
+          code: "FORBIDDEN"
+        });
       } finally {
         await context.dispose();
       }
@@ -41,14 +47,10 @@ test.describe("Customer API Read-only Contract Tests @api @regression", () => {
       const context = await createRoleContext(playwright, "customer");
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        expectStatusExact(response, 200, `${module.name} readonly API should succeed for customer role`);
-
-        const payload = (await response.json()) as { content?: unknown[]; totalElements?: number } | unknown[];
         if (module.expectsPage) {
-          expect(Array.isArray((payload as { content?: unknown[] }).content)).toBeTruthy();
-          expect(typeof (payload as { totalElements?: number }).totalElements).toBe("number");
+          await expectPageBody(response, { status: 200 });
         } else {
-          expect(Array.isArray(payload)).toBeTruthy();
+          await expectArrayBody(response, 200);
         }
       } finally {
         await context.dispose();

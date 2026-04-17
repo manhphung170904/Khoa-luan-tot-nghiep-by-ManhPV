@@ -1075,5 +1075,37 @@
     });
 </script>
 
+<script th:if="${param.payAlreadyPaid}">
+    Swal.fire({
+        title: "Hóa đơn đã được thanh toán",
+        text: "Hệ thống đã ghi nhận thanh toán cho hóa đơn này trước đó.",
+        icon: "info"
+    });
+</script>
+
+<script th:if="${param.payForbidden}">
+    Swal.fire({
+        title: "Không thể truy cập hóa đơn",
+        text: "Bạn không có quyền thanh toán hóa đơn này.",
+        icon: "warning"
+    });
+</script>
+
+<script th:if="${param.payNotFound}">
+    Swal.fire({
+        title: "Không tìm thấy hóa đơn",
+        text: "Hóa đơn không tồn tại hoặc đã bị thay đổi.",
+        icon: "warning"
+    });
+</script>
+
+<script th:if="${param.payInvalidStatus}">
+    Swal.fire({
+        title: "Hóa đơn chưa thể thanh toán",
+        text: "Trạng thái hiện tại của hóa đơn không hỗ trợ thanh toán QR.",
+        icon: "warning"
+    });
+</script>
+
 </html>
 

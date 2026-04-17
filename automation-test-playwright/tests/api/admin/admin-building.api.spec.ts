@@ -1,4 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expectApiErrorBody, expectApiMessage, expectObjectBody, expectPageBody, expectStatusExact } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiFileFixtures } from "@api/apiFileFixtures";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
@@ -46,7 +48,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         failOnStatusCode: false,
         data: validPayload
       });
-      expect(response.status()).toBe(401);
+      await expectApiErrorBody(response, {
+        status: 401,
+        code: "UNAUTHORIZED",
+        path: "/api/v1/admin/buildings"
+      });
     });
 
     test("[BLD_002] POST /buildings rejects missing required fields", async () => {
@@ -59,7 +65,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: invalidPayload
       });
 
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings"
+      });
     });
 
     test("[BLD_012] POST /buildings rejects missing latitude and longitude", async () => {
@@ -72,7 +82,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: invalidPayload
       });
 
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings"
+      });
     });
 
     test("[BLD_013] POST /buildings rejects blank ward and street", async () => {
@@ -81,7 +95,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: { ...validPayload, ward: "", street: "" }
       });
 
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings"
+      });
     });
 
     test("[BLD_014] POST /buildings fails on unsupported propertyType", async () => {
@@ -90,7 +108,7 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: { ...validPayload, propertyType: "VILLA_LUXURY" }
       });
 
-      expect(response.status()).toBe(500);
+      expectStatusExact(response, 500, "Unsupported propertyType currently triggers backend 500");
     });
 
     test("[BLD_003] POST /buildings rejects negative numberOfFloor", async () => {
@@ -99,7 +117,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: { ...validPayload, numberOfFloor: -99 }
       });
 
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings"
+      });
     });
 
     test("[BLD_004] POST /buildings creates building and persists to DB", async () => {
@@ -113,9 +135,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: payload
       });
 
-      expect(response.status()).toBe(200);
-      const createBody = (await response.json()) as { message?: string };
-      expect(createBody.message).toBeTruthy();
+      await expectApiMessage(response, {
+        status: 200,
+        message: apiExpectedMessages.admin.buildings.create,
+        dataMode: "null"
+      });
 
       const dbResult = await MySqlDbClient.query<{
         id: number;
@@ -149,13 +173,10 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         params: { page: 1, size: 100 }
       });
 
-      expect(response.status()).toBe(200);
-      const data = (await response.json()) as {
+      const data = await expectPageBody<{
         content: Array<{ id: number; name: string }>;
         totalElements?: number;
-      };
-      expect(Array.isArray(data.content)).toBeTruthy();
-      expect(typeof data.totalElements).toBe("number");
+      }>(response, { status: 200 });
       const found = data.content.find((building) => building.id === createdBuildingId);
       expect(found).toBeDefined();
       expect(found?.name).toBe(createdBuildingName);
@@ -166,14 +187,13 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         failOnStatusCode: false
       });
 
-      expect(response.status()).toBe(200);
-      const data = (await response.json()) as {
+      const data = await expectObjectBody<{
         propertyTypes?: unknown[];
         transactionTypes?: unknown[];
         directions?: unknown[];
         levels?: unknown[];
         managers?: unknown[];
-      };
+      }>(response, 200, ["propertyTypes", "transactionTypes", "directions", "levels", "managers"]);
       expect(Array.isArray(data.propertyTypes)).toBeTruthy();
       expect(Array.isArray(data.transactionTypes)).toBeTruthy();
       expect(Array.isArray(data.directions)).toBeTruthy();
@@ -187,12 +207,10 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         params: { propertyType: "OFFICE", page: 1, size: 100 }
       });
 
-      expect(response.status()).toBe(200);
-      const data = (await response.json()) as {
+      const data = await expectPageBody<{
         content: Array<{ id?: number; name?: string }>;
         totalElements?: number;
-      };
-      expect(typeof data.totalElements).toBe("number");
+      }>(response, { status: 200 });
       expect(data.content.length).toBeGreaterThan(0);
       expect(data.content.every((item) => typeof item.id === "number" && typeof item.name === "string")).toBeTruthy();
     });
@@ -203,7 +221,7 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         params: { page: 0, size: 0 }
       });
 
-      expect(response.status()).toBe(500);
+      expectStatusExact(response, 500, "Invalid pagination currently triggers backend 500");
     });
 
     test("[BLD_017] GET /buildings returns empty content for unknown name", async () => {
@@ -212,8 +230,7 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         params: { name: "XYZNOTEXIST999", page: 1, size: 5 }
       });
 
-      expect(response.status()).toBe(200);
-      const data = (await response.json()) as { content: unknown[] };
+      const data = await expectPageBody<{ content: unknown[] }>(response, { status: 200 });
       expect(data.content.length).toBe(0);
     });
 
@@ -223,7 +240,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: { ...validPayload, id: null }
       });
 
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings/999999999"
+      });
     });
 
     test("[BLD_008] PUT /buildings/{id} blocks sold building updates with temp sale-contract data", async () => {
@@ -249,7 +270,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
           )
         });
 
-        expect(response.status()).toBe(400);
+        await expectApiErrorBody(response, {
+          status: 400,
+          code: "BAD_REQUEST",
+          path: `/api/v1/admin/buildings/${tempSaleContract.building.id}`
+        });
       } finally {
         await TempEntityHelper.xoaSaleContractTam(admin, tempSaleContract);
       }
@@ -267,9 +292,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      expect(response.status()).toBe(200);
-      const updateBody = (await response.json()) as { message?: string };
-      expect(updateBody.message).toBeTruthy();
+      await expectApiMessage(response, {
+        status: 200,
+        message: apiExpectedMessages.admin.buildings.update,
+        dataMode: "null"
+      });
 
       const dbResult = await MySqlDbClient.query<{ name: string; floor_area: number }>(
         "SELECT name, floor_area FROM building WHERE id = ?",
@@ -288,7 +315,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
           failOnStatusCode: false
         });
 
-        expect(response.status()).toBe(400);
+        await expectApiErrorBody(response, {
+          status: 400,
+          code: "BAD_REQUEST",
+          path: `/api/v1/admin/buildings/${tempContract.building.id}`
+        });
       } finally {
         await TempEntityHelper.xoaContractTam(admin, tempContract);
       }
@@ -303,7 +334,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
           failOnStatusCode: false
         });
 
-        expect(response.status()).toBe(400);
+        await expectApiErrorBody(response, {
+          status: 400,
+          code: "BAD_REQUEST",
+          path: `/api/v1/admin/buildings/${tempSaleContract.building.id}`
+        });
       } finally {
         await MySqlDbClient.execute("DELETE FROM sale_contract WHERE id = ?", [tempSaleContract.id]).catch(() => {});
         await TempEntityHelper.capNhatPhanCongCustomer(admin, tempSaleContract.staff.id, []).catch(() => {});
@@ -319,9 +354,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         failOnStatusCode: false
       });
 
-      expect(response.status()).toBe(400);
-      const body = (await response.json()) as { message?: string };
-      expect(body.message).toBeTruthy();
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings/999999"
+      });
     });
 
     test("[BLD_011] DELETE /buildings/{id} deletes created building", async () => {
@@ -329,9 +366,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         failOnStatusCode: false
       });
 
-      expect(response.status()).toBe(200);
-      const deleteBody = (await response.json()) as { message?: string };
-      expect(deleteBody.message).toBeTruthy();
+      await expectApiMessage(response, {
+        status: 200,
+        message: apiExpectedMessages.admin.buildings.delete,
+        dataMode: "null"
+      });
 
       const dbResult = await MySqlDbClient.query<{ id: number }>(
         "SELECT id FROM building WHERE id = ?",
@@ -353,7 +392,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      expect(response.status()).toBe(401);
+      await expectApiErrorBody(response, {
+        status: 401,
+        code: "UNAUTHORIZED",
+        path: "/api/v1/admin/buildings/image"
+      });
     });
 
     test("[BLD_U06] POST /buildings/image rejects empty file", async () => {
@@ -364,9 +407,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      expect(response.status()).toBe(400);
-      const data = (await response.json()) as { message?: string };
-      expect(data.message).toBeTruthy();
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings/image"
+      });
     });
 
     test("[BLD_U02] POST /buildings/image rejects unsupported mime type", async () => {
@@ -377,9 +422,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      expect(response.status()).toBe(400);
-      const data = (await response.json()) as { message?: string };
-      expect(data.message).toBeTruthy();
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings/image"
+      });
     });
 
     test("[BLD_U07] POST /buildings/image rejects invalid extension even with image mime", async () => {
@@ -390,9 +437,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      expect(response.status()).toBe(400);
-      const data = (await response.json()) as { message?: string };
-      expect(data.message).toBeTruthy();
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings/image"
+      });
     });
 
     test("[BLD_U03] POST /buildings/image currently accepts corrupt JPG content when mime/ext pass", async () => {
@@ -403,9 +452,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      expect(response.status()).toBe(200);
-      const data = (await response.json()) as { message?: string; data?: { filename?: string } };
-      expect(data.message).toBeTruthy();
+      const data = await expectApiMessage<{ message?: string; data?: { filename?: string } }>(response, {
+        status: 200,
+        message: apiExpectedMessages.admin.buildings.upload,
+        dataMode: "object"
+      });
       expect(data.data?.filename).toMatch(/\.jpg$/);
     });
 
@@ -418,7 +469,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings/image"
+      });
     });
 
     test("[BLD_U05] POST /buildings/image uploads valid JPG and returns generated filename", async () => {
@@ -430,9 +485,11 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      expect(response.status()).toBe(200);
-      const data = (await response.json()) as { message?: string; data?: { filename?: string } };
-      expect(data.message).toBeTruthy();
+      const data = await expectApiMessage<{ message?: string; data?: { filename?: string } }>(response, {
+        status: 200,
+        message: apiExpectedMessages.admin.buildings.upload,
+        dataMode: "object"
+      });
       expect(data.data?.filename).toBeDefined();
       expect(data.data?.filename).not.toBe(sourceFile.name);
       expect(data.data?.filename).toMatch(/\.jpg$/);

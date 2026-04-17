@@ -1,4 +1,6 @@
 import { expect, test } from "@fixtures/api.fixture";
+import { expectApiErrorBody, expectApiMessage, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
@@ -9,7 +11,11 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
       failOnStatusCode: false,
       data: TestDataFactory.buildContractPayload()
     });
-    expect(response.status()).toBe(401);
+    await expectApiErrorBody(response, {
+      status: 401,
+      code: "UNAUTHORIZED",
+      path: "/api/v1/admin/contracts"
+    });
   });
 
   test("[CTR_002] POST /contracts rejects negative rentPrice", async ({ adminApi }) => {
@@ -17,7 +23,11 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
       failOnStatusCode: false,
       data: TestDataFactory.buildContractPayload({ rentPrice: -5 })
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/contracts"
+    });
   });
 
   test("[CTR_005] POST /contracts rejects endDate before startDate", async ({ adminApi }) => {
@@ -28,21 +38,22 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
         endDate: "2026-05-01"
       })
     });
-    expect(response.status()).toBe(400);
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/contracts"
+    });
   });
 
   test("[CTR_011] GET /contracts/metadata returns select options shape", async ({ adminApi }) => {
     const response = await adminApi.get("/api/v1/admin/contracts/metadata", {
       failOnStatusCode: false
     });
-    expect(response.status()).toBe(200);
-
-    const body = (await response.json()) as {
+    const body = await expectObjectBody<{
       customers?: unknown[];
       buildings?: unknown[];
       staffs?: unknown[];
-    };
-    expect(Array.isArray(body.customers)).toBeTruthy();
+    }>(response, 200, ["customers", "buildings", "staffs"]);
     expect(Array.isArray(body.buildings)).toBeTruthy();
     expect(Array.isArray(body.staffs)).toBeTruthy();
   });
@@ -59,7 +70,11 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
           staffId: temp.staff.id
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/contracts"
+      });
     } finally {}
   });
 
@@ -75,7 +90,11 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
           staffId: temp.staff.id
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/contracts"
+      });
     } finally {}
   });
 
@@ -94,7 +113,11 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
           staffId: outsiderStaff.id
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/contracts"
+      });
     } finally {}
   });
 
@@ -119,7 +142,11 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
           staffId: contractStaff.id
         })
       });
-      expect(response.status()).toBe(400);
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/contracts"
+      });
     } finally {}
   });
 
@@ -133,9 +160,11 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
       })
     });
 
-    expect(response.status()).toBe(400);
-    const body = (await response.json()) as { message?: string };
-    expect(body.message).toBeTruthy();
+    await expectApiErrorBody(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: "/api/v1/admin/contracts/999999999"
+    });
   });
 
   test("[CTR_006] contract create/list/filter/update/status/delete lifecycle with temp data", async ({
@@ -166,9 +195,11 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
         failOnStatusCode: false,
         data: payload
       });
-      expect(createResponse.status()).toBe(200);
-      const createBody = (await createResponse.json()) as { message?: string };
-      expect(createBody.message).toBeTruthy();
+      await expectApiMessage(createResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.contracts.create,
+        dataMode: "null"
+      });
 
       const contractRows = await MySqlDbClient.query<{
         id: number;
@@ -194,12 +225,10 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
         failOnStatusCode: false,
         params: { page: 1, size: 100, customerId: tempCustomer.id }
       });
-      expect(listResponse.status()).toBe(200);
-      const listBody = (await listResponse.json()) as {
+      const listBody = await expectPageBody<{
         content?: Array<{ id: number; customer?: string; building?: string; status?: string }>;
         totalElements?: number;
-      };
-      expect(typeof listBody.totalElements).toBe("number");
+      }>(listResponse, { status: 200 });
       expect(listBody.content?.some((item) => item.id === createdContractId)).toBeTruthy();
       const createdItem = listBody.content?.find((item) => item.id === createdContractId);
       expect(createdItem?.customer).toBe(tempCustomer.fullName);
@@ -210,12 +239,10 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
         failOnStatusCode: false,
         params: { buildingId: tempBuilding.id, page: 1, size: 10 }
       });
-      expect(filterResponse.status()).toBe(200);
-      const filterBody = (await filterResponse.json()) as {
+      const filterBody = await expectPageBody<{
         content?: Array<{ id: number; building?: string }>;
         totalElements?: number;
-      };
-      expect(typeof filterBody.totalElements).toBe("number");
+      }>(filterResponse, { status: 200 });
       expect(filterBody.content?.some((item) => item.id === createdContractId)).toBeTruthy();
 
       const updateResponse = await adminApi.put(`/api/v1/admin/contracts/${createdContractId}`, {
@@ -227,9 +254,11 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
           status: "EXPIRED"
         }
       });
-      expect(updateResponse.status()).toBe(200);
-      const updateBody = (await updateResponse.json()) as { message?: string };
-      expect(updateBody.message).toBeTruthy();
+      await expectApiMessage(updateResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.contracts.update,
+        dataMode: "null"
+      });
 
       const updatedRows = await MySqlDbClient.query<{ rent_price: number; status: string }>(
         "SELECT rent_price, status FROM contract WHERE id = ?",
@@ -241,23 +270,29 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
       const statusUpdateResponse = await adminApi.put("/api/v1/admin/contracts/status", {
         failOnStatusCode: false
       });
-      expect(statusUpdateResponse.status()).toBe(200);
-      const statusUpdateBody = (await statusUpdateResponse.json()) as { message?: string };
-      expect(statusUpdateBody.message).toBeTruthy();
+      await expectApiMessage(statusUpdateResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.contracts.updateStatus,
+        dataMode: "null"
+      });
 
       const missingDelete = await adminApi.delete("/api/v1/admin/contracts/999999", {
         failOnStatusCode: false
       });
-      expect(missingDelete.status()).toBe(400);
-      const missingDeleteBody = (await missingDelete.json()) as { message?: string };
-      expect(missingDeleteBody.message).toBeTruthy();
+      await expectApiErrorBody(missingDelete, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/contracts/999999"
+      });
 
       const deleteResponse = await adminApi.delete(`/api/v1/admin/contracts/${createdContractId}`, {
         failOnStatusCode: false
       });
-      expect(deleteResponse.status()).toBe(200);
-      const deleteBody = (await deleteResponse.json()) as { message?: string };
-      expect(deleteBody.message).toBeTruthy();
+      await expectApiMessage(deleteResponse, {
+        status: 200,
+        message: apiExpectedMessages.admin.contracts.delete,
+        dataMode: "null"
+      });
 
       const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM contract WHERE id = ?", [createdContractId]);
       expect(deletedRows.length).toBe(0);

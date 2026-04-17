@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { expectApiErrorBody, expectApiMessage, expectArrayBody } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { createAnonymousContext } from "@api/adminApiUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
@@ -18,7 +20,11 @@ test.describe("Customer Property Request API @api @regression", () => {
         data: TestDataFactory.buildPropertyRequestPayload()
       });
 
-      expect(response.status()).toBe(401);
+      await expectApiErrorBody(response, {
+        status: 401,
+        code: "UNAUTHORIZED",
+        path: "/api/v1/customer/property-requests"
+      });
     } finally {
       await context.dispose();
     }
@@ -33,9 +39,11 @@ test.describe("Customer Property Request API @api @regression", () => {
         data: TestDataFactory.buildPropertyRequestPayload({ buildingId: null }, "RENT")
       });
 
-      expect(response.status()).toBe(400);
-      const body = (await response.json()) as { message?: string };
-      expect(body.message).toBeTruthy();
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/customer/property-requests"
+      });
     } finally {
       await scenario.cleanup();
     }
@@ -48,14 +56,12 @@ test.describe("Customer Property Request API @api @regression", () => {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expect(listResponse.status()).toBe(200);
-
-      const payload = (await listResponse.json()) as Array<{
+      const payload = await expectArrayBody<{
         id: number;
         buildingName?: string;
         status?: string;
         requestType?: string;
-      }>;
+      }>(listResponse, 200);
       const createdRequest = payload.find((item) => item.id === scenario.propertyRequestId);
 
       expect(createdRequest).toBeDefined();
@@ -76,9 +82,11 @@ test.describe("Customer Property Request API @api @regression", () => {
         data: TestDataFactory.buildPropertyRequestPayload({ buildingId: scenario.buildingId }, "RENT")
       });
 
-      expect(duplicateResponse.status()).toBe(400);
-      const body = (await duplicateResponse.json()) as { message?: string };
-      expect(body.message).toBeTruthy();
+      await expectApiErrorBody(duplicateResponse, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/customer/property-requests"
+      });
     } finally {
       await scenario.cleanup();
     }
@@ -91,15 +99,17 @@ test.describe("Customer Property Request API @api @regression", () => {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expect(cancelResponse.status()).toBe(200);
+      await expectApiMessage(cancelResponse, {
+        status: 200,
+        message: apiExpectedMessages.customer.propertyRequests.delete,
+        dataMode: "null"
+      });
 
       const listResponse = await scenario.customer.get("/api/v1/customer/property-requests", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expect(listResponse.status()).toBe(200);
-
-      const payload = (await listResponse.json()) as Array<{ id: number; status?: string }>;
+      const payload = await expectArrayBody<{ id: number; status?: string }>(listResponse, 200);
       const cancelledRequest = payload.find((item) => item.id === scenario.propertyRequestId);
       expect(cancelledRequest?.status).toBe("CANCELLED");
     } finally {

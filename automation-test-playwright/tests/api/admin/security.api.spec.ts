@@ -1,17 +1,30 @@
 import { test } from "@playwright/test";
 import { adminEndpointCatalog } from "@api/adminEndpointCatalog";
 import { createAnonymousContext, createRoleContext, sendRequest } from "@api/adminApiUtils";
-import { expectStatusExact } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectStatusExact } from "@api/apiContractUtils";
 
 test.describe("ADMIN API Security Matrix @api @regression", () => {
   test.describe.configure({ mode: "serial" });
+
+  const expectSecurityBodyIfJson = async (response: Awaited<ReturnType<typeof sendRequest>>, status: 401 | 403) => {
+    const contentType = response.headers()["content-type"] ?? "";
+    if (!contentType.includes("application/json")) {
+      expectStatusExact(response, status, "Security response must return expected status");
+      return;
+    }
+
+    await expectApiErrorBody(response, {
+      status,
+      code: status === 401 ? "UNAUTHORIZED" : "FORBIDDEN"
+    });
+  };
 
   for (const endpoint of adminEndpointCatalog) {
     test(`${endpoint.id} rejects unauthenticated access @smoke @regression`, async ({ playwright }) => {
       const context = await createAnonymousContext(playwright);
       try {
         const response = await sendRequest(context, endpoint);
-        expectStatusExact(response, 401, `${endpoint.id} must reject anonymous admin access`);
+        await expectSecurityBodyIfJson(response, 401);
       } finally {
         await context.dispose();
       }
@@ -21,7 +34,7 @@ test.describe("ADMIN API Security Matrix @api @regression", () => {
       const context = await createAnonymousContext(playwright, true);
       try {
         const response = await sendRequest(context, endpoint);
-        expectStatusExact(response, 401, `${endpoint.id} must reject invalid admin session`);
+        await expectSecurityBodyIfJson(response, 401);
       } finally {
         await context.dispose();
       }
@@ -31,7 +44,7 @@ test.describe("ADMIN API Security Matrix @api @regression", () => {
       const context = await createRoleContext(playwright, "staff");
       try {
         const response = await sendRequest(context, endpoint);
-        expectStatusExact(response, 403, `${endpoint.id} must reject staff role on admin endpoint`);
+        await expectSecurityBodyIfJson(response, 403);
       } finally {
         await context.dispose();
       }
@@ -41,7 +54,7 @@ test.describe("ADMIN API Security Matrix @api @regression", () => {
       const context = await createRoleContext(playwright, "customer");
       try {
         const response = await sendRequest(context, endpoint);
-        expectStatusExact(response, 403, `${endpoint.id} must reject customer role on admin endpoint`);
+        await expectSecurityBodyIfJson(response, 403);
       } finally {
         await context.dispose();
       }

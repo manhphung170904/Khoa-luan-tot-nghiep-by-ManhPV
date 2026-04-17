@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { expectApiErrorBody, expectApiMessage, expectObjectBody } from "@api/apiContractUtils";
+import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { env } from "@config/env";
 import { ApiSessionHelper, type ApiUserRole } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
@@ -27,14 +29,10 @@ test.describe("REST Auth Session API @api @regression", () => {
 
       try {
         const { response, username } = await ApiSessionHelper.loginAsRole(context, scenario.role);
-        expect(response.status()).toBe(200);
-
-        const loginBody = (await response.json()) as {
+        const loginBody = await expectApiMessage<{
           message?: string;
           data?: { user?: { id?: number; username?: string; role?: string; userType?: string; signupSource?: string } };
-        };
-
-        expect(loginBody.message).toBeTruthy();
+        }>(response, { status: 200, message: apiExpectedMessages.auth.login, dataMode: "object" });
         expect(loginBody.data?.user?.username).toBe(username);
         expect(loginBody.data?.user?.role).toBe(scenario.expectedRoleCode);
         expect(loginBody.data?.user?.id).toBeTruthy();
@@ -44,11 +42,9 @@ test.describe("REST Auth Session API @api @regression", () => {
         const meResponse = await context.get("/api/v1/auth/me", {
           failOnStatusCode: false
         });
-        expect(meResponse.status()).toBe(200);
-
-        const meBody = (await meResponse.json()) as {
+        const meBody = await expectObjectBody<{
           user?: { id?: number; username?: string; role?: string; userType?: string; signupSource?: string };
-        };
+        }>(meResponse, 200, ["user"]);
 
         expect(meBody.user?.username).toBe(username);
         expect(meBody.user?.role).toBe(scenario.expectedRoleCode);
@@ -57,16 +53,17 @@ test.describe("REST Auth Session API @api @regression", () => {
         expect(meBody.user?.signupSource).toBe(loginBody.data?.user?.signupSource);
 
         const logoutResponse = await ApiSessionHelper.logout(context);
-        expect(logoutResponse.status()).toBe(200);
-
-        const logoutBody = (await logoutResponse.json()) as { message?: string };
-        expect(logoutBody.message).toBeTruthy();
+        await expectApiMessage(logoutResponse, { status: 200, message: apiExpectedMessages.auth.logout, dataMode: "null" });
 
         const afterLogoutMe = await context.get("/api/v1/auth/me", {
           failOnStatusCode: false,
           maxRedirects: 0
         });
-        expect(afterLogoutMe.status()).toBe(401);
+        await expectApiErrorBody(afterLogoutMe, {
+          status: 401,
+          code: "UNAUTHORIZED",
+          path: "/api/v1/auth/me"
+        });
       } finally {
         await context.dispose();
       }
@@ -85,17 +82,12 @@ test.describe("REST Auth Session API @api @regression", () => {
         }
       });
 
-      expect(response.status()).toBe(400);
-      const body = (await response.json()) as {
-        code?: string;
-        message?: string;
-        errors?: Array<{ field?: string; message?: string }>;
-      };
-
-      expect(body.code).toBe("BAD_REQUEST");
-      expect(body.message).toBeTruthy();
-      const errorFields = body.errors?.map((error) => error.field) ?? [];
-      expect(errorFields).toEqual(expect.arrayContaining(["username", "password"]));
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/auth/login",
+        fields: ["username", "password"]
+      });
     } finally {
       await context.dispose();
     }
@@ -113,10 +105,11 @@ test.describe("REST Auth Session API @api @regression", () => {
         }
       });
 
-      expect(response.status()).toBe(400);
-      const body = (await response.json()) as { code?: string; message?: string };
-      expect(body.code).toBe("BAD_REQUEST");
-      expect(body.message).toBeTruthy();
+      await expectApiErrorBody(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/auth/login"
+      });
     } finally {
       await context.dispose();
     }
@@ -131,10 +124,11 @@ test.describe("REST Auth Session API @api @regression", () => {
         maxRedirects: 0
       });
 
-      expect(response.status()).toBe(401);
-      const body = (await response.json()) as { code?: string; message?: string };
-      expect(body.code).toBe("UNAUTHORIZED");
-      expect(body.message).toBeTruthy();
+      await expectApiErrorBody(response, {
+        status: 401,
+        code: "UNAUTHORIZED",
+        path: "/api/v1/auth/me"
+      });
     } finally {
       await context.dispose();
     }
@@ -158,9 +152,11 @@ test.describe("REST Auth Session API @api @regression", () => {
         params: { email }
       });
 
-      expect(response.status()).toBe(200);
-      const body = (await response.json()) as { message?: string };
-      expect(body.message).toBeTruthy();
+      await expectApiMessage(response, {
+        status: 200,
+        message: apiExpectedMessages.auth.forgotPassword,
+        dataMode: "null"
+      });
 
       const otpRows = await MySqlDbClient.query<{ status: string }>(
         `
@@ -196,9 +192,11 @@ test.describe("REST Auth Session API @api @regression", () => {
         params: { email }
       });
 
-      expect(response.status()).toBe(200);
-      const body = (await response.json()) as { message?: string };
-      expect(body.message).toBeTruthy();
+      await expectApiMessage(response, {
+        status: 200,
+        message: apiExpectedMessages.auth.forgotPassword,
+        dataMode: "null"
+      });
 
       const afterRows = await MySqlDbClient.query<{ total: number }>(
         "SELECT COUNT(*) AS total FROM email_verification WHERE email = ? AND purpose = ?",
