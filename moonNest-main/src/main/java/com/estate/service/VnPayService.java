@@ -40,10 +40,10 @@ public class VnPayService {
     public VnPayCreatePaymentResponseDTO createPayment(Long invoiceId, HttpServletRequest request) {
 
         InvoiceEntity invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn."));
 
         if ("PAID".equalsIgnoreCase(invoice.getStatus())) {
-            throw new RuntimeException("Invoice already paid");
+            throw new RuntimeException("Hóa đơn này đã được thanh toán.");
         }
 
         // VNPay: amount đơn vị = VND * 100

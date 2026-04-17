@@ -117,7 +117,7 @@ public class BuildingFormConverter {
 
         if (dto.getDistrictId() != null) {
             DistrictEntity district = districtRepository.findById(dto.getDistrictId())
-                    .orElseThrow(() -> new ResourceNotFoundException("District was not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quận/huyện."));
             entity.setDistrict(district);
         }
 

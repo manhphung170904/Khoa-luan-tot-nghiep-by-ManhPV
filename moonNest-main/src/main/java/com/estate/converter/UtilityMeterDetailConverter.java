@@ -25,7 +25,7 @@ public class UtilityMeterDetailConverter {
         modelMapper.map(dto, entity);
 
         ContractEntity contract = contractRepository.findById(dto.getContractId())
-                .orElseThrow(() -> new ResourceNotFoundException("Contract was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."));
         entity.setContract(contract);
     }
 }

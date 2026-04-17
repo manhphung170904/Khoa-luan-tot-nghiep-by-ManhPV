@@ -40,7 +40,7 @@ public class StaffInvoiceV1API {
     public ResponseEntity<ApiMessageResponse<Void>> addInvoice(@RequestBody InvoiceFormDTO dto,
                                                                @AuthenticationPrincipal CustomUserDetails user) {
         invoiceService.saveForStaff(dto, user.getUserId());
-        return ResponseEntity.ok(ApiMessageResponse.of("Invoice created successfully."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Tạo hóa đơn thành công."));
     }
 
     @PutMapping("/{id}")
@@ -49,13 +49,13 @@ public class StaffInvoiceV1API {
                                                 @AuthenticationPrincipal CustomUserDetails user) {
         dto.setId(id);
         invoiceService.saveForStaff(dto, user.getUserId());
-        return ApiMessageResponse.of("Invoice updated successfully.");
+        return ApiMessageResponse.of("Cập nhật hóa đơn thành công.");
     }
 
     @DeleteMapping("/{id}")
     public ApiMessageResponse<Void> deleteInvoice(@PathVariable Long id,
                                                   @AuthenticationPrincipal CustomUserDetails user) {
         invoiceService.deleteForStaff(id, user.getUserId());
-        return ApiMessageResponse.of("Invoice deleted successfully.");
+        return ApiMessageResponse.of("Xóa hóa đơn thành công.");
     }
 }

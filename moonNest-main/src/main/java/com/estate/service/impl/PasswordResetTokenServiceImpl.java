@@ -32,13 +32,13 @@ public class PasswordResetTokenServiceImpl implements PasswordResetTokenService 
     @Override
     public PasswordResetTokenEntity validate(String tokenValue) {
         PasswordResetTokenEntity token = tokenRepo.findByToken(tokenValue)
-                .orElseThrow(() -> new BusinessException("Reset token is invalid"));
+                .orElseThrow(() -> new BusinessException("Mã đặt lại mật khẩu không hợp lệ."));
 
         if (token.isUsed()) {
-            throw new BusinessException("Reset token has already been used");
+            throw new BusinessException("Mã đặt lại mật khẩu này đã được sử dụng.");
         }
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new BusinessException("Reset token has expired");
+            throw new BusinessException("Mã đặt lại mật khẩu đã hết hạn.");
         }
 
         return token;

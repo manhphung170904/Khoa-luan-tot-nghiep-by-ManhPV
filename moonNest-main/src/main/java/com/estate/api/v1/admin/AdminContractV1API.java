@@ -63,7 +63,7 @@ public class AdminContractV1API {
     ) {
         validate(result);
         contractService.save(dto);
-        return ResponseEntity.ok(ApiMessageResponse.of("T?o h?p ??ng th?nh c?ng."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Tạo hợp đồng thành công."));
     }
 
     @PutMapping("/{id}")
@@ -75,19 +75,19 @@ public class AdminContractV1API {
         validate(result);
         dto.setId(id);
         contractService.save(dto);
-        return ApiMessageResponse.of("C?p nh?t h?p ??ng th?nh c?ng.");
+        return ApiMessageResponse.of("Cập nhật hợp đồng thành công.");
     }
 
     @DeleteMapping("/{id}")
     public ApiMessageResponse<Void> deleteContract(@PathVariable Long id) {
         contractService.delete(id);
-        return ApiMessageResponse.of("X?a h?p ??ng th?nh c?ng.");
+        return ApiMessageResponse.of("Xóa hợp đồng thành công.");
     }
 
     @PutMapping("/status")
     public ApiMessageResponse<Void> updateStatuses() {
         contractService.statusUpdate();
-        return ApiMessageResponse.of("C?p nh?t tr?ng th?i h?p ??ng th?nh c?ng.");
+        return ApiMessageResponse.of("Cập nhật trạng thái hợp đồng thành công.");
     }
 
     private void validate(BindingResult result) {

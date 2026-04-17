@@ -32,10 +32,10 @@ public class ProfileOtpServiceImpl implements ProfileOtpService {
     public void sendOtp(String email, String purpose) {
         String normalizedEmail = normalizeEmail(email);
         if (!StringUtils.hasText(normalizedEmail)) {
-            throw new BusinessException("Email is invalid");
+            throw new BusinessException("Email không hợp lệ.");
         }
         if (!StringUtils.hasText(purpose)) {
-            throw new BusinessException("OTP purpose is invalid");
+            throw new BusinessException("Mục đích OTP không hợp lệ.");
         }
 
         emailVerificationRepository.deleteByEmailAndPurposeAndStatus(normalizedEmail, purpose, STATUS_PENDING);
@@ -66,17 +66,17 @@ public class ProfileOtpServiceImpl implements ProfileOtpService {
         String normalizedEmail = normalizeEmail(email);
         EmailVerificationEntity entity = emailVerificationRepository
                 .findTopByEmailAndPurposeAndStatusOrderByCreatedAtDesc(normalizedEmail, purpose, STATUS_PENDING)
-                .orElseThrow(() -> new BusinessException("Verification code was not found or has expired"));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy mã xác thực hoặc mã đã hết hạn."));
 
         if (entity.getExpiresAt().isBefore(LocalDateTime.now())) {
             entity.setStatus(STATUS_USED);
             entity.setUsedAt(LocalDateTime.now());
             emailVerificationRepository.save(entity);
-            throw new BusinessException("Verification code has expired");
+            throw new BusinessException("Mã xác thực đã hết hạn.");
         }
 
         if (!hash(otp).equals(entity.getOtpHash())) {
-            throw new BusinessException("Verification code is invalid");
+            throw new BusinessException("Mã xác thực không hợp lệ.");
         }
 
         entity.setStatus(STATUS_USED);

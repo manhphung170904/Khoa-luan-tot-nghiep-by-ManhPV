@@ -94,7 +94,7 @@ public class CustomerServiceImpl implements CustomerService {
     public Page<CustomerDetailDTO> searchByStaff(Map<String, String> requestParam, int page, int size) {
         String staffIdValue = requestParam.get("staffId");
         if (staffIdValue == null || staffIdValue.isBlank()) {
-            throw new BusinessException("Missing staff information");
+            throw new BusinessException("Thiếu thông tin nhân viên phụ trách.");
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<CustomerEntity> customerPage = customerRepository.findByNameAndStaffID(
@@ -109,18 +109,18 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public void save(CustomerFormDTO dto) {
         if (customerRepository.existsByUsername(dto.getUsername()) || staffRepository.existsByUsername(dto.getUsername())) {
-            throw new BusinessException("Username already exists");
+            throw new BusinessException("Tên đăng nhập đã tồn tại.");
         }
         if (customerRepository.existsByEmail(dto.getEmail()) || staffRepository.existsByEmail(dto.getEmail())) {
-            throw new BusinessException("Email already exists");
+            throw new BusinessException("Email đã tồn tại.");
         }
         if (customerRepository.existsByPhone(dto.getPhone()) || staffRepository.existsByPhone(dto.getPhone())) {
-            throw new BusinessException("Phone number already exists");
+            throw new BusinessException("Số điện thoại đã tồn tại.");
         }
 
         CustomerEntity entity = dto.getId() != null
                 ? customerRepository.findById(dto.getId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Customer was not found"))
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng."))
                 : customerFormConverter.toEntity(dto);
         if (dto.getId() == null) {
             entity.setRole("CUSTOMER");
@@ -136,11 +136,11 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public void delete(Long id) {
         if (!customerRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Customer was not found");
+            throw new ResourceNotFoundException("Không tìm thấy khách hàng.");
         }
         long count = contractRepository.countByCustomerId(id);
         if (count > 0) {
-            throw new BusinessException("Cannot delete a customer with related contracts");
+            throw new BusinessException("Không thể xóa khách hàng đang có hợp đồng liên quan.");
         }
         customerRepository.deleteById(id);
     }
@@ -148,7 +148,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerDetailDTO viewById(Long id) {
         CustomerEntity customerEntity = customerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng."));
         return customerDetailConverter.toDTO(customerEntity);
     }
 
@@ -181,7 +181,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerEntity findById(Long customerId) {
         return customerRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng."));
     }
 
     @Override
@@ -189,11 +189,11 @@ public class CustomerServiceImpl implements CustomerService {
         CustomerEntity customer = this.findById(customerId);
         if (customerRepository.existsByUsernameAndIdNot(dto.getNewUsername(), customerId)
                 || staffRepository.existsByUsername(dto.getNewUsername())) {
-            throw new BusinessException("Username is already in use");
+            throw new BusinessException("Tên đăng nhập đã được sử dụng.");
         }
         profileOtpService.verifyOtp(resolveOtpEmail(customer), "PROFILE_USERNAME", dto.getOtp());
         if (customer.getPassword() != null && !customer.getPassword().isBlank()) {
-            throw new BusinessException("This account already has a password. Use the password change flow instead");
+            throw new BusinessException("Tài khoản này đã có mật khẩu. Vui lòng dùng chức năng đổi mật khẩu.");
         }
         customerRepository.usernameUpdate(dto.getNewUsername(), customerId);
     }
@@ -203,11 +203,11 @@ public class CustomerServiceImpl implements CustomerService {
         CustomerEntity customer = this.findById(customerId);
         boolean isCorrect = passwordEncoder.matches(dto.getPassword(), customer.getPassword());
         if (!isCorrect) {
-            throw new BusinessException("Current password is incorrect");
+            throw new BusinessException("Mật khẩu hiện tại không đúng.");
         }
         if (customerRepository.existsByEmailAndIdNot(dto.getNewEmail(), customerId)
                 || staffRepository.existsByEmail(dto.getNewEmail())) {
-            throw new BusinessException("Email is already in use");
+            throw new BusinessException("Email đã được sử dụng.");
         }
         customerRepository.emailUpdate(dto.getNewEmail(), customerId);
     }
@@ -217,7 +217,7 @@ public class CustomerServiceImpl implements CustomerService {
         CustomerEntity customer = this.findById(customerId);
         if (customerRepository.existsByPhoneAndIdNot(dto.getNewPhoneNumber(), customerId)
                 || staffRepository.existsByPhone(dto.getNewPhoneNumber())) {
-            throw new BusinessException("Phone number is already in use");
+            throw new BusinessException("Số điện thoại đã được sử dụng.");
         }
         profileOtpService.verifyOtp(resolveOtpEmail(customer), "PROFILE_PHONE", dto.getOtp());
         customerRepository.phoneNumberUpdate(dto.getNewPhoneNumber(), customerId);
@@ -227,11 +227,11 @@ public class CustomerServiceImpl implements CustomerService {
     public void passwordUpdate(PasswordChangeDTO dto, Long customerId) {
         CustomerEntity customer = this.findById(customerId);
         if (dto.getNewPassword() == null || dto.getNewPassword().length() < 8) {
-            throw new BusinessException("Password must contain at least 8 characters");
+            throw new BusinessException("Mật khẩu phải có ít nhất 8 ký tự.");
         }
         profileOtpService.verifyOtp(resolveOtpEmail(customer), "PROFILE_PASSWORD", dto.getOtp());
         if (!dto.getConfirmPassword().equals(dto.getNewPassword())) {
-            throw new BusinessException("Password confirmation does not match");
+            throw new BusinessException("Mật khẩu xác nhận không khớp.");
         }
         String encodedPassword = passwordEncoder.encode(dto.getNewPassword());
         customerRepository.passwordUpdate(encodedPassword, customerId);

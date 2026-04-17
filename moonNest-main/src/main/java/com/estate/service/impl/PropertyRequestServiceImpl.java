@@ -58,14 +58,14 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
     @Override
     public void submit(PropertyRequestFormDTO dto, Long customerId) {
         BuildingEntity building = buildingRepository.findById(dto.getBuildingId())
-                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản."));
 
         validateRequestTypeAgainstBuilding(dto, building);
         validateNoDuplicatePendingRequest(customerId, dto.getBuildingId());
         validateDateRange(dto);
 
         CustomerEntity customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng."));
 
         PropertyRequestEntity entity = new PropertyRequestEntity();
         entity.setCustomer(customer);
@@ -99,9 +99,9 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
         PropertyRequestEntity entity = requireRequest(requestId);
 
         if (!Objects.equals(entity.getCustomer().getId(), customerId)) {
-            throw new ForbiddenOperationException("You cannot cancel another customer's request");
+            throw new ForbiddenOperationException("Bạn không thể hủy yêu cầu của khách hàng khác.");
         }
-        ensurePending(entity, "Only pending requests can be cancelled");
+        ensurePending(entity, "Chỉ có thể hủy yêu cầu đang chờ xử lý.");
 
         entity.setStatus("CANCELLED");
         propertyRequestRepository.save(entity);
@@ -129,13 +129,13 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
     @Override
     public void reject(Long requestId, Long staffId, String reason) {
         PropertyRequestEntity entity = requireRequest(requestId);
-        ensurePending(entity, "Only pending requests can be rejected");
+        ensurePending(entity, "Chỉ có thể từ chối yêu cầu đang chờ xử lý.");
 
         entity.setStatus("REJECTED");
         entity.setAdminNote(reason == null ? "" : reason.trim());
         entity.setProcessedBy(
                 staffRepository.findById(staffId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Processing staff was not found"))
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên xử lý"))
         );
         propertyRequestRepository.save(entity);
     }
@@ -143,28 +143,28 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
     @Override
     public void markApproved(Long requestId, Long staffId, Long contractId, Long saleContractId) {
         PropertyRequestEntity entity = requireRequest(requestId);
-        ensurePending(entity, "Only pending requests can be approved");
+        ensurePending(entity, "Chỉ có thể duyệt yêu cầu đang chờ xử lý.");
         validateApprovalPayload(entity, contractId, saleContractId);
 
         entity.setStatus("APPROVED");
         entity.setAdminNote(null);
         entity.setProcessedBy(
                 staffRepository.findById(staffId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Processing staff was not found"))
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên xử lý"))
         );
         entity.setContract(null);
         entity.setSaleContract(null);
 
         if (contractId != null) {
             ContractEntity contract = contractRepository.findById(contractId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Contract was not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."));
             validateContractMatchesRequest(entity, contract);
             entity.setContract(contract);
         }
 
         if (saleContractId != null) {
             SaleContractEntity saleContract = saleContractRepository.findById(saleContractId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Sale contract was not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng mua bán."));
             validateSaleContractMatchesRequest(entity, saleContract);
             entity.setSaleContract(saleContract);
         }
@@ -208,24 +208,24 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
 
     private PropertyRequestEntity requireRequest(Long requestId) {
         return propertyRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResourceNotFoundException("Property request was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu bất động sản."));
     }
 
     private void validateRequestTypeAgainstBuilding(PropertyRequestFormDTO dto, BuildingEntity building) {
         if ("RENT".equals(dto.getRequestType()) && building.getTransactionType() != TransactionType.FOR_RENT) {
-            throw new BusinessException("This building is not available for rent");
+            throw new BusinessException("Bất động sản này hiện không cho thuê.");
         }
         if ("BUY".equals(dto.getRequestType()) && building.getTransactionType() != TransactionType.FOR_SALE) {
-            throw new BusinessException("This building is not available for sale");
+            throw new BusinessException("Bất động sản này hiện không để bán.");
         }
         if ("BUY".equals(dto.getRequestType()) && saleContractRepository.existsByBuilding_Id(building.getId())) {
-            throw new BusinessException("This building already has a sale contract");
+            throw new BusinessException("Bất động sản này đã có hợp đồng mua bán.");
         }
     }
 
     private void validateNoDuplicatePendingRequest(Long customerId, Long buildingId) {
         if (propertyRequestRepository.existsByCustomerIdAndBuildingIdAndStatus(customerId, buildingId, "PENDING")) {
-            throw new BusinessException("A pending request already exists for this building");
+            throw new BusinessException("Đã tồn tại yêu cầu đang chờ xử lý cho bất động sản này.");
         }
     }
 
@@ -236,7 +236,7 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
         if (dto.getDesiredStartDate() != null
                 && dto.getDesiredEndDate() != null
                 && !dto.getDesiredEndDate().isAfter(dto.getDesiredStartDate())) {
-            throw new BusinessException("Desired end date must be after desired start date");
+            throw new BusinessException("Ngày kết thúc mong muốn phải sau ngày bắt đầu mong muốn.");
         }
     }
 
@@ -251,41 +251,41 @@ public class PropertyRequestServiceImpl implements PropertyRequestService {
         boolean hasSaleContract = saleContractId != null;
 
         if (hasContract == hasSaleContract) {
-            throw new BusinessException("Approval requires exactly one downstream contract reference");
+            throw new BusinessException("Duyệt yêu cầu cần đúng một tham chiếu hợp đồng đi kèm.");
         }
         if ("RENT".equals(entity.getRequestType()) && !hasContract) {
-            throw new BusinessException("RENT requests must be linked to a rental contract");
+            throw new BusinessException("Yêu cầu thuê phải được liên kết với hợp đồng thuê.");
         }
         if ("BUY".equals(entity.getRequestType()) && !hasSaleContract) {
-            throw new BusinessException("BUY requests must be linked to a sale contract");
+            throw new BusinessException("Yêu cầu mua phải được liên kết với hợp đồng mua bán.");
         }
     }
 
     private void validateContractMatchesRequest(PropertyRequestEntity request, ContractEntity contract) {
         if (!Objects.equals(contract.getBuilding().getId(), request.getBuilding().getId())
                 || !Objects.equals(contract.getCustomer().getId(), request.getCustomer().getId())) {
-            throw new BusinessException("Contract does not match the selected property request");
+            throw new BusinessException("Hợp đồng không khớp với yêu cầu bất động sản đã chọn.");
         }
     }
 
     private void validateSaleContractMatchesRequest(PropertyRequestEntity request, SaleContractEntity saleContract) {
         if (!Objects.equals(saleContract.getBuilding().getId(), request.getBuilding().getId())
                 || !Objects.equals(saleContract.getCustomer().getId(), request.getCustomer().getId())) {
-            throw new BusinessException("Sale contract does not match the selected property request");
+            throw new BusinessException("Hợp đồng mua bán không khớp với yêu cầu bất động sản đã chọn.");
         }
     }
 
     private void validateRequestReadyForContract(PropertyRequestEntity request) {
-        ensurePending(request, "Only pending requests can be converted into a contract");
+        ensurePending(request, "Chỉ có thể chuyển yêu cầu đang chờ xử lý thành hợp đồng.");
         if (!"RENT".equals(request.getRequestType())) {
-            throw new BusinessException("Only RENT requests can be converted into a rental contract");
+            throw new BusinessException("Chỉ yêu cầu thuê mới có thể chuyển thành hợp đồng thuê.");
         }
     }
 
     private void validateRequestReadyForSaleContract(PropertyRequestEntity request) {
-        ensurePending(request, "Only pending requests can be converted into a sale contract");
+        ensurePending(request, "Chỉ có thể chuyển yêu cầu đang chờ xử lý thành hợp đồng mua bán.");
         if (!"BUY".equals(request.getRequestType())) {
-            throw new BusinessException("Only BUY requests can be converted into a sale contract");
+            throw new BusinessException("Chỉ yêu cầu mua mới có thể chuyển thành hợp đồng mua bán.");
         }
     }
 

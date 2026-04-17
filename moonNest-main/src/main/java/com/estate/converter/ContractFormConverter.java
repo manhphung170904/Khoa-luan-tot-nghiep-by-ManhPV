@@ -31,15 +31,15 @@ public class ContractFormConverter {
         modelMapper.map(dto, entity);
 
         BuildingEntity building = buildingRepository.findById(dto.getBuildingId())
-                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản."));
         entity.setBuilding(building);
 
         StaffEntity staff = staffRepository.findById(dto.getStaffId())
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
         entity.setStaff(staff);
 
         CustomerEntity customer = customerRepository.findById(dto.getCustomerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Customer was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng."));
         entity.setCustomer(customer);
 
         return entity;

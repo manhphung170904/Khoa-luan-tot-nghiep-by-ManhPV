@@ -77,30 +77,30 @@ public class AuthServiceImpl implements AuthService {
     public void resetPassword(String email, String otp, String newPassword, String confirmPassword) {
         String normalizedEmail = normalizeEmail(email);
         if (!StringUtils.hasText(normalizedEmail) || !isLocalAccount(normalizedEmail)) {
-            throw new BusinessException("Account was not found");
+            throw new BusinessException("Không tìm thấy tài khoản.");
         }
 
         if (newPassword == null || newPassword.length() < MIN_PASSWORD_LENGTH) {
-            throw new BusinessException("Password must be at least 8 characters long");
+            throw new BusinessException("Mật khẩu phải có ít nhất 8 ký tự.");
         }
 
         if (!StringUtils.hasText(confirmPassword) || !newPassword.equals(confirmPassword)) {
-            throw new BusinessException("Password confirmation does not match");
+            throw new BusinessException("Mật khẩu xác nhận không khớp.");
         }
 
         EmailVerificationEntity verification = emailVerificationRepository
                 .findTopByEmailAndPurposeAndStatusOrderByCreatedAtDesc(normalizedEmail, PURPOSE_RESET_PASSWORD, STATUS_PENDING)
-                .orElseThrow(() -> new BusinessException("Reset code was not found or has expired"));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy mã đặt lại mật khẩu hoặc mã đã hết hạn."));
 
         if (verification.getExpiresAt().isBefore(LocalDateTime.now())) {
             verification.setStatus(STATUS_USED);
             verification.setUsedAt(LocalDateTime.now());
             emailVerificationRepository.save(verification);
-            throw new BusinessException("Reset code has expired");
+            throw new BusinessException("Mã đặt lại mật khẩu đã hết hạn.");
         }
 
         if (!hash(otp).equals(verification.getOtpHash())) {
-            throw new BusinessException("Reset code is invalid");
+            throw new BusinessException("Mã đặt lại mật khẩu không hợp lệ.");
         }
 
         Optional<StaffEntity> staff = staffRepository.findByEmail(normalizedEmail)
@@ -113,7 +113,7 @@ public class AuthServiceImpl implements AuthService {
         } else {
             CustomerEntity customer = customerRepository.findByEmail(normalizedEmail)
                     .filter(customerEntity -> isLocalAccount(customerEntity.getEmail()))
-                    .orElseThrow(() -> new BusinessException("Account was not found"));
+                    .orElseThrow(() -> new BusinessException("Không tìm thấy tài khoản."));
             customer.setPassword(passwordEncoder.encode(newPassword));
             customerRepository.save(customer);
             refreshTokenService.revokeAllForUser("CUSTOMER", customer.getId());
@@ -128,15 +128,15 @@ public class AuthServiceImpl implements AuthService {
     public CustomUserDetails authenticate(String identifier, String password) {
         String normalizedIdentifier = identifier == null ? "" : identifier.trim();
         if (!StringUtils.hasText(normalizedIdentifier)) {
-            throw new BusinessException("Username is required");
+            throw new BusinessException("Vui lòng nhập tên đăng nhập.");
         }
 
         CustomUserDetails user = resolveLoginUser(normalizedIdentifier);
         if (user == null || user.getPassword() == null || user.getPassword().isBlank()) {
-            throw new BusinessException("Invalid username or password");
+            throw new BusinessException("Tên đăng nhập hoặc mật khẩu không đúng.");
         }
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new BusinessException("Invalid username or password");
+            throw new BusinessException("Tên đăng nhập hoặc mật khẩu không đúng.");
         }
 
         return user;

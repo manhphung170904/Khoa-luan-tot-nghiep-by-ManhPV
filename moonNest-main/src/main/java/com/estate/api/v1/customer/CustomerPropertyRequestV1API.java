@@ -31,7 +31,7 @@ public class CustomerPropertyRequestV1API {
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         propertyRequestService.submit(dto, user.getUserId());
-        return ResponseEntity.ok(ApiMessageResponse.of("Property request submitted successfully."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Gửi yêu cầu bất động sản thành công."));
     }
 
     @GetMapping
@@ -43,6 +43,6 @@ public class CustomerPropertyRequestV1API {
     public ApiMessageResponse<Void> cancelRequest(@PathVariable Long id,
                                                   @AuthenticationPrincipal CustomUserDetails user) {
         propertyRequestService.cancel(id, user.getUserId());
-        return ApiMessageResponse.of("Property request canceled successfully.");
+        return ApiMessageResponse.of("Hủy yêu cầu bất động sản thành công.");
     }
 }

@@ -49,27 +49,27 @@ public class BuildingDetailServiceImpl implements BuildingDetailService {
 
     private BuildingEntity requireBuilding(Long buildingId) {
         return buildingRepository.findById(buildingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản."));
     }
 
     private LegalAuthorityEntity requireLegalAuthority(Long id) {
         return legalAuthorityRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Legal authority was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy cơ quan pháp lý."));
     }
 
     private NearbyAmenityEntity requireNearbyAmenity(Long id) {
         return nearbyAmenityRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Nearby amenity was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tiện ích lân cận."));
     }
 
     private PlanningMapEntity requirePlanningMap(Long id) {
         return planningMapRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Planning map was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bản đồ quy hoạch."));
     }
 
     private SupplierEntity requireSupplier(Long id) {
         return supplierRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp."));
     }
 
     @Override

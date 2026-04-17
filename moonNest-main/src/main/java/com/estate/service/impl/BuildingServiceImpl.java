@@ -154,9 +154,9 @@ public class BuildingServiceImpl implements BuildingService {
         BuildingEntity entity;
         if (dto.getId() != null) {
             entity = buildingRepository.findById(dto.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản."));
             if (saleContractRepository.countByBuildingId(dto.getId()) == 1) {
-                throw new BusinessException("Sold buildings cannot be updated");
+                throw new BusinessException("Không thể cập nhật bất động sản đã bán.");
             }
         } else {
             entity = new BuildingEntity();
@@ -168,18 +168,18 @@ public class BuildingServiceImpl implements BuildingService {
     @Override
     public BuildingFormDTO findById(Long id) {
         BuildingEntity buildingEntity = buildingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản."));
         return buildingFormConverter.toDTO(buildingEntity);
     }
 
     @Override
     public void delete(Long id) {
         if (!buildingRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Building was not found");
+            throw new ResourceNotFoundException("Không tìm thấy bất động sản.");
         }
         long count = contractRepository.countByBuildingId(id);
         if (count > 0) {
-            throw new BusinessException("Cannot delete a building with related contracts");
+            throw new BusinessException("Không thể xóa bất động sản đang có hợp đồng liên quan.");
         }
         buildingRepository.deleteById(id);
     }
@@ -187,7 +187,7 @@ public class BuildingServiceImpl implements BuildingService {
     @Override
     public BuildingDetailDTO viewById(Long id) {
         BuildingEntity buildingEntity = buildingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản."));
         return buildingDetailConverter.toDTO(buildingEntity);
     }
 

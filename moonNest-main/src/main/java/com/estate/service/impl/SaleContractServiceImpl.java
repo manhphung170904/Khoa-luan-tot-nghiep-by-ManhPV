@@ -116,17 +116,17 @@ public class SaleContractServiceImpl implements SaleContractService {
 
     private void saveNew(SaleContractFormDTO dto) {
         BuildingEntity building = buildingRepository.findById(dto.getBuildingId())
-                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản."));
 
         if (!"FOR_SALE".equals(building.getTransactionType().toString())) {
             throw new SaleContractValidationException(
-                    "Building \"" + building.getName() + "\" is not a sale property"
+                    "Bất động sản \"" + building.getName() + "\" không phải loại mua bán."
             );
         }
 
         if (saleContractRepository.existsByBuilding_Id(dto.getBuildingId())) {
             throw new SaleContractValidationException(
-                    "Building \"" + building.getName() + "\" has already been sold"
+                    "Bất động sản \"" + building.getName() + "\" đã được bán."
             );
         }
 
@@ -137,16 +137,16 @@ public class SaleContractServiceImpl implements SaleContractService {
 
         if (dto.getFromRequestId() != null) {
             PropertyRequestEntity request = propertyRequestRepository.findById(dto.getFromRequestId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Property request was not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu bất động sản."));
             if (!"PENDING".equals(request.getStatus())) {
-                throw new SaleContractValidationException("Only pending requests can be converted into a sale contract");
+                throw new SaleContractValidationException("Chỉ có thể chuyển yêu cầu đang chờ xử lý thành hợp đồng mua bán.");
             }
             if (!"BUY".equals(request.getRequestType())) {
-                throw new SaleContractValidationException("Only BUY requests can be converted into a sale contract");
+                throw new SaleContractValidationException("Chỉ yêu cầu mua mới có thể chuyển thành hợp đồng mua bán.");
             }
             if (!request.getBuilding().getId().equals(dto.getBuildingId())
                     || !request.getCustomer().getId().equals(dto.getCustomerId())) {
-                throw new SaleContractValidationException("Sale contract data does not match the selected request");
+                throw new SaleContractValidationException("Dữ liệu hợp đồng mua bán không khớp với yêu cầu đã chọn.");
             }
             request.setStatus("APPROVED");
             request.setProcessedBy(entity.getStaff());
@@ -192,7 +192,7 @@ public class SaleContractServiceImpl implements SaleContractService {
 
     private SaleContractEntity findEntityById(Long id) {
         return saleContractRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Sale contract was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng mua bán."));
     }
 
     private Page<SaleContractListDTO> toPageDTO(Page<SaleContractEntity> entityPage) {

@@ -164,10 +164,10 @@ public class PaymentV1API {
         }
 
         InvoiceEntity invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
 
         if (invoice.getCustomer() == null || !Objects.equals(invoice.getCustomer().getId(), user.getUserId())) {
-            throw new ForbiddenOperationException("You cannot access this invoice");
+            throw new ForbiddenOperationException("Bạn không có quyền truy cập hóa đơn này.");
         }
 
         return invoice;

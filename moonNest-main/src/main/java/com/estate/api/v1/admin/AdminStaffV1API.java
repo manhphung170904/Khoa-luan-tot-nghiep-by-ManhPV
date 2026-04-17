@@ -51,13 +51,13 @@ public class AdminStaffV1API {
     ) {
         validate(result);
         staffService.save(dto);
-        return ResponseEntity.ok(ApiMessageResponse.of("Th?m nh?n vi?n th?nh c?ng."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Thêm nhân viên thành công."));
     }
 
     @DeleteMapping("/{id}")
     public ApiMessageResponse<Void> deleteStaff(@PathVariable Long id) {
         staffService.delete(id);
-        return ApiMessageResponse.of("X?a nh?n vi?n th?nh c?ng.");
+        return ApiMessageResponse.of("Xóa nhân viên thành công.");
     }
 
     @GetMapping("/customers")
@@ -73,7 +73,7 @@ public class AdminStaffV1API {
     @PutMapping("/{id}/assignments/customers")
     public ApiMessageResponse<Void> updateCustomerAssignments(@PathVariable Long id, @RequestBody List<Long> customerIds) {
         staffService.updateCustomerAssignments(id, customerIds);
-        return ApiMessageResponse.of("C?p nh?t ph?n c?ng kh?ch h?ng th?nh c?ng.");
+        return ApiMessageResponse.of("Cập nhật phân công khách hàng thành công.");
     }
 
     @GetMapping("/buildings")
@@ -89,7 +89,7 @@ public class AdminStaffV1API {
     @PutMapping("/{id}/assignments/buildings")
     public ApiMessageResponse<Void> updateBuildingAssignments(@PathVariable Long id, @RequestBody List<Long> buildingIds) {
         staffService.updateBuildingAssignments(id, buildingIds);
-        return ApiMessageResponse.of("C?p nh?t ph?n c?ng t?a nh? th?nh c?ng.");
+        return ApiMessageResponse.of("Cập nhật phân công tòa nhà thành công.");
     }
 
     @PostMapping("/{id}/quick-assign")
@@ -99,7 +99,7 @@ public class AdminStaffV1API {
             @RequestParam Long customerId
     ) {
         staffService.quickAssign(id, buildingId, customerId);
-        return ApiMessageResponse.of("Ph?n c?ng nhanh th?nh c?ng.");
+        return ApiMessageResponse.of("Phân công nhanh thành công.");
     }
 
     private void validate(BindingResult result) {

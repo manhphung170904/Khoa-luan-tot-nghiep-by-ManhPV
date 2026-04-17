@@ -95,7 +95,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public InvoiceFormDTO findById(Long invoiceId) {
         InvoiceEntity invoiceEntity = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
         InvoiceFormDTO dto = new InvoiceFormDTO();
         invoiceFormConverter.toDTO(invoiceEntity, dto);
         return dto;
@@ -181,7 +181,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public void delete(Long id) {
         InvoiceEntity invoice = invoiceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
         utilityMeterRepository.deleteByContractIdAndMonthAndYear(invoice.getContract().getId(), invoice.getMonth(), invoice.getYear());
         invoiceRepository.deleteById(id);
     }
@@ -189,7 +189,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public void deleteForStaff(Long id, Long staffId) {
         InvoiceEntity invoice = invoiceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
         assertStaffOwnsInvoice(invoice, staffId);
         delete(id);
     }
@@ -197,7 +197,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public InvoiceDetailDTO viewById(Long invoiceId) {
         InvoiceEntity invoiceEntity = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
         UtilityMeterEntity utilityMeter = utilityMeterService.findByContractIdAndMonthAndYear(
                 invoiceEntity.getContract().getId(), invoiceEntity.getMonth(), invoiceEntity.getYear());
         return invoiceDetailConverter.toDTO(invoiceEntity, utilityMeter);
@@ -207,7 +207,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     public void invoiceConfirm(Long id) {
         int updated = invoiceRepository.confirmInvoice(id);
         if (updated == 0) {
-            throw new BusinessException("Invoice could not be confirmed");
+            throw new BusinessException("Không thể xác nhận hóa đơn.");
         }
     }
 
@@ -224,7 +224,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         assertStaffOwnsContract(dto.getContractId(), staffId);
         if (dto.getId() != null) {
             InvoiceEntity existingInvoice = invoiceRepository.findById(dto.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
             assertStaffOwnsInvoice(existingInvoice, staffId);
         }
         saveInternal(dto);
@@ -243,24 +243,24 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (dto.getId() == null) {
             if (invoiceRepository.existsByContractIdAndCustomerIdAndMonthAndYear(
                     dto.getContractId(), dto.getCustomerId(), invoiceMonth, invoiceYear)) {
-                throw new BusinessException("An invoice for the selected month and year already exists");
+                throw new BusinessException("Hóa đơn của tháng và năm đã chọn đã tồn tại.");
             }
             if (!isLastMonth) {
-                throw new BusinessException("Invoices can only be created for the previous month");
+                throw new BusinessException("Chỉ được tạo hóa đơn cho tháng liền trước.");
             }
         }
 
         InvoiceEntity invoice = dto.getId() == null
                 ? new InvoiceEntity()
                 : invoiceRepository.findById(dto.getId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
 
         if (dto.getId() != null) {
             if (!"PENDING".equals(invoice.getStatus())) {
-                throw new BusinessException("Only pending invoices can be updated");
+                throw new BusinessException("Chỉ có thể cập nhật hóa đơn đang chờ xử lý.");
             }
             if (!isLastMonth) {
-                throw new BusinessException("Invoices can only be updated for the previous month");
+                throw new BusinessException("Chỉ được cập nhật hóa đơn của tháng liền trước.");
             }
         }
 
@@ -268,7 +268,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         LocalDate endOfInvoiceMonth = LocalDate.of(invoiceYear, invoiceMonth, 1)
                 .withDayOfMonth(LocalDate.of(invoiceYear, invoiceMonth, 1).lengthOfMonth());
         if (!dueDate.isAfter(endOfInvoiceMonth)) {
-            throw new BusinessException("Due date must be after the invoice month");
+            throw new BusinessException("Hạn thanh toán phải sau tháng lập hóa đơn.");
         }
 
         invoiceFormConverter.toEntity(invoice, dto);
@@ -287,33 +287,33 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private void validateContractCustomerMatch(InvoiceFormDTO dto) {
         ContractEntity contract = contractRepository.findById(dto.getContractId())
-                .orElseThrow(() -> new ResourceNotFoundException("Contract was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."));
         if (contract.getCustomer() == null || !Objects.equals(contract.getCustomer().getId(), dto.getCustomerId())) {
-            throw new BusinessException("Selected customer does not match the selected contract");
+            throw new BusinessException("Khách hàng đã chọn không khớp với hợp đồng đã chọn.");
         }
     }
 
     private void assertStaffOwnsContract(Long contractId, Long staffId) {
         ContractEntity contract = contractRepository.findById(contractId)
-                .orElseThrow(() -> new ResourceNotFoundException("Contract was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."));
         if (contract.getStaff() == null || !Objects.equals(contract.getStaff().getId(), staffId)) {
-            throw new ForbiddenOperationException("You cannot manage invoices outside your assigned contracts");
+            throw new ForbiddenOperationException("Bạn không có quyền quản lý hóa đơn ngoài các hợp đồng được phân công.");
         }
     }
 
     private void assertStaffOwnsInvoice(InvoiceEntity invoice, Long staffId) {
         ContractEntity contract = invoice.getContract();
         if (contract == null || contract.getStaff() == null || !Objects.equals(contract.getStaff().getId(), staffId)) {
-            throw new ForbiddenOperationException("You cannot manage invoices outside your assigned contracts");
+            throw new ForbiddenOperationException("Bạn không có quyền quản lý hóa đơn ngoài các hợp đồng được phân công.");
         }
     }
 
     @Override
     public Integer getRentArea(Long id) {
         InvoiceEntity invoice = invoiceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
         ContractEntity contract = contractRepository.findById(invoice.getContract().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Contract was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."));
         return contract.getRentArea();
     }
 
@@ -327,12 +327,12 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public void markPaid(Long invoiceId, String method, String txnRef) {
         InvoiceEntity invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
         if ("PAID".equalsIgnoreCase(invoice.getStatus())) {
             return;
         }
         if (!"PENDING".equalsIgnoreCase(invoice.getStatus()) && !"OVERDUE".equalsIgnoreCase(invoice.getStatus())) {
-            throw new BusinessException("Only payable invoices can be marked as paid");
+            throw new BusinessException("Chỉ có thể đánh dấu đã thanh toán với hóa đơn đến hạn thanh toán.");
         }
         invoice.setStatus("PAID");
         invoice.setPaidDate(LocalDateTime.now());

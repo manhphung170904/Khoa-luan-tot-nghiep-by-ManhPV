@@ -25,7 +25,7 @@ public class InvoiceDetailDetailConverter {
         modelMapper.map(dto, entity);
 
         InvoiceEntity invoice = invoiceRepository.findById(dto.getInvoiceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Invoice was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn."));
         entity.setInvoice(invoice);
     }
 }

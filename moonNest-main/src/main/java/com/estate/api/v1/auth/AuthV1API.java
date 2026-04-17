@@ -35,7 +35,7 @@ public class AuthV1API {
     @PostMapping("/forgot-password")
     public ApiMessageResponse<Void> forgotPassword(@RequestParam String email) {
         authService.forgotPassword(email);
-        return ApiMessageResponse.of("If the account exists, a reset code has been sent.");
+        return ApiMessageResponse.of("Nếu tài khoản tồn tại, mã đặt lại mật khẩu đã được gửi.");
     }
 
     @PostMapping("/login")
@@ -49,7 +49,7 @@ public class AuthV1API {
 
         return ResponseEntity.ok(
                 ApiMessageWithDataResponse.of(
-                        "Login successful.",
+                        "Đăng nhập thành công.",
                         AuthSessionDTO.of(toUserDto(user))
                 )
         );
@@ -65,7 +65,7 @@ public class AuthV1API {
         authService.logout(authCookieService.readCookie(request, AuthCookieService.REFRESH_COOKIE));
         authCookieService.clearAuthCookies(response);
         authCookieService.clearOAuthLinkCookies(response);
-        return ApiMessageResponse.of("Logout successful.");
+        return ApiMessageResponse.of("Đăng xuất thành công.");
     }
 
     private AuthUserDTO toUserDto(CustomUserDetails user) {

@@ -86,7 +86,7 @@ public class AdminBuildingV1API {
     ) {
         validate(result);
         buildingService.save(dto);
-        return ResponseEntity.ok(ApiMessageResponse.of("Building created successfully."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Thêm bất động sản thành công."));
     }
 
     @PutMapping("/{id}")
@@ -98,33 +98,33 @@ public class AdminBuildingV1API {
         validate(result);
         dto.setId(id);
         buildingService.save(dto);
-        return ApiMessageResponse.of("Building updated successfully.");
+        return ApiMessageResponse.of("Cập nhật bất động sản thành công.");
     }
 
     @DeleteMapping("/{id}")
     public ApiMessageResponse<Void> deleteBuilding(@PathVariable Long id) {
         buildingService.delete(id);
-        return ApiMessageResponse.of("Building deleted successfully.");
+        return ApiMessageResponse.of("Xóa bất động sản thành công.");
     }
 
     @PostMapping("/image")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
-            throw new InputValidationException("Please select an image file");
+            throw new InputValidationException("Vui lòng chọn tệp ảnh.");
         }
         if (file.getSize() > MAX_SIZE_BYTES) {
-            throw new PayloadTooLargeException("Image size must not exceed 5 MB");
+            throw new PayloadTooLargeException("Dung lượng ảnh không được vượt quá 5 MB.");
         }
 
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
-            throw new UnsupportedMediaTypeApiException("Only JPG, PNG and WEBP files are supported");
+            throw new UnsupportedMediaTypeApiException("Chỉ hỗ trợ tệp JPG, PNG và WEBP.");
         }
 
         String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
         boolean validExt = ALLOWED_EXTS.stream().anyMatch(originalName::endsWith);
         if (!validExt) {
-            throw new UnsupportedMediaTypeApiException("Only .jpg, .jpeg, .png and .webp extensions are supported");
+            throw new UnsupportedMediaTypeApiException("Chỉ hỗ trợ phần mở rộng .jpg, .jpeg, .png và .webp.");
         }
 
         String ext = originalName.substring(originalName.lastIndexOf('.'));
@@ -137,10 +137,10 @@ public class AdminBuildingV1API {
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
             return ResponseEntity.ok(
-                    ApiMessageResponse.of("File uploaded successfully.", FileUploadResponseDTO.of(newFilename))
+                    ApiMessageResponse.of("Tải ảnh lên thành công.", FileUploadResponseDTO.of(newFilename))
             );
         } catch (IOException e) {
-            throw new IllegalStateException("Unable to store uploaded file", e);
+            throw new IllegalStateException("Không thể lưu tệp ảnh đã tải lên.", e);
         }
     }
 

@@ -197,40 +197,40 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public void save(ContractFormDTO dto) {
         StaffEntity staff = staffRepository.findById(dto.getStaffId())
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
         if (!staffRepository.existsByStaffIdAndBuildingId(dto.getStaffId(), dto.getBuildingId())) {
             BuildingEntity building = buildingRepository.findById(dto.getBuildingId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
-            throw new BusinessException("Selected staff does not manage building " + building.getName());
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản."));
+            throw new BusinessException("Nhân viên được chọn không phụ trách bất động sản " + building.getName());
         }
         if (!staffRepository.existsByStaffIdAndCustomerId(dto.getStaffId(), dto.getCustomerId())) {
             CustomerEntity customer = customerRepository.findById(dto.getCustomerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Customer was not found"));
-            throw new BusinessException("Selected staff does not manage customer " + customer.getFullName());
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng."));
+            throw new BusinessException("Nhân viên được chọn không phụ trách khách hàng " + customer.getFullName());
         }
         if (dto.getStartDate() != null && dto.getEndDate() != null && dto.getEndDate().isBefore(dto.getStartDate())) {
-            throw new BusinessException("End date must be after or equal to start date");
+            throw new BusinessException("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
         }
 
         ContractEntity entity = dto.getId() != null
                 ? contractRepository.findById(dto.getId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Contract was not found"))
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."))
                 : new ContractEntity();
         contractFormConverter.toEntity(entity, dto);
         contractRepository.save(entity);
 
         if (dto.getFromRequestId() != null) {
             PropertyRequestEntity request = propertyRequestRepository.findById(dto.getFromRequestId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Property request was not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu bất động sản."));
             if (!"PENDING".equals(request.getStatus())) {
-                throw new BusinessException("Only pending requests can be converted into a contract");
+                throw new BusinessException("Chỉ có thể chuyển yêu cầu đang chờ xử lý thành hợp đồng.");
             }
             if (!"RENT".equals(request.getRequestType())) {
-                throw new BusinessException("Only RENT requests can be converted into a rental contract");
+                throw new BusinessException("Chỉ yêu cầu thuê mới có thể chuyển thành hợp đồng thuê.");
             }
             if (!request.getBuilding().getId().equals(dto.getBuildingId())
                     || !request.getCustomer().getId().equals(dto.getCustomerId())) {
-                throw new BusinessException("Contract data does not match the selected request");
+                throw new BusinessException("Dữ liệu hợp đồng không khớp với yêu cầu đã chọn.");
             }
             request.setStatus("APPROVED");
             request.setProcessedBy(staff);
@@ -244,7 +244,7 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public void delete(Long id) {
         if (!contractRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Contract was not found");
+            throw new ResourceNotFoundException("Không tìm thấy hợp đồng.");
         }
         contractRepository.deleteById(id);
     }
@@ -252,14 +252,14 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public ContractFormDTO findById(Long id) {
         ContractEntity contractEntity = contractRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Contract was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."));
         return contractFormConverter.toDTO(contractEntity);
     }
 
     @Override
     public ContractDetailDTO viewById(Long id) {
         ContractEntity contractEntity = contractRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Contract was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hợp đồng."));
         return contractDetailConverter.toDto(contractEntity);
     }
 

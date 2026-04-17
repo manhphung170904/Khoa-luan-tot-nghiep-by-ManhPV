@@ -91,18 +91,18 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public void save(StaffFormDTO dto) {
         if (staffRepository.existsByUsername(dto.getUsername()) || customerRepository.existsByUsername(dto.getUsername())) {
-            throw new BusinessException("Username already exists");
+            throw new BusinessException("Tên đăng nhập đã tồn tại.");
         }
         if (staffRepository.existsByEmail(dto.getEmail()) || customerRepository.existsByEmail(dto.getEmail())) {
-            throw new BusinessException("Email already exists");
+            throw new BusinessException("Email đã tồn tại.");
         }
         if (staffRepository.existsByPhone(dto.getPhone()) || customerRepository.existsByPhone(dto.getPhone())) {
-            throw new BusinessException("Phone number already exists");
+            throw new BusinessException("Số điện thoại đã tồn tại.");
         }
 
         StaffEntity entity = dto.getId() != null
                 ? staffRepository.findById(dto.getId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"))
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."))
                 : staffFormConverter.toEntity(dto);
         if (dto.getId() == null) {
             entity.setAuthOrigin("LOCAL");
@@ -114,15 +114,15 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public void delete(Long id) {
         if (!staffRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Staff was not found");
+            throw new ResourceNotFoundException("Không tìm thấy nhân viên.");
         }
         long buildingCnt = staffRepository.countBuildingsByStaffId(id);
         if (buildingCnt > 0) {
-            throw new BusinessException("Cannot delete staff assigned to buildings");
+            throw new BusinessException("Không thể xóa nhân viên đang được phân công cho bất động sản.");
         }
         long customerCnt = staffRepository.countCustomersByStaffId(id);
         if (customerCnt > 0) {
-            throw new BusinessException("Cannot delete staff assigned to customers");
+            throw new BusinessException("Không thể xóa nhân viên đang được phân công cho khách hàng.");
         }
         staffRepository.deleteById(id);
     }
@@ -130,7 +130,7 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public StaffDetailDTO viewById(Long id) {
         StaffEntity staffEntity = staffRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
         return staffDetailConverter.toDTO(staffEntity);
     }
 
@@ -157,10 +157,10 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public void usernameUpdate(UsernameChangeDTO dto, Long staffId) {
         StaffEntity staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
         if (staffRepository.existsByUsernameAndIdNot(dto.getNewUsername(), staffId)
                 || customerRepository.existsByUsername(dto.getNewUsername())) {
-            throw new BusinessException("Username is already in use");
+            throw new BusinessException("Tên đăng nhập đã được sử dụng.");
         }
         profileOtpService.verifyOtp(resolveOtpEmail(staff), "PROFILE_USERNAME", dto.getOtp());
         staffRepository.usernameUpdate(dto.getNewUsername(), staffId);
@@ -169,14 +169,14 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public void emailUpdate(EmailChangeDTO dto, Long staffId) {
         StaffEntity staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
         boolean isCorrect = passwordEncoder.matches(dto.getPassword(), staff.getPassword());
         if (!isCorrect) {
-            throw new BusinessException("Current password is incorrect");
+            throw new BusinessException("Mật khẩu hiện tại không đúng.");
         }
         if (customerRepository.existsByEmail(dto.getNewEmail())
                 || staffRepository.existsByEmailAndIdNot(dto.getNewEmail(), staffId)) {
-            throw new BusinessException("Email is already in use");
+            throw new BusinessException("Email đã được sử dụng.");
         }
         staffRepository.emailUpdate(dto.getNewEmail(), staffId);
     }
@@ -184,10 +184,10 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public void phoneNumberUpdate(PhoneNumberChangeDTO dto, Long staffId) {
         StaffEntity staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
         if (customerRepository.existsByPhone(dto.getNewPhoneNumber())
                 || staffRepository.existsByPhoneAndIdNot(dto.getNewPhoneNumber(), staffId)) {
-            throw new BusinessException("Phone number is already in use");
+            throw new BusinessException("Số điện thoại đã được sử dụng.");
         }
         profileOtpService.verifyOtp(resolveOtpEmail(staff), "PROFILE_PHONE", dto.getOtp());
         staffRepository.phoneNumberUpdate(dto.getNewPhoneNumber(), staffId);
@@ -196,13 +196,13 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public void passwordUpdate(PasswordChangeDTO dto, Long staffId) {
         StaffEntity staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
         if (dto.getNewPassword() == null || dto.getNewPassword().length() < 8) {
-            throw new BusinessException("Password must contain at least 8 characters");
+            throw new BusinessException("Mật khẩu phải có ít nhất 8 ký tự.");
         }
         profileOtpService.verifyOtp(resolveOtpEmail(staff), "PROFILE_PASSWORD", dto.getOtp());
         if (!dto.getConfirmPassword().equals(dto.getNewPassword())) {
-            throw new BusinessException("Password confirmation does not match");
+            throw new BusinessException("Mật khẩu xác nhận không khớp.");
         }
         String encodedPassword = passwordEncoder.encode(dto.getNewPassword());
         staffRepository.passwordUpdate(encodedPassword, staffId);
@@ -222,7 +222,7 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public StaffEntity findById(Long staffId) {
         return staffRepository.findById(staffId)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
     }
 
     @Override
@@ -250,7 +250,7 @@ public class StaffServiceImpl implements StaffService {
     public void updateBuildingAssignments(Long staffId, List<Long> newBuildingIds) {
         List<Long> requestedBuildingIds = newBuildingIds == null ? new ArrayList<>() : newBuildingIds;
         StaffEntity staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
         List<Long> currentIds = staffRepository.findAssignedBuildingIds(staffId);
         List<Long> removedIds = currentIds.stream().filter(id -> !requestedBuildingIds.contains(id)).toList();
         List<Long> addedIds = requestedBuildingIds.stream().filter(id -> !currentIds.contains(id)).toList();
@@ -287,7 +287,7 @@ public class StaffServiceImpl implements StaffService {
     public void updateCustomerAssignments(Long staffId, List<Long> newCustomerIds) {
         List<Long> requestedCustomerIds = newCustomerIds == null ? new ArrayList<>() : newCustomerIds;
         StaffEntity staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
         List<Long> currentIds = staffRepository.findAssignedCustomerIds(staffId);
         List<Long> removedIds = currentIds.stream().filter(id -> !requestedCustomerIds.contains(id)).toList();
         List<Long> addedIds = requestedCustomerIds.stream().filter(id -> !currentIds.contains(id)).toList();
@@ -333,15 +333,15 @@ public class StaffServiceImpl implements StaffService {
     @Transactional
     public void quickAssign(Long staffId, Long buildingId, Long customerId) {
         StaffEntity staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên."));
         BuildingEntity building = buildingRepository.findById(buildingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Building was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản."));
         if (!building.getStaffs_buildings().contains(staff)) {
             building.getStaffs_buildings().add(staff);
             buildingRepository.save(building);
         }
         CustomerEntity customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng."));
         if (!customer.getStaffs_customers().contains(staff)) {
             customer.getStaffs_customers().add(staff);
             customerRepository.save(customer);
