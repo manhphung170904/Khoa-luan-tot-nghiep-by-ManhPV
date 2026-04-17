@@ -1,179 +1,166 @@
-import { test, expect } from "@playwright/test";
-import { ApiAuthHelper } from "../../../utils/api/apiAuthHelper";
-import { DatabaseHelper } from "../../../utils/db-client";
+import { expect, test, type APIRequestContext } from "@playwright/test";
+import { ApiSessionHelper } from "@api/apiSessionHelper";
+import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TempEntityHelper } from "@helpers/TempEntityHelper";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin Customer API Tests @api @regression", () => {
-  let db: DatabaseHelper;
-  let adminCookies: string;
-  let createdCustomerId: number;
+test.describe.serial("Admin Customer API Tests @api @regression", () => {
+  let admin: APIRequestContext;
 
-  const uniqueSuffix = Date.now();
-  const validCustomerPayload = {
-    username: `autocust${uniqueSuffix}`,
-    password: "password123",
-    fullName: "Auto Test Customer",
-    phone: `0700${String(uniqueSuffix).slice(-6)}`,
-    email: `autocust${uniqueSuffix}@customer.com`,
-    staffIds: [1]
-  };
-
-  test.beforeAll(async () => {
-    db = new DatabaseHelper();
-    await db.connect();
-    adminCookies = await ApiAuthHelper.loginAsAdmin();
-
-    const staff = await db.query("SELECT id FROM staff ORDER BY id LIMIT 1");
-    if (staff.length > 0) {
-      validCustomerPayload.staffIds = [staff[0].id];
-    }
+  test.beforeAll(async ({ playwright }) => {
+    admin = await ApiSessionHelper.newContext(playwright, "admin");
   });
 
   test.afterAll(async () => {
-    if (createdCustomerId) {
-      await db.query("DELETE FROM assignment_customer WHERE customer_id = ?", [createdCustomerId]).catch(() => {});
-      await db.query("DELETE FROM customer WHERE id = ?", [createdCustomerId]).catch(() => {});
-    }
-    await db.disconnect();
+    await admin.dispose();
+    await MySqlDbClient.close();
   });
 
-  test.describe.serial("Customer CRUD", () => {
-    test("[CUS_001] POST /customers rejects anonymous create", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/customers", { data: validCustomerPayload });
-      expect(response.status()).toBe(401);
+  test("[CUS_001] POST /customers rejects anonymous create", async ({ request }) => {
+    const response = await request.post("/api/v1/admin/customers", {
+      failOnStatusCode: false,
+      data: TestDataFactory.buildCustomerPayload()
     });
+    expect(response.status()).toBe(401);
+  });
 
-    test("[CUS_002] POST /customers rejects empty staffIds", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/customers", {
-        headers: { Cookie: adminCookies },
-        data: { ...validCustomerPayload, staffIds: [] }
+  test("[CUS_002] POST /customers rejects empty staffIds", async () => {
+    const response = await admin.post("/api/v1/admin/customers", {
+      failOnStatusCode: false,
+      data: TestDataFactory.buildCustomerPayload({ staffIds: [] })
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[CUS_009] POST /customers rejects username shorter than 4", async () => {
+    const response = await admin.post("/api/v1/admin/customers", {
+      failOnStatusCode: false,
+      data: TestDataFactory.buildCustomerPayload({ username: "abc" })
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[CUS_003] POST /customers rejects password shorter than 6", async () => {
+    const response = await admin.post("/api/v1/admin/customers", {
+      failOnStatusCode: false,
+      data: TestDataFactory.buildCustomerPayload({ password: "123" })
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[CUS_010] POST /customers rejects oversized email", async () => {
+    const response = await admin.post("/api/v1/admin/customers", {
+      failOnStatusCode: false,
+      data: TestDataFactory.buildCustomerPayload({ email: `${"a".repeat(95)}@b.com` })
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[CUS_011] POST /customers rejects invalid phone format", async () => {
+    const response = await admin.post("/api/v1/admin/customers", {
+      failOnStatusCode: false,
+      data: TestDataFactory.buildCustomerPayload({ phone: "9999999999" })
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[CUS_004] POST /customers creates customer and supports list/search/delete flow", async () => {
+    const tempStaff = await TempEntityHelper.taoStaffTam(admin);
+    const customerPayload = TestDataFactory.buildCustomerPayload({ staffIds: [tempStaff.id] });
+    let createdCustomerId = 0;
+
+    try {
+      const createResponse = await admin.post("/api/v1/admin/customers", {
+        failOnStatusCode: false,
+        data: customerPayload
       });
-      expect(response.status()).toBe(400);
-    });
+      expect(createResponse.status()).toBe(200);
+      const createBody = (await createResponse.json()) as { message?: string };
+      expect(createBody.message).toBeTruthy();
 
-    test("[CUS_009] POST /customers rejects username shorter than 4", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/customers", {
-        headers: { Cookie: adminCookies },
-        data: { ...validCustomerPayload, username: "abc" }
+      const customerRows = await MySqlDbClient.query<{
+        id: number;
+        email: string;
+        full_name: string;
+      }>("SELECT id, email, full_name FROM customer WHERE username = ? LIMIT 1", [String(customerPayload.username)]);
+
+      expect(customerRows.length).toBe(1);
+      createdCustomerId = customerRows[0]!.id;
+      expect(customerRows[0]!.email).toBe(customerPayload.email);
+      expect(customerRows[0]!.full_name).toBe(customerPayload.fullName);
+
+      const duplicateResponse = await admin.post("/api/v1/admin/customers", {
+        failOnStatusCode: false,
+        data: customerPayload
       });
-      expect(response.status()).toBe(400);
-    });
+      expect(duplicateResponse.status()).toBe(400);
 
-    test("[CUS_003] POST /customers rejects password shorter than 6", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/customers", {
-        headers: { Cookie: adminCookies },
-        data: { ...validCustomerPayload, password: "123" }
+      const listResponse = await admin.get("/api/v1/admin/customers", {
+        failOnStatusCode: false,
+        params: { page: 1, size: 50, fullName: String(customerPayload.fullName) }
       });
-      expect(response.status()).toBe(400);
-    });
+      expect(listResponse.status()).toBe(200);
+      const listBody = (await listResponse.json()) as {
+        content?: Array<{ id: number; fullName?: string; email?: string }>;
+        totalElements?: number;
+      };
+      expect(typeof listBody.totalElements).toBe("number");
+      expect(listBody.content?.some((item) => item.id === createdCustomerId)).toBeTruthy();
+      const createdItem = listBody.content?.find((item) => item.id === createdCustomerId);
+      expect(createdItem?.fullName).toBe(customerPayload.fullName);
+      expect(createdItem?.email).toBe(customerPayload.email);
 
-    test("[CUS_010] POST /customers rejects oversized email", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/customers", {
-        headers: { Cookie: adminCookies },
-        data: { ...validCustomerPayload, email: `${"a".repeat(95)}@b.com` }
-      });
-      expect(response.status()).toBe(400);
-    });
-
-    test("[CUS_011] POST /customers rejects invalid phone format", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/customers", {
-        headers: { Cookie: adminCookies },
-        data: { ...validCustomerPayload, phone: "9999999999" }
-      });
-      expect(response.status()).toBe(400);
-    });
-
-    test("[CUS_004] POST /customers creates customer and persists to DB", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/customers", {
-        headers: { Cookie: adminCookies },
-        data: validCustomerPayload
-      });
-      expect(response.status()).toBe(200);
-
-      const dbResult = await db.query("SELECT * FROM customer WHERE email = ?", [validCustomerPayload.email]);
-      if (dbResult.length > 0) {
-        expect(dbResult[0].email).toBe(validCustomerPayload.email);
-        createdCustomerId = dbResult[0].id;
-      } else {
-        const fallback = await db.query(
-          "SELECT c.id FROM customer c JOIN user u ON c.account_id = u.id WHERE u.email = ?",
-          [validCustomerPayload.email]
-        );
-        expect(fallback.length).toBeGreaterThan(0);
-        createdCustomerId = fallback[0].id;
-      }
-      expect(createdCustomerId).toBeGreaterThan(0);
-    });
-
-    test("[CUS_012] POST /customers rejects duplicate username/email", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/customers", {
-        headers: { Cookie: adminCookies },
-        data: validCustomerPayload
-      });
-      expect(response.status()).toBe(400);
-    });
-
-    test("[CUS_005] GET /customers lists created customer", async ({ request }) => {
-      const response = await request.get("/api/v1/admin/customers", {
-        headers: { Cookie: adminCookies },
-        params: { page: 1, size: 50 }
-      });
-      expect(response.status()).toBe(200);
-      const data = await response.json();
-      expect(Array.isArray(data.content)).toBeTruthy();
-      const found = data.content.find(
-        (item: { id: number; email: string }) => item.id === createdCustomerId || item.email === validCustomerPayload.email
-      );
-      expect(found).toBeDefined();
-    });
-
-    test("[CUS_006] GET /customers searches by fullName", async ({ request }) => {
-      const response = await request.get("/api/v1/admin/customers", {
-        headers: { Cookie: adminCookies },
-        params: { page: 1, size: 10, fullName: "Auto Test Customer" }
-      });
-      expect(response.status()).toBe(200);
-      const data = await response.json();
-      expect(data.content.length).toBeGreaterThanOrEqual(1);
-    });
-
-    test("[CUS_007] DELETE /customers/{id} rejects delete for customer with contract", async ({ request }) => {
-      const customerWithContract = await db.query(`
-        SELECT DISTINCT c.id FROM customer c
-        INNER JOIN contract ct ON ct.customer_id = c.id
-        LIMIT 1
-      `);
-
-      if (customerWithContract.length === 0) {
-        test.skip(true, "No customer with contract found");
-        return;
+      const customerWithContract = await TempEntityHelper.taoContractTam(admin);
+      try {
+        const deleteWithContract = await admin.delete(`/api/v1/admin/customers/${customerWithContract.customer.id}`, {
+          failOnStatusCode: false
+        });
+        expect(deleteWithContract.status()).toBe(400);
+      } finally {
+        await TempEntityHelper.xoaContractTam(admin, customerWithContract);
       }
 
-      const response = await request.delete(`/api/v1/admin/customers/${customerWithContract[0].id}`, {
-        headers: { Cookie: adminCookies }
+      const missingDelete = await admin.delete("/api/v1/admin/customers/999999", {
+        failOnStatusCode: false
       });
-      expect(response.status()).toBe(400);
-    });
+      expect(missingDelete.status()).toBe(400);
+      const missingDeleteBody = (await missingDelete.json()) as { message?: string };
+      expect(missingDeleteBody.message).toBeTruthy();
 
-    test("[CUS_013] DELETE /customers/{id} rejects nonexistent id", async ({ request }) => {
-      const response = await request.delete("/api/v1/admin/customers/999999", {
-        headers: { Cookie: adminCookies }
+      const deleteResponse = await admin.delete(`/api/v1/admin/customers/${createdCustomerId}`, {
+        failOnStatusCode: false
       });
-      expect(response.status()).toBe(400);
-    });
+      expect(deleteResponse.status()).toBe(200);
+      const deleteBody = (await deleteResponse.json()) as { message?: string };
+      expect(deleteBody.message).toBeTruthy();
 
-    test("[CUS_008] DELETE /customers/{id} deletes created customer", async ({ request }) => {
-      const response = await request.delete(`/api/v1/admin/customers/${createdCustomerId}`, {
-        headers: { Cookie: adminCookies }
-      });
-      expect(response.status()).toBe(200);
-
-      const dbResult = await db.query("SELECT * FROM customer WHERE id = ?", [createdCustomerId]);
-      if (dbResult.length > 0) {
-        expect(dbResult[0].is_deleted || dbResult[0].deleted || dbResult[0].status === "DELETED").toBeTruthy();
-      } else {
-        expect(dbResult.length).toBe(0);
-      }
+      const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM customer WHERE id = ?", [createdCustomerId]);
+      expect(deletedRows.length).toBe(0);
       createdCustomerId = 0;
-    });
+    } finally {
+      if (createdCustomerId) {
+        await admin.delete(`/api/v1/admin/customers/${createdCustomerId}`, { failOnStatusCode: false });
+      }
+      await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
+    }
+  });
+
+  test("[CUS_012] DELETE /customers/{id} should block delete when sale contracts exist on temp data", async () => {
+    test.fail(true, "Backend currently checks rent contracts only and may still allow delete despite existing sale contract.");
+    const customerWithSaleContract = await TempEntityHelper.taoSaleContractTam(admin);
+
+    try {
+      const deleteWithSaleContract = await admin.delete(`/api/v1/admin/customers/${customerWithSaleContract.customer.id}`, {
+        failOnStatusCode: false
+      });
+      expect(deleteWithSaleContract.status()).toBe(400);
+    } finally {
+      await MySqlDbClient.execute("DELETE FROM sale_contract WHERE id = ?", [customerWithSaleContract.id]).catch(() => {});
+      await TempEntityHelper.capNhatPhanCongCustomer(admin, customerWithSaleContract.staff.id, []).catch(() => {});
+      await TempEntityHelper.capNhatPhanCongBuilding(admin, customerWithSaleContract.staff.id, []).catch(() => {});
+      await TempEntityHelper.xoaCustomerTam(admin, customerWithSaleContract.customer.id).catch(() => {});
+      await TempEntityHelper.xoaBuildingTam(admin, customerWithSaleContract.building.id).catch(() => {});
+      await TempEntityHelper.xoaStaffTam(admin, customerWithSaleContract.staff.id).catch(() => {});
+    }
   });
 });

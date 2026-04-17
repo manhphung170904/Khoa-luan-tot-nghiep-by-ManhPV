@@ -1,9 +1,9 @@
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { expect, type APIRequestContext, type APIResponse } from "@playwright/test";
 import { env } from "@config/env";
-import { AuthSessionHelper, type UserRole } from "@helpers/AuthSessionHelper";
+import { ApiSessionHelper, type ApiUserRole } from "@api/apiSessionHelper";
+import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import type { ExpectedApiContract, EndpointKind, ApiCoverageStatus } from "@api/apiContractUtils";
@@ -19,7 +19,7 @@ export type RequestDescriptor = {
   id: string;
   method: HttpMethod;
   path: string;
-  roleExpected?: UserRole | "public";
+  roleExpected?: ApiUserRole | "public";
   kind?: EndpointKind;
   coverage?: ApiCoverageStatus;
   contract?: ExpectedApiContract;
@@ -62,7 +62,7 @@ export const invalidTextFile = (name = "invalid.txt") => ({
 
 export async function createRoleContext(
   playwright: RequestContextFactory,
-  role: UserRole,
+  role: ApiUserRole,
   usernameOverride?: string,
   password = env.defaultPassword
 ): Promise<APIRequestContext> {
@@ -74,19 +74,12 @@ export async function createRoleContext(
   });
 
   if (usernameOverride) {
-    const response = await AuthSessionHelper.loginApi(context, usernameOverride, password);
-    expect(response.status()).toBe(302);
-    expect(response.headers()["location"] ?? "").not.toContain("errorMessage");
+    const response = await ApiSessionHelper.login(context, usernameOverride, password);
+    expect(response.status()).toBe(200);
     return context;
   }
 
-  if (role === "admin") {
-    await AuthSessionHelper.loginAsAdminApi(context);
-  } else if (role === "staff") {
-    await AuthSessionHelper.loginAsStaffApi(context);
-  } else {
-    await AuthSessionHelper.loginAsCustomerApi(context);
-  }
+  await ApiSessionHelper.loginAsRole(context, role);
 
   return context;
 }
@@ -164,32 +157,12 @@ export function expectPageShape<T extends object>(payload: { content?: T[]; tota
 }
 
 export async function forceOtp(email: string, purpose: string, otp: string): Promise<void> {
-  const hash = crypto.createHash("sha256").update(otp).digest("hex");
-  await MySqlDbClient.execute(
-    `
-      UPDATE email_verification
-      SET otp_hash = ?, status = 'PENDING', expires_at = DATE_ADD(NOW(), INTERVAL 10 MINUTE), verified_at = NULL, used_at = NULL
-      WHERE email = ? AND purpose = ?
-      ORDER BY created_at DESC
-      LIMIT 1
-    `,
-    [hash, email.toLowerCase(), purpose]
-  );
+  await ApiOtpHelper.setLatestPendingOtp(email, purpose, otp);
 }
 
 export async function latestPendingOtpEmail(email: string, purpose: string): Promise<{ id: number; status: string } | null> {
-  const rows = await MySqlDbClient.query<{ id: number; status: string }>(
-    `
-      SELECT id, status
-      FROM email_verification
-      WHERE email = ? AND purpose = ?
-      ORDER BY created_at DESC
-      LIMIT 1
-    `,
-    [email.toLowerCase(), purpose]
-  );
-
-  return rows[0] ?? null;
+  const latest = await ApiOtpHelper.latest(email, purpose);
+  return latest ? { id: latest.id, status: latest.status } : null;
 }
 
 export async function resolveStaffIdByUsername(username: string): Promise<number> {

@@ -1,0 +1,2 @@
+This is intentionally not a real JPEG binary.
+The backend currently validates MIME type, extension, and size only.

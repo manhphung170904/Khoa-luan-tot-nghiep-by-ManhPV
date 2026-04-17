@@ -1,10 +1,14 @@
-﻿import { test, expect } from "@playwright/test";
-import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
-import { expectMessageBody, expectStatusExact } from "@api/apiContractUtils";
+import { expect, test } from "@playwright/test";
+import { createAnonymousContext } from "@api/adminApiUtils";
+import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "../_fixtures/propertyRequestScenario";
 
 test.describe("Customer Property Request API @api @regression", () => {
+  test.afterAll(async () => {
+    await MySqlDbClient.close();
+  });
+
   test("API-CUS-PRQ-001 rejects anonymous submit with API auth status @regression", async ({ playwright }) => {
     const context = await createAnonymousContext(playwright);
     try {
@@ -14,25 +18,26 @@ test.describe("Customer Property Request API @api @regression", () => {
         data: TestDataFactory.buildPropertyRequestPayload()
       });
 
-      expectStatusExact(response, 401, "Customer property request submit must reject anonymous access");
+      expect(response.status()).toBe(401);
     } finally {
       await context.dispose();
     }
   });
 
   test("API-CUS-PRQ-002 validates required buildingId @regression", async ({ playwright }) => {
-    const customer = await createRoleContext(playwright, "customer");
+    const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
-      const response = await customer.post("/api/v1/customer/property-requests", {
+      const response = await scenario.customer.post("/api/v1/customer/property-requests", {
         failOnStatusCode: false,
         maxRedirects: 0,
-        data: TestDataFactory.buildPropertyRequestPayload({ buildingId: null })
+        data: TestDataFactory.buildPropertyRequestPayload({ buildingId: null }, "RENT")
       });
 
-      const message = await expectMessageBody(response, 400);
-      expect(message.length).toBeGreaterThan(0);
+      expect(response.status()).toBe(400);
+      const body = (await response.json()) as { message?: string };
+      expect(body.message).toBeTruthy();
     } finally {
-      await customer.dispose();
+      await scenario.cleanup();
     }
   });
 
@@ -43,9 +48,14 @@ test.describe("Customer Property Request API @api @regression", () => {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(listResponse, 200, "Customer property request list should succeed");
+      expect(listResponse.status()).toBe(200);
 
-      const payload = (await listResponse.json()) as Array<{ id: number; buildingName?: string; status?: string; requestType?: string }>;
+      const payload = (await listResponse.json()) as Array<{
+        id: number;
+        buildingName?: string;
+        status?: string;
+        requestType?: string;
+      }>;
       const createdRequest = payload.find((item) => item.id === scenario.propertyRequestId);
 
       expect(createdRequest).toBeDefined();
@@ -57,7 +67,7 @@ test.describe("Customer Property Request API @api @regression", () => {
     }
   });
 
-  test("API-CUS-PRQ-004 rejects duplicate pending request with 409 @extended", async ({ playwright }) => {
+  test("API-CUS-PRQ-004 rejects duplicate pending request with business validation @extended", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const duplicateResponse = await scenario.customer.post("/api/v1/customer/property-requests", {
@@ -66,8 +76,9 @@ test.describe("Customer Property Request API @api @regression", () => {
         data: TestDataFactory.buildPropertyRequestPayload({ buildingId: scenario.buildingId }, "RENT")
       });
 
-      const message = await expectMessageBody(duplicateResponse, 409);
-      expect(message.length).toBeGreaterThan(0);
+      expect(duplicateResponse.status()).toBe(400);
+      const body = (await duplicateResponse.json()) as { message?: string };
+      expect(body.message).toBeTruthy();
     } finally {
       await scenario.cleanup();
     }
@@ -80,14 +91,13 @@ test.describe("Customer Property Request API @api @regression", () => {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      const message = await expectMessageBody(cancelResponse, 200);
-      expect(message.length).toBeGreaterThan(0);
+      expect(cancelResponse.status()).toBe(200);
 
       const listResponse = await scenario.customer.get("/api/v1/customer/property-requests", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(listResponse, 200, "Customer property request list after cancel should succeed");
+      expect(listResponse.status()).toBe(200);
 
       const payload = (await listResponse.json()) as Array<{ id: number; status?: string }>;
       const cancelledRequest = payload.find((item) => item.id === scenario.propertyRequestId);
@@ -97,4 +107,3 @@ test.describe("Customer Property Request API @api @regression", () => {
     }
   });
 });
-

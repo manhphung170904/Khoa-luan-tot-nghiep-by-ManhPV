@@ -7,6 +7,7 @@ import com.estate.repository.StaffRepository;
 import com.estate.repository.entity.CustomerEntity;
 import com.estate.repository.entity.EmailVerificationEntity;
 import com.estate.security.jwt.RefreshTokenService;
+import com.estate.service.OtpTestSupportService;
 import com.estate.service.RegistrationService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,9 @@ public class RegistrationServiceImpl implements RegistrationService {
     @Autowired
     private RefreshTokenService refreshTokenService;
 
+    @Autowired(required = false)
+    private OtpTestSupportService otpTestSupportService;
+
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
@@ -73,6 +77,9 @@ public class RegistrationServiceImpl implements RegistrationService {
         entity.setOtpHash(hash(otp));
         entity.setExpiresAt(LocalDateTime.now().plusMinutes(10));
         emailVerificationRepository.save(entity);
+        if (otpTestSupportService != null) {
+            otpTestSupportService.recordOtp(normalizedEmail, PURPOSE_REGISTER, otp);
+        }
 
         sendOtpEmail(normalizedEmail, otp);
     }

@@ -10,6 +10,7 @@ import com.estate.repository.entity.StaffEntity;
 import com.estate.security.CustomUserDetails;
 import com.estate.security.jwt.RefreshTokenService;
 import com.estate.service.AuthService;
+import com.estate.service.OtpTestSupportService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -50,6 +51,9 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Autowired(required = false)
+    private OtpTestSupportService otpTestSupportService;
+
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
@@ -66,9 +70,12 @@ public class AuthServiceImpl implements AuthService {
         entity.setEmail(normalizedEmail);
         entity.setPurpose(PURPOSE_RESET_PASSWORD);
         entity.setStatus(STATUS_PENDING);
-        entity.setOtpHash(hash(otp));
+       entity.setOtpHash(hash(otp));
         entity.setExpiresAt(LocalDateTime.now().plusMinutes(10));
         emailVerificationRepository.save(entity);
+        if (otpTestSupportService != null) {
+            otpTestSupportService.recordOtp(normalizedEmail, PURPOSE_RESET_PASSWORD, otp);
+        }
 
         sendResetEmail(normalizedEmail, otp);
     }

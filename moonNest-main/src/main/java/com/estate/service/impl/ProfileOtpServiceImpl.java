@@ -3,6 +3,7 @@ package com.estate.service.impl;
 import com.estate.exception.BusinessException;
 import com.estate.repository.EmailVerificationRepository;
 import com.estate.repository.entity.EmailVerificationEntity;
+import com.estate.service.OtpTestSupportService;
 import com.estate.service.ProfileOtpService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -26,6 +27,7 @@ public class ProfileOtpServiceImpl implements ProfileOtpService {
 
     private final EmailVerificationRepository emailVerificationRepository;
     private final JavaMailSender mailSender;
+    private final org.springframework.beans.factory.ObjectProvider<OtpTestSupportService> otpTestSupportServiceProvider;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
@@ -48,6 +50,7 @@ public class ProfileOtpServiceImpl implements ProfileOtpService {
         entity.setOtpHash(hash(otp));
         entity.setExpiresAt(LocalDateTime.now().plusMinutes(OTP_EXPIRE_MINUTES));
         emailVerificationRepository.save(entity);
+        otpTestSupportServiceProvider.ifAvailable(service -> service.recordOtp(normalizedEmail, purpose, otp));
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(normalizedEmail);

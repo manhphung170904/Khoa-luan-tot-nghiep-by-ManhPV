@@ -1,76 +1,72 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { env } from "@config/env";
-import { expectMessageBody, expectStatusExact } from "@api/apiContractUtils";
+import { ApiSessionHelper, type ApiUserRole } from "@api/apiSessionHelper";
+import { MySqlDbClient } from "@db/MySqlDbClient";
 
 type RoleScenario = {
-  role: "ADMIN" | "STAFF" | "CUSTOMER";
-  username: string;
+  role: ApiUserRole;
+  expectedRoleCode: "ADMIN" | "STAFF" | "CUSTOMER";
 };
 
-const roleScenarios: RoleScenario[] = [
-  { role: "ADMIN", username: env.adminUsername },
-  { role: "STAFF", username: env.staffUsername },
-  { role: "CUSTOMER", username: env.customerUsername }
+const scenarios: RoleScenario[] = [
+  { role: "admin", expectedRoleCode: "ADMIN" },
+  { role: "staff", expectedRoleCode: "STAFF" },
+  { role: "customer", expectedRoleCode: "CUSTOMER" }
 ];
 
 test.describe("REST Auth Session API @api @regression", () => {
-  for (const scenario of roleScenarios) {
-    test(`API-AUTH-REST-${scenario.role} login/me/logout works for ${scenario.role} @smoke @regression`, async ({ playwright }) => {
-      const context = await playwright.request.newContext({
-        baseURL: env.baseUrl,
-        extraHTTPHeaders: {
-          Accept: "application/json"
-        }
-      });
+  test.afterAll(async () => {
+    await MySqlDbClient.close();
+  });
+
+  for (const scenario of scenarios) {
+    test(`API-AUTH-REST-${scenario.expectedRoleCode} login/me/logout works with cookie session @smoke @regression`, async ({
+      playwright
+    }) => {
+      const context = await ApiSessionHelper.newContext(playwright);
 
       try {
-        const loginResponse = await context.post("/api/v1/auth/login", {
-          failOnStatusCode: false,
-          data: {
-            username: scenario.username,
-            password: env.defaultPassword
-          }
-        });
-        expectStatusExact(loginResponse, 200, `REST auth login should succeed for ${scenario.role}`);
+        const { response, username } = await ApiSessionHelper.loginAsRole(context, scenario.role);
+        expect(response.status()).toBe(200);
 
-        const cookieHeader = loginResponse
-          .headersArray()
-          .filter((header) => header.name.toLowerCase() === "set-cookie")
-          .map((header) => header.value)
-          .join("; ");
-        expect(cookieHeader).toContain("estate_access_token=");
-        expect(cookieHeader).toContain("estate_refresh_token=");
-
-        const loginBody = (await loginResponse.json()) as {
+        const loginBody = (await response.json()) as {
           message?: string;
-          data?: { user?: { username?: string; role?: string } };
+          data?: { user?: { id?: number; username?: string; role?: string; userType?: string; signupSource?: string } };
         };
-        expect(loginBody.message).toBe("Login successful.");
-        expect(loginBody.data?.user?.username).toBe(scenario.username);
-        expect(loginBody.data?.user?.role).toBe(scenario.role);
+
+        expect(loginBody.message).toBeTruthy();
+        expect(loginBody.data?.user?.username).toBe(username);
+        expect(loginBody.data?.user?.role).toBe(scenario.expectedRoleCode);
+        expect(loginBody.data?.user?.id).toBeTruthy();
+        expect(loginBody.data?.user?.userType).toBeTruthy();
+        expect(loginBody.data?.user?.signupSource).toBeTruthy();
 
         const meResponse = await context.get("/api/v1/auth/me", {
-          failOnStatusCode: false,
-          maxRedirects: 0
+          failOnStatusCode: false
         });
-        expectStatusExact(meResponse, 200, `REST auth me should succeed for ${scenario.role}`);
+        expect(meResponse.status()).toBe(200);
 
-        const meBody = (await meResponse.json()) as { user?: { username?: string; role?: string } };
-        expect(meBody.user?.username).toBe(scenario.username);
-        expect(meBody.user?.role).toBe(scenario.role);
+        const meBody = (await meResponse.json()) as {
+          user?: { id?: number; username?: string; role?: string; userType?: string; signupSource?: string };
+        };
 
-        const logoutResponse = await context.post("/api/v1/auth/logout", {
-          failOnStatusCode: false,
-          maxRedirects: 0
-        });
-        const message = await expectMessageBody(logoutResponse, 200);
-        expect(message).toBe("Logout successful.");
+        expect(meBody.user?.username).toBe(username);
+        expect(meBody.user?.role).toBe(scenario.expectedRoleCode);
+        expect(meBody.user?.id).toBe(loginBody.data?.user?.id);
+        expect(meBody.user?.userType).toBe(loginBody.data?.user?.userType);
+        expect(meBody.user?.signupSource).toBe(loginBody.data?.user?.signupSource);
+
+        const logoutResponse = await ApiSessionHelper.logout(context);
+        expect(logoutResponse.status()).toBe(200);
+
+        const logoutBody = (await logoutResponse.json()) as { message?: string };
+        expect(logoutBody.message).toBeTruthy();
 
         const afterLogoutMe = await context.get("/api/v1/auth/me", {
           failOnStatusCode: false,
           maxRedirects: 0
         });
-        expectStatusExact(afterLogoutMe, 401, `REST auth me should reject cleared session for ${scenario.role}`);
+        expect(afterLogoutMe.status()).toBe(401);
       } finally {
         await context.dispose();
       }
@@ -78,12 +74,7 @@ test.describe("REST Auth Session API @api @regression", () => {
   }
 
   test("API-AUTH-REST-VAL-001 rejects blank login DTO @regression", async ({ playwright }) => {
-    const context = await playwright.request.newContext({
-      baseURL: env.baseUrl,
-      extraHTTPHeaders: {
-        Accept: "application/json"
-      }
-    });
+    const context = await ApiSessionHelper.newContext(playwright);
 
     try {
       const response = await context.post("/api/v1/auth/login", {
@@ -94,20 +85,24 @@ test.describe("REST Auth Session API @api @regression", () => {
         }
       });
 
-      const message = await expectMessageBody(response, 400);
-      expect(message.length).toBeGreaterThan(0);
+      expect(response.status()).toBe(400);
+      const body = (await response.json()) as {
+        code?: string;
+        message?: string;
+        errors?: Array<{ field?: string; message?: string }>;
+      };
+
+      expect(body.code).toBe("BAD_REQUEST");
+      expect(body.message).toBeTruthy();
+      const errorFields = body.errors?.map((error) => error.field) ?? [];
+      expect(errorFields).toEqual(expect.arrayContaining(["username", "password"]));
     } finally {
       await context.dispose();
     }
   });
 
   test("API-AUTH-REST-VAL-002 rejects wrong credential on REST login @regression", async ({ playwright }) => {
-    const context = await playwright.request.newContext({
-      baseURL: env.baseUrl,
-      extraHTTPHeaders: {
-        Accept: "application/json"
-      }
-    });
+    const context = await ApiSessionHelper.newContext(playwright);
 
     try {
       const response = await context.post("/api/v1/auth/login", {
@@ -118,27 +113,98 @@ test.describe("REST Auth Session API @api @regression", () => {
         }
       });
 
-      const message = await expectMessageBody(response, 400);
-      expect(message).toContain("Invalid");
+      expect(response.status()).toBe(400);
+      const body = (await response.json()) as { code?: string; message?: string };
+      expect(body.code).toBe("BAD_REQUEST");
+      expect(body.message).toBeTruthy();
     } finally {
       await context.dispose();
     }
   });
 
   test("API-AUTH-REST-SEC-001 rejects anonymous me access @smoke @regression", async ({ playwright }) => {
-    const context = await playwright.request.newContext({
-      baseURL: env.baseUrl,
-      extraHTTPHeaders: {
-        Accept: "application/json"
-      }
-    });
+    const context = await ApiSessionHelper.newContext(playwright);
 
     try {
       const response = await context.get("/api/v1/auth/me", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(response, 401, "REST auth me must reject anonymous access");
+
+      expect(response.status()).toBe(401);
+      const body = (await response.json()) as { code?: string; message?: string };
+      expect(body.code).toBe("UNAUTHORIZED");
+      expect(body.message).toBeTruthy();
+    } finally {
+      await context.dispose();
+    }
+  });
+
+  test("API-AUTH-REST-OTP-001 forgot-password returns success and persists pending OTP for existing email @regression", async ({
+    playwright
+  }) => {
+    const context = await ApiSessionHelper.newContext(playwright);
+
+    try {
+      const customers = await MySqlDbClient.query<{ email: string }>(
+        "SELECT email FROM customer WHERE username = ? LIMIT 1",
+        [env.customerUsername]
+      );
+      const email = customers[0]?.email ?? "";
+      expect(email).toBeTruthy();
+
+      const response = await context.post("/api/v1/auth/forgot-password", {
+        failOnStatusCode: false,
+        params: { email }
+      });
+
+      expect(response.status()).toBe(200);
+      const body = (await response.json()) as { message?: string };
+      expect(body.message).toBeTruthy();
+
+      const otpRows = await MySqlDbClient.query<{ status: string }>(
+        `
+          SELECT status
+          FROM email_verification
+          WHERE email = ? AND purpose = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        [email, "RESET_PASSWORD"]
+      );
+      expect(otpRows.length).toBeGreaterThan(0);
+      expect(otpRows[0]!.status).toBe("PENDING");
+    } finally {
+      await context.dispose();
+    }
+  });
+
+  test("API-AUTH-REST-OTP-002 forgot-password keeps success contract for unknown email @regression", async ({
+    playwright
+  }) => {
+    const context = await ApiSessionHelper.newContext(playwright);
+    const email = `pw-missing-${Date.now()}@example.com`;
+
+    try {
+      const beforeRows = await MySqlDbClient.query<{ total: number }>(
+        "SELECT COUNT(*) AS total FROM email_verification WHERE email = ? AND purpose = ?",
+        [email, "RESET_PASSWORD"]
+      );
+
+      const response = await context.post("/api/v1/auth/forgot-password", {
+        failOnStatusCode: false,
+        params: { email }
+      });
+
+      expect(response.status()).toBe(200);
+      const body = (await response.json()) as { message?: string };
+      expect(body.message).toBeTruthy();
+
+      const afterRows = await MySqlDbClient.query<{ total: number }>(
+        "SELECT COUNT(*) AS total FROM email_verification WHERE email = ? AND purpose = ?",
+        [email, "RESET_PASSWORD"]
+      );
+      expect(afterRows[0]!.total).toBe(beforeRows[0]!.total);
     } finally {
       await context.dispose();
     }

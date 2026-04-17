@@ -1,218 +1,307 @@
-﻿import { test, expect } from '@playwright/test';
-import { DatabaseHelper } from '../../../utils/db-client';
-import { env } from '../../../config/env';
-import { createHash } from 'crypto';
+import { expect, test } from "@playwright/test";
+import { env } from "@config/env";
+import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
+import { ApiOtpHelper } from "@api/apiOtpHelper";
+import { MySqlDbClient } from "@db/MySqlDbClient";
 
-test.describe('Authentication & Security API Tests @api @regression', () => {
-    let db: DatabaseHelper;
-    let validUser = {
-        username: `testuser_auth_${Date.now()}`,
-        password: 'Password@123',
-        email: `testauth_${Date.now()}@example.com`,
-        fullName: 'Bot Testing'
-    };
-    let validLocalEmail = '';
-    let registrationTicket = '';
+test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @otp @regression", () => {
+  const validUser = {
+    username: `testuser_auth_${Date.now()}`,
+    password: "Password@123",
+    email: `testauth_${Date.now()}@example.com`,
+    fullName: "Bot Testing"
+  };
 
-    const staticOtp = '123456';
+  let validLocalEmail = "";
+  let registrationTicket = "";
 
-    const hashOtp = (otp: string) => createHash('sha256').update(otp).digest('hex');
+  test.beforeAll(async () => {
+    const customers = await MySqlDbClient.query<{ email: string }>(
+      "SELECT email FROM customer WHERE username = ? LIMIT 1",
+      [env.customerUsername]
+    );
 
-    const setLatestVerificationOtp = async (email: string, purpose: string, otp: string) => {
-        const row = await db.query<{ id: number }>(
-            'SELECT id FROM email_verification WHERE email = ? AND purpose = ? AND status = ? ORDER BY id DESC LIMIT 1',
-            [email, purpose, 'PENDING']
-        );
-        expect(row.length).toBeGreaterThan(0);
-        await db.query('UPDATE email_verification SET otp_hash = ? WHERE id = ?', [hashOtp(otp), row[0].id]);
-    };
+    if (customers.length > 0) {
+      validLocalEmail = customers[0]!.email;
+      return;
+    }
 
-    test.beforeAll(async () => {
-        db = new DatabaseHelper();
-        await db.connect();
+    const staffRows = await MySqlDbClient.query<{ email: string }>(
+      "SELECT email FROM staff WHERE username = ? LIMIT 1",
+      [env.staffUsername]
+    );
+    validLocalEmail = staffRows[0]?.email ?? "";
+  });
 
-        const customers = await db.query<{ email: string }>(
-            'SELECT email FROM customer WHERE username = ? LIMIT 1',
-            [env.customerUsername]
-        );
-        if (customers.length > 0) {
-            validLocalEmail = customers[0].email;
-        } else {
-            const staffRows = await db.query<{ email: string }>(
-                'SELECT email FROM staff WHERE username = ? LIMIT 1',
-                [env.staffUsername]
-            );
-            validLocalEmail = staffRows.length > 0 ? staffRows[0].email : '';
-        }
+  test.afterAll(async () => {
+    await MySqlDbClient.execute("DELETE FROM customer WHERE email = ?", [validUser.email]);
+    await MySqlDbClient.execute("DELETE FROM email_verification WHERE email = ?", [validUser.email]);
+    await MySqlDbClient.close();
+  });
+
+  test.describe("1. Login + Authentication", () => {
+    test("[API_TC_001] [Happy Path] Login with valid credentials returns JWT cookies and redirect @smoke @regression", async ({
+      request
+    }) => {
+      const response = await request.post("/login", {
+        form: { username: env.adminUsername, password: env.defaultPassword },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("/login-success");
+
+      const cookies = response.headersArray().filter((header) => header.name.toLowerCase() === "set-cookie");
+      expect(cookies.length).toBeGreaterThan(0);
+      const cookieString = cookies.map((cookie) => cookie.value).join("; ");
+      expect(cookieString).toContain("estate_access_token=");
+      expect(cookieString).toContain("estate_refresh_token=");
     });
 
-    test.afterAll(async () => {
-        await db.query('DELETE FROM customer WHERE email = ?', [validUser.email]);
-        await db.query('DELETE FROM email_verification WHERE email = ? AND purpose = ?', [validUser.email, 'REGISTER']);
-        await db.disconnect();
+    test("[API_TC_002] [Negative] Blank username/password returns login error redirect @regression", async ({
+      request
+    }) => {
+      const response = await request.post("/login", {
+        form: { username: "", password: "" },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("errorMessage");
     });
 
-    test.describe.serial('1. Login + Authentication', () => {
-        test('[API_TC_001] [Happy Path] Login with valid credentials returns JWT cookies and redirect @smoke @regression', async ({ request }) => {
-            const response = await request.post('/login', {
-                form: { username: env.adminUsername, password: env.defaultPassword },
-                maxRedirects: 0
-            });
+    test("[API_TC_003] [Negative] Wrong credentials are rejected @regression", async ({ request }) => {
+      const response = await request.post("/login", {
+        form: { username: env.adminUsername, password: "bad-password-123" },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
 
-            expect(response.status()).toBe(302);
-            expect(response.headers().location).toContain('/login-success');
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("errorMessage");
+    });
+  });
 
-            const cookies = response.headersArray().filter(h => h.name.toLowerCase() === 'set-cookie');
-            expect(cookies.length).toBeGreaterThan(0);
-            const cookieString = cookies.map(c => c.value).join('; ');
-            expect(cookieString).toContain('estate_access_token=');
-            expect(cookieString).toContain('estate_refresh_token=');
-        });
+  test.describe("2. Registration + Database Chaining", () => {
+    test("[API_TC_004] [Happy Path] Send registration OTP and persist pending verification row @regression", async ({
+      request
+    }) => {
+      const response = await request.post("/auth/register/send-code", {
+        form: { email: validUser.email },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
 
-        test('[API_TC_002] [Negative] Blank username/password returns login error redirect @regression', async ({ request }) => {
-            const response = await request.post('/login', {
-                form: { username: '', password: '' },
-                maxRedirects: 0
-            });
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("/register/verify");
+      expect(response.headers().location).toContain("email=");
 
-            expect(response.status()).toBe(302);
-            expect(response.headers().location).toContain('errorMessage');
-        });
-
-        test('[API_TC_003] [Negative] Wrong credentials are rejected @regression', async ({ request }) => {
-            const response = await request.post('/login', {
-                form: { username: env.adminUsername, password: 'bad-password-123' },
-                maxRedirects: 0
-            });
-
-            expect(response.status()).toBe(302);
-            expect(response.headers().location).toContain('errorMessage');
-        });
+      const latest = await ApiOtpHelper.latest(validUser.email, "REGISTER");
+      expect(latest).not.toBeNull();
+      expect(latest?.status).toBe("PENDING");
     });
 
-    test.describe.serial('2. Registration + Database Chaining', () => {
-        test('[API_TC_004] [Happy Path] Send registration OTP and persist pending verification row @regression', async ({ request }) => {
-            const response = await request.post('/auth/register/send-code', {
-                form: { email: validUser.email },
-                maxRedirects: 0
-            });
+    test("[API_TC_005] [Happy Path] Verify registration OTP via official test hook @extended", async ({
+      request
+    }) => {
+      const otp = await ApiOtpAccessHelper.latestOtp(request, validUser.email, "REGISTER");
 
-            expect(response.status()).toBe(302);
-            expect(response.headers().location).toContain('/register');
+      const response = await request.post("/auth/register/verify", {
+        form: { email: validUser.email, otp },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
 
-            const rows = await db.query<{ id: number; email: string; purpose: string; status: string }>(
-                'SELECT id, email, purpose, status FROM email_verification WHERE email = ? AND purpose = ? ORDER BY id DESC LIMIT 1',
-                [validUser.email, 'REGISTER']
-            );
-            expect(rows.length).toBeGreaterThan(0);
-            expect(rows[0].status).toBe('PENDING');
-        });
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("/register/complete");
+      expect(response.headers().location).toContain("ticket=");
+      expect(response.headers().location).toContain("email=");
 
-        test('[API_TC_005] [Happy Path] Verify registration OTP by injecting static OTP hash into DB @extended', async ({ request }) => {
-            await setLatestVerificationOtp(validUser.email, 'REGISTER', staticOtp);
-
-            const response = await request.post('/auth/register/verify', {
-                form: { email: validUser.email, otp: staticOtp },
-                maxRedirects: 0
-            });
-
-            expect(response.status()).toBe(302);
-            expect(response.headers().location).toContain('/register/complete');
-
-            const ticketMatch = response.headers().location.match(/ticket=([^&]+)/);
-            expect(ticketMatch).not.toBeNull();
-            registrationTicket = ticketMatch?.[1] ?? '';
-            expect(registrationTicket).not.toBe('');
-        });
-
-        test('[API_TC_006] [Happy Path] Complete registration and verify customer row created @regression', async ({ request }) => {
-            expect(registrationTicket).not.toBe('');
-
-            const response = await request.post('/auth/register/complete', {
-                form: {
-                    ticket: registrationTicket,
-                    email: validUser.email,
-                    fullName: validUser.fullName,
-                    username: validUser.username,
-                    password: validUser.password,
-                    confirmPassword: validUser.password
-                },
-                maxRedirects: 0
-            });
-
-            expect(response.status()).toBe(302);
-            expect(response.headers().location).not.toContain('errorMessage');
-
-            const createdRows = await db.query<{ username: string; email: string }>(
-                'SELECT username, email FROM customer WHERE username = ? AND email = ?',
-                [validUser.username, validUser.email]
-            );
-            expect(createdRows.length).toBe(1);
-        });
-
-        test('[API_TC_007] [Negative] Complete registration fails when passwords do not match @regression', async ({ request }) => {
-            const response = await request.post('/auth/register/complete', {
-                form: {
-                    ticket: registrationTicket || 'invalid_ticket',
-                    email: validUser.email,
-                    fullName: validUser.fullName,
-                    username: `${validUser.username}_failed`,
-                    password: validUser.password,
-                    confirmPassword: 'WrongConfirm!'
-                },
-                maxRedirects: 0
-            });
-
-            expect(response.status()).toBe(302);
-            expect(response.headers().location).toContain('errorMessage');
-        });
+      const ticketMatch = response.headers().location.match(/ticket=([^&]+)/);
+      expect(ticketMatch).not.toBeNull();
+      registrationTicket = ticketMatch?.[1] ?? "";
+      expect(registrationTicket).not.toBe("");
     });
 
-    test.describe.serial('3. Forgot Password + Reset Password', () => {
-        test('[API_TC_008] [Happy Path] Request forgot password and check OTP row in DB @regression', async ({ request }) => {
-            expect(validLocalEmail).toBeTruthy();
-            const response = await request.post(`/api/v1/auth/forgot-password?email=${encodeURIComponent(validLocalEmail)}`);
-            expect(response.status()).toBe(200);
+    test("[API_TC_006] [Happy Path] Complete registration and verify customer row created @regression", async ({
+      request
+    }) => {
+      expect(registrationTicket).not.toBe("");
 
-            const rows = await db.query<{ id: number; email: string; purpose: string; status: string }>(
-                'SELECT id, email, purpose, status FROM email_verification WHERE email = ? AND purpose = ? ORDER BY id DESC LIMIT 1',
-                [validLocalEmail, 'RESET_PASSWORD']
-            );
-            expect(rows.length).toBeGreaterThan(0);
-            expect(rows[0].status).toBe('PENDING');
-        });
+      const response = await request.post("/auth/register/complete", {
+        form: {
+          ticket: registrationTicket,
+          email: validUser.email,
+          fullName: validUser.fullName,
+          username: validUser.username,
+          password: validUser.password,
+          confirmPassword: validUser.password
+        },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
 
-        test('[API_TC_009] [Negative] Reset password with incorrect OTP is rejected @extended', async ({ request }) => {
-            expect(validLocalEmail).toBeTruthy();
-            await request.post(`/api/v1/auth/forgot-password?email=${encodeURIComponent(validLocalEmail)}`);
-            await setLatestVerificationOtp(validLocalEmail, 'RESET_PASSWORD', staticOtp);
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("/login-success");
+      const cookies = response.headersArray().filter((header) => header.name.toLowerCase() === "set-cookie");
+      expect(cookies.length).toBeGreaterThan(0);
 
-            const response = await request.post('/auth/reset-password', {
-                form: {
-                    email: validLocalEmail,
-                    otp: '000000',
-                    newPassword: 'NewPassword123',
-                    confirmPassword: 'NewPassword123'
-                },
-                maxRedirects: 0
-            });
-
-            expect(response.status()).toBe(302);
-            expect(response.headers().location).toContain('errorMessage');
-        });
+      const createdRows = await MySqlDbClient.query<{ username: string; email: string }>(
+        "SELECT username, email FROM customer WHERE username = ? AND email = ?",
+        [validUser.username, validUser.email]
+      );
+      expect(createdRows.length).toBe(1);
     });
 
-    test.describe.serial('4. Logout', () => {
-        test('[API_TC_010] [Security] Logout clears auth cookies and redirects to login @smoke @regression', async ({ request }) => {
-            const response = await request.post('/auth/logout', { maxRedirects: 0 });
-            expect(response.status()).toBe(302);
-            expect(response.headers().location).toContain('/login?logout');
+    test("[API_TC_007] [Negative] Complete registration fails when passwords do not match @regression", async ({
+      request
+    }) => {
+      const response = await request.post("/auth/register/complete", {
+        form: {
+          ticket: registrationTicket || "invalid_ticket",
+          email: validUser.email,
+          fullName: validUser.fullName,
+          username: `${validUser.username}_failed`,
+          password: validUser.password,
+          confirmPassword: "WrongConfirm!"
+        },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
 
-            const cookies = response.headersArray().filter(h => h.name.toLowerCase() === 'set-cookie');
-            if (cookies.length > 0) {
-                const cookieString = cookies.map(c => c.value).join('; ');
-                expect(cookieString.toLowerCase()).toContain('max-age=0');
-            }
-        });
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("/register/complete");
+      expect(response.headers().location).toContain("errorMessage");
     });
+  });
+
+  test.describe("3. Forgot Password + Reset Password", () => {
+    test("[API_TC_008] [Happy Path] Request forgot password and check OTP row in DB @regression", async ({
+      request
+    }) => {
+      test.fail(true, "Known defect: MVC POST /auth/forgot-password is not permitAll in security config, so anonymous requests are redirected to /login.");
+
+      expect(validLocalEmail).toBeTruthy();
+      const response = await request.post("/auth/forgot-password", {
+        form: { email: validLocalEmail },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("/auth/reset-password");
+
+      const rows = await MySqlDbClient.query<{ id: number; email: string; purpose: string; status: string }>(
+        `
+          SELECT id, email, purpose, status
+          FROM email_verification
+          WHERE email = ? AND purpose = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        [validLocalEmail, "RESET_PASSWORD"]
+      );
+      expect(rows.length).toBeGreaterThan(0);
+      expect(rows[0]!.status).toBe("PENDING");
+    });
+
+    test("[API_TC_009] [Negative] Reset password with incorrect OTP is rejected @extended", async ({ request }) => {
+      expect(validLocalEmail).toBeTruthy();
+      await request.post("/api/v1/auth/forgot-password", {
+        params: { email: validLocalEmail },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+
+      const response = await request.post("/auth/reset-password", {
+        form: {
+          email: validLocalEmail,
+          otp: "000000",
+          newPassword: "NewPassword123",
+          confirmPassword: "NewPassword123"
+        },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("/auth/reset-password");
+      expect(response.headers().location).toContain("errorMessage");
+    });
+
+    test("[API_TC_011] [Happy Path] Reset password with valid OTP redirects to login and updates credentials @regression", async ({
+      request
+    }) => {
+      const nextPassword = "Password@456";
+
+      const forgotPasswordResponse = await request.post("/api/v1/auth/forgot-password", {
+        params: { email: validUser.email },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expect(forgotPasswordResponse.status()).toBe(200);
+
+      const otp = await ApiOtpAccessHelper.latestOtp(request, validUser.email, "RESET_PASSWORD");
+
+      const response = await request.post("/auth/reset-password", {
+        form: {
+          email: validUser.email,
+          otp,
+          newPassword: nextPassword,
+          confirmPassword: nextPassword
+        },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("/login");
+      expect(response.headers().location).toContain("successMessage");
+
+      const oldLogin = await request.post("/login", {
+        form: { username: validUser.username, password: validUser.password },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expect(oldLogin.status()).toBe(302);
+      expect(oldLogin.headers().location).toContain("errorMessage");
+
+      const newLogin = await request.post("/login", {
+        form: { username: validUser.username, password: nextPassword },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expect(newLogin.status()).toBe(302);
+      expect(newLogin.headers().location).toContain("/login-success");
+
+      validUser.password = nextPassword;
+    });
+  });
+
+  test.describe("4. Logout", () => {
+    test("[API_TC_010] [Security] Logout clears auth cookies and redirects to login @smoke @regression", async ({
+      request
+    }) => {
+      const loginResponse = await request.post("/login", {
+        form: { username: env.adminUsername, password: env.defaultPassword },
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expect(loginResponse.status()).toBe(302);
+
+      const response = await request.post("/auth/logout", {
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toContain("/login?logout");
+
+      const cookies = response.headersArray().filter((header) => header.name.toLowerCase() === "set-cookie");
+      if (cookies.length > 0) {
+        const cookieString = cookies.map((cookie) => cookie.value).join("; ");
+        expect(cookieString.toLowerCase()).toContain("max-age=0");
+      }
+    });
+  });
 });

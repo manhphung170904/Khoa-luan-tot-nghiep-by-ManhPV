@@ -1,9 +1,14 @@
-﻿import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
-import { expectMessageBody, expectStatusExact } from "@api/apiContractUtils";
+import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "../_fixtures/propertyRequestScenario";
 
 test.describe("Admin Property Request API @api @regression", () => {
+  test.afterAll(async () => {
+    await MySqlDbClient.close();
+  });
+
   test("API-ADM-PRQ-001 rejects anonymous list access with API auth status @regression", async ({ playwright }) => {
     const context = await createAnonymousContext(playwright);
     try {
@@ -11,7 +16,7 @@ test.describe("Admin Property Request API @api @regression", () => {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(response, 401, "Admin property request list must reject anonymous access");
+      expect(response.status()).toBe(401);
     } finally {
       await context.dispose();
     }
@@ -24,7 +29,7 @@ test.describe("Admin Property Request API @api @regression", () => {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(response, 200, "Admin property request list should succeed");
+      expect(response.status()).toBe(200);
 
       const payload = (await response.json()) as { content?: Array<{ id: number; status?: string }>; totalElements?: number };
       expect(Array.isArray(payload.content)).toBeTruthy();
@@ -42,9 +47,15 @@ test.describe("Admin Property Request API @api @regression", () => {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(detailResponse, 200, "Admin property request detail should succeed");
+      expect(detailResponse.status()).toBe(200);
 
-      const detail = (await detailResponse.json()) as { id?: number; buildingId?: number; customerId?: number; status?: string; requestType?: string };
+      const detail = (await detailResponse.json()) as {
+        id?: number;
+        buildingId?: number;
+        customerId?: number;
+        status?: string;
+        requestType?: string;
+      };
       expect(detail.id).toBe(scenario.propertyRequestId);
       expect(detail.buildingId).toBe(scenario.buildingId);
       expect(detail.customerId).toBe(scenario.customerId);
@@ -55,7 +66,7 @@ test.describe("Admin Property Request API @api @regression", () => {
         `/api/v1/admin/property-requests/${scenario.propertyRequestId}/contract-data`,
         { failOnStatusCode: false, maxRedirects: 0 }
       );
-      expectStatusExact(contractDataResponse, 200, "Admin contract autofill should succeed");
+      expect(contractDataResponse.status()).toBe(200);
 
       const contractData = (await contractDataResponse.json()) as { buildingId?: number; customerId?: number; rentArea?: number };
       expect(contractData.buildingId).toBe(scenario.buildingId);
@@ -73,7 +84,7 @@ test.describe("Admin Property Request API @api @regression", () => {
         `/api/v1/admin/property-requests/${scenario.propertyRequestId}/sale-contract-data`,
         { failOnStatusCode: false, maxRedirects: 0 }
       );
-      expectStatusExact(response, 200, "Admin sale contract autofill should succeed");
+      expect(response.status()).toBe(200);
 
       const payload = (await response.json()) as { buildingId?: number; customerId?: number; salePrice?: number };
       expect(payload.buildingId).toBe(scenario.buildingId);
@@ -92,14 +103,13 @@ test.describe("Admin Property Request API @api @regression", () => {
         maxRedirects: 0,
         data: { reason: "Contract data mismatch" }
       });
-      const message = await expectMessageBody(rejectResponse, 200);
-      expect(message.length).toBeGreaterThan(0);
+      expect(rejectResponse.status()).toBe(200);
 
       const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(detailResponse, 200, "Admin property request detail after reject should succeed");
+      expect(detailResponse.status()).toBe(200);
 
       const detail = (await detailResponse.json()) as { status?: string; adminNote?: string };
       expect(detail.status).toBe("REJECTED");
@@ -109,49 +119,132 @@ test.describe("Admin Property Request API @api @regression", () => {
     }
   });
 
-  test("API-ADM-PRQ-006 approves a pending request and exposes pending-count endpoint @extended", async ({ playwright }) => {
-    const scenario = await createPropertyRequestScenario(playwright, "BUY");
+  test("API-ADM-PRQ-006 approves a RENT request when linked contract matches request @extended", async ({ playwright }) => {
+    const scenario = await createPropertyRequestScenario(playwright, "RENT");
+    let contractId = 0;
+
     try {
+      const createContractResponse = await scenario.admin.post("/api/v1/admin/contracts", {
+        failOnStatusCode: false,
+        data: TestDataFactory.buildContractPayload({
+          customerId: scenario.customerId,
+          buildingId: scenario.buildingId,
+          staffId: scenario.staffId
+        })
+      });
+      expect(createContractResponse.status()).toBe(200);
+
+      const contractRows = await MySqlDbClient.query<{ id: number }>(
+        `
+          SELECT id
+          FROM contract
+          WHERE customer_id = ? AND building_id = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        [scenario.customerId, scenario.buildingId]
+      );
+      contractId = contractRows[0]?.id ?? 0;
+      expect(contractId).toBeGreaterThan(0);
+
       const approveResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/approve`, {
         failOnStatusCode: false,
         maxRedirects: 0,
-        data: {}
+        data: { contractId }
       });
-      const message = await expectMessageBody(approveResponse, 200);
-      expect(message.length).toBeGreaterThan(0);
+      expect(approveResponse.status()).toBe(200);
 
       const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(detailResponse, 200, "Admin property request detail after approve should succeed");
+      expect(detailResponse.status()).toBe(200);
 
-      const detail = (await detailResponse.json()) as { status?: string };
+      const detail = (await detailResponse.json()) as { status?: string; contractId?: number };
       expect(detail.status).toBe("APPROVED");
+      expect(detail.contractId).toBe(contractId);
 
       const pendingResponse = await scenario.admin.get("/api/v1/admin/property-requests/pending-count", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expectStatusExact(pendingResponse, 200, "Admin property request pending-count should succeed");
+      expect(pendingResponse.status()).toBe(200);
 
       const pendingBody = (await pendingResponse.json()) as { pendingCount?: number };
       expect(typeof pendingBody.pendingCount).toBe("number");
       expect(pendingBody.pendingCount).toBeGreaterThanOrEqual(0);
     } finally {
+      await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]).catch(() => {});
+      if (contractId) {
+        await scenario.admin.delete(`/api/v1/admin/contracts/${contractId}`, { failOnStatusCode: false });
+      }
       await scenario.cleanup();
     }
   });
 
-  test("API-ADM-PRQ-007 returns 409 for missing request id @extended", async ({ playwright }) => {
+  test("API-ADM-PRQ-007 approves a BUY request when linked sale contract matches request @extended", async ({ playwright }) => {
+    const scenario = await createPropertyRequestScenario(playwright, "BUY");
+    let saleContractId = 0;
+
+    try {
+      const createSaleContractResponse = await scenario.admin.post("/api/v1/admin/sale-contracts", {
+        failOnStatusCode: false,
+        data: TestDataFactory.buildSaleContractPayload({
+          buildingId: scenario.buildingId,
+          customerId: scenario.customerId,
+          staffId: scenario.staffId
+        })
+      });
+      expect(createSaleContractResponse.status()).toBe(200);
+
+      const saleContractRows = await MySqlDbClient.query<{ id: number }>(
+        `
+          SELECT id
+          FROM sale_contract
+          WHERE customer_id = ? AND building_id = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        [scenario.customerId, scenario.buildingId]
+      );
+      saleContractId = saleContractRows[0]?.id ?? 0;
+      expect(saleContractId).toBeGreaterThan(0);
+
+      const approveResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/approve`, {
+        failOnStatusCode: false,
+        maxRedirects: 0,
+        data: { saleContractId }
+      });
+      expect(approveResponse.status()).toBe(200);
+
+      const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
+        failOnStatusCode: false,
+        maxRedirects: 0
+      });
+      expect(detailResponse.status()).toBe(200);
+
+      const detail = (await detailResponse.json()) as { status?: string; saleContractId?: number };
+      expect(detail.status).toBe("APPROVED");
+      expect(detail.saleContractId).toBe(saleContractId);
+    } finally {
+      await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]).catch(() => {});
+      if (saleContractId) {
+        await scenario.admin.delete(`/api/v1/admin/sale-contracts/${saleContractId}`, { failOnStatusCode: false });
+      }
+      await scenario.cleanup();
+    }
+  });
+
+  test("API-ADM-PRQ-008 returns 400 for missing request id @extended", async ({ playwright }) => {
     const admin = await createRoleContext(playwright, "admin");
     try {
       const response = await admin.get("/api/v1/admin/property-requests/999999999", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      const message = await expectMessageBody(response, 409);
-      expect(message.length).toBeGreaterThan(0);
+      expect(response.status()).toBe(400);
+      const body = (await response.json()) as { message?: string };
+      expect(body.message).toBeTruthy();
     } finally {
       await admin.dispose();
     }

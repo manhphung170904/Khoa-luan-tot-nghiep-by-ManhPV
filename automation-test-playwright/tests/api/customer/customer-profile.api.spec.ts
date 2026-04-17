@@ -1,179 +1,253 @@
-﻿import { test, expect } from '@playwright/test';
-import { ApiAuthHelper } from '../../../utils/api/apiAuthHelper';
-import { DatabaseHelper } from '../../../utils/db-client';
-import { env } from '../../../config/env';
-import { createHash } from 'crypto';
+import { expect, test, type APIRequestContext } from "@playwright/test";
+import { env } from "@config/env";
+import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
+import { ApiOtpHelper } from "@api/apiOtpHelper";
+import { ApiSessionHelper } from "@api/apiSessionHelper";
+import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TempEntityHelper } from "@helpers/TempEntityHelper";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe('Customer Profile API Tests', () => {
-    let db: DatabaseHelper;
-    let customerCookies: string;
-    let customerId: number;
-    let originalEmail: string;
-    let originalPhone: string;
-    let originalPasswordHash: string;
-    let customerEmail: string;
-    const staticOtp = '123456';
+type TempCustomer = {
+  id: number;
+  username: string;
+  email: string;
+  phone: string;
+};
 
-    const hashOtp = (otp: string) => createHash('sha256').update(otp).digest('hex');
+test.describe.serial("Customer Profile API Tests @api @api-write @otp @regression", () => {
+  let bootstrapAdmin: APIRequestContext;
+  let customerContext: APIRequestContext;
+  let managerStaffId = 0;
+  let tempCustomer: TempCustomer;
+  let currentPassword = env.defaultPassword;
 
-    const resetOtpRow = async (email: string, purpose: string, otp: string) => {
-        const rows = await db.query<{ id: number }>(
-            'SELECT id FROM email_verification WHERE email = ? AND purpose = ? AND status = ? ORDER BY id DESC LIMIT 1',
-            [email, purpose, 'PENDING']
-        );
-        expect(rows.length).toBeGreaterThan(0);
-        await db.query('UPDATE email_verification SET otp_hash = ? WHERE id = ?', [hashOtp(otp), rows[0].id]);
-    };
-
-    test.beforeAll(async () => {
-        db = new DatabaseHelper();
-        await db.connect();
-
-        customerCookies = await ApiAuthHelper.loginAsCustomer();
-
-        const rows = await db.query<{ id: number; email: string; phone: string; password: string }>(
-            'SELECT id, email, phone, password FROM customer WHERE username = ? LIMIT 1',
-            [env.customerUsername]
-        );
-        expect(rows.length).toBeGreaterThan(0);
-        customerId = rows[0].id;
-        customerEmail = rows[0].email;
-        originalEmail = rows[0].email;
-        originalPhone = rows[0].phone;
-        originalPasswordHash = rows[0].password;
+  const createTempCustomer = async (): Promise<TempCustomer> => {
+    const payload = TestDataFactory.buildCustomerPayload({ staffIds: [managerStaffId] });
+    const response = await bootstrapAdmin.post("/api/v1/admin/customers", {
+      failOnStatusCode: false,
+      data: payload
     });
+    expect(response.status()).toBe(200);
 
-    test.afterAll(async () => {
-        await db.query(
-            'UPDATE customer SET email = ?, phone = ?, password = ? WHERE id = ?',
-            [originalEmail, originalPhone, originalPasswordHash, customerId]
-        );
-        await db.disconnect();
+    const rows = await MySqlDbClient.query<TempCustomer>(
+      `
+        SELECT id, username, email, phone
+        FROM customer
+        WHERE username = ?
+        ORDER BY id DESC
+        LIMIT 1
+      `,
+      [String(payload.username)]
+    );
+    expect(rows.length).toBe(1);
+    return rows[0]!;
+  };
+
+  const sendOtp = async (purpose: string) => {
+    const response = await customerContext.post(`/api/v1/customer/profile/otp/${purpose}`, {
+      failOnStatusCode: false
     });
+    expect(response.status()).toBe(200);
+  };
 
-    test.describe.serial('Customer Profile - Update flows with DB validation', () => {
-        test('[API_TC_011] [Happy Path] Update email with valid password and verify DB change', async ({ request }) => {
-            const newEmail = `customer_email_update_${Date.now()}@example.com`;
-            const response = await request.put('/api/v1/customer/profile/email', {
-                headers: {
-                    Cookie: customerCookies,
-                    'Content-Type': 'application/json'
-                },
-                data: {
-                    newEmail,
-                    password: env.defaultPassword
-                }
-            });
+  test.beforeAll(async ({ playwright }) => {
+    bootstrapAdmin = await ApiSessionHelper.newContext(playwright, "admin");
+    const tempStaff = await TempEntityHelper.taoStaffTam(bootstrapAdmin);
+    managerStaffId = tempStaff.id;
+    tempCustomer = await createTempCustomer();
+    customerContext = await ApiSessionHelper.newContext(playwright);
 
-            expect(response.status()).toBe(200);
+    const loginResponse = await ApiSessionHelper.login(customerContext, tempCustomer.username, currentPassword);
+    expect(loginResponse.status()).toBe(200);
+  });
 
-            const dbRows = await db.query<{ email: string }>(
-                'SELECT email FROM customer WHERE id = ?',
-                [customerId]
-            );
-            expect(dbRows.length).toBe(1);
-            expect(dbRows[0].email).toBe(newEmail);
-        });
+  test.afterAll(async () => {
+    await customerContext.dispose();
+    await bootstrapAdmin.delete(`/api/v1/admin/customers/${tempCustomer.id}`, { failOnStatusCode: false });
+    await TempEntityHelper.xoaStaffTam(bootstrapAdmin, managerStaffId);
+    await bootstrapAdmin.dispose();
+    await MySqlDbClient.close();
+  });
 
-        test('[API_TC_012] [Negative] Reject customer email update with wrong current password', async ({ request }) => {
-            const response = await request.put('/api/v1/customer/profile/email', {
-                headers: {
-                    Cookie: customerCookies,
-                    'Content-Type': 'application/json'
-                },
-                data: {
-                    newEmail: `invalid_email_${Date.now()}@example.com`,
-                    password: 'wrong-password-123'
-                }
-            });
-
-            expect(response.status()).toBe(400);
-        });
-
-        test('[API_TC_013] [Happy Path] Send OTP for phone update and update phone successfully', async ({ request }) => {
-            const responseOtp = await request.post('/api/v1/customer/profile/otp/PROFILE_PHONE', {
-                headers: { Cookie: customerCookies }
-            });
-            expect(responseOtp.status()).toBe(200);
-
-            const currentEmail = (await db.query<{ email: string }>('SELECT email FROM customer WHERE id = ?', [customerId]))[0].email;
-            await resetOtpRow(currentEmail, 'PROFILE_PHONE', staticOtp);
-
-            const newPhone = `09${Math.floor(100000000 + Math.random() * 900000000)}`;
-            const responseUpdate = await request.put('/api/v1/customer/profile/phone-number', {
-                headers: {
-                    Cookie: customerCookies,
-                    'Content-Type': 'application/json'
-                },
-                data: {
-                    newPhoneNumber: newPhone,
-                    otp: staticOtp
-                }
-            });
-
-            expect(responseUpdate.status()).toBe(200);
-
-            const dbRows = await db.query<{ phone: string }>('SELECT phone FROM customer WHERE id = ?', [customerId]);
-            expect(dbRows[0].phone).toBe(newPhone);
-        });
-
-        test('[API_TC_014] [Boundary] Update password with OTP and verify DB hash changed', async ({ request }) => {
-            const currentPasswordHash = (await db.query<{ password: string }>(
-                'SELECT password FROM customer WHERE id = ?',
-                [customerId]
-            ))[0].password;
-
-            const responseOtp = await request.post('/api/v1/customer/profile/otp/PROFILE_PASSWORD', {
-                headers: { Cookie: customerCookies }
-            });
-            expect(responseOtp.status()).toBe(200);
-
-            const currentEmail = (await db.query<{ email: string }>('SELECT email FROM customer WHERE id = ?', [customerId]))[0].email;
-            await resetOtpRow(currentEmail, 'PROFILE_PASSWORD', staticOtp);
-
-            const responseUpdate = await request.put('/api/v1/customer/profile/password', {
-                headers: {
-                    Cookie: customerCookies,
-                    'Content-Type': 'application/json'
-                },
-                data: {
-                    currentPassword: env.defaultPassword,
-                    newPassword: 'NewCustomerPwd1!',
-                    confirmPassword: 'NewCustomerPwd1!',
-                    otp: staticOtp
-                }
-            });
-
-            expect(responseUpdate.status()).toBe(200);
-
-            const newPasswordHash = (await db.query<{ password: string }>('SELECT password FROM customer WHERE id = ?', [customerId]))[0].password;
-            expect(newPasswordHash).not.toBe(currentPasswordHash);
-        });
-
-        test('[API_TC_015] [Negative] Reject password update when confirmation does not match', async ({ request }) => {
-            const responseOtp = await request.post('/api/v1/customer/profile/otp/PROFILE_PASSWORD', {
-                headers: { Cookie: customerCookies }
-            });
-            expect(responseOtp.status()).toBe(200);
-
-            const currentEmail = (await db.query<{ email: string }>('SELECT email FROM customer WHERE id = ?', [customerId]))[0].email;
-            await resetOtpRow(currentEmail, 'PROFILE_PASSWORD', staticOtp);
-
-            const responseUpdate = await request.put('/api/v1/customer/profile/password', {
-                headers: {
-                    Cookie: customerCookies,
-                    'Content-Type': 'application/json'
-                },
-                data: {
-                    currentPassword: env.defaultPassword,
-                    newPassword: 'NewCustomerPwd1!',
-                    confirmPassword: 'MismatchPassword',
-                    otp: staticOtp
-                }
-            });
-
-            expect(responseUpdate.status()).toBe(400);
-        });
+  test("[CUS-PRO-001] rejects anonymous access to customer profile mutation endpoints", async ({ request }) => {
+    const usernameResponse = await request.put("/api/v1/customer/profile/username", {
+      failOnStatusCode: false,
+      data: {
+        newUsername: "customer_hacked",
+        otp: "000000"
+      }
     });
+    expect(usernameResponse.status()).toBe(401);
+
+    const emailResponse = await request.put("/api/v1/customer/profile/email", {
+      failOnStatusCode: false,
+      data: {
+        newEmail: "hacked@example.com",
+        password: "wrong-password"
+      }
+    });
+    expect(emailResponse.status()).toBe(401);
+
+    const passwordResponse = await request.put("/api/v1/customer/profile/password", {
+      failOnStatusCode: false,
+      data: {
+        currentPassword,
+        newPassword: "newpassword123",
+        confirmPassword: "newpassword123",
+        otp: "000000"
+      }
+    });
+    expect(passwordResponse.status()).toBe(401);
+
+    const otpResponse = await request.post("/api/v1/customer/profile/otp/PROFILE_PHONE", {
+      failOnStatusCode: false
+    });
+    expect(otpResponse.status()).toBe(401);
+  });
+
+  test("[CUS-PRO-001A] sends OTP for phone update and marks row pending", async () => {
+    await sendOtp("PROFILE_PHONE");
+    const latest = await ApiOtpHelper.latest(tempCustomer.email, "PROFILE_PHONE");
+    expect(latest?.status).toBe("PENDING");
+  });
+
+  test("[CUS-PRO-001B] username update for local customer stays blocked even with valid OTP", async () => {
+    await sendOtp("PROFILE_USERNAME");
+    const otp = await ApiOtpAccessHelper.latestOtp(customerContext, tempCustomer.email, "PROFILE_USERNAME");
+
+    const response = await customerContext.put("/api/v1/customer/profile/username", {
+      failOnStatusCode: false,
+      data: {
+        newUsername: `cus${Date.now().toString().slice(-7)}`,
+        otp
+      }
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[CUS-PRO-002] updates email with valid current password", async () => {
+    const newEmail = `customer-update-${Date.now()}@example.com`;
+    const response = await customerContext.put("/api/v1/customer/profile/email", {
+      failOnStatusCode: false,
+      data: {
+        newEmail,
+        password: currentPassword
+      }
+    });
+    expect(response.status()).toBe(200);
+
+    const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM customer WHERE id = ?", [tempCustomer.id]);
+    expect(rows[0]!.email).toBe(newEmail);
+    tempCustomer.email = newEmail;
+  });
+
+  test("[CUS-PRO-003] rejects email update with wrong current password", async () => {
+    const response = await customerContext.put("/api/v1/customer/profile/email", {
+      failOnStatusCode: false,
+      data: {
+        newEmail: `customer-invalid-${Date.now()}@example.com`,
+        password: "wrong-password-123"
+      }
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[CUS-PRO-004] updates phone with valid OTP", async () => {
+    await sendOtp("PROFILE_PHONE");
+    const otp = await ApiOtpAccessHelper.latestOtp(customerContext, tempCustomer.email, "PROFILE_PHONE");
+
+    const newPhone = TestDataFactory.taoSoDienThoai();
+    const response = await customerContext.put("/api/v1/customer/profile/phone-number", {
+      failOnStatusCode: false,
+      data: {
+        newPhoneNumber: newPhone,
+        otp
+      }
+    });
+    expect(response.status()).toBe(200);
+
+    const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempCustomer.id]);
+    expect(rows[0]!.phone).toBe(newPhone);
+    tempCustomer.phone = newPhone;
+  });
+
+  test("[CUS-PRO-004A] rejects phone update with invalid OTP", async () => {
+    const response = await customerContext.put("/api/v1/customer/profile/phone-number", {
+      failOnStatusCode: false,
+      data: {
+        newPhoneNumber: TestDataFactory.taoSoDienThoai(),
+        otp: "111111"
+      }
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[CUS-PRO-005] updates password with valid OTP and changes DB hash", async ({ playwright }) => {
+    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    const oldHash = oldHashRows[0]!.password;
+
+    await sendOtp("PROFILE_PASSWORD");
+    const otp = await ApiOtpAccessHelper.latestOtp(customerContext, tempCustomer.email, "PROFILE_PASSWORD");
+
+    const newPassword = "NewCustomerPwd1!";
+    const response = await customerContext.put("/api/v1/customer/profile/password", {
+      failOnStatusCode: false,
+      data: {
+        currentPassword,
+        newPassword,
+        confirmPassword: newPassword,
+        otp
+      }
+    });
+    expect(response.status()).toBe(200);
+
+    const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    expect(newHashRows[0]!.password).not.toBe(oldHash);
+    const otpRow = await ApiOtpHelper.latest(tempCustomer.email, "PROFILE_PASSWORD");
+    expect(otpRow?.status).toBe("USED");
+
+    const oldLoginContext = await ApiSessionHelper.newContext(playwright);
+    const newLoginContext = await ApiSessionHelper.newContext(playwright);
+    try {
+      const oldLogin = await ApiSessionHelper.login(oldLoginContext, tempCustomer.username, currentPassword);
+      expect([400, 401]).toContain(oldLogin.status());
+
+      const newLogin = await ApiSessionHelper.login(newLoginContext, tempCustomer.username, newPassword);
+      expect(newLogin.status()).toBe(200);
+    } finally {
+      await oldLoginContext.dispose();
+      await newLoginContext.dispose();
+    }
+
+    currentPassword = newPassword;
+  });
+
+  test("[CUS-PRO-006] rejects password update when confirmation does not match", async () => {
+    await sendOtp("PROFILE_PASSWORD");
+    const otp = await ApiOtpAccessHelper.latestOtp(customerContext, tempCustomer.email, "PROFILE_PASSWORD");
+
+    const response = await customerContext.put("/api/v1/customer/profile/password", {
+      failOnStatusCode: false,
+      data: {
+        currentPassword,
+        newPassword: "MismatchTarget1!",
+        confirmPassword: "MismatchPassword",
+        otp
+      }
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[CUS-PRO-007] rejects password update with invalid OTP", async () => {
+    const response = await customerContext.put("/api/v1/customer/profile/password", {
+      failOnStatusCode: false,
+      data: {
+        currentPassword,
+        newPassword: "AnotherTarget1!",
+        confirmPassword: "AnotherTarget1!",
+        otp: "111111"
+      }
+    });
+    expect(response.status()).toBe(400);
+  });
 });
-

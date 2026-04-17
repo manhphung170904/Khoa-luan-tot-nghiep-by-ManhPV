@@ -74,7 +74,7 @@ export default defineConfig({
     }
   ],
   metadata: {
-    project: "SunTower Playwright Automation",
+    project: "MoonNest Playwright Automation",
     baseUrl: env.baseUrl,
     framework: "Playwright + TypeScript",
     environment: env.appEnv,

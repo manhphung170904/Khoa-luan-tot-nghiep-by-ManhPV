@@ -1,11 +1,11 @@
-import { test, expect } from "@playwright/test";
-import { ApiAuthHelper } from "../../../utils/api/apiAuthHelper";
-import { DatabaseHelper } from "../../../utils/db-client";
+import { expect, test, type APIRequestContext } from "@playwright/test";
+import { ApiSessionHelper } from "@api/apiSessionHelper";
+import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TempEntityHelper } from "@helpers/TempEntityHelper";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin Invoice API Tests @api @regression", () => {
-  let db: DatabaseHelper;
-  let adminCookies: string;
-  let createdInvoiceId: number;
+test.describe.serial("Admin Invoice API Tests @api @regression", () => {
+  let admin: APIRequestContext;
 
   const now = new Date();
   const prevMonth = now.getMonth() === 0 ? 12 : now.getMonth();
@@ -14,202 +14,350 @@ test.describe("Admin Invoice API Tests @api @regression", () => {
   const dueDateYear = prevMonth === 12 ? prevYear + 1 : prevYear;
   const dueDate = `${dueDateYear}-${String(dueDateMonth).padStart(2, "0")}-15`;
 
-  const validPayload = {
-    contractId: 1,
-    customerId: 1,
-    month: prevMonth,
-    year: prevYear,
-    dueDate,
-    totalAmount: 15300.5,
-    electricityUsage: 100,
-    waterUsage: 25,
-    details: [
-      { feeName: "Tien dien", amount: 3000 },
-      { feeName: "Tien nuoc", amount: 1500 }
-    ]
-  };
-
-  test.beforeAll(async () => {
-    db = new DatabaseHelper();
-    await db.connect();
-    adminCookies = await ApiAuthHelper.loginAsAdmin();
-
-    try {
-      const activeContract = await db.query(`
-        SELECT id AS contract_id, customer_id FROM contract
-        WHERE status = 'ACTIVE'
-        LIMIT 1
-      `);
-      if (activeContract.length > 0) {
-        validPayload.contractId = activeContract[0].contract_id;
-        validPayload.customerId = activeContract[0].customer_id;
-      }
-    } catch (error) {
-      console.log("Could not seed contract/customer ID:", error);
-    }
-
-    await db.query(
-      "DELETE FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
-      [validPayload.contractId, validPayload.month, validPayload.year]
-    ).catch(() => {});
+  test.beforeAll(async ({ playwright }) => {
+    admin = await ApiSessionHelper.newContext(playwright, "admin");
   });
 
   test.afterAll(async () => {
-    if (createdInvoiceId) {
-      await db.query("DELETE FROM invoice_detail WHERE invoice_id = ?", [createdInvoiceId]).catch(() => {});
-      await db.query("DELETE FROM invoice WHERE id = ?", [createdInvoiceId]).catch(() => {});
-    }
-    await db.disconnect();
+    await admin.dispose();
+    await MySqlDbClient.close();
   });
 
-  test.describe.serial("Invoice lifecycle", () => {
-    test("[INV_001] POST /invoices rejects anonymous create", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/invoices", { data: validPayload });
-      expect(response.status()).toBe(401);
+  test("[INV_001] POST /invoices rejects anonymous create", async ({ request }) => {
+    const response = await request.post("/api/v1/admin/invoices", {
+      failOnStatusCode: false,
+      data: TestDataFactory.buildInvoicePayload()
     });
+    expect(response.status()).toBe(401);
+  });
 
-    test("[INV_002] POST /invoices rejects invalid month type", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/invoices", {
-        headers: { Cookie: adminCookies },
-        data: { ...validPayload, month: "Muoi Hai" }
+  test("[INV_002] POST /invoices rejects invalid month type", async () => {
+    const response = await admin.post("/api/v1/admin/invoices", {
+      failOnStatusCode: false,
+      data: { ...TestDataFactory.buildInvoicePayload(), month: "Muoi Hai" }
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[INV_015] POST /invoices rejects current-month invoice creation", async () => {
+    const temp = await TempEntityHelper.taoContractTam(admin);
+    try {
+      const response = await admin.post("/api/v1/admin/invoices", {
+        failOnStatusCode: false,
+        data: TestDataFactory.buildInvoicePayload({
+          contractId: temp.id,
+          customerId: temp.customer.id,
+          month: now.getMonth() + 1,
+          year: now.getFullYear(),
+          dueDate: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-28`
+        })
       });
       expect(response.status()).toBe(400);
-    });
+    } finally {
+      await TempEntityHelper.xoaContractTam(admin, temp);
+    }
+  });
 
-    test("[INV_003] POST /invoices rejects nonexistent contractId", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/invoices", {
-        headers: { Cookie: adminCookies },
-        data: { ...validPayload, contractId: -1 }
+  test("[INV_003] POST /invoices rejects nonexistent contractId", async () => {
+    const temp = await TempEntityHelper.taoContractTam(admin);
+    try {
+      const response = await admin.post("/api/v1/admin/invoices", {
+        failOnStatusCode: false,
+        data: TestDataFactory.buildInvoicePayload({
+          contractId: -1,
+          customerId: temp.customer.id,
+          dueDate
+        })
       });
       expect(response.status()).toBe(400);
-    });
+    } finally {
+      await TempEntityHelper.xoaContractTam(admin, temp);
+    }
+  });
 
-    test("[INV_004] POST /invoices rejects mismatched customerId", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/invoices", {
-        headers: { Cookie: adminCookies },
-        data: { ...validPayload, customerId: 999999 }
+  test("[INV_004] POST /invoices rejects mismatched customerId", async () => {
+    const temp = await TempEntityHelper.taoContractTam(admin);
+    try {
+      const response = await admin.post("/api/v1/admin/invoices", {
+        failOnStatusCode: false,
+        data: TestDataFactory.buildInvoicePayload({
+          contractId: temp.id,
+          customerId: 999999,
+          dueDate
+        })
       });
       expect(response.status()).toBe(400);
-    });
+    } finally {
+      await TempEntityHelper.xoaContractTam(admin, temp);
+    }
+  });
 
-    test("[INV_005] POST /invoices rejects dueDate within invoice month", async ({ request }) => {
-      const sameDueDate = `${prevYear}-${String(prevMonth).padStart(2, "0")}-15`;
-      const response = await request.post("/api/v1/admin/invoices", {
-        headers: { Cookie: adminCookies },
-        data: { ...validPayload, dueDate: sameDueDate }
+  test("[INV_005] POST /invoices rejects dueDate within invoice month", async () => {
+    const temp = await TempEntityHelper.taoContractTam(admin);
+    try {
+      const sameMonthDueDate = `${prevYear}-${String(prevMonth).padStart(2, "0")}-15`;
+      const response = await admin.post("/api/v1/admin/invoices", {
+        failOnStatusCode: false,
+        data: TestDataFactory.buildInvoicePayload({
+          contractId: temp.id,
+          customerId: temp.customer.id,
+          dueDate: sameMonthDueDate
+        })
       });
       expect(response.status()).toBe(400);
-    });
+    } finally {
+      await TempEntityHelper.xoaContractTam(admin, temp);
+    }
+  });
 
-    test("[INV_015] POST /invoices rejects current-month invoice creation", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/invoices", {
-        headers: { Cookie: adminCookies },
-        data: { ...validPayload, month: now.getMonth() + 1, year: now.getFullYear() }
+  test("[INV_016] PUT /invoices/{id} rejects nonexistent invoice", async () => {
+    const temp = await TempEntityHelper.taoContractTam(admin);
+    try {
+      const response = await admin.put("/api/v1/admin/invoices/999999", {
+        failOnStatusCode: false,
+        data: TestDataFactory.buildInvoicePayload({
+          id: 999999,
+          contractId: temp.id,
+          customerId: temp.customer.id,
+          dueDate
+        })
       });
       expect(response.status()).toBe(400);
+    } finally {
+      await TempEntityHelper.xoaContractTam(admin, temp);
+    }
+  });
+
+  test("[INV_017] DELETE /invoices/{id} rejects nonexistent invoice", async () => {
+    const response = await admin.delete("/api/v1/admin/invoices/999999", {
+      failOnStatusCode: false
     });
+    expect(response.status()).toBe(400);
+  });
 
-    test("[INV_006] POST /invoices creates invoice and persists to DB", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/invoices", {
-        headers: { Cookie: adminCookies },
-        data: validPayload
+  test("[INV_018] PUT /invoices/status marks overdue invoices based on due date", async () => {
+    const tempContract = await TempEntityHelper.taoContractTam(admin);
+    let createdInvoiceId = 0;
+
+    try {
+      const overduePayload = TestDataFactory.buildInvoicePayload({
+        contractId: tempContract.id,
+        customerId: tempContract.customer.id,
+        dueDate: `${dueDateYear}-${String(dueDateMonth).padStart(2, "0")}-01`
       });
-      expect(response.status()).toBe(200);
 
-      const dbResult = await db.query(
-        "SELECT * FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
-        [validPayload.contractId, validPayload.month, validPayload.year]
+      const createResponse = await admin.post("/api/v1/admin/invoices", {
+        failOnStatusCode: false,
+        data: overduePayload
+      });
+      expect(createResponse.status()).toBe(200);
+
+      const invoiceRows = await MySqlDbClient.query<{ id: number; status: string }>(
+        `
+          SELECT id, status
+          FROM invoice
+          WHERE contract_id = ? AND month = ? AND year = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        [tempContract.id, overduePayload.month, overduePayload.year]
       );
-      expect(dbResult.length).toBe(1);
-      expect(Number(dbResult[0].total_amount)).toBe(validPayload.totalAmount);
-      createdInvoiceId = dbResult[0].id;
-    });
+      expect(invoiceRows.length).toBe(1);
+      createdInvoiceId = invoiceRows[0]!.id;
+      expect(invoiceRows[0]!.status).toBe("PENDING");
 
-    test("[INV_010] POST /invoices rejects duplicate month-year-contract invoice", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/invoices", {
-        headers: { Cookie: adminCookies },
-        data: validPayload
+      const statusUpdateResponse = await admin.put("/api/v1/admin/invoices/status", {
+        failOnStatusCode: false
       });
-      expect(response.status()).toBe(400);
-    });
+      expect(statusUpdateResponse.status()).toBe(200);
 
-    test("[INV_007] GET /invoices lists created invoice", async ({ request }) => {
-      const response = await request.get("/api/v1/admin/invoices", {
-        headers: { Cookie: adminCookies },
-        params: { page: 1, size: 100 }
-      });
-      expect(response.status()).toBe(200);
-      const data = await response.json();
-      expect(Array.isArray(data.content)).toBeTruthy();
-      expect(data.content.find((item: { id: number }) => item.id === createdInvoiceId)).toBeDefined();
-    });
-
-    test("[INV_008] GET /invoices filters by month", async ({ request }) => {
-      const response = await request.get("/api/v1/admin/invoices", {
-        headers: { Cookie: adminCookies },
-        params: { page: 1, size: 10, month: validPayload.month }
-      });
-      expect(response.status()).toBe(200);
-      const data = await response.json();
-      expect(data.content.length).toBeGreaterThanOrEqual(1);
-    });
-
-    test("[INV_009] PUT /invoices/{id} updates invoice and DB", async ({ request }) => {
-      const response = await request.put(`/api/v1/admin/invoices/${createdInvoiceId}`, {
-        headers: { Cookie: adminCookies },
-        data: { ...validPayload, id: createdInvoiceId, totalAmount: 19999, details: [] }
-      });
-      expect(response.status()).toBe(200);
-
-      const dbResult = await db.query("SELECT * FROM invoice WHERE id = ?", [createdInvoiceId]);
-      expect(Number(dbResult[0].total_amount)).toBe(19999);
-    });
-
-    test("[INV_011] POST /invoices/{id}/confirm marks invoice as paid", async ({ request }) => {
-      const response = await request.post(`/api/v1/admin/invoices/${createdInvoiceId}/confirm`, {
-        headers: { Cookie: adminCookies }
-      });
-      expect(response.status()).toBe(200);
-
-      const dbResult = await db.query("SELECT status FROM invoice WHERE id = ?", [createdInvoiceId]);
-      expect(dbResult[0].status).toBe("PAID");
-    });
-
-    test("[INV_016] POST /invoices/{id}/confirm rejects nonexistent invoice", async ({ request }) => {
-      const response = await request.post("/api/v1/admin/invoices/999999/confirm", {
-        headers: { Cookie: adminCookies }
-      });
-      expect(response.status()).toBe(400);
-    });
-
-    test("[INV_012] PUT /invoices/{id} rejects editing paid invoice", async ({ request }) => {
-      const response = await request.put(`/api/v1/admin/invoices/${createdInvoiceId}`, {
-        headers: { Cookie: adminCookies },
-        data: { ...validPayload, id: createdInvoiceId, totalAmount: 99999 }
-      });
-      expect(response.status()).toBe(400);
-    });
-
-    test("[INV_013] PUT /invoices/status triggers bulk status update", async ({ request }) => {
-      const response = await request.put("/api/v1/admin/invoices/status", {
-        headers: { Cookie: adminCookies }
-      });
-      expect(response.status()).toBe(200);
-    });
-
-    test("[INV_014] DELETE /invoices/{id} deletes invoice", async ({ request }) => {
-      const response = await request.delete(`/api/v1/admin/invoices/${createdInvoiceId}`, {
-        headers: { Cookie: adminCookies }
-      });
-      expect(response.status()).toBe(200);
-
-      const dbResult = await db.query("SELECT * FROM invoice WHERE id = ?", [createdInvoiceId]);
-      if (dbResult.length > 0) {
-        expect(dbResult[0].is_deleted || dbResult[0].deleted).toBeTruthy();
-      } else {
-        expect(dbResult.length).toBe(0);
+      const overdueRows = await MySqlDbClient.query<{ status: string }>(
+        "SELECT status FROM invoice WHERE id = ?",
+        [createdInvoiceId]
+      );
+      expect(overdueRows[0]!.status).toBe("OVERDUE");
+    } finally {
+      if (createdInvoiceId) {
+        await admin.delete(`/api/v1/admin/invoices/${createdInvoiceId}`, { failOnStatusCode: false });
       }
+      await TempEntityHelper.xoaContractTam(admin, tempContract);
+    }
+  });
+
+  test("[INV_006] invoice create/list/filter/update/confirm/delete lifecycle with temp contract", async () => {
+    const tempContract = await TempEntityHelper.taoContractTam(admin);
+    let createdInvoiceId = 0;
+
+    try {
+      const payload = TestDataFactory.buildInvoicePayload({
+        contractId: tempContract.id,
+        customerId: tempContract.customer.id,
+        dueDate
+      });
+
+      const createResponse = await admin.post("/api/v1/admin/invoices", {
+        failOnStatusCode: false,
+        data: payload
+      });
+      expect(createResponse.status()).toBe(200);
+
+      const invoiceRows = await MySqlDbClient.query<{
+        id: number;
+        total_amount: number;
+      }>(
+        `
+          SELECT id, total_amount
+          FROM invoice
+          WHERE contract_id = ? AND month = ? AND year = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        [tempContract.id, payload.month, payload.year]
+      );
+      expect(invoiceRows.length).toBe(1);
+      createdInvoiceId = invoiceRows[0]!.id;
+      expect(Number(invoiceRows[0]!.total_amount)).toBe(Number(payload.totalAmount));
+
+      const utilityRows = await MySqlDbClient.query<{
+        electricity_old: number;
+        electricity_new: number;
+        water_old: number;
+        water_new: number;
+      }>(
+        `
+          SELECT electricity_old, electricity_new, water_old, water_new
+          FROM utility_meter
+          WHERE contract_id = ? AND month = ? AND year = ?
+          LIMIT 1
+        `,
+        [tempContract.id, payload.month, payload.year]
+      );
+      expect(utilityRows.length).toBe(1);
+      expect(utilityRows[0]!.electricity_old).toBe(0);
+      expect(utilityRows[0]!.water_old).toBe(0);
+      expect(utilityRows[0]!.electricity_new).toBe(Number(payload.electricityUsage));
+      expect(utilityRows[0]!.water_new).toBe(Number(payload.waterUsage));
+
+      const duplicateResponse = await admin.post("/api/v1/admin/invoices", {
+        failOnStatusCode: false,
+        data: payload
+      });
+      expect(duplicateResponse.status()).toBe(400);
+
+      const listResponse = await admin.get("/api/v1/admin/invoices", {
+        failOnStatusCode: false,
+        params: { page: 1, size: 100, customerId: tempContract.customer.id }
+      });
+      expect(listResponse.status()).toBe(200);
+      const listBody = (await listResponse.json()) as {
+        content?: Array<{ id: number; status?: string; month?: number; year?: number }>;
+        totalElements?: number;
+      };
+      expect(typeof listBody.totalElements).toBe("number");
+      expect(listBody.content?.some((item) => item.id === createdInvoiceId)).toBeTruthy();
+      const createdItem = listBody.content?.find((item) => item.id === createdInvoiceId);
+      expect(createdItem?.status).toBe(payload.status);
+      expect(createdItem?.month).toBe(Number(payload.month));
+      expect(createdItem?.year).toBe(Number(payload.year));
+
+      const filterResponse = await admin.get("/api/v1/admin/invoices", {
+        failOnStatusCode: false,
+        params: { page: 1, size: 100, month: Number(payload.month), customerId: tempContract.customer.id }
+      });
+      expect(filterResponse.status()).toBe(200);
+      const filterBody = (await filterResponse.json()) as {
+        content?: Array<{ id: number; month?: number; customer?: string }>;
+        totalElements?: number;
+      };
+      expect(typeof filterBody.totalElements).toBe("number");
+      expect(filterBody.content?.some((item) => item.id === createdInvoiceId)).toBeTruthy();
+
+      const updateResponse = await admin.put(`/api/v1/admin/invoices/${createdInvoiceId}`, {
+        failOnStatusCode: false,
+        data: {
+          ...payload,
+          id: createdInvoiceId,
+          totalAmount: 19999,
+          details: [],
+          electricityUsage: 22,
+          waterUsage: 11
+        }
+      });
+      expect(updateResponse.status()).toBe(200);
+
+      const updatedRows = await MySqlDbClient.query<{ total_amount: number }>(
+        "SELECT total_amount FROM invoice WHERE id = ?",
+        [createdInvoiceId]
+      );
+      expect(Number(updatedRows[0]!.total_amount)).toBe(19999);
+
+      const updatedUtilityRows = await MySqlDbClient.query<{
+        electricity_old: number;
+        electricity_new: number;
+        water_old: number;
+        water_new: number;
+      }>(
+        `
+          SELECT electricity_old, electricity_new, water_old, water_new
+          FROM utility_meter
+          WHERE contract_id = ? AND month = ? AND year = ?
+          LIMIT 1
+        `,
+        [tempContract.id, payload.month, payload.year]
+      );
+      expect(updatedUtilityRows.length).toBe(1);
+      expect(updatedUtilityRows[0]!.electricity_old).toBe(0);
+      expect(updatedUtilityRows[0]!.water_old).toBe(0);
+      expect(updatedUtilityRows[0]!.electricity_new).toBe(22);
+      expect(updatedUtilityRows[0]!.water_new).toBe(11);
+
+      const confirmResponse = await admin.post(`/api/v1/admin/invoices/${createdInvoiceId}/confirm`, {
+        failOnStatusCode: false
+      });
+      expect(confirmResponse.status()).toBe(200);
+
+      const paidRows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [createdInvoiceId]);
+      expect(paidRows[0]!.status).toBe("PAID");
+
+      const missingConfirm = await admin.post("/api/v1/admin/invoices/999999/confirm", {
+        failOnStatusCode: false
+      });
+      expect(missingConfirm.status()).toBe(400);
+
+      const updatePaidResponse = await admin.put(`/api/v1/admin/invoices/${createdInvoiceId}`, {
+        failOnStatusCode: false,
+        data: {
+          ...payload,
+          id: createdInvoiceId,
+          totalAmount: 99999
+        }
+      });
+      expect(updatePaidResponse.status()).toBe(400);
+
+      const statusUpdateResponse = await admin.put("/api/v1/admin/invoices/status", {
+        failOnStatusCode: false
+      });
+      expect(statusUpdateResponse.status()).toBe(200);
+
+      const deleteResponse = await admin.delete(`/api/v1/admin/invoices/${createdInvoiceId}`, {
+        failOnStatusCode: false
+      });
+      expect(deleteResponse.status()).toBe(200);
+
+      const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [createdInvoiceId]);
+      expect(deletedRows.length).toBe(0);
+
+      const deletedUtilityRows = await MySqlDbClient.query<{ id: number }>(
+        "SELECT id FROM utility_meter WHERE contract_id = ? AND month = ? AND year = ?",
+        [tempContract.id, payload.month, payload.year]
+      );
+      expect(deletedUtilityRows.length).toBe(0);
       createdInvoiceId = 0;
-    });
+    } finally {
+      if (createdInvoiceId) {
+        await admin.delete(`/api/v1/admin/invoices/${createdInvoiceId}`, { failOnStatusCode: false });
+      }
+      await TempEntityHelper.xoaContractTam(admin, tempContract);
+    }
   });
 });

@@ -1,0 +1,1 @@
+This is a plain text fixture used to verify upload validation rejects non-image content.

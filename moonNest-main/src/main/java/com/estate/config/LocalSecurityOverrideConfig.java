@@ -31,6 +31,7 @@ public class LocalSecurityOverrideConfig {
             "/forgot-password",
             "/api/v1/auth/login",
             "/api/v1/auth/forgot-password",
+            "/api/test-support/**",
             "/api/v1/public/**",
             "/auth/reset-password",
             "/auth/register/send-code",

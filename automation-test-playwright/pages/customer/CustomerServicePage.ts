@@ -5,6 +5,6 @@ export class CustomerServicePage extends CustomerRoutedPage {
   protected readonly path = "/customer/service";
 
   async expectLoaded(): Promise<void> {
-    await expect(this.page).toHaveTitle(/Dịch vụ|SunTower/i);
+    await expect(this.page).toHaveTitle(/Dịch vụ|MoonNest/i);
   }
 }

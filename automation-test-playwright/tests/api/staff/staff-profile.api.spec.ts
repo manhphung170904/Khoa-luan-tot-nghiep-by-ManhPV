@@ -1,179 +1,249 @@
-﻿import { test, expect } from '@playwright/test';
-import { ApiAuthHelper } from '../../../utils/api/apiAuthHelper';
-import { DatabaseHelper } from '../../../utils/db-client';
-import { env } from '../../../config/env';
-import { createHash } from 'crypto';
+import { expect, test, type APIRequestContext } from "@playwright/test";
+import { env } from "@config/env";
+import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
+import { ApiOtpHelper } from "@api/apiOtpHelper";
+import { ApiSessionHelper } from "@api/apiSessionHelper";
+import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe('Staff Profile API Tests', () => {
-    let db: DatabaseHelper;
-    let staffCookies: string;
-    let staffId: number;
-    let originalEmail: string;
-    let originalPhone: string;
-    let originalPasswordHash: string;
-    let staffEmail: string;
-    const staticOtp = '123456';
+type TempStaff = {
+  id: number;
+  username: string;
+  email: string;
+  phone: string;
+};
 
-    const hashOtp = (otp: string) => createHash('sha256').update(otp).digest('hex');
+test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression", () => {
+  let bootstrapAdmin: APIRequestContext;
+  let staffContext: APIRequestContext;
+  let tempStaff: TempStaff;
+  let currentPassword = env.defaultPassword;
 
-    const resetOtpRow = async (email: string, purpose: string, otp: string) => {
-        const rows = await db.query<{ id: number }>(
-            'SELECT id FROM email_verification WHERE email = ? AND purpose = ? AND status = ? ORDER BY id DESC LIMIT 1',
-            [email, purpose, 'PENDING']
-        );
-        expect(rows.length).toBeGreaterThan(0);
-        await db.query('UPDATE email_verification SET otp_hash = ? WHERE id = ?', [hashOtp(otp), rows[0].id]);
-    };
-
-    test.beforeAll(async () => {
-        db = new DatabaseHelper();
-        await db.connect();
-
-        staffCookies = await ApiAuthHelper.loginAsStaff();
-        const rows = await db.query<{ id: number; email: string; phone: string; password: string }>(
-            'SELECT id, email, phone, password FROM staff WHERE username = ? LIMIT 1',
-            [env.staffUsername]
-        );
-        expect(rows.length).toBeGreaterThan(0);
-        staffId = rows[0].id;
-        staffEmail = rows[0].email;
-        originalEmail = rows[0].email;
-        originalPhone = rows[0].phone;
-        originalPasswordHash = rows[0].password;
+  const createTempStaff = async (): Promise<TempStaff> => {
+    const payload = TestDataFactory.buildAdminStaffPayload();
+    const response = await bootstrapAdmin.post("/api/v1/admin/staff", {
+      failOnStatusCode: false,
+      data: payload
     });
+    expect(response.status()).toBe(200);
 
-    test.afterAll(async () => {
-        await db.query(
-            'UPDATE staff SET email = ?, phone = ?, password = ? WHERE id = ?',
-            [originalEmail, originalPhone, originalPasswordHash, staffId]
-        );
-        await db.disconnect();
+    const rows = await MySqlDbClient.query<TempStaff>(
+      `
+        SELECT id, username, email, phone
+        FROM staff
+        WHERE username = ?
+        ORDER BY id DESC
+        LIMIT 1
+      `,
+      [String(payload.username)]
+    );
+    expect(rows.length).toBe(1);
+    return rows[0]!;
+  };
+
+  const sendOtp = async (purpose: string) => {
+    const response = await staffContext.post(`/api/v1/staff/profile/otp/${purpose}`, {
+      failOnStatusCode: false
     });
+    expect(response.status()).toBe(200);
+  };
 
-    test.describe.serial('Staff profile update flow with DB assertions', () => {
-        test('[API_TC_016] [Happy Path] Update staff email with valid password and DB verify', async ({ request }) => {
-            const responseOtp = await request.post('/api/v1/staff/profile/otp/PROFILE_EMAIL', {
-                headers: { Cookie: staffCookies }
-            });
-            expect(responseOtp.status()).toBe(200);
+  test.beforeAll(async ({ playwright }) => {
+    bootstrapAdmin = await ApiSessionHelper.newContext(playwright, "admin");
+    tempStaff = await createTempStaff();
+    staffContext = await ApiSessionHelper.newContext(playwright);
 
-            await resetOtpRow(originalEmail, 'PROFILE_EMAIL', staticOtp);
+    const loginResponse = await ApiSessionHelper.login(staffContext, tempStaff.username, currentPassword);
+    expect(loginResponse.status()).toBe(200);
+  });
 
-            const newEmail = `staff_update_${Date.now()}@example.com`;
-            const response = await request.put('/api/v1/staff/profile/email', {
-                headers: {
-                    Cookie: staffCookies,
-                    'Content-Type': 'application/json'
-                },
-                data: {
-                    newEmail,
-                    password: env.defaultPassword
-                }
-            });
+  test.afterAll(async () => {
+    await staffContext.dispose();
+    await bootstrapAdmin.delete(`/api/v1/admin/staff/${tempStaff.id}`, { failOnStatusCode: false });
+    await bootstrapAdmin.dispose();
+    await MySqlDbClient.close();
+  });
 
-            expect(response.status()).toBe(200);
-
-            const dbRows = await db.query<{ email: string }>('SELECT email FROM staff WHERE id = ?', [staffId]);
-            expect(dbRows.length).toBe(1);
-            expect(dbRows[0].email).toBe(newEmail);
-        });
-
-        test('[API_TC_017] [Negative] Reject staff email update with wrong current password', async ({ request }) => {
-            const response = await request.put('/api/v1/staff/profile/email', {
-                headers: {
-                    Cookie: staffCookies,
-                    'Content-Type': 'application/json'
-                },
-                data: {
-                    newEmail: `staff_invalid_${Date.now()}@example.com`,
-                    password: 'wrong-password'
-                }
-            });
-
-            expect(response.status()).toBe(400);
-        });
-
-        test('[API_TC_018] [Happy Path] Update staff phone with OTP and verify DB value', async ({ request }) => {
-            const responseOtp = await request.post('/api/v1/staff/profile/otp/PROFILE_PHONE', {
-                headers: { Cookie: staffCookies }
-            });
-            expect(responseOtp.status()).toBe(200);
-
-            const currentEmail = (await db.query<{ email: string }>('SELECT email FROM staff WHERE id = ?', [staffId]))[0].email;
-            await resetOtpRow(currentEmail, 'PROFILE_PHONE', staticOtp);
-
-            const newPhone = `098${Math.floor(100000000 + Math.random() * 900000000)}`;
-            const response = await request.put('/api/v1/staff/profile/phone-number', {
-                headers: {
-                    Cookie: staffCookies,
-                    'Content-Type': 'application/json'
-                },
-                data: {
-                    newPhoneNumber: newPhone,
-                    otp: staticOtp
-                }
-            });
-
-            expect(response.status()).toBe(200);
-
-            const dbRows = await db.query<{ phone: string }>('SELECT phone FROM staff WHERE id = ?', [staffId]);
-            expect(dbRows.length).toBe(1);
-            expect(dbRows[0].phone).toBe(newPhone);
-        });
-
-        test('[API_TC_019] [Boundary] Reject staff password update when new password is too short', async ({ request }) => {
-            const responseOtp = await request.post('/api/v1/staff/profile/otp/PROFILE_PASSWORD', {
-                headers: { Cookie: staffCookies }
-            });
-            expect(responseOtp.status()).toBe(200);
-
-            await resetOtpRow(staffEmail, 'PROFILE_PASSWORD', staticOtp);
-
-            const response = await request.put('/api/v1/staff/profile/password', {
-                headers: {
-                    Cookie: staffCookies,
-                    'Content-Type': 'application/json'
-                },
-                data: {
-                    currentPassword: env.defaultPassword,
-                    newPassword: 'short',
-                    confirmPassword: 'short',
-                    otp: staticOtp
-                }
-            });
-
-            expect(response.status()).toBe(400);
-        });
-
-        test('[API_TC_020] [Happy Path] Update staff password with OTP and confirm DB hash changed', async ({ request }) => {
-            const currentPasswordHash = (await db.query<{ password: string }>('SELECT password FROM staff WHERE id = ?', [staffId]))[0].password;
-
-            const responseOtp = await request.post('/api/v1/staff/profile/otp/PROFILE_PASSWORD', {
-                headers: { Cookie: staffCookies }
-            });
-            expect(responseOtp.status()).toBe(200);
-
-            const currentEmail = (await db.query<{ email: string }>('SELECT email FROM staff WHERE id = ?', [staffId]))[0].email;
-            await resetOtpRow(currentEmail, 'PROFILE_PASSWORD', staticOtp);
-
-            const response = await request.put('/api/v1/staff/profile/password', {
-                headers: {
-                    Cookie: staffCookies,
-                    'Content-Type': 'application/json'
-                },
-                data: {
-                    currentPassword: env.defaultPassword,
-                    newPassword: 'NewStaffPassword1!',
-                    confirmPassword: 'NewStaffPassword1!',
-                    otp: staticOtp
-                }
-            });
-
-            expect(response.status()).toBe(200);
-
-            const newPasswordHash = (await db.query<{ password: string }>('SELECT password FROM staff WHERE id = ?', [staffId]))[0].password;
-            expect(newPasswordHash).not.toBe(currentPasswordHash);
-        });
+  test("[STF-PRO-001] rejects anonymous access to staff profile mutation endpoints", async ({ request }) => {
+    const usernameResponse = await request.put("/api/v1/staff/profile/username", {
+      failOnStatusCode: false,
+      data: {
+        newUsername: "staff_hacked",
+        otp: "000000"
+      }
     });
+    expect(usernameResponse.status()).toBe(401);
+
+    const emailResponse = await request.put("/api/v1/staff/profile/email", {
+      failOnStatusCode: false,
+      data: {
+        newEmail: "hacked@example.com",
+        password: "wrong-password"
+      }
+    });
+    expect(emailResponse.status()).toBe(401);
+
+    const phoneResponse = await request.put("/api/v1/staff/profile/phone-number", {
+      failOnStatusCode: false,
+      data: {
+        newPhoneNumber: "0900000000",
+        otp: "000000"
+      }
+    });
+    expect(phoneResponse.status()).toBe(401);
+
+    const otpResponse = await request.post("/api/v1/staff/profile/otp/PROFILE_USERNAME", {
+      failOnStatusCode: false
+    });
+    expect(otpResponse.status()).toBe(401);
+  });
+
+  test("[STF-PRO-002] sends OTP for username update and marks row pending", async () => {
+    await sendOtp("PROFILE_USERNAME");
+    const latest = await ApiOtpHelper.latest(tempStaff.email, "PROFILE_USERNAME");
+    expect(latest?.status).toBe("PENDING");
+  });
+
+  test("[STF-PRO-003] rejects invalid OTP for username update", async () => {
+    const response = await staffContext.put("/api/v1/staff/profile/username", {
+      failOnStatusCode: false,
+      data: {
+        newUsername: `staff-updated-${Date.now()}`,
+        otp: "111111"
+      }
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[STF-PRO-004] updates username with valid OTP", async () => {
+    await sendOtp("PROFILE_USERNAME");
+    const otp = await ApiOtpAccessHelper.latestOtp(staffContext, tempStaff.email, "PROFILE_USERNAME");
+
+    const nextUsername = `stf${Date.now().toString().slice(-7)}`;
+    const response = await staffContext.put("/api/v1/staff/profile/username", {
+      failOnStatusCode: false,
+      data: {
+        newUsername: nextUsername,
+        otp
+      }
+    });
+    expect(response.status()).toBe(200);
+
+    const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempStaff.id]);
+    expect(rows[0]!.username).toBe(nextUsername);
+    tempStaff.username = nextUsername;
+  });
+
+  test("[STF-PRO-005] rejects email update with wrong current password", async () => {
+    const response = await staffContext.put("/api/v1/staff/profile/email", {
+      failOnStatusCode: false,
+      data: {
+        newEmail: `staff-invalid-${Date.now()}@example.com`,
+        password: "wrong-password"
+      }
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[STF-PRO-006] updates email with valid current password", async () => {
+    const newEmail = `staff-update-${Date.now()}@example.com`;
+    const response = await staffContext.put("/api/v1/staff/profile/email", {
+      failOnStatusCode: false,
+      data: {
+        newEmail,
+        password: currentPassword
+      }
+    });
+    expect(response.status()).toBe(200);
+
+    const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM staff WHERE id = ?", [tempStaff.id]);
+    expect(rows[0]!.email).toBe(newEmail);
+    tempStaff.email = newEmail;
+  });
+
+  test("[STF-PRO-007] updates phone with valid OTP", async () => {
+    await sendOtp("PROFILE_PHONE");
+    const otp = await ApiOtpAccessHelper.latestOtp(staffContext, tempStaff.email, "PROFILE_PHONE");
+
+    const nextPhone = TestDataFactory.taoSoDienThoai();
+    const response = await staffContext.put("/api/v1/staff/profile/phone-number", {
+      failOnStatusCode: false,
+      data: {
+        newPhoneNumber: nextPhone,
+        otp
+      }
+    });
+    expect(response.status()).toBe(200);
+
+    const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempStaff.id]);
+    expect(rows[0]!.phone).toBe(nextPhone);
+    tempStaff.phone = nextPhone;
+  });
+
+  test("[STF-PRO-007A] rejects phone update with invalid OTP", async () => {
+    const response = await staffContext.put("/api/v1/staff/profile/phone-number", {
+      failOnStatusCode: false,
+      data: {
+        newPhoneNumber: TestDataFactory.taoSoDienThoai(),
+        otp: "111111"
+      }
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[STF-PRO-008] rejects password update when new password is too short", async () => {
+    await sendOtp("PROFILE_PASSWORD");
+    const otp = await ApiOtpAccessHelper.latestOtp(staffContext, tempStaff.email, "PROFILE_PASSWORD");
+
+    const response = await staffContext.put("/api/v1/staff/profile/password", {
+      failOnStatusCode: false,
+      data: {
+        currentPassword,
+        newPassword: "short",
+        confirmPassword: "short",
+        otp
+      }
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("[STF-PRO-009] updates password with valid OTP", async ({ playwright }) => {
+    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
+    const oldHash = oldHashRows[0]!.password;
+
+    await sendOtp("PROFILE_PASSWORD");
+    const otp = await ApiOtpAccessHelper.latestOtp(staffContext, tempStaff.email, "PROFILE_PASSWORD");
+
+    const newPassword = "NewStaffPassword1!";
+    const response = await staffContext.put("/api/v1/staff/profile/password", {
+      failOnStatusCode: false,
+      data: {
+        currentPassword,
+        newPassword,
+        confirmPassword: newPassword,
+        otp
+      }
+    });
+    expect(response.status()).toBe(200);
+
+    const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
+    expect(newHashRows[0]!.password).not.toBe(oldHash);
+    const otpRow = await ApiOtpHelper.latest(tempStaff.email, "PROFILE_PASSWORD");
+    expect(otpRow?.status).toBe("USED");
+
+    const oldLoginContext = await ApiSessionHelper.newContext(playwright);
+    const newLoginContext = await ApiSessionHelper.newContext(playwright);
+    try {
+      const oldLogin = await ApiSessionHelper.login(oldLoginContext, tempStaff.username, currentPassword);
+      expect([400, 401]).toContain(oldLogin.status());
+
+      const newLogin = await ApiSessionHelper.login(newLoginContext, tempStaff.username, newPassword);
+      expect(newLogin.status()).toBe(200);
+    } finally {
+      await oldLoginContext.dispose();
+      await newLoginContext.dispose();
+    }
+
+    currentPassword = newPassword;
+  });
 });
-

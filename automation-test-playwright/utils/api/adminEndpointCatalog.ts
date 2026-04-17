@@ -4,6 +4,7 @@ import { invalidTextFile, tinyPngFile } from "@api/adminApiUtils";
 export const adminEndpointCatalog: RequestDescriptor[] = [
   { id: "ADM-BLD-001", method: "GET", path: "/api/v1/admin/buildings", params: { page: 1, size: 5 } },
   { id: "ADM-BLD-002", method: "GET", path: "/api/v1/admin/buildings", params: { page: 1, size: 5, name: "tower" } },
+  { id: "ADM-BLD-002A", method: "GET", path: "/api/v1/admin/buildings/metadata" },
   {
     id: "ADM-BLD-003",
     method: "POST",
@@ -66,6 +67,7 @@ export const adminEndpointCatalog: RequestDescriptor[] = [
 
   { id: "ADM-CON-001", method: "GET", path: "/api/v1/admin/contracts", params: { page: 1, size: 5 } },
   { id: "ADM-CON-002", method: "GET", path: "/api/v1/admin/contracts", params: { page: 1, size: 5, customerName: "a" } },
+  { id: "ADM-CON-002A", method: "GET", path: "/api/v1/admin/contracts/metadata" },
   { id: "ADM-CON-003", method: "POST", path: "/api/v1/admin/contracts", data: { rentPrice: -1 } },
   { id: "ADM-CON-004", method: "PUT", path: "/api/v1/admin/contracts/999999999", data: { id: 999999999, rentPrice: -1 } },
   { id: "ADM-CON-005", method: "DELETE", path: "/api/v1/admin/contracts/999999999" },
@@ -101,6 +103,7 @@ export const adminEndpointCatalog: RequestDescriptor[] = [
   { id: "ADM-STF-008", method: "GET", path: "/api/v1/admin/staff/buildings" },
   { id: "ADM-STF-009", method: "GET", path: "/api/v1/admin/staff/1/assignments/buildings" },
   { id: "ADM-STF-010", method: "PUT", path: "/api/v1/admin/staff/1/assignments/buildings", data: [1] },
+  { id: "ADM-STF-011", method: "POST", path: "/api/v1/admin/staff/1/quick-assign", params: { buildingId: 1, customerId: 1 } },
 
   { id: "ADM-PRQ-001", method: "GET", path: "/api/v1/admin/property-requests", params: { page: 1, size: 5 } },
   { id: "ADM-PRQ-002", method: "GET", path: "/api/v1/admin/property-requests/1" },

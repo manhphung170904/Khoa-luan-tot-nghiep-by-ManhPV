@@ -19,7 +19,7 @@ export class PublicLandingPage extends BasePage {
   }
 
   async open(): Promise<void> {
-    await this.visit("/suntower");
+    await this.visit("/moonnest");
   }
 
   async searchByBuildingName(name: string): Promise<void> {
