@@ -2065,11 +2065,12 @@
             })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
-                    if (data.filename) {
+                    var filename = data && data.data && data.data.filename ? data.data.filename : data.filename;
+                    if (filename) {
                         // Lưu full path vào hidden field – giống building lưu data.filename
-                        var fullPath = '/images/planning_map_img/' + data.filename;
+                        var fullPath = '/images/planning_map_img/' + filename;
                         document.getElementById('planning-imageUrl').value = fullPath;
-                        setPlanningUploadStatus('✓ ' + data.filename, '#059669');
+                        setPlanningUploadStatus('✓ ' + filename, '#059669');
                         document.getElementById('planningUploadZone').classList.remove('uploading');
                     } else {
                         throw new Error(data.message || 'Upload thất bại');

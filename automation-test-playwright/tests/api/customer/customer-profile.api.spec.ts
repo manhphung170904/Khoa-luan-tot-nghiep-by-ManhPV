@@ -87,7 +87,7 @@ test.describe('Customer Profile API Tests', () => {
                 }
             });
 
-            expect(response.status()).not.toBe(200);
+            expect(response.status()).toBe(400);
         });
 
         test('[API_TC_013] [Happy Path] Send OTP for phone update and update phone successfully', async ({ request }) => {
@@ -172,7 +172,7 @@ test.describe('Customer Profile API Tests', () => {
                 }
             });
 
-            expect(responseUpdate.status()).not.toBe(200);
+            expect(responseUpdate.status()).toBe(400);
         });
     });
 });

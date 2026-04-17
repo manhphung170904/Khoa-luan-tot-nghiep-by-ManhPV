@@ -4,7 +4,7 @@ import { expectStatusExact } from "@api/apiContractUtils";
 import { DatabaseHelper } from "../../../utils/db-client";
 import { env } from "../../../config/env";
 
-test.describe("Payment API (QR VietQR) Contract Tests", () => {
+test.describe("Payment API (QR VietQR) Contract Tests @api @regression", () => {
   let db: DatabaseHelper;
   let customerInvoiceId: number;
   let nonexistentInvoiceId: number;
@@ -28,10 +28,10 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
     await db.disconnect();
   });
 
-  test("API-PAY-001 rejects anonymous QR access", async ({ playwright }) => {
+  test("API-PAY-001 rejects anonymous QR access @regression", async ({ playwright }) => {
     const anonymous = await playwright.request.newContext({ baseURL: env.baseUrl });
     try {
-      const response = await anonymous.get(`/api/v1/payment/qr/${customerInvoiceId}`, {
+      const response = await anonymous.get(`/payment-demo/qr/${customerInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -41,10 +41,10 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
     }
   });
 
-  test("API-PAY-002 rejects admin access to customer QR", async ({ playwright }) => {
+  test("API-PAY-002 rejects admin access to customer QR @regression", async ({ playwright }) => {
     const admin = await createRoleContext(playwright, "admin");
     try {
-      const response = await admin.get(`/api/v1/payment/qr/${customerInvoiceId}`, {
+      const response = await admin.get(`/payment-demo/qr/${customerInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -54,10 +54,10 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
     }
   });
 
-  test("API-PAY-003 returns 404 for missing invoice id", async ({ playwright }) => {
+  test("API-PAY-003 returns 404 for missing invoice id @regression", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer");
     try {
-      const response = await customer.get(`/api/v1/payment/qr/${nonexistentInvoiceId}`, {
+      const response = await customer.get(`/payment-demo/qr/${nonexistentInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -67,10 +67,10 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
     }
   });
 
-  test("API-PAY-004 renders QR HTML for customer-owned invoice", async ({ playwright }) => {
+  test("API-PAY-004 renders QR HTML for customer-owned invoice @smoke @regression", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer");
     try {
-      const response = await customer.get(`/api/v1/payment/qr/${customerInvoiceId}`, {
+      const response = await customer.get(`/payment-demo/qr/${customerInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -79,18 +79,30 @@ test.describe("Payment API (QR VietQR) Contract Tests", () => {
       const bodyHtml = await response.text();
       expect(bodyHtml).toContain("Thanh to");
       expect(bodyHtml).toContain("img.vietqr.io");
-      expect(bodyHtml).toContain(`/api/v1/payment/qr/confirm/${customerInvoiceId}`);
+      expect(bodyHtml).toContain(`/payment-demo/qr/confirm/${customerInvoiceId}`);
     } finally {
       await customer.dispose();
     }
   });
 
-  test("API-PAY-005 confirms QR payment and redirects to invoice list", async ({ playwright }) => {
+  test("API-PAY-005 confirms QR payment and redirects to invoice list @regression", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer");
     try {
-      const response = await customer.get(`/api/v1/payment/qr/confirm/${customerInvoiceId}`, {
+      const pageResponse = await customer.get(`/payment-demo/qr/${customerInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
+      });
+      expectStatusExact(pageResponse, 200, "QR page must render before confirm");
+      const bodyHtml = await pageResponse.text();
+      const tokenMatch = bodyHtml.match(/name="token" value="([^"]+)"/);
+      expect(tokenMatch).not.toBeNull();
+
+      const response = await customer.post(`/payment-demo/qr/confirm/${customerInvoiceId}`, {
+        failOnStatusCode: false,
+        maxRedirects: 0,
+        form: {
+          token: tokenMatch?.[1] ?? ""
+        }
       });
       expectStatusExact(response, 302, "QR confirmation should redirect after success");
       expect(response.headers().location).toContain("/customer/invoice/list?paySuccess");

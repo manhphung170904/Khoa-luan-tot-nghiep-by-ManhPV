@@ -9,10 +9,24 @@ Coverage status meanings:
 - `missing`: no direct spec yet.
 - `defect-driven`: spec is intentionally strict and may fail when backend status semantics are wrong.
 
+## Execution tiers by module
+
+| Group | Priority | Smoke baseline | Core regression focus | Extended focus |
+| --- | --- | --- | --- | --- |
+| Auth | P0 | REST login, `me`, logout | forgot-password, register/reset support flow | OTP/session edge case |
+| Public | P0 | building search | filter, pagination, response shape | invalid enum and boundary |
+| Admin | P1 | security matrix, critical readonly | CRUD + validation + DB verify | upload, trigger batch, defect-driven |
+| Staff | P1 | readonly contract | invoice lifecycle, profile update | scope boundary, unsupported write |
+| Customer | P1 | readonly contract | property-request, profile update | duplicate/conflict, defect-driven |
+| Payment | P2 | QR render | access control, confirm flow | ownership and edge state |
+
 ## Auth
 
 | Module | Method | Path | Kind | Expected role | Test file | Coverage |
 | --- | --- | --- | --- | --- | --- | --- |
+| Auth | `POST` | `/api/v1/auth/login` | otp-auth | public | `tests/api/auth/auth-session.api.spec.ts` | covered |
+| Auth | `GET` | `/api/v1/auth/me` | readonly | authenticated | `tests/api/auth/auth-session.api.spec.ts` | covered |
+| Auth | `POST` | `/api/v1/auth/logout` | background-trigger | authenticated | `tests/api/auth/auth-session.api.spec.ts` | covered |
 | Auth | `POST` | `/api/v1/auth/forgot-password` | otp-auth | public | `tests/api/auth/auth.api.spec.ts` | partial |
 | MVC auth | `POST` | `/login` | otp-auth | public | `tests/api/auth/auth.api.spec.ts` | partial |
 | MVC auth | `POST` | `/auth/register/send-code` | otp-auth | public | `tests/api/auth/auth.api.spec.ts` | partial |
@@ -115,8 +129,8 @@ Coverage status meanings:
 
 | Module | Method | Path | Kind | Expected role | Test file | Coverage |
 | --- | --- | --- | --- | --- | --- | --- |
-| QR payment | `GET` | `/api/v1/payment/qr/{invoiceId}` | readonly | customer | `tests/api/payment/payment.api.spec.ts` | defect-driven |
-| QR confirm | `GET` | `/api/v1/payment/qr/confirm/{invoiceId}` | background-trigger | customer | `tests/api/payment/payment.api.spec.ts` | defect-driven |
+| QR payment | `GET` | `/payment-demo/qr/{invoiceId}` | readonly | customer | `tests/api/payment/payment.api.spec.ts` | defect-driven |
+| QR confirm | `GET/POST` | `/payment-demo/qr/confirm/{invoiceId}` | background-trigger | customer | `tests/api/payment/payment.api.spec.ts` | defect-driven |
 
 ## Public Page
 
@@ -129,6 +143,7 @@ Coverage status meanings:
 - `staff-readonly` and `customer-readonly` were migrated to the real REST API paths under `com.estate.api`. Old page/controller paths are no longer the source of truth.
 - `property-request` coverage was added for both customer and admin APIs, but the current backend behavior redirects or otherwise prevents the customer submit flow from persisting data, so these routes are marked `defect-driven`.
 - Customer and staff readonly REST routes now point to the correct API controllers; current auth-status mismatches (`302` instead of `401`/`403`) are intentionally exposed as backend defects.
+- Payment contract uses `/payment-demo/**` because that is the actual backend controller mapping.
 - Broad status assertions still exist in some older admin/profile/auth/public specs. Those modules remain marked `partial` until they are fully migrated to exact contract assertions.
 
 

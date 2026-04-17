@@ -4,8 +4,8 @@ import { expectMessageBody, expectStatusExact } from "@api/apiContractUtils";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "../_fixtures/propertyRequestScenario";
 
-test.describe("Customer Property Request API", () => {
-  test("API-CUS-PRQ-001 rejects anonymous submit with API auth status", async ({ playwright }) => {
+test.describe("Customer Property Request API @api @regression", () => {
+  test("API-CUS-PRQ-001 rejects anonymous submit with API auth status @regression", async ({ playwright }) => {
     const context = await createAnonymousContext(playwright);
     try {
       const response = await context.post("/api/v1/customer/property-requests", {
@@ -14,13 +14,13 @@ test.describe("Customer Property Request API", () => {
         data: TestDataFactory.buildPropertyRequestPayload()
       });
 
-      expect([401, 403]).toContain(response.status());
+      expectStatusExact(response, 401, "Customer property request submit must reject anonymous access");
     } finally {
       await context.dispose();
     }
   });
 
-  test("API-CUS-PRQ-002 validates required buildingId", async ({ playwright }) => {
+  test("API-CUS-PRQ-002 validates required buildingId @regression", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer");
     try {
       const response = await customer.post("/api/v1/customer/property-requests", {
@@ -36,7 +36,7 @@ test.describe("Customer Property Request API", () => {
     }
   });
 
-  test("API-CUS-PRQ-003 submits and lists a RENT property request", async ({ playwright }) => {
+  test("API-CUS-PRQ-003 submits and lists a RENT property request @regression", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const listResponse = await scenario.customer.get("/api/v1/customer/property-requests", {
@@ -57,7 +57,7 @@ test.describe("Customer Property Request API", () => {
     }
   });
 
-  test("API-CUS-PRQ-004 rejects duplicate pending request with 409", async ({ playwright }) => {
+  test("API-CUS-PRQ-004 rejects duplicate pending request with 409 @extended", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const duplicateResponse = await scenario.customer.post("/api/v1/customer/property-requests", {
@@ -73,7 +73,7 @@ test.describe("Customer Property Request API", () => {
     }
   });
 
-  test("API-CUS-PRQ-005 cancels own pending request", async ({ playwright }) => {
+  test("API-CUS-PRQ-005 cancels own pending request @regression", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const cancelResponse = await scenario.customer.delete(`/api/v1/customer/property-requests/${scenario.propertyRequestId}`, {

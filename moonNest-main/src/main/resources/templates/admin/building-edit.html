@@ -1180,9 +1180,10 @@
             fetch('/api/v1/admin/buildings/image', { method: 'POST', body: formData })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
-                    if (data.filename) {
-                        document.getElementById('imageFilename').value = data.filename;
-                        setUploadStatus('✓ ' + data.filename, 'success');
+                    var filename = data && data.data && data.data.filename ? data.data.filename : data.filename;
+                    if (filename) {
+                        document.getElementById('imageFilename').value = filename;
+                        setUploadStatus('✓ ' + filename, 'success');
                     } else {
                         setUploadStatus(data.message || 'Upload thất bại.', 'error'); removeImage();
                     }
@@ -1193,6 +1194,7 @@
         function removeImage(e) {
             if (e) e.stopPropagation();
             document.getElementById('imageFileInput').value = '';
+            document.getElementById('imageFilename').value = '';
             document.getElementById('previewImg').src = '';
             document.getElementById('uploadPlaceholder').style.display = '';
             document.getElementById('uploadPreview').style.display = 'none';

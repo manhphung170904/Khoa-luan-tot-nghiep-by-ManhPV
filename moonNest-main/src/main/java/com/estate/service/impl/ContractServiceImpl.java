@@ -208,6 +208,9 @@ public class ContractServiceImpl implements ContractService {
                     .orElseThrow(() -> new ResourceNotFoundException("Customer was not found"));
             throw new BusinessException("Selected staff does not manage customer " + customer.getFullName());
         }
+        if (dto.getStartDate() != null && dto.getEndDate() != null && dto.getEndDate().isBefore(dto.getStartDate())) {
+            throw new BusinessException("End date must be after or equal to start date");
+        }
 
         ContractEntity entity = dto.getId() != null
                 ? contractRepository.findById(dto.getId())

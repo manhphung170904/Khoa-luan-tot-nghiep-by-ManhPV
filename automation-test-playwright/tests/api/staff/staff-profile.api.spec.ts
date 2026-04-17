@@ -90,7 +90,7 @@ test.describe('Staff Profile API Tests', () => {
                 }
             });
 
-            expect(response.status()).not.toBe(200);
+            expect(response.status()).toBe(400);
         });
 
         test('[API_TC_018] [Happy Path] Update staff phone with OTP and verify DB value', async ({ request }) => {
@@ -142,7 +142,7 @@ test.describe('Staff Profile API Tests', () => {
                 }
             });
 
-            expect(response.status()).not.toBe(200);
+            expect(response.status()).toBe(400);
         });
 
         test('[API_TC_020] [Happy Path] Update staff password with OTP and confirm DB hash changed', async ({ request }) => {

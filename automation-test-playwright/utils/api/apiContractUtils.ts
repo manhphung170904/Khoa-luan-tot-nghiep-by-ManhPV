@@ -27,6 +27,10 @@ export function expectStatusOneOf(response: APIResponse, expected: number[], con
   ).toContain(response.status());
 }
 
+export function expectSuccessStatus(response: APIResponse, context: string): void {
+  expectStatusExact(response, 200, context);
+}
+
 export async function expectJsonArray(response: APIResponse): Promise<unknown[]> {
   const payload = (await response.json()) as unknown;
   expect(Array.isArray(payload), "Expected JSON array response").toBeTruthy();

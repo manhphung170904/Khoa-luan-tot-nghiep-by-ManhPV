@@ -4,5 +4,6 @@ export const TEST_TAGS = {
   api: "@api",
   e2e: "@e2e",
   functional: "@functional",
-  regression: "@regression"
+  regression: "@regression",
+  extended: "@extended"
 } as const;

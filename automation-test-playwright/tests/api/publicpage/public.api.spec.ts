@@ -1,7 +1,7 @@
 ﻿import { test, expect } from '@playwright/test';
 import { DatabaseHelper } from '../../../utils/db-client';
 
-test.describe('Public Page API Tests', () => {
+test.describe('Public Page API Tests @api @regression', () => {
     let db: DatabaseHelper;
 
     test.beforeAll(async () => {
@@ -14,7 +14,7 @@ test.describe('Public Page API Tests', () => {
     });
 
     test.describe('GET /api/v1/public/buildings', () => {
-        test('[API_TC_026] [Happy Path] Search public buildings and cross-check DB results', async ({ request }) => {
+        test('[API_TC_026] [Happy Path] Search public buildings and cross-check DB results @smoke @regression', async ({ request }) => {
             const wardRows = await db.query<{ ward: string }>(
                 "SELECT ward FROM building WHERE ward IS NOT NULL AND ward <> '' LIMIT 1"
             );
@@ -44,7 +44,7 @@ test.describe('Public Page API Tests', () => {
             }
         });
 
-        test('[API_TC_027] [Boundary] Search with invalid propertyType returns a valid empty result set', async ({ request }) => {
+        test('[API_TC_027] [Boundary] Search with invalid propertyType returns a valid empty result set @extended', async ({ request }) => {
             const response = await request.get('/api/v1/public/buildings', {
                 params: {
                     propertyType: 'INVALID_TYPE'
@@ -55,6 +55,30 @@ test.describe('Public Page API Tests', () => {
             const data = await response.json();
             expect(Array.isArray(data)).toBeTruthy();
             expect(data.length).toBeGreaterThanOrEqual(0);
+        });
+
+        test('[API_TC_028] [Happy Path] Page endpoint returns paged public buildings @regression', async ({ request }) => {
+            const response = await request.get('/api/v1/public/buildings/page', {
+                params: {
+                    page: 1,
+                    size: 5
+                }
+            });
+            expect(response.status()).toBe(200);
+
+            const data = await response.json();
+            expect(Array.isArray(data.content)).toBeTruthy();
+            expect(typeof data.totalElements).toBe('number');
+        });
+
+        test('[API_TC_029] [Happy Path] Filters endpoint exposes public metadata @regression', async ({ request }) => {
+            const response = await request.get('/api/v1/public/buildings/filters');
+            expect(response.status()).toBe(200);
+
+            const data = await response.json();
+            expect(Array.isArray(data.districts)).toBeTruthy();
+            expect(Array.isArray(data.directions)).toBeTruthy();
+            expect(Array.isArray(data.levels)).toBeTruthy();
         });
     });
 });

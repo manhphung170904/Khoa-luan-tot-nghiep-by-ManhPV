@@ -1,6 +1,6 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
-import { expectStatusExact } from "@api/apiContractUtils";
+import { expectStatusExact, expectStatusOneOf } from "@api/apiContractUtils";
 
 type ReadonlyModule = {
   id: string;
@@ -9,36 +9,36 @@ type ReadonlyModule = {
 };
 
 const readOnlyModules: ReadonlyModule[] = [
-  { id: "API-STF-READ-001", name: "Building", path: "/staff/building/search?page=1&size=5" },
-  { id: "API-STF-READ-002", name: "Lease Contract", path: "/staff/contracts/search?page=1&size=5" },
-  { id: "API-STF-READ-003", name: "Sale Contract", path: "/staff/sale-contracts/search?page=1&size=5" },
-  { id: "API-STF-READ-004", name: "Customer", path: "/staff/customers/search?page=1&size=5" },
-  { id: "API-STF-READ-005", name: "Invoice", path: "/staff/invoices/search?page=1&size=5" }
+  { id: "API-STF-READ-001", name: "Building", path: "/api/v1/staff/buildings?page=1&size=5" },
+  { id: "API-STF-READ-002", name: "Lease Contract", path: "/api/v1/staff/contracts?page=1&size=5" },
+  { id: "API-STF-READ-003", name: "Sale Contract", path: "/api/v1/staff/sale-contracts?page=1&size=5" },
+  { id: "API-STF-READ-004", name: "Customer", path: "/api/v1/staff/customers?page=1&size=5" },
+  { id: "API-STF-READ-005", name: "Invoice", path: "/api/v1/staff/invoices?page=1&size=5" }
 ];
 
-test.describe("Staff API Read-only Contract Tests", () => {
+test.describe("Staff API Read-only Contract Tests @api @regression", () => {
   for (const module of readOnlyModules) {
-    test(`${module.id} rejects anonymous access with API auth status`, async ({ playwright }) => {
+    test(`${module.id} rejects anonymous access with API auth status @smoke @regression`, async ({ playwright }) => {
       const context = await createAnonymousContext(playwright);
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        expect([401, 403]).toContain(response.status());
+        expectStatusExact(response, 401, `${module.name} readonly API must reject anonymous staff access`);
       } finally {
         await context.dispose();
       }
     });
 
-    test(`${module.id} rejects customer role`, async ({ playwright }) => {
+    test(`${module.id} rejects customer role @regression`, async ({ playwright }) => {
       const context = await createRoleContext(playwright, "customer");
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        expect([403, 404]).toContain(response.status());
+        expectStatusExact(response, 403, `${module.name} readonly API must reject customer role`);
       } finally {
         await context.dispose();
       }
     });
 
-    test(`${module.id} returns JSON payload for staff`, async ({ playwright }) => {
+    test(`${module.id} returns JSON payload for staff @smoke @regression`, async ({ playwright }) => {
       const context = await createRoleContext(playwright, "staff");
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
@@ -52,7 +52,7 @@ test.describe("Staff API Read-only Contract Tests", () => {
       }
     });
 
-    test(`${module.id} rejects unsupported write path`, async ({ playwright }) => {
+    test(`${module.id} rejects unsupported write path @extended`, async ({ playwright }) => {
       const context = await createRoleContext(playwright, "staff");
       try {
         const response = await context.post(`${module.path}/add`, {
@@ -61,11 +61,10 @@ test.describe("Staff API Read-only Contract Tests", () => {
           data: { attack: "should-not-exist" }
         });
 
-        expect([403, 404, 405]).toContain(response.status());
+        expectStatusOneOf(response, [404, 405], `${module.name} readonly API should not expose synthetic write route`);
       } finally {
         await context.dispose();
       }
     });
   }
 });
-

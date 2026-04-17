@@ -10,7 +10,9 @@ import com.estate.exception.InputValidationException;
 import com.estate.exception.PayloadTooLargeException;
 import com.estate.exception.UnsupportedMediaTypeApiException;
 import com.estate.service.BuildingDetailService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,9 +37,14 @@ import java.util.UUID;
 @RequestMapping("/api/v1/admin/building-additional-information")
 @RequiredArgsConstructor
 public class AdminBuildingAdditionalInformationV1API {
-    private static final String UPLOAD_DIR = "src/main/resources/static/images/planning_map_img/";
-
     private final BuildingDetailService buildingDetailService;
+
+    @Value("${planning.map.image.upload-dir:src/main/resources/static/images/planning_map_img}")
+    private String uploadDir;
+
+    private static final List<String> ALLOWED_TYPES = List.of("image/jpeg", "image/png", "image/webp");
+    private static final List<String> ALLOWED_EXTS = List.of(".jpg", ".jpeg", ".png", ".webp");
+    private static final long MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
     @GetMapping("/legal-authorities/{buildingId}")
     public List<LegalAuthorityDTO> listLegalAuthorities(@PathVariable Long buildingId) {
@@ -45,12 +52,12 @@ public class AdminBuildingAdditionalInformationV1API {
     }
 
     @PostMapping("/legal-authorities")
-    public ResponseEntity<LegalAuthorityDTO> createLegalAuthority(@RequestBody LegalAuthorityDTO dto) {
+    public ResponseEntity<LegalAuthorityDTO> createLegalAuthority(@Valid @RequestBody LegalAuthorityDTO dto) {
         return ResponseEntity.ok(buildingDetailService.createLegalAuthority(dto));
     }
 
     @PutMapping("/legal-authorities/{id}")
-    public LegalAuthorityDTO updateLegalAuthority(@PathVariable Long id, @RequestBody LegalAuthorityDTO dto) {
+    public LegalAuthorityDTO updateLegalAuthority(@PathVariable Long id, @Valid @RequestBody LegalAuthorityDTO dto) {
         return buildingDetailService.updateLegalAuthority(id, dto);
     }
 
@@ -128,28 +135,31 @@ public class AdminBuildingAdditionalInformationV1API {
         if (file.isEmpty()) {
             throw new InputValidationException("Please select an image file");
         }
-        String contentType = file.getContentType();
-        if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png") && !contentType.equals("image/webp"))) {
-            throw new UnsupportedMediaTypeApiException("Only JPG, PNG and WEBP files are supported");
-        }
-        if (file.getSize() > 5 * 1024 * 1024) {
+        if (file.getSize() > MAX_SIZE_BYTES) {
             throw new PayloadTooLargeException("Image size must not exceed 5 MB");
         }
 
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
+            throw new UnsupportedMediaTypeApiException("Only JPG, PNG and WEBP files are supported");
+        }
+
+        String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+        boolean validExt = ALLOWED_EXTS.stream().anyMatch(originalName::endsWith);
+        if (!validExt) {
+            throw new UnsupportedMediaTypeApiException("Only .jpg, .jpeg, .png and .webp extensions are supported");
+        }
+
         try {
-            String originalFilename = file.getOriginalFilename();
-            String ext = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                ext = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
+            String ext = originalName.substring(originalName.lastIndexOf('.'));
             String filename = "planning_" + UUID.randomUUID().toString().replace("-", "") + ext;
 
-            Path uploadPath = Paths.get(UPLOAD_DIR);
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath();
             Files.createDirectories(uploadPath);
             Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 
             return ResponseEntity.ok(
-                    ApiMessageResponse.of("Tải tệp lên thành công", FileUploadResponseDTO.of(filename))
+                    ApiMessageResponse.of("File uploaded successfully.", FileUploadResponseDTO.of(filename))
             );
         } catch (IOException e) {
             throw new IllegalStateException("Unable to store uploaded file", e);

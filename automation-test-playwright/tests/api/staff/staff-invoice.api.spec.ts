@@ -1,6 +1,6 @@
 ﻿import { test, expect, type APIRequestContext } from "@playwright/test";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
-import { expectStatusExact } from "@api/apiContractUtils";
+import { expectStatusExact, expectSuccessStatus } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
@@ -35,7 +35,7 @@ test.describe("Staff Invoice CRUD API Tests", () => {
     await MySqlDbClient.close();
   });
 
-  test("API-STF-INV-001 rejects anonymous create access with API auth status", async ({ playwright }) => {
+  test("API-STF-INV-001 rejects anonymous create access with API auth status @regression", async ({ playwright }) => {
     const anonymous = await createAnonymousContext(playwright);
     try {
       const response = await anonymous.post("/api/v1/staff/invoices", {
@@ -43,33 +43,33 @@ test.describe("Staff Invoice CRUD API Tests", () => {
         maxRedirects: 0,
         data: validPayload
       });
-      expect([401, 403]).toContain(response.status());
+      expectStatusExact(response, 401, "Staff invoice create must reject anonymous access");
     } finally {
       await anonymous.dispose();
     }
   });
 
-  test("API-STF-INV-002 rejects customer role on staff invoice search", async ({ playwright }) => {
+  test("API-STF-INV-002 rejects customer role on staff invoice search @regression", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer");
     try {
-      const response = await customer.get("/staff/invoices/search?page=1&size=10", {
+      const response = await customer.get("/api/v1/staff/invoices?page=1&size=10", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
-      expect([403, 404]).toContain(response.status());
+      expectStatusExact(response, 403, "Customer role must be forbidden from staff invoice search");
     } finally {
       await customer.dispose();
     }
   });
 
   test.describe.serial("Staff invoice lifecycle", () => {
-    test("API-STF-INV-003 staff creates invoice for assigned contract", async () => {
+    test("API-STF-INV-003 staff creates invoice for assigned contract @regression", async () => {
       const response = await staffContext.post("/api/v1/staff/invoices", {
         failOnStatusCode: false,
         maxRedirects: 0,
         data: validPayload
       });
-      expectStatusExact(response, 200, "Staff invoice creation should succeed");
+      expectSuccessStatus(response, "Staff invoice creation should succeed");
 
       const rows = await MySqlDbClient.query<{ id: number }>(
         "SELECT id FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
@@ -79,8 +79,8 @@ test.describe("Staff Invoice CRUD API Tests", () => {
       createdInvoiceId = rows[0]!.id;
     });
 
-    test("API-STF-INV-004 staff searches own invoices", async () => {
-      const response = await staffContext.get("/staff/invoices/search?page=1&size=20", {
+    test("API-STF-INV-004 staff searches own invoices @smoke @regression", async () => {
+      const response = await staffContext.get("/api/v1/staff/invoices?page=1&size=20", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -91,7 +91,7 @@ test.describe("Staff Invoice CRUD API Tests", () => {
       expect(payload.content?.some((item) => item.id === createdInvoiceId)).toBeTruthy();
     });
 
-    test("API-STF-INV-005 staff edits own invoice", async () => {
+    test("API-STF-INV-005 staff edits own invoice @regression", async () => {
       const response = await staffContext.put(`/api/v1/staff/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0,
@@ -111,14 +111,14 @@ test.describe("Staff Invoice CRUD API Tests", () => {
       expect(Number(rows[0]!.total_amount)).toBe(9999);
     });
 
-    test("API-STF-INV-006 staff deletes own invoice", async () => {
+    test("API-STF-INV-006 staff deletes own invoice @regression", async () => {
       const response = await staffContext.delete(`/api/v1/staff/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
       expectStatusExact(response, 200, "Staff invoice delete should succeed");
 
-      const searchResponse = await staffContext.get("/staff/invoices/search?page=1&size=20", {
+      const searchResponse = await staffContext.get("/api/v1/staff/invoices?page=1&size=20", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -130,4 +130,3 @@ test.describe("Staff Invoice CRUD API Tests", () => {
     });
   });
 });
-

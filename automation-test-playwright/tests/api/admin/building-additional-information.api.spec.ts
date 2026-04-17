@@ -1,426 +1,435 @@
-import { test, expect } from '@playwright/test';
-import { ApiAuthHelper } from '../../../utils/api/apiAuthHelper';
-import { DatabaseHelper } from '../../../utils/db-client';
+import { test, expect } from "@playwright/test";
+import { ApiAuthHelper } from "../../../utils/api/apiAuthHelper";
+import { DatabaseHelper } from "../../../utils/db-client";
 
-test.describe('Admin Building Additional Information API', () => {
-    let db: DatabaseHelper;
-    let adminCookies: string;
-    let buildingId: number;
+test.describe("Admin Building Additional Information API @api @extended", () => {
+  let db: DatabaseHelper;
+  let adminCookies: string;
+  let buildingId: number;
 
-    test.beforeAll(async () => {
-        db = new DatabaseHelper();
-        await db.connect();
-        adminCookies = await ApiAuthHelper.loginAsAdmin();
+  test.beforeAll(async () => {
+    db = new DatabaseHelper();
+    await db.connect();
+    adminCookies = await ApiAuthHelper.loginAsAdmin();
 
-        // Lấy 1 building ID thực tế từ DB
-        const buildings = await db.query('SELECT id FROM building ORDER BY id LIMIT 1');
-        buildingId = buildings.length > 0 ? buildings[0].id : 1;
+    const buildings = await db.query("SELECT id FROM building ORDER BY id LIMIT 1");
+    buildingId = buildings.length > 0 ? buildings[0].id : 1;
+  });
+
+  test.afterAll(async () => {
+    await db.disconnect();
+  });
+
+  test.describe.serial("Legal Authority CRUD", () => {
+    let createdLegalAuthorityId: number;
+
+    test("[BAI_LA_SEC] POST /legal-authorities rejects anonymous access", async ({ request }) => {
+      const response = await request.post("/api/v1/admin/building-additional-information/legal-authorities", {
+        data: { buildingId, authorityName: "Test Security", authorityType: "NOTARY" }
+      });
+
+      expect(response.status()).toBe(401);
     });
 
-    test.afterAll(async () => {
-        await db.disconnect();
+    test("[BAI_LA_NEG] POST /legal-authorities fails when buildingId is missing", async ({ request }) => {
+      const response = await request.post("/api/v1/admin/building-additional-information/legal-authorities", {
+        headers: { Cookie: adminCookies },
+        data: { authorityName: "Missing building", authorityType: "NOTARY" }
+      });
+
+      expect(response.status()).toBe(500);
     });
 
-    // ---------------------------------------------------------------
-    //  LEGAL AUTHORITY CRUD (Serial)
-    // ---------------------------------------------------------------
-    test.describe.serial('CRUD API cho Legal Authority', () => {
-        let createdLegalAuthorityId: number;
+    test("[BAI_LA_BND] POST /legal-authorities rejects oversized authorityName", async ({ request }) => {
+      const response = await request.post("/api/v1/admin/building-additional-information/legal-authorities", {
+        headers: { Cookie: adminCookies },
+        data: { buildingId, authorityName: "A".repeat(300), authorityType: "NOTARY" }
+      });
 
-        // -- SECURITY ----------------------------------------------
-        test('[BAI_LA_SEC] POST /legal-authority - [Security] Reject thiếu Token', async ({ request }) => {
-            const response = await request.post('/api/v1/admin/building-additional-information/legal-authorities', {
-                data: { buildingId, authorityName: 'Test Security', authorityType: 'NOTARY' }
-            });
-            expect([200, 302, 401, 403]).toContain(response.status());
-        });
-
-        // -- NEGATIVE ----------------------------------------------
-        test('[BAI_LA_NEG] POST /legal-authority - [Negative] Thiếu buildingId', async ({ request }) => {
-            const response = await request.post('/api/v1/admin/building-additional-information/legal-authorities', {
-                headers: { Cookie: adminCookies },
-                data: { authorityName: 'Test Missing Building ID', authorityType: 'NOTARY' }
-            });
-            expect([400, 500]).toContain(response.status());
-        });
-
-        test('[BAI_LA_BND] POST /legal-authority - [Boundary] Tên > 255 ký tự', async ({ request }) => {
-            const response = await request.post('/api/v1/admin/building-additional-information/legal-authorities', {
-                headers: { Cookie: adminCookies },
-                data: { buildingId, authorityName: 'A'.repeat(300), authorityType: 'NOTARY' }
-            });
-            expect([400, 500]).toContain(response.status());
-        });
-
-        // -- POSITIVE: Create --------------------------------------
-        test('[BAI_LA_C] POST /legal-authority - [Positive] Create & DB Check', async ({ request }) => {
-            const payload = {
-                buildingId,
-                authorityName: 'Văn phòng công chứng Auto',
-                authorityType: 'NOTARY',
-                address: '123 Đường B, Quận C',
-                phone: '0123456789',
-                email: 'contact@notary-auto.com',
-                note: 'Auto test'
-            };
-
-            const response = await request.post('/api/v1/admin/building-additional-information/legal-authorities', {
-                headers: { Cookie: adminCookies },
-                data: payload
-            });
-            expect(response.status()).toBe(200);
-            const data = await response.json();
-            expect(data).toHaveProperty('id');
-            expect(data.authorityName).toBe(payload.authorityName);
-
-            createdLegalAuthorityId = data.id;
-
-            // -- DB VALIDATION --
-            const dbResult = await db.query('SELECT * FROM legal_authority WHERE id = ?', [createdLegalAuthorityId]);
-            expect(dbResult.length).toBe(1);
-            expect(dbResult[0].authority_name).toBe(payload.authorityName);
-            expect(dbResult[0].email).toBe(payload.email);
-            expect(dbResult[0].building_id).toBe(buildingId);
-        });
-
-        // -- POSITIVE: Read ----------------------------------------
-        test('[BAI_LA_R] GET /legal-authority/{buildingId}/list - [Positive] Read', async ({ request }) => {
-            const response = await request.get(`/api/v1/admin/building-additional-information/legal-authorities/${buildingId}`, {
-                headers: { Cookie: adminCookies }
-            });
-            expect(response.status()).toBe(200);
-            const list = await response.json();
-            expect(Array.isArray(list)).toBeTruthy();
-            const found = list.find((item: any) => item.id === createdLegalAuthorityId);
-            expect(found).toBeDefined();
-            expect(found.authorityName).toBe('Văn phòng công chứng Auto');
-        });
-
-        // -- POSITIVE: Update --------------------------------------
-        test('[BAI_LA_U] PUT /legal-authority/{id} - [Positive] Update & DB Check', async ({ request }) => {
-            const updatePayload = {
-                buildingId,
-                authorityName: 'VP Công Chứng - UPDATED',
-                authorityType: 'LAW_FIRM',
-                address: '456 Đường D',
-                phone: '0987654321',
-                email: 'updated@notary.com',
-                note: 'Updated'
-            };
-
-            const response = await request.put(`/api/v1/admin/building-additional-information/legal-authorities/${createdLegalAuthorityId}`, {
-                headers: { Cookie: adminCookies },
-                data: updatePayload
-            });
-            expect(response.status()).toBe(200);
-
-            // -- DB VALIDATION --
-            const dbResult = await db.query('SELECT * FROM legal_authority WHERE id = ?', [createdLegalAuthorityId]);
-            expect(dbResult[0].authority_name).toBe('VP Công Chứng - UPDATED');
-            expect(dbResult[0].phone).toBe('0987654321');
-            expect(dbResult[0].authority_type).toBe('LAW_FIRM');
-        });
-
-        // -- POSITIVE: Delete --------------------------------------
-        test('[BAI_LA_D] DELETE /legal-authority/{id} - [Positive] Delete & DB Check', async ({ request }) => {
-            const response = await request.delete(`/api/v1/admin/building-additional-information/legal-authorities/${createdLegalAuthorityId}`, {
-                headers: { Cookie: adminCookies }
-            });
-            expect([200, 204]).toContain(response.status());
-
-            // -- DB VALIDATION --
-            const dbResult = await db.query('SELECT * FROM legal_authority WHERE id = ?', [createdLegalAuthorityId]);
-            expect(dbResult.length).toBe(0);
-            createdLegalAuthorityId = 0;
-        });
+      expect(response.status()).toBe(400);
     });
 
-    // ---------------------------------------------------------------
-    //  NEARBY AMENITY CRUD (Serial)
-    // ---------------------------------------------------------------
-    test.describe.serial('CRUD API cho Nearby Amenity', () => {
-        let createdAmenityId: number;
+    test("[BAI_LA_C] POST /legal-authorities creates record and persists to DB", async ({ request }) => {
+      const payload = {
+        buildingId,
+        authorityName: "Auto Notary Office",
+        authorityType: "NOTARY",
+        address: "123 Test Street",
+        phone: "0123456789",
+        email: "contact@notary-auto.com",
+        note: "Auto test"
+      };
 
-        test('[BAI_NA_SEC] POST /nearby-amenity - [Security] Reject thiếu Token', async ({ request }) => {
-            const response = await request.post('/api/v1/admin/building-additional-information/nearby-amenities', {
-                data: { buildingId, name: 'Test Security', amenityType: 'PARK' }
-            });
-            expect([200, 302, 401, 403]).toContain(response.status());
-        });
+      const response = await request.post("/api/v1/admin/building-additional-information/legal-authorities", {
+        headers: { Cookie: adminCookies },
+        data: payload
+      });
 
-        test('[BAI_NA_C] POST /nearby-amenity - [Positive] Create & DB Check', async ({ request }) => {
-            const payload = {
-                buildingId,
-                name: 'Công viên Auto Test',
-                amenityType: 'PARK',
-                distanceMeter: 500,
-                address: '123 Đường Test',
-                latitude: 10.762,
-                longitude: 106.660
-            };
-            const response = await request.post('/api/v1/admin/building-additional-information/nearby-amenities', {
-                headers: { Cookie: adminCookies },
-                data: payload
-            });
-            expect(response.status()).toBe(200);
-            const data = await response.json();
-            createdAmenityId = data.id;
+      expect(response.status()).toBe(200);
+      const data = await response.json();
+      expect(data.id).toBeDefined();
+      expect(data.authorityName).toBe(payload.authorityName);
 
-            // -- DB VALIDATION --
-            const dbResult = await db.query('SELECT * FROM nearby_amenity WHERE id = ?', [createdAmenityId]);
-            expect(dbResult.length).toBe(1);
-            expect(dbResult[0].name).toBe(payload.name);
-        });
+      createdLegalAuthorityId = data.id;
 
-        test('[BAI_NA_R] GET /nearby-amenity/{buildingId}/list - [Positive] Read', async ({ request }) => {
-            const response = await request.get(`/api/v1/admin/building-additional-information/nearby-amenities/${buildingId}`, {
-                headers: { Cookie: adminCookies }
-            });
-            expect(response.status()).toBe(200);
-            const list = await response.json();
-            expect(list.some((i: any) => i.id === createdAmenityId)).toBeTruthy();
-        });
-
-        test('[BAI_NA_U] PUT /nearby-amenity/{id} - [Positive] Update & DB Check', async ({ request }) => {
-            const payload = {
-                buildingId,
-                name: 'Công viên UPDATED',
-                amenityType: 'PARK',
-                distanceMeter: 600,
-                address: '456 Đường Update',
-                latitude: 10.763,
-                longitude: 106.661
-            };
-            const response = await request.put(`/api/v1/admin/building-additional-information/nearby-amenities/${createdAmenityId}`, {
-                headers: { Cookie: adminCookies },
-                data: payload
-            });
-            expect(response.status()).toBe(200);
-
-            // -- DB VALIDATION --
-            const dbResult = await db.query('SELECT name, distance_meter FROM nearby_amenity WHERE id = ?', [createdAmenityId]);
-            expect(dbResult[0].name).toBe('Công viên UPDATED');
-            expect(dbResult[0].distance_meter).toBe(600);
-        });
-
-        test('[BAI_NA_D] DELETE /nearby-amenity/{id} - [Positive] Delete', async ({ request }) => {
-            const response = await request.delete(`/api/v1/admin/building-additional-information/nearby-amenities/${createdAmenityId}`, {
-                headers: { Cookie: adminCookies }
-            });
-            expect([200, 204]).toContain(response.status());
-
-            const dbResult = await db.query('SELECT * FROM nearby_amenity WHERE id = ?', [createdAmenityId]);
-            expect(dbResult.length).toBe(0);
-        });
+      const dbResult = await db.query("SELECT * FROM legal_authority WHERE id = ?", [createdLegalAuthorityId]);
+      expect(dbResult.length).toBe(1);
+      expect(dbResult[0].authority_name).toBe(payload.authorityName);
+      expect(dbResult[0].email).toBe(payload.email);
+      expect(dbResult[0].building_id).toBe(buildingId);
     });
 
-    // ---------------------------------------------------------------
-    //  SUPPLIER CRUD (Serial)
-    // ---------------------------------------------------------------
-    test.describe.serial('CRUD API cho Supplier', () => {
-        let createdSupplierId: number;
+    test("[BAI_LA_R] GET /legal-authorities/{buildingId} returns created record", async ({ request }) => {
+      const response = await request.get(`/api/v1/admin/building-additional-information/legal-authorities/${buildingId}`, {
+        headers: { Cookie: adminCookies }
+      });
 
-        test('[BAI_SP_SEC] POST /supplier - [Security] Reject thiếu Token', async ({ request }) => {
-            const response = await request.post('/api/v1/admin/building-additional-information/suppliers', {
-                data: { buildingId, name: 'Test', serviceType: 'CLEANING' }
-            });
-            expect([200, 302, 401, 403]).toContain(response.status());
-        });
-
-        test('[BAI_SP_C] POST /supplier - [Positive] Create & DB Check', async ({ request }) => {
-            const payload = {
-                buildingId,
-                name: 'Cty TNHH Vệ Sinh Auto',
-                serviceType: 'CLEANING',
-                phone: '0901234567',
-                email: 'clean@auto.com',
-                address: '1A Đường Test',
-                note: 'Auto test'
-            };
-            const response = await request.post('/api/v1/admin/building-additional-information/suppliers', {
-                headers: { Cookie: adminCookies },
-                data: payload
-            });
-            expect(response.status()).toBe(200);
-            const data = await response.json();
-            createdSupplierId = data.id;
-
-            // -- DB VALIDATION --
-            const dbResult = await db.query('SELECT * FROM supplier WHERE id = ?', [createdSupplierId]);
-            expect(dbResult.length).toBe(1);
-            expect(dbResult[0].name).toBe(payload.name);
-        });
-
-        test('[BAI_SP_R] GET /supplier/{buildingId}/list - [Positive] Read', async ({ request }) => {
-            const response = await request.get(`/api/v1/admin/building-additional-information/suppliers/${buildingId}`, {
-                headers: { Cookie: adminCookies }
-            });
-            expect(response.status()).toBe(200);
-            const list = await response.json();
-            expect(list.some((i: any) => i.id === createdSupplierId)).toBeTruthy();
-        });
-
-        test('[BAI_SP_U] PUT /supplier/{id} - [Positive] Update & DB Check', async ({ request }) => {
-            const payload = {
-                buildingId,
-                name: 'Cty Vệ Sinh VIP UPDATED',
-                serviceType: 'CLEANING',
-                phone: '0909999999',
-                email: 'vip@auto.com',
-                address: '2B Đường Update',
-                note: 'Updated'
-            };
-            const response = await request.put(`/api/v1/admin/building-additional-information/suppliers/${createdSupplierId}`, {
-                headers: { Cookie: adminCookies },
-                data: payload
-            });
-            expect(response.status()).toBe(200);
-
-            // -- DB VALIDATION --
-            const dbResult = await db.query('SELECT name FROM supplier WHERE id = ?', [createdSupplierId]);
-            expect(dbResult[0].name).toBe('Cty Vệ Sinh VIP UPDATED');
-        });
-
-        test('[BAI_SP_D] DELETE /supplier/{id} - [Positive] Delete', async ({ request }) => {
-            const response = await request.delete(`/api/v1/admin/building-additional-information/suppliers/${createdSupplierId}`, {
-                headers: { Cookie: adminCookies }
-            });
-            expect([200, 204]).toContain(response.status());
-
-            const dbResult = await db.query('SELECT * FROM supplier WHERE id = ?', [createdSupplierId]);
-            expect(dbResult.length).toBe(0);
-        });
+      expect(response.status()).toBe(200);
+      const list = await response.json();
+      expect(Array.isArray(list)).toBeTruthy();
+      const found = list.find((item: { id: number; authorityName: string }) => item.id === createdLegalAuthorityId);
+      expect(found).toBeDefined();
+      expect(found.authorityName).toBe("Auto Notary Office");
     });
 
-    // ---------------------------------------------------------------
-    //  PLANNING MAP CRUD (Serial)
-    // ---------------------------------------------------------------
-    test.describe.serial('CRUD API cho Planning Map', () => {
-        let createdMapId: number;
+    test("[BAI_LA_U] PUT /legal-authorities/{id} updates record and DB", async ({ request }) => {
+      const response = await request.put(
+        `/api/v1/admin/building-additional-information/legal-authorities/${createdLegalAuthorityId}`,
+        {
+          headers: { Cookie: adminCookies },
+          data: {
+            buildingId,
+            authorityName: "Auto Law Office Updated",
+            authorityType: "LAW_FIRM",
+            address: "456 Update Street",
+            phone: "0987654321",
+            email: "updated@notary.com",
+            note: "Updated"
+          }
+        }
+      );
 
-        test('[BAI_PM_SEC] POST /planning-map - [Security] Reject thiếu Token', async ({ request }) => {
-            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps', {
-                data: { buildingId, mapType: 'Quy hoạch', issuedBy: 'Test' }
-            });
-            expect([200, 302, 401, 403]).toContain(response.status());
-        });
+      expect(response.status()).toBe(200);
 
-        test('[BAI_PM_C] POST /planning-map - [Positive] Create & DB Check', async ({ request }) => {
-            const payload = {
-                buildingId,
-                mapType: 'Quy hoạch 1/500 Auto',
-                issuedBy: 'Sở Xây Dựng',
-                issuedDate: '2025-01-01',
-                expiredDate: '2030-01-01',
-                imageUrl: 'planning_auto.jpg',
-                note: 'Auto test'
-            };
-            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps', {
-                headers: { Cookie: adminCookies },
-                data: payload
-            });
-            expect(response.status()).toBe(200);
-            const data = await response.json();
-            createdMapId = data.id;
-
-            // -- DB VALIDATION --
-            const dbResult = await db.query('SELECT * FROM planning_map WHERE id = ?', [createdMapId]);
-            expect(dbResult.length).toBe(1);
-            expect(dbResult[0].map_type).toBe(payload.mapType);
-        });
-
-        test('[BAI_PM_R] GET /planning-map/{buildingId}/list - [Positive] Read', async ({ request }) => {
-            const response = await request.get(`/api/v1/admin/building-additional-information/planning-maps/${buildingId}`, {
-                headers: { Cookie: adminCookies }
-            });
-            expect(response.status()).toBe(200);
-            const list = await response.json();
-            expect(list.some((i: any) => i.id === createdMapId)).toBeTruthy();
-        });
-
-        test('[BAI_PM_U] PUT /planning-map/{id} - [Positive] Update & DB Check', async ({ request }) => {
-            const payload = {
-                buildingId,
-                mapType: 'Quy hoạch UPDATED',
-                issuedBy: 'Sở Xây Dựng',
-                issuedDate: '2025-01-01',
-                expiredDate: '2030-01-01',
-                imageUrl: 'planning_auto.jpg',
-                note: 'Updated'
-            };
-            const response = await request.put(`/api/v1/admin/building-additional-information/planning-maps/${createdMapId}`, {
-                headers: { Cookie: adminCookies },
-                data: payload
-            });
-            expect(response.status()).toBe(200);
-
-            // -- DB VALIDATION --
-            const dbResult = await db.query('SELECT map_type FROM planning_map WHERE id = ?', [createdMapId]);
-            expect(dbResult[0].map_type).toBe('Quy hoạch UPDATED');
-        });
-
-        test('[BAI_PM_D] DELETE /planning-map/{id} - [Positive] Delete', async ({ request }) => {
-            const response = await request.delete(`/api/v1/admin/building-additional-information/planning-maps/${createdMapId}`, {
-                headers: { Cookie: adminCookies }
-            });
-            expect([200, 204]).toContain(response.status());
-
-            const dbResult = await db.query('SELECT * FROM planning_map WHERE id = ?', [createdMapId]);
-            expect(dbResult.length).toBe(0);
-        });
+      const dbResult = await db.query("SELECT * FROM legal_authority WHERE id = ?", [createdLegalAuthorityId]);
+      expect(dbResult[0].authority_name).toBe("Auto Law Office Updated");
+      expect(dbResult[0].phone).toBe("0987654321");
+      expect(dbResult[0].authority_type).toBe("LAW_FIRM");
     });
 
-    // ---------------------------------------------------------------
-    //  UPLOAD IMAGE (Planning Map)
-    // ---------------------------------------------------------------
-    test.describe('Upload Image API cho Planning Map', () => {
+    test("[BAI_LA_D] DELETE /legal-authorities/{id} removes record", async ({ request }) => {
+      const response = await request.delete(
+        `/api/v1/admin/building-additional-information/legal-authorities/${createdLegalAuthorityId}`,
+        {
+          headers: { Cookie: adminCookies }
+        }
+      );
 
-        test('[BAI_UP_SEC] POST /planning-map/upload-image - [Security] Reject thiếu Token', async ({ request }) => {
-            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps/image', {
-                multipart: {
-                    file: { name: 'test.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('fake') }
-                }
-            });
-            expect([200, 302, 401, 403]).toContain(response.status());
-        });
-
-        test('[BAI_UP_NEG] POST /planning-map/upload-image - [Negative] Sai định dạng (text/plain)', async ({ request }) => {
-            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps/image', {
-                headers: { Cookie: adminCookies },
-                multipart: {
-                    file: { name: 'test.txt', mimeType: 'text/plain', buffer: Buffer.from('not an image') }
-                }
-            });
-            expect(response.status()).toBe(400);
-            const data = await response.json();
-            expect(data.message).toContain('Định dạng không hợp lệ');
-        });
-
-        test('[BAI_UP_BND] POST /planning-map/upload-image - [Boundary] File > 5MB', async ({ request }) => {
-            const largeBuffer = Buffer.alloc(5.1 * 1024 * 1024, 'a');
-            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps/image', {
-                headers: { Cookie: adminCookies },
-                multipart: {
-                    file: { name: 'large.jpg', mimeType: 'image/jpeg', buffer: largeBuffer }
-                }
-            });
-            expect([400, 500]).toContain(response.status());
-        });
-
-        test('[BAI_UP_POS] POST /planning-map/upload-image - [Positive] Upload JPG hợp lệ', async ({ request }) => {
-            const buffer = Buffer.from('fake valid image binary');
-            const response = await request.post('/api/v1/admin/building-additional-information/planning-maps/image', {
-                headers: { Cookie: adminCookies },
-                multipart: {
-                    file: { name: 'my_map.jpg', mimeType: 'image/jpeg', buffer }
-                }
-            });
-            expect(response.status()).toBe(200);
-            const data = await response.json();
-            expect(data.filename).toBeDefined();
-            expect(data.filename).toContain('planning_');
-            expect(data.filename).toMatch(/\.jpg$/);
-        });
+      expect(response.status()).toBe(200);
+      const dbResult = await db.query("SELECT * FROM legal_authority WHERE id = ?", [createdLegalAuthorityId]);
+      expect(dbResult.length).toBe(0);
+      createdLegalAuthorityId = 0;
     });
+  });
+
+  test.describe.serial("Nearby Amenity CRUD", () => {
+    let createdAmenityId: number;
+
+    test("[BAI_NA_SEC] POST /nearby-amenities rejects anonymous access", async ({ request }) => {
+      const response = await request.post("/api/v1/admin/building-additional-information/nearby-amenities", {
+        data: { buildingId, name: "Test Security", amenityType: "PARK" }
+      });
+
+      expect(response.status()).toBe(401);
+    });
+
+    test("[BAI_NA_C] POST /nearby-amenities creates record and persists to DB", async ({ request }) => {
+      const payload = {
+        buildingId,
+        name: "Auto Test Park",
+        amenityType: "PARK",
+        distanceMeter: 500,
+        address: "123 Test Street",
+        latitude: 10.762,
+        longitude: 106.66
+      };
+
+      const response = await request.post("/api/v1/admin/building-additional-information/nearby-amenities", {
+        headers: { Cookie: adminCookies },
+        data: payload
+      });
+
+      expect(response.status()).toBe(200);
+      const data = await response.json();
+      createdAmenityId = data.id;
+
+      const dbResult = await db.query("SELECT * FROM nearby_amenity WHERE id = ?", [createdAmenityId]);
+      expect(dbResult.length).toBe(1);
+      expect(dbResult[0].name).toBe(payload.name);
+    });
+
+    test("[BAI_NA_R] GET /nearby-amenities/{buildingId} returns created record", async ({ request }) => {
+      const response = await request.get(`/api/v1/admin/building-additional-information/nearby-amenities/${buildingId}`, {
+        headers: { Cookie: adminCookies }
+      });
+
+      expect(response.status()).toBe(200);
+      const list = await response.json();
+      expect(list.some((item: { id: number }) => item.id === createdAmenityId)).toBeTruthy();
+    });
+
+    test("[BAI_NA_U] PUT /nearby-amenities/{id} updates record and DB", async ({ request }) => {
+      const response = await request.put(
+        `/api/v1/admin/building-additional-information/nearby-amenities/${createdAmenityId}`,
+        {
+          headers: { Cookie: adminCookies },
+          data: {
+            buildingId,
+            name: "Auto Test Park Updated",
+            amenityType: "PARK",
+            distanceMeter: 600,
+            address: "456 Update Street",
+            latitude: 10.763,
+            longitude: 106.661
+          }
+        }
+      );
+
+      expect(response.status()).toBe(200);
+
+      const dbResult = await db.query("SELECT name, distance_meter FROM nearby_amenity WHERE id = ?", [createdAmenityId]);
+      expect(dbResult[0].name).toBe("Auto Test Park Updated");
+      expect(dbResult[0].distance_meter).toBe(600);
+    });
+
+    test("[BAI_NA_D] DELETE /nearby-amenities/{id} removes record", async ({ request }) => {
+      const response = await request.delete(
+        `/api/v1/admin/building-additional-information/nearby-amenities/${createdAmenityId}`,
+        {
+          headers: { Cookie: adminCookies }
+        }
+      );
+
+      expect(response.status()).toBe(200);
+      const dbResult = await db.query("SELECT * FROM nearby_amenity WHERE id = ?", [createdAmenityId]);
+      expect(dbResult.length).toBe(0);
+    });
+  });
+
+  test.describe.serial("Supplier CRUD", () => {
+    let createdSupplierId: number;
+
+    test("[BAI_SP_SEC] POST /suppliers rejects anonymous access", async ({ request }) => {
+      const response = await request.post("/api/v1/admin/building-additional-information/suppliers", {
+        data: { buildingId, name: "Test", serviceType: "CLEANING" }
+      });
+
+      expect(response.status()).toBe(401);
+    });
+
+    test("[BAI_SP_C] POST /suppliers creates record and persists to DB", async ({ request }) => {
+      const payload = {
+        buildingId,
+        name: "Auto Cleaning Co",
+        serviceType: "CLEANING",
+        phone: "0901234567",
+        email: "clean@auto.com",
+        address: "1A Test Street",
+        note: "Auto test"
+      };
+
+      const response = await request.post("/api/v1/admin/building-additional-information/suppliers", {
+        headers: { Cookie: adminCookies },
+        data: payload
+      });
+
+      expect(response.status()).toBe(200);
+      const data = await response.json();
+      createdSupplierId = data.id;
+
+      const dbResult = await db.query("SELECT * FROM supplier WHERE id = ?", [createdSupplierId]);
+      expect(dbResult.length).toBe(1);
+      expect(dbResult[0].name).toBe(payload.name);
+    });
+
+    test("[BAI_SP_R] GET /suppliers/{buildingId} returns created record", async ({ request }) => {
+      const response = await request.get(`/api/v1/admin/building-additional-information/suppliers/${buildingId}`, {
+        headers: { Cookie: adminCookies }
+      });
+
+      expect(response.status()).toBe(200);
+      const list = await response.json();
+      expect(list.some((item: { id: number }) => item.id === createdSupplierId)).toBeTruthy();
+    });
+
+    test("[BAI_SP_U] PUT /suppliers/{id} updates record and DB", async ({ request }) => {
+      const response = await request.put(
+        `/api/v1/admin/building-additional-information/suppliers/${createdSupplierId}`,
+        {
+          headers: { Cookie: adminCookies },
+          data: {
+            buildingId,
+            name: "Auto Cleaning Co Updated",
+            serviceType: "CLEANING",
+            phone: "0909999999",
+            email: "vip@auto.com",
+            address: "2B Update Street",
+            note: "Updated"
+          }
+        }
+      );
+
+      expect(response.status()).toBe(200);
+      const dbResult = await db.query("SELECT name FROM supplier WHERE id = ?", [createdSupplierId]);
+      expect(dbResult[0].name).toBe("Auto Cleaning Co Updated");
+    });
+
+    test("[BAI_SP_D] DELETE /suppliers/{id} removes record", async ({ request }) => {
+      const response = await request.delete(
+        `/api/v1/admin/building-additional-information/suppliers/${createdSupplierId}`,
+        {
+          headers: { Cookie: adminCookies }
+        }
+      );
+
+      expect(response.status()).toBe(200);
+      const dbResult = await db.query("SELECT * FROM supplier WHERE id = ?", [createdSupplierId]);
+      expect(dbResult.length).toBe(0);
+    });
+  });
+
+  test.describe.serial("Planning Map CRUD", () => {
+    let createdMapId: number;
+
+    test("[BAI_PM_SEC] POST /planning-maps rejects anonymous access", async ({ request }) => {
+      const response = await request.post("/api/v1/admin/building-additional-information/planning-maps", {
+        data: { buildingId, mapType: "Planning map", issuedBy: "Test" }
+      });
+
+      expect(response.status()).toBe(401);
+    });
+
+    test("[BAI_PM_C] POST /planning-maps creates record and persists to DB", async ({ request }) => {
+      const payload = {
+        buildingId,
+        mapType: "Planning Auto",
+        issuedBy: "Construction Department",
+        issuedDate: "2025-01-01",
+        expiredDate: "2030-01-01",
+        imageUrl: "planning_auto.jpg",
+        note: "Auto test"
+      };
+
+      const response = await request.post("/api/v1/admin/building-additional-information/planning-maps", {
+        headers: { Cookie: adminCookies },
+        data: payload
+      });
+
+      expect(response.status()).toBe(200);
+      const data = await response.json();
+      createdMapId = data.id;
+
+      const dbResult = await db.query("SELECT * FROM planning_map WHERE id = ?", [createdMapId]);
+      expect(dbResult.length).toBe(1);
+      expect(dbResult[0].map_type).toBe(payload.mapType);
+    });
+
+    test("[BAI_PM_R] GET /planning-maps/{buildingId} returns created record", async ({ request }) => {
+      const response = await request.get(`/api/v1/admin/building-additional-information/planning-maps/${buildingId}`, {
+        headers: { Cookie: adminCookies }
+      });
+
+      expect(response.status()).toBe(200);
+      const list = await response.json();
+      expect(list.some((item: { id: number }) => item.id === createdMapId)).toBeTruthy();
+    });
+
+    test("[BAI_PM_U] PUT /planning-maps/{id} updates record and DB", async ({ request }) => {
+      const response = await request.put(
+        `/api/v1/admin/building-additional-information/planning-maps/${createdMapId}`,
+        {
+          headers: { Cookie: adminCookies },
+          data: {
+            buildingId,
+            mapType: "Planning Auto Updated",
+            issuedBy: "Construction Department",
+            issuedDate: "2025-01-01",
+            expiredDate: "2030-01-01",
+            imageUrl: "planning_auto.jpg",
+            note: "Updated"
+          }
+        }
+      );
+
+      expect(response.status()).toBe(200);
+      const dbResult = await db.query("SELECT map_type FROM planning_map WHERE id = ?", [createdMapId]);
+      expect(dbResult[0].map_type).toBe("Planning Auto Updated");
+    });
+
+    test("[BAI_PM_D] DELETE /planning-maps/{id} removes record", async ({ request }) => {
+      const response = await request.delete(
+        `/api/v1/admin/building-additional-information/planning-maps/${createdMapId}`,
+        {
+          headers: { Cookie: adminCookies }
+        }
+      );
+
+      expect(response.status()).toBe(200);
+      const dbResult = await db.query("SELECT * FROM planning_map WHERE id = ?", [createdMapId]);
+      expect(dbResult.length).toBe(0);
+    });
+  });
+
+  test.describe("Planning Map Image Upload", () => {
+    test("[BAI_UP_SEC] POST /planning-maps/image rejects anonymous access", async ({ request }) => {
+      const response = await request.post("/api/v1/admin/building-additional-information/planning-maps/image", {
+        multipart: {
+          file: { name: "test.jpg", mimeType: "image/jpeg", buffer: Buffer.from("fake") }
+        }
+      });
+
+      expect(response.status()).toBe(401);
+    });
+
+    test("[BAI_UP_NEG] POST /planning-maps/image rejects unsupported mime type", async ({ request }) => {
+      const response = await request.post("/api/v1/admin/building-additional-information/planning-maps/image", {
+        headers: { Cookie: adminCookies },
+        multipart: {
+          file: { name: "test.txt", mimeType: "text/plain", buffer: Buffer.from("not an image") }
+        }
+      });
+
+      expect(response.status()).toBe(400);
+      const data = await response.json();
+      expect(data.message).toBe("Only JPG, PNG and WEBP files are supported");
+    });
+
+    test("[BAI_UP_BND] POST /planning-maps/image rejects file larger than 5MB", async ({ request }) => {
+      const largeBuffer = Buffer.alloc(5 * 1024 * 1024 + 16, "a");
+      const response = await request.post("/api/v1/admin/building-additional-information/planning-maps/image", {
+        headers: { Cookie: adminCookies },
+        multipart: {
+          file: { name: "large.jpg", mimeType: "image/jpeg", buffer: largeBuffer }
+        }
+      });
+
+      expect(response.status()).toBe(400);
+    });
+
+    test("[BAI_UP_POS] POST /planning-maps/image uploads a valid JPG", async ({ request }) => {
+      const response = await request.post("/api/v1/admin/building-additional-information/planning-maps/image", {
+        headers: { Cookie: adminCookies },
+        multipart: {
+          file: { name: "my_map.jpg", mimeType: "image/jpeg", buffer: Buffer.from("fake valid image binary") }
+        }
+      });
+
+      expect(response.status()).toBe(200);
+      const data = await response.json();
+      expect(typeof data.message).toBe("string");
+      expect(data.message.length).toBeGreaterThan(0);
+      expect(data.data.filename).toContain("planning_");
+      expect(data.data.filename).toMatch(/\.jpg$/);
+    });
+  });
 });
-

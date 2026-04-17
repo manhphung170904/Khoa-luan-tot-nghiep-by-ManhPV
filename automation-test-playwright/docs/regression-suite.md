@@ -22,3 +22,12 @@ npm run test:regression:extended
 - cac list page quan trong
 - luong hoa don, hop dong, thanh toan
 - API quan trong cho admin
+
+## 5. API roadmap theo nhom
+
+- `auth`: smoke truoc vi la dependency cua toan bo role-based suite.
+- `public`: smoke va regression nhe, doc lap auth.
+- `admin`: chia theo module con, bat dau tu `security matrix`.
+- `staff`: readonly, invoice CRUD, profile.
+- `customer`: readonly, property-request, profile.
+- `payment`: QR render va confirm sau khi customer + invoice on dinh.

@@ -3,7 +3,7 @@ import { DatabaseHelper } from '../../../utils/db-client';
 import { env } from '../../../config/env';
 import { createHash } from 'crypto';
 
-test.describe('Authentication & Security API Tests', () => {
+test.describe('Authentication & Security API Tests @api @regression', () => {
     let db: DatabaseHelper;
     let validUser = {
         username: `testuser_auth_${Date.now()}`,
@@ -53,7 +53,7 @@ test.describe('Authentication & Security API Tests', () => {
     });
 
     test.describe.serial('1. Login + Authentication', () => {
-        test('[API_TC_001] [Happy Path] Login with valid credentials returns JWT cookies and redirect', async ({ request }) => {
+        test('[API_TC_001] [Happy Path] Login with valid credentials returns JWT cookies and redirect @smoke @regression', async ({ request }) => {
             const response = await request.post('/login', {
                 form: { username: env.adminUsername, password: env.defaultPassword },
                 maxRedirects: 0
@@ -69,7 +69,7 @@ test.describe('Authentication & Security API Tests', () => {
             expect(cookieString).toContain('estate_refresh_token=');
         });
 
-        test('[API_TC_002] [Negative] Blank username/password returns login error redirect', async ({ request }) => {
+        test('[API_TC_002] [Negative] Blank username/password returns login error redirect @regression', async ({ request }) => {
             const response = await request.post('/login', {
                 form: { username: '', password: '' },
                 maxRedirects: 0
@@ -79,7 +79,7 @@ test.describe('Authentication & Security API Tests', () => {
             expect(response.headers().location).toContain('errorMessage');
         });
 
-        test('[API_TC_003] [Negative] Wrong credentials are rejected', async ({ request }) => {
+        test('[API_TC_003] [Negative] Wrong credentials are rejected @regression', async ({ request }) => {
             const response = await request.post('/login', {
                 form: { username: env.adminUsername, password: 'bad-password-123' },
                 maxRedirects: 0
@@ -91,7 +91,7 @@ test.describe('Authentication & Security API Tests', () => {
     });
 
     test.describe.serial('2. Registration + Database Chaining', () => {
-        test('[API_TC_004] [Happy Path] Send registration OTP and persist pending verification row', async ({ request }) => {
+        test('[API_TC_004] [Happy Path] Send registration OTP and persist pending verification row @regression', async ({ request }) => {
             const response = await request.post('/auth/register/send-code', {
                 form: { email: validUser.email },
                 maxRedirects: 0
@@ -108,7 +108,7 @@ test.describe('Authentication & Security API Tests', () => {
             expect(rows[0].status).toBe('PENDING');
         });
 
-        test('[API_TC_005] [Happy Path] Verify registration OTP by injecting static OTP hash into DB', async ({ request }) => {
+        test('[API_TC_005] [Happy Path] Verify registration OTP by injecting static OTP hash into DB @extended', async ({ request }) => {
             await setLatestVerificationOtp(validUser.email, 'REGISTER', staticOtp);
 
             const response = await request.post('/auth/register/verify', {
@@ -125,7 +125,7 @@ test.describe('Authentication & Security API Tests', () => {
             expect(registrationTicket).not.toBe('');
         });
 
-        test('[API_TC_006] [Happy Path] Complete registration and verify customer row created', async ({ request }) => {
+        test('[API_TC_006] [Happy Path] Complete registration and verify customer row created @regression', async ({ request }) => {
             expect(registrationTicket).not.toBe('');
 
             const response = await request.post('/auth/register/complete', {
@@ -150,7 +150,7 @@ test.describe('Authentication & Security API Tests', () => {
             expect(createdRows.length).toBe(1);
         });
 
-        test('[API_TC_007] [Negative] Complete registration fails when passwords do not match', async ({ request }) => {
+        test('[API_TC_007] [Negative] Complete registration fails when passwords do not match @regression', async ({ request }) => {
             const response = await request.post('/auth/register/complete', {
                 form: {
                     ticket: registrationTicket || 'invalid_ticket',
@@ -169,9 +169,9 @@ test.describe('Authentication & Security API Tests', () => {
     });
 
     test.describe.serial('3. Forgot Password + Reset Password', () => {
-        test('[API_TC_008] [Happy Path] Request forgot password and check OTP row in DB', async ({ request }) => {
+        test('[API_TC_008] [Happy Path] Request forgot password and check OTP row in DB @regression', async ({ request }) => {
             expect(validLocalEmail).toBeTruthy();
-            const response = await request.post(`/api/auth/forgot-password?email=${encodeURIComponent(validLocalEmail)}`);
+            const response = await request.post(`/api/v1/auth/forgot-password?email=${encodeURIComponent(validLocalEmail)}`);
             expect(response.status()).toBe(200);
 
             const rows = await db.query<{ id: number; email: string; purpose: string; status: string }>(
@@ -182,9 +182,9 @@ test.describe('Authentication & Security API Tests', () => {
             expect(rows[0].status).toBe('PENDING');
         });
 
-        test('[API_TC_009] [Negative] Reset password with incorrect OTP is rejected', async ({ request }) => {
+        test('[API_TC_009] [Negative] Reset password with incorrect OTP is rejected @extended', async ({ request }) => {
             expect(validLocalEmail).toBeTruthy();
-            await request.post(`/api/auth/forgot-password?email=${encodeURIComponent(validLocalEmail)}`);
+            await request.post(`/api/v1/auth/forgot-password?email=${encodeURIComponent(validLocalEmail)}`);
             await setLatestVerificationOtp(validLocalEmail, 'RESET_PASSWORD', staticOtp);
 
             const response = await request.post('/auth/reset-password', {
@@ -203,7 +203,7 @@ test.describe('Authentication & Security API Tests', () => {
     });
 
     test.describe.serial('4. Logout', () => {
-        test('[API_TC_010] [Security] Logout clears auth cookies and redirects to login', async ({ request }) => {
+        test('[API_TC_010] [Security] Logout clears auth cookies and redirects to login @smoke @regression', async ({ request }) => {
             const response = await request.post('/auth/logout', { maxRedirects: 0 });
             expect(response.status()).toBe(302);
             expect(response.headers().location).toContain('/login?logout');
@@ -216,4 +216,3 @@ test.describe('Authentication & Security API Tests', () => {
         });
     });
 });
-
