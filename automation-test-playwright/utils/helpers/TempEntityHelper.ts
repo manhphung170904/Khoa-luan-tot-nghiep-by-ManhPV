@@ -87,7 +87,7 @@ export class TempEntityHelper {
     const taoResponse = await request.post("/api/v1/admin/staff", {
       data: payload
     });
-    expect([200, 201]).toContain(taoResponse.status());
+    expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/staff", {
       params: { page: 1, size: 20, fullName, role }
@@ -117,7 +117,7 @@ export class TempEntityHelper {
     const taoResponse = await request.post("/api/v1/admin/customers", {
       data: payload
     });
-    expect([200, 201]).toContain(taoResponse.status());
+    expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/customers", {
       params: { page: 1, size: 20, fullName }
@@ -146,7 +146,7 @@ export class TempEntityHelper {
     const name = String(payload.name);
 
     const taoResponse = await request.post("/api/v1/admin/buildings", { data: payload });
-    expect([200, 201]).toContain(taoResponse.status());
+    expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/buildings", {
       params: { page: 1, size: 20, name }
@@ -192,7 +192,7 @@ export class TempEntityHelper {
     });
 
     const taoResponse = await request.post("/api/v1/admin/contracts", { data: payload });
-    expect([200, 201]).toContain(taoResponse.status());
+    expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/contracts", {
       params: { page: 1, size: 20, customerId: customer.id }
@@ -229,7 +229,7 @@ export class TempEntityHelper {
     const year = Number(payload.year);
 
     const taoResponse = await request.post("/api/v1/admin/invoices", { data: payload });
-    expect([200, 201]).toContain(taoResponse.status());
+    expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/invoices", {
       params: { page: 1, size: 20, customerId: contract.customer.id, month, year }
@@ -265,7 +265,7 @@ export class TempEntityHelper {
     });
 
     const taoResponse = await request.post("/api/v1/admin/sale-contracts", { data: payload });
-    expect([200, 201]).toContain(taoResponse.status());
+    expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/sale-contracts", {
       params: { page: 1, size: 20, customerName: customer.fullName }

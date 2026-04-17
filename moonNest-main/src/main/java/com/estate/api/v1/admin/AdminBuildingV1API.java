@@ -21,7 +21,6 @@ import com.estate.service.StaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -87,7 +86,7 @@ public class AdminBuildingV1API {
     ) {
         validate(result);
         buildingService.save(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiMessageResponse.of("Building created successfully."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Building created successfully."));
     }
 
     @PutMapping("/{id}")

@@ -10,7 +10,6 @@ import com.estate.exception.InputValidationException;
 import com.estate.service.StaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -52,7 +51,7 @@ public class AdminStaffV1API {
     ) {
         validate(result);
         staffService.save(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiMessageResponse.of("Th?m nh?n vi?n th?nh c?ng."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Th?m nh?n vi?n th?nh c?ng."));
     }
 
     @DeleteMapping("/{id}")

@@ -7,7 +7,6 @@ import com.estate.security.CustomUserDetails;
 import com.estate.service.PropertyRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,7 +31,7 @@ public class CustomerPropertyRequestV1API {
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         propertyRequestService.submit(dto, user.getUserId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiMessageResponse.of("Property request submitted successfully."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Property request submitted successfully."));
     }
 
     @GetMapping

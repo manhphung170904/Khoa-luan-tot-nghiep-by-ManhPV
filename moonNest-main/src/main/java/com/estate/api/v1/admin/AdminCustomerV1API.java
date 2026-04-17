@@ -8,7 +8,6 @@ import com.estate.exception.InputValidationException;
 import com.estate.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,7 +41,7 @@ public class AdminCustomerV1API {
     ) {
         validate(result);
         customerService.save(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiMessageResponse.of("Th?m kh?ch h?ng th?nh c?ng."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Th?m kh?ch h?ng th?nh c?ng."));
     }
 
     @DeleteMapping("/{id}")

@@ -14,7 +14,6 @@ import com.estate.service.CustomerService;
 import com.estate.service.StaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -64,7 +63,7 @@ public class AdminContractV1API {
     ) {
         validate(result);
         contractService.save(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiMessageResponse.of("T?o h?p ??ng th?nh c?ng."));
+        return ResponseEntity.ok(ApiMessageResponse.of("T?o h?p ??ng th?nh c?ng."));
     }
 
     @PutMapping("/{id}")

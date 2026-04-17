@@ -7,7 +7,6 @@ import com.estate.dto.InvoiceListDTO;
 import com.estate.dto.PageResponse;
 import com.estate.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,7 +37,7 @@ public class AdminInvoiceV1API {
     @PostMapping
     public ResponseEntity<ApiMessageResponse<Void>> addInvoice(@RequestBody InvoiceFormDTO dto) {
         invoiceService.save(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiMessageResponse.of("Invoice created successfully."));
+        return ResponseEntity.ok(ApiMessageResponse.of("Invoice created successfully."));
     }
 
     @PutMapping("/{id}")
