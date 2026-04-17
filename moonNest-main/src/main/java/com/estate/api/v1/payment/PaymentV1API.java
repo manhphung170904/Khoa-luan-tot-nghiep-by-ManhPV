@@ -76,7 +76,7 @@ public class PaymentV1API {
                   <head>
                     <meta charset=\"utf-8\"/>
                     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>
-                    <title>Thanh toan QR</title>
+                    <title>Thanh toán QR</title>
                     <style>
                       body { font-family: Arial, sans-serif; background: #f4f6fb; margin: 0; padding: 24px; color: #1f2937; }
                       .wrap { max-width: 520px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
@@ -94,26 +94,26 @@ public class PaymentV1API {
                   </head>
                   <body>
                     <div class=\"wrap\">
-                      <h1>Thanh toan bang QR</h1>
-                      <p>Quet ma bang ung dung ngan hang de thanh toan hoa don.</p>
+                      <h1>Thanh toán bằng QR</h1>
+                      <p>Quét mã bằng ứng dụng ngân hàng để thanh toán hóa đơn.</p>
                       <div class=\"qr\">
-                        <img src=\"%s\" alt=\"QR thanh toan hoa don %d\"/>
+                        <img src=\"%s\" alt=\"QR thanh toán hóa đơn %d\"/>
                       </div>
                       <div class=\"meta\">
-                        <p><strong>Ma hoa don:</strong> #%d</p>
-                        <p><strong>So tien:</strong> %s VND</p>
-                        <p><strong>Ma ngan hang:</strong> %s</p>
-                        <p><strong>So tai khoan:</strong> %s</p>
-                        <p><strong>Chu tai khoan:</strong> %s</p>
-                        <p><strong>Noi dung CK:</strong> %s</p>
+                        <p><strong>Mã hóa đơn:</strong> #%d</p>
+                        <p><strong>Số tiền:</strong> %s VND</p>
+                        <p><strong>Mã ngân hàng:</strong> %s</p>
+                        <p><strong>Số tài khoản:</strong> %s</p>
+                        <p><strong>Chủ tài khoản:</strong> %s</p>
+                        <p><strong>Nội dung CK:</strong> %s</p>
                       </div>
-                      <p class=\"hint\">Sau khi chuyen khoan thanh cong, bam \"Toi da thanh toan\" de he thong ghi nhan theo che do demo.</p>
+                      <p class=\"hint\">Sau khi chuyển khoản thành công, bấm \"Tôi đã thanh toán\" để hệ thống ghi nhận theo chế độ demo.</p>
                       <div class=\"actions\">
                         <form style=\"flex: 1; margin: 0;\" method=\"post\" action=\"/payment-demo/qr/confirm/%d\">
                           <input type=\"hidden\" name=\"token\" value=\"%s\"/>
-                          <button class=\"btn btn-primary\" style=\"width: 100%%; border: 0; cursor: pointer;\" type=\"submit\">Toi da thanh toan</button>
+                          <button class=\"btn btn-primary\" style=\"width: 100%%; border: 0; cursor: pointer;\" type=\"submit\">Tôi đã thanh toán</button>
                         </form>
-                        <a class=\"btn btn-secondary\" href=\"/customer/invoice/list\">Quay lai</a>
+                        <a class=\"btn btn-secondary\" href=\"/customer/invoice/list\">Quay lại</a>
                       </div>
                     </div>
                   </body>
