@@ -1158,6 +1158,30 @@
         // ---------------------------------------------------------------------------
         // UPLOAD
         // ---------------------------------------------------------------------------
+        var selectedImageFile = null;
+
+        async function uploadSelectedImage() {
+            if (!selectedImageFile) {
+                return document.getElementById('imageFilename').value || null;
+            }
+
+            setUploadStatus('<i class="bi bi-arrow-repeat"></i> Đang upload...', 'loading');
+            var formData = new FormData();
+            formData.append('file', selectedImageFile);
+
+            var response = await fetch('/api/v1/admin/buildings/image', { method: 'POST', body: formData });
+            var data = await response.json();
+            var filename = data && data.data && data.data.filename ? data.data.filename : data.filename;
+            if (!response.ok || !filename) {
+                throw new Error(data.message || 'Upload thất bại.');
+            }
+
+            document.getElementById('imageFilename').value = filename;
+            selectedImageFile = null;
+            setUploadStatus('✓ ' + filename, 'success');
+            return filename;
+        }
+
         function handleImageSelect(input) {
             var file = input.files[0];
             if (!file) return;
@@ -1174,25 +1198,13 @@
                 document.getElementById('uploadPreview').style.display = 'block';
             };
             reader.readAsDataURL(file);
-            setUploadStatus('<i class="bi bi-arrow-repeat"></i> Đang upload...', 'loading');
-            var formData = new FormData();
-            formData.append('file', file);
-            fetch('/api/v1/admin/buildings/image', { method: 'POST', body: formData })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    var filename = data && data.data && data.data.filename ? data.data.filename : data.filename;
-                    if (filename) {
-                        document.getElementById('imageFilename').value = filename;
-                        setUploadStatus('✓ ' + filename, 'success');
-                    } else {
-                        setUploadStatus(data.message || 'Upload thất bại.', 'error'); removeImage();
-                    }
-                })
-                .catch(function () { setUploadStatus('Lỗi kết nối.', 'error'); removeImage(); });
+            selectedImageFile = file;
+            setUploadStatus('Ảnh sẽ được tải lên khi lưu thay đổi.', 'loading');
         }
 
         function removeImage(e) {
             if (e) e.stopPropagation();
+            selectedImageFile = null;
             document.getElementById('imageFileInput').value = '';
             document.getElementById('imageFilename').value = '';
             document.getElementById('previewImg').src = '';
@@ -1242,7 +1254,7 @@
         // ---------------------------------------------------------------------------
         // SUBMIT
         // ---------------------------------------------------------------------------
-        document.getElementById('buildingForm').addEventListener('submit', function (e) {
+        document.getElementById('buildingForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             // Guard kép: nếu form đang bị lock thì không làm gì
@@ -1264,6 +1276,14 @@
             var staffIds = Array.from(document.querySelectorAll('input[name="staffIds"]:checked'))
                 .map(function (cb) { return Number(cb.value); });
             var g = function (sel) { var el = document.querySelector('[name="' + sel + '"]'); return el ? el.value : null; };
+            var uploadedImage = document.getElementById('imageFilename').value || null;
+
+            try {
+                uploadedImage = await uploadSelectedImage();
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Lỗi', text: err.message || 'Upload ảnh thất bại.' });
+                return;
+            }
 
             var data = {
                 id: g('id') ? Number(g('id')) : null,
@@ -1289,7 +1309,7 @@
                 latitude: g('latitude') ? Number(g('latitude')) : null,
                 longitude: g('longitude') ? Number(g('longitude')) : null,
                 linkOfBuilding: g('linkOfBuilding') || null,
-                image: document.getElementById('imageFilename').value || null,
+                image: uploadedImage,
                 rentAreaValues: txType === 'FOR_RENT' ? (document.getElementById('rentAreaValuesInput') ? document.getElementById('rentAreaValuesInput').value || null : null) : null,
                 staffIds: staffIds
             };

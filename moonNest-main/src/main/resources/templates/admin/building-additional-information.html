@@ -1489,6 +1489,8 @@
             supplier: 'suppliers',
         };
 
+        var selectedPlanningImageFile = null;
+
         const formFields = {
             legal: ['authorityName', 'authorityType', 'phone', 'email', 'address', 'note'],
             amenity: ['name', 'amenityType', 'distanceMeter', 'address', 'latitude', 'longitude'],
@@ -1545,6 +1547,14 @@
             saveBtn.disabled = true;
 
             try {
+                if (type === 'planning') {
+                    payload.imageUrl = await uploadPlanningImageIfNeeded();
+                    if (!payload.imageUrl) {
+                        Swal.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng chọn ảnh bản đồ.' });
+                        return;
+                    }
+                }
+
                 const res = await fetch(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
@@ -1736,7 +1746,7 @@
             const required = {
                 legal: ['authorityName', 'authorityType', 'phone', 'email', 'address'],
                 amenity: ['name', 'amenityType', 'address', 'latitude', 'longitude'],
-                planning: ['mapType', 'issuedBy', 'issuedDate', 'expiredDate', 'imageUrl'],
+                planning: ['mapType', 'issuedBy', 'issuedDate', 'expiredDate'],
                 supplier: ['name', 'serviceType', 'phone', 'email'],
             };
             const requiredLabels = {
@@ -2053,36 +2063,45 @@
             };
             reader.readAsDataURL(file);
 
+            selectedPlanningImageFile = file;
+            document.getElementById('planning-imageUrl').value = '';
+            setPlanningUploadStatus('Ảnh sẽ được tải lên khi lưu bản đồ quy hoạch.', '#6b7280');
+        }
+
+        async function uploadPlanningImageIfNeeded() {
+            if (!selectedPlanningImageFile) {
+                return document.getElementById('planning-imageUrl').value || null;
+            }
+
             setPlanningUploadStatus('Đang tải lên...', '#6b7280');
             document.getElementById('planningUploadZone').classList.add('uploading');
 
             var formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', selectedPlanningImageFile);
 
-            fetch('/api/v1/admin/building-additional-information/planning-maps/image', {
-                method: 'POST',
-                body: formData
-            })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    var filename = data && data.data && data.data.filename ? data.data.filename : data.filename;
-                    if (filename) {
-                        // Lưu full path vào hidden field – giống building lưu data.filename
-                        var fullPath = '/images/planning_map_img/' + filename;
-                        document.getElementById('planning-imageUrl').value = fullPath;
-                        setPlanningUploadStatus('✓ ' + filename, '#059669');
-                        document.getElementById('planningUploadZone').classList.remove('uploading');
-                    } else {
-                        throw new Error(data.message || 'Upload thất bại');
-                    }
-                })
-                .catch(function (err) {
-                    setPlanningUploadStatus('Lỗi: ' + err.message, '#dc2626');
-                    document.getElementById('planningUploadZone').classList.remove('uploading');
+            try {
+                var response = await fetch('/api/v1/admin/building-additional-information/planning-maps/image', {
+                    method: 'POST',
+                    body: formData
                 });
+                var data = await response.json();
+                var filename = data && data.data && data.data.filename ? data.data.filename : data.filename;
+                if (!response.ok || !filename) {
+                    throw new Error(data.message || 'Upload thất bại');
+                }
+
+                var fullPath = '/images/planning_map_img/' + filename;
+                document.getElementById('planning-imageUrl').value = fullPath;
+                selectedPlanningImageFile = null;
+                setPlanningUploadStatus('✓ ' + filename, '#059669');
+                return fullPath;
+            } finally {
+                document.getElementById('planningUploadZone').classList.remove('uploading');
+            }
         }
 
         function clearPlanningImage() {
+            selectedPlanningImageFile = null;
             document.getElementById('planning-imageUrl').value = '';
             document.getElementById('planningImageFile').value = '';
             var img = document.getElementById('planningPreviewImg');

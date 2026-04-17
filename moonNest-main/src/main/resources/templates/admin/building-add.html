@@ -977,6 +977,33 @@
         // ---------------------------------------------------------------------------
         // UPLOAD
         // ---------------------------------------------------------------------------
+        var selectedImageFile = null;
+
+        async function uploadSelectedImage() {
+            if (!selectedImageFile) {
+                return document.getElementById('imageFilename').value || null;
+            }
+
+            setUploadStatus('<i class="bi bi-arrow-repeat"></i> Đang upload...', 'loading');
+            var formData = new FormData();
+            formData.append('file', selectedImageFile);
+
+            var response = await fetch('/api/v1/admin/buildings/image', {
+                method: 'POST',
+                body: formData
+            });
+            var data = await response.json();
+            var filename = data && data.data && data.data.filename ? data.data.filename : data.filename;
+            if (!response.ok || !filename) {
+                throw new Error(data.message || 'Upload thất bại.');
+            }
+
+            document.getElementById('imageFilename').value = filename;
+            selectedImageFile = null;
+            setUploadStatus('✓ ' + filename, 'success');
+            return filename;
+        }
+
         function handleImageSelect(input) {
             var file = input.files[0];
             if (!file) return;
@@ -995,33 +1022,14 @@
                 document.getElementById('uploadPreview').style.display = 'block';
             };
             reader.readAsDataURL(file);
-            setUploadStatus('<i class="bi bi-arrow-repeat"></i> Đang upload...', 'loading');
-            var formData = new FormData();
-            formData.append('file', file);
-
-            fetch('/api/v1/admin/buildings/image', {
-                method: 'POST',
-                body: formData
-            })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    var filename = data && data.data && data.data.filename ? data.data.filename : data.filename;
-                    if (filename) {
-                        document.getElementById('imageFilename').value = filename;
-                        setUploadStatus('✓ ' + filename, 'success');
-                    } else {
-                        setUploadStatus(data.message || 'Upload thất bại.', 'error');
-                        removeImage();
-                    }
-                })
-                .catch(function () {
-                    setUploadStatus('Lỗi kết nối.', 'error');
-                    removeImage();
-                });
+            selectedImageFile = file;
+            document.getElementById('imageFilename').value = '';
+            setUploadStatus('Ảnh sẽ được tải lên khi lưu bất động sản.', 'loading');
         }
 
         function removeImage(e) {
             if (e) e.stopPropagation();
+            selectedImageFile = null;
             document.getElementById('imageFileInput').value = '';
             document.getElementById('imageFilename').value = '';
             document.getElementById('previewImg').src = '';
@@ -1054,6 +1062,7 @@
             // Staff
             document.querySelectorAll('.staff-item').forEach(function (i) { i.classList.remove('selected'); });
             document.getElementById('selectedCount').textContent = '0';
+            removeImage();
         }
 
         // ---------------------------------------------------------------------------
@@ -1078,6 +1087,14 @@
             // 2. Tọa độ bản đồ
             if (!document.getElementById('latInput').value || !document.getElementById('lngInput').value) {
                 Swal.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng chọn vị trí trên bản đồ.' });
+                return;
+            }
+
+            var uploadedImage = document.getElementById('imageFilename').value || null;
+            try {
+                uploadedImage = await uploadSelectedImage();
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Lỗi', text: err.message || 'Upload ảnh thất bại.' });
                 return;
             }
 
@@ -1108,7 +1125,7 @@
                 longitude: document.getElementById('lngInput').value ? Number(document.getElementById('lngInput').value) : null,
                 linkOfBuilding: g('linkOfBuilding').value || null,
                 taxCode: g('taxCode').value || null,
-                image: document.getElementById('imageFilename').value || null,
+                image: uploadedImage,
                 rentAreaValues: txType === 'FOR_RENT' ? (document.getElementById('rentAreaValuesInput').value || null) : null,
                 staffIds: staffIds
             };
