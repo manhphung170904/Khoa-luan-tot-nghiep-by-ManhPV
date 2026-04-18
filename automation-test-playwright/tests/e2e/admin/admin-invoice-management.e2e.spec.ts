@@ -11,14 +11,14 @@ import {
   createTempContractScenario,
   previousInvoicePeriod,
   type TempInvoiceRecord
-} from "../_fixtures/invoiceTempData";
+} from "@data/invoiceTempData";
 import {
   cleanupTempStaffProfileUser,
   createTempStaffProfileUser,
   loginAsTempUser,
   newAdminApiContext,
   type TempStaffProfileUser
-} from "../_fixtures/profileTempUsers";
+} from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 

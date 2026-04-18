@@ -1,4 +1,4 @@
-import { MySqlDbClient } from './db/MySqlDbClient';
+import { MySqlDbClient } from './MySqlDbClient';
 
 /**
  * Adapter Class DatabaseHelper

@@ -12,8 +12,8 @@ import {
   loginAsTempUser,
   newAdminApiContext,
   type TempStaffProfileUser
-} from "../_fixtures/profileTempUsers";
-import { createPropertyRequestScenario, type PropertyRequestScenario } from "../../api/_fixtures/propertyRequestScenario";
+} from "@data/profileTempUsers";
+import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
 
 test.describe("Admin Property Request Management E2E @regression", () => {
   let bootstrapAdminApi: APIRequestContext;

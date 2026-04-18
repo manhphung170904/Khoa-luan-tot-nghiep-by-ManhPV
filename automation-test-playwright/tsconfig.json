@@ -9,7 +9,7 @@
       "@config/*": ["./config/*"],
       "@pages/*": ["./pages/*"],
       "@helpers/*": ["./utils/helpers/*"],
-      "@fixtures/*": ["./utils/fixtures/*"],
+      "@fixtures/*": ["./fixtures/*"],
       "@data/*": ["./test-data/*"],
       "@api/*": ["./utils/api/*"],
       "@db/*": ["./utils/db/*"]

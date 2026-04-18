@@ -3,7 +3,7 @@ import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { StaffSaleContractListPage } from "@pages/staff/StaffSaleContractListPage";
-import { loginAsTempUser, newAdminApiContext } from "../_fixtures/profileTempUsers";
+import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempSaleContract = Awaited<ReturnType<typeof TempEntityHelper.taoSaleContractTam>>;
 

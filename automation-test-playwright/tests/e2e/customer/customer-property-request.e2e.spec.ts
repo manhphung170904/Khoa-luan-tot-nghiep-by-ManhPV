@@ -2,8 +2,8 @@ import { expect, test } from "@fixtures/base.fixture";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { CustomerPropertyRequestListPage } from "@pages/customer/CustomerPropertyRequestListPage";
-import { createPropertyRequestScenario, type PropertyRequestScenario } from "../../api/_fixtures/propertyRequestScenario";
-import { loginAsTempUser } from "../_fixtures/profileTempUsers";
+import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
+import { loginAsTempUser } from "@data/profileTempUsers";
 
 test.describe("Customer Property Request E2E @regression", () => {
   let scenario: PropertyRequestScenario | null = null;

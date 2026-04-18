@@ -2,8 +2,8 @@ import { expect, test } from "@fixtures/base.fixture";
 import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { CustomerTransactionHistoryPage } from "@pages/customer/CustomerTransactionHistoryPage";
-import { cleanupContractScenario, createManagedInvoiceForContract, createTempContractScenario } from "../_fixtures/invoiceTempData";
-import { loginAsTempUser, newAdminApiContext } from "../_fixtures/profileTempUsers";
+import { cleanupContractScenario, createManagedInvoiceForContract, createTempContractScenario } from "@data/invoiceTempData";
+import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 

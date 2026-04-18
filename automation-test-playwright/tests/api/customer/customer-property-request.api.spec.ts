@@ -4,7 +4,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { createAnonymousContext } from "@api/adminApiUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
-import { createPropertyRequestScenario } from "../_fixtures/propertyRequestScenario";
+import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
 test.describe("Customer Property Request API @regression", () => {
   test.afterAll(async () => {

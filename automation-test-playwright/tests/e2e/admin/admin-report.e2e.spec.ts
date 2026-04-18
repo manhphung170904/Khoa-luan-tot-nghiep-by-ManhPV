@@ -7,7 +7,7 @@ import {
   loginAsTempUser,
   newAdminApiContext,
   type TempStaffProfileUser
-} from "../_fixtures/profileTempUsers";
+} from "@data/profileTempUsers";
 
 test.describe("Admin Report E2E @regression", () => {
   let adminApi: APIRequestContext;

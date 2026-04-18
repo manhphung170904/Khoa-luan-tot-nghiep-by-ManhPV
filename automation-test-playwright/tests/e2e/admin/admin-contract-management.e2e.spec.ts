@@ -11,7 +11,7 @@ import {
   loginAsTempUser,
   newAdminApiContext,
   type TempStaffProfileUser
-} from "../_fixtures/profileTempUsers";
+} from "@data/profileTempUsers";
 
 type TempStaff = Awaited<ReturnType<typeof TempEntityHelper.taoStaffTam>>;
 type TempCustomer = Awaited<ReturnType<typeof TempEntityHelper.taoCustomerTam>>;

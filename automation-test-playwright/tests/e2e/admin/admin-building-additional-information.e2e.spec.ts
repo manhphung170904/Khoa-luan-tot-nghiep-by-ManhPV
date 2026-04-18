@@ -9,7 +9,7 @@ import {
   loginAsTempUser,
   newAdminApiContext,
   type TempStaffProfileUser
-} from "../_fixtures/profileTempUsers";
+} from "@data/profileTempUsers";
 
 type AdditionalType = "legal" | "amenity" | "planning" | "supplier";
 

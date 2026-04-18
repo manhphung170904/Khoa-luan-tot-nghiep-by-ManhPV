@@ -8,8 +8,8 @@ import {
   createTempContractScenario,
   previousInvoicePeriod,
   type TempInvoiceRecord
-} from "../_fixtures/invoiceTempData";
-import { loginAsTempUser, newAdminApiContext } from "../_fixtures/profileTempUsers";
+} from "@data/invoiceTempData";
+import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
