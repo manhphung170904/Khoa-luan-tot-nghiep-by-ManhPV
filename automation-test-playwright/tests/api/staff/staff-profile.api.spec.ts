@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/api.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { expectApiErrorBody, expectApiMessage } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { env } from "@config/env";
@@ -326,3 +327,5 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
     currentPassword = newPassword;
   });
 });
+
+

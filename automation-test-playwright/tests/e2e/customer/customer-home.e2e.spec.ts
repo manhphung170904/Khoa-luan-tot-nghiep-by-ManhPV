@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { CustomerHomePage } from "@pages/customer/CustomerHomePage";
 import {
   cleanupTempCustomerProfileUser,
@@ -49,3 +50,5 @@ test.describe("Customer Home E2E @regression", () => {
     await page.waitForURL(/\/customer\/building\/list|\/customer\/buildings/);
   });
 });
+
+

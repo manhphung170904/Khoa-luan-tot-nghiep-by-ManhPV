@@ -24,7 +24,7 @@ Dieu nay giup de truy vet:
 ## Quy uoc chia module API
 
 - `tests/api/auth`: auth REST va MVC auth support flow.
-- `tests/api/publicpage`: public browsing contract.
+- `tests/api/public`: public browsing contract.
 - `tests/api/admin`: admin theo module con `building`, `customer`, `staff`, `contract`, `invoice`, `sale-contract`, `property-request`, `profile`, `security`.
 - `tests/api/staff`: readonly, invoice CRUD, profile.
 - `tests/api/customer`: readonly, property-request, profile.

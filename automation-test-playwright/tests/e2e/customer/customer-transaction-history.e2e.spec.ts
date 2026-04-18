@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { CustomerTransactionHistoryPage } from "@pages/customer/CustomerTransactionHistoryPage";
 import { cleanupContractScenario, createManagedInvoiceForContract, createTempContractScenario } from "../_fixtures/invoiceTempData";
@@ -118,3 +119,5 @@ test.describe("Customer Transaction History E2E @regression", () => {
     await expect(transactionPage.rowByBuildingName(tempContract!.building.name)).toBeVisible();
   });
 });
+
+

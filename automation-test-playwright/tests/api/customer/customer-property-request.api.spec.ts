@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectArrayBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { createAnonymousContext } from "@api/adminApiUtils";
@@ -128,3 +128,5 @@ test.describe("Customer Property Request API @api @regression", () => {
     }
   });
 });
+
+

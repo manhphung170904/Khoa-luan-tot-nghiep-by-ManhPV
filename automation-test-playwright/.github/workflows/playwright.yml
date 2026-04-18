@@ -39,11 +39,11 @@ jobs:
         working-directory: automation-test-playwright
         env:
           APP_ENV: test
-          BASE_URL: ${{ secrets.SUNTOWER_BASE_URL }}
-          ADMIN_USERNAME: ${{ secrets.SUNTOWER_ADMIN_USERNAME }}
-          STAFF_USERNAME: ${{ secrets.SUNTOWER_STAFF_USERNAME }}
-          CUSTOMER_USERNAME: ${{ secrets.SUNTOWER_CUSTOMER_USERNAME }}
-          DEFAULT_PASSWORD: ${{ secrets.SUNTOWER_DEFAULT_PASSWORD }}
+          BASE_URL: ${{ secrets.MOONNEST_BASE_URL }}
+          ADMIN_USERNAME: ${{ secrets.MOONNEST_ADMIN_USERNAME }}
+          STAFF_USERNAME: ${{ secrets.MOONNEST_STAFF_USERNAME }}
+          CUSTOMER_USERNAME: ${{ secrets.MOONNEST_CUSTOMER_USERNAME }}
+          DEFAULT_PASSWORD: ${{ secrets.MOONNEST_DEFAULT_PASSWORD }}
         run: npm run test:regression
 
       - name: Upload HTML report
@@ -51,11 +51,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: automation-test-playwright/playwright-report
+          path: automation-test-playwright/.runtime/playwright-report
 
       - name: Upload artifact loi
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-artifacts
-          path: automation-test-playwright/artifacts/test-results
+          path: automation-test-playwright/.runtime/test-results

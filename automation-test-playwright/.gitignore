@@ -1,8 +1,9 @@
-node_modules/
+.runtime/
+artifacts/
 playwright-report/
+reports/
+playwright/
 test-results/
 blob-report/
-reports/
-artifacts/test-results/
-playwright/.auth/
+node_modules/
 .env

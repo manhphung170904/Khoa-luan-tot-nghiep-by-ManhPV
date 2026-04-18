@@ -1,4 +1,5 @@
 import type { APIRequestContext, Page } from "@playwright/test";
+import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { env } from "@config/env";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
@@ -116,24 +117,5 @@ export async function loginAsTempUser(page: Page, username: string, password = d
 }
 
 export async function newAdminApiContext(playwright: PlaywrightLike): Promise<APIRequestContext> {
-  const context = await playwright.request.newContext({
-    baseURL: env.baseUrl,
-    extraHTTPHeaders: {
-      Accept: "application/json"
-    }
-  });
-
-  const loginResponse = await context.post("/api/v1/auth/login", {
-    failOnStatusCode: false,
-    data: {
-      username: env.adminUsername,
-      password: env.defaultPassword
-    }
-  });
-
-  if (loginResponse.status() !== 200) {
-    throw new Error(`Khong dang nhap duoc admin bootstrap. HTTP ${loginResponse.status()}.`);
-  }
-
-  return context;
+  return ApiSessionHelper.newContext(playwright, "admin");
 }

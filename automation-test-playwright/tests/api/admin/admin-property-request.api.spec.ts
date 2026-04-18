@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
@@ -289,3 +289,5 @@ test.describe("Admin Property Request API @api @regression", () => {
     }
   });
 });
+
+

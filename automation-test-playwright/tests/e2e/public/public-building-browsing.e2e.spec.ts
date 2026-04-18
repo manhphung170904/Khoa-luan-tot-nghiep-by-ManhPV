@@ -293,3 +293,5 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await expect(publicPage.buildingList).toBeVisible();
   });
 });
+
+

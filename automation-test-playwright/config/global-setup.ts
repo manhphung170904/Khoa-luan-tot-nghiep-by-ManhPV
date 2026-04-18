@@ -1,11 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { FullConfig } from "@playwright/test";
-import { env } from "./env";
 import { runtimePaths } from "./paths";
 
 const directories = [
-  env.authStateDir,
+  runtimePaths.rootDir,
   runtimePaths.artifactsRootDir,
   path.dirname(runtimePaths.junitReportFile),
   runtimePaths.htmlReportDir

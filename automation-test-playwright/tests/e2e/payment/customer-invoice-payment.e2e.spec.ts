@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { CustomerInvoicePage } from "@pages/customer/CustomerInvoicePage";
 import { CustomerPaymentQrPage } from "@pages/customer/CustomerPaymentQrPage";
@@ -161,3 +162,5 @@ test.describe("Customer Invoice Payment E2E @regression", () => {
     await invoicePage.expectEmptyState();
   });
 });
+
+

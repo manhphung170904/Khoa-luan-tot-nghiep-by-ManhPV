@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/api.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { env } from "@config/env";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
@@ -343,3 +344,5 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
     });
   });
 });
+
+

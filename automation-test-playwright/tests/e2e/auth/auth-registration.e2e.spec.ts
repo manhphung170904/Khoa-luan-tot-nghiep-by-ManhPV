@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext, Page } from "@playwright/test";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { LoginPage } from "@pages/auth/LoginPage";
@@ -153,3 +154,5 @@ test.describe("Auth Registration E2E @regression", () => {
     }
   });
 });
+
+

@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { StaffContractListPage } from "@pages/staff/StaffContractListPage";
@@ -62,3 +63,5 @@ test.describe("Staff Contract List E2E @regression", () => {
     await contractPage.expectDetailModalContains(tempContract!.customer.fullName);
   });
 });
+
+

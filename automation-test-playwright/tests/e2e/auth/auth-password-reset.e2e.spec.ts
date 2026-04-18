@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { ForgotPasswordPage } from "@pages/auth/ForgotPasswordPage";
@@ -104,3 +105,5 @@ test.describe("Auth Password Reset E2E @regression", () => {
     await resetPage.expectPopupContains(/Mat khau khong khop|khong khop/i);
   });
 });
+
+

@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { LoginPage } from "@pages/auth/LoginPage";
 import {
@@ -60,3 +61,5 @@ test.describe("Auth Login E2E @regression", () => {
     await expect(page).toHaveURL(/\/customer\/home/);
   });
 });
+
+

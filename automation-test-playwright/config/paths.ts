@@ -6,10 +6,10 @@ const defaultRunId = new Date().toISOString().replace(/[:.]/g, "-");
 
 export const runtimePaths = {
   runId: sanitizeRunId(process.env.PW_RUN_ID ?? defaultRunId),
-  artifactsRootDir: path.join("artifacts", "test-results"),
-  htmlReportDir: "playwright-report",
-  junitReportFile: path.join("reports", "junit", "results.xml"),
-  authStateDir: path.join("playwright", ".auth")
+  rootDir: ".runtime",
+  artifactsRootDir: path.join(".runtime", "test-results"),
+  htmlReportDir: path.join(".runtime", "playwright-report"),
+  junitReportFile: path.join(".runtime", "reports", "junit", "results.xml")
 };
 
 export const playwrightOutputDir = path.join(runtimePaths.artifactsRootDir, runtimePaths.runId);

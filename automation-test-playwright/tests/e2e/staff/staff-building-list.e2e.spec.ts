@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { StaffBuildingListPage } from "@pages/staff/StaffBuildingListPage";
@@ -53,3 +54,5 @@ test.describe("Staff Building List E2E @regression", () => {
     await buildingPage.expectDetailModalContains(tempContract!.building.name);
   });
 });
+
+

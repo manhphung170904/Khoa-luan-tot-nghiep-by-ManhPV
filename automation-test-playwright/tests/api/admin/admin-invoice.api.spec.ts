@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/api.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
@@ -459,3 +460,5 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
     }
   });
 });
+
+

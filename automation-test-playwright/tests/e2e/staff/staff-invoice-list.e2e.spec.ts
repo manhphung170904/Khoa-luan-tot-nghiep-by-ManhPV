@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { StaffInvoiceListPage } from "@pages/staff/StaffInvoiceListPage";
 import {
@@ -201,3 +202,5 @@ test.describe("Staff Invoice List E2E @regression", () => {
     createdInvoices = createdInvoices.filter((item) => item.id !== invoice.id);
   });
 });
+
+

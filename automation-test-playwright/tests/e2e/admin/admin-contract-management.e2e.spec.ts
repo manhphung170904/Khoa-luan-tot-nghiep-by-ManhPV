@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { AdminContractDetailPage } from "@pages/admin/AdminContractDetailPage";
@@ -233,3 +234,5 @@ test.describe("Admin Contract Management E2E @regression", () => {
     cleanupContractIds.delete(tempContract.id);
   });
 });
+
+

@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { AdminReportPage } from "@pages/admin/AdminReportPage";
 import {
   cleanupTempStaffProfileUser,
@@ -72,3 +73,5 @@ test.describe("Admin Report E2E @regression", () => {
     expect(printTriggered).toBeTruthy();
   });
 });
+
+

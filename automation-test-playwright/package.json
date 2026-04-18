@@ -8,7 +8,7 @@
     "test": "playwright test",
     "test:api": "playwright test tests/api",
     "test:api:auth": "playwright test tests/api/auth --project api",
-    "test:api:public": "playwright test tests/api/publicpage --project api",
+    "test:api:public": "playwright test tests/api/public --project api",
     "test:api:admin": "playwright test tests/api/admin --project api",
     "test:api:staff": "playwright test tests/api/staff --project api",
     "test:api:customer": "playwright test tests/api/customer --project api",
@@ -22,11 +22,10 @@
     "test:smoke": "playwright test --grep \"@smoke\"",
     "test:regression:core": "playwright test --grep \"@regression\" --grep-invert \"@extended|@smoke\"",
     "test:regression:extended": "playwright test --grep \"@extended\"",
-    "test:tag:regression": "playwright test --grep \"@regression\"",
     "test:headed": "playwright test --headed",
     "test:ci": "npm run typecheck && playwright test --grep \"@regression\"",
-    "report": "playwright show-report",
-    "report:open": "playwright show-report playwright-report",
+    "report": "playwright show-report .runtime/playwright-report",
+    "report:open": "playwright show-report .runtime/playwright-report",
     "codegen": "playwright codegen"
   },
   "devDependencies": {

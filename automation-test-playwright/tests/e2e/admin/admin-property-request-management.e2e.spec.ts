@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { AdminContractFormPage } from "@pages/admin/AdminContractFormPage";
@@ -212,3 +213,5 @@ test.describe("Admin Property Request Management E2E @regression", () => {
     expect(rows[0]?.sale_contract_id).toBe(createdSaleContractId);
   });
 });
+
+

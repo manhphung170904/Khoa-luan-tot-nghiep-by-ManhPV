@@ -14,18 +14,18 @@ automation-test-playwright/
 |-- .github/
 |   `-- workflows/
 |       `-- playwright.yml
-|-- artifacts/
 |-- config/
 |   |-- env.ts
 |   |-- global-setup.ts
-|   |-- global-teardown.ts
-|   `-- test-tags.ts
+|   `-- global-teardown.ts
 |-- docs/
+|   |-- architecture.md
 |   |-- huong-dan-framework.md
 |   |-- playwright-reporting.md
 |   |-- pom-classes.md
 |   |-- regression-suite.md
 |   `-- test-script-mapping.md
+|-- .runtime/
 |-- pages/
 |   |-- admin/
 |   |-- auth/
@@ -33,14 +33,13 @@ automation-test-playwright/
 |   |-- customer/
 |   |-- public/
 |   `-- staff/
-|-- reports/
 |-- test-data/
 |   `-- files/
 |-- tests/
 |   |-- api/
 |   |-- e2e/
-|   |   `-- _fixtures/
-|   `-- _fixtures/
+|   |-- api/_fixtures/
+|   `-- e2e/_fixtures/
 |-- utils/
 |   |-- api/
 |   |-- db/
@@ -64,13 +63,13 @@ automation-test-playwright/
 - `utils/db/`: ket noi va truy van DB phuc vu xac minh du lieu.
 - `test-data/files/`: file mau cho cac case upload va validation.
 - `config/`: cau hinh moi truong, retry, setup/teardown.
-- `artifacts/`, `reports/`: luu ket qua chay, screenshot, trace, video, report.
+- `.runtime/`: luu ket qua chay, screenshot, trace, video, HTML report, JUnit report.
 
 ## 4. Nhung thanh phan da du cho mot framework day du
 - Phan tach test theo 2 nhom chinh: API va E2E.
 - POM theo module nghiep vu.
 - Helper chung cho login, assertion, page flow.
-- Co session luu tru bang `storageState`.
+- Fixture chung cho API va E2E de tai su dung context/session.
 - Co `global setup / teardown`.
 - Co config moi truong `local / dev / test / staging`.
 - Co retry theo nhom test.
@@ -107,13 +106,8 @@ npm run test:ci
 npm run report:open
 ```
 
-## 6. Luong session va auth state
-Framework tao 3 file session trong `playwright/.auth/`:
-- `admin.json`
-- `staff.json`
-- `customer.json`
-
-Nhung file nay duoc test tai su dung de giam viec dang nhap lap di lap lai giua cac luong role-based.
+## 6. Luong session va fixture
+Framework hien uu tien fixture de cap `adminApi`, `staffApi`, `customerApi`, `anonymousApi` cho API suite va `adminApi` cho E2E suite. Cach nay giup test dung chung logic dang nhap, cleanup, va mo rong framework ma khong phai lap lai `newContext()` trong tung file.
 
 ## 7. Quy uoc quan trong
 - Moi test case phai giu `Test ID` va `Test Name`.
@@ -129,4 +123,5 @@ Framework nay the hien duoc:
 - chien luoc regression va E2E
 - bao cao ket qua chay test va kha nang mo rong sau nay
 
+Tai lieu kien truc xem them trong `docs/architecture.md`.
 Tai lieu chi tiet xem them trong `docs/huong-dan-framework.md`.

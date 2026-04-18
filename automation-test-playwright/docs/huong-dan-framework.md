@@ -18,7 +18,7 @@
 ### Buoc 4: Viet test
 - Giu ten test theo mau: `TEST-ID Test Name`.
 - Moi test phai co assertion ro rang.
-- Neu test co login lap lai, uu tien helper trong `PageScenarioHelper` hoac fixture session theo role.
+- Neu test co login lap lai, uu tien fixture trong `utils/fixtures/` va helper trong `PageScenarioHelper`.
 
 ## 2. Quy uoc dat ten
 ### File test
@@ -33,6 +33,13 @@
 
 ### Helper
 - Dat ten theo tac vu: `AuthSessionHelper`, `AssertionHelper`, `TestDataFactory`.
+
+## 2.1. Dat file vao dung nhom
+- `utils/fixtures/`: fixture cap framework, co the dung lai cho nhieu suite.
+- `utils/helpers/`: helper tong quat, khong phu thuoc truc tiep vao fixture lifecycle.
+- `tests/api/_fixtures/`, `tests/e2e/_fixtures/`: bootstrap hoac scenario chi phuc vu tung suite cu the.
+
+Chi tiet kien truc xem them trong `docs/architecture.md`.
 
 ## 3. Quy uoc tag
 - `@smoke`: luong rat quan trong, chay nhanh.
@@ -75,8 +82,9 @@ $env:ALLOW_DESTRUCTIVE_TESTS="true"
 - Khong duoc bat tren moi truong dang dung tai khoan that cua nguoi dung.
 
 ## 7. Session va dang nhap nhanh
-- Auth state luu trong `playwright/.auth/`.
-- Test nen tai su dung `PageScenarioHelper`, `AuthSessionHelper`, fixture, va auth state hien co khi phu hop.
+- Test nen uu tien import `@fixtures/api.fixture` cho API suite va `@fixtures/base.fixture` cho E2E suite.
+- Runtime output va report duoc gom trong `.runtime/`.
+- Test nen tai su dung `PageScenarioHelper`, `AuthSessionHelper`, va fixture hien co khi phu hop.
 
 ## 8. Quy trinh de nghi truoc khi merge
 1. `npm run typecheck`

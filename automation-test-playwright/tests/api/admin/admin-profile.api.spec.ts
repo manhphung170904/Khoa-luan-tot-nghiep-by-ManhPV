@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/api.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { expectApiErrorBody, expectApiMessage } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
@@ -509,3 +510,5 @@ test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression",
     currentPassword = nextPassword;
   });
 });
+
+

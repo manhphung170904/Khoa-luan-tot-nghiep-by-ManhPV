@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/api.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { ApiFileFixtures } from "@api/apiFileFixtures";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { expectApiErrorBody, expectApiMessage, expectArrayBody, expectObjectBody } from "@api/apiContractUtils";
@@ -460,3 +461,5 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
     expect(missingPlanningMapError.message).toMatch(/planning|map|ban do|bản đồ|quy hoạch|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
   });
 });
+
+

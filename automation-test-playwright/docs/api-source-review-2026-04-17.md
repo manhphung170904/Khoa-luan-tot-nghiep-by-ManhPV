@@ -109,7 +109,7 @@
 - `tests/api/admin`
 - `tests/api/staff`
 - `tests/api/customer`
-- `tests/api/publicpage`
+- `tests/api/public`
 - `tests/api/payment`
 - `tests/api/_fixtures`
 - `utils/api`
@@ -208,7 +208,7 @@
 - Viet lai `tests/api/admin/building-additional-information.api.spec.ts` theo temp building strategy, bo phu thuoc building seed.
 - Viet lai `tests/api/staff/staff-profile.api.spec.ts` theo temp staff strategy, OTP/source flow that.
 - Viet lai `tests/api/customer/customer-profile.api.spec.ts` theo temp customer strategy, OTP/source flow that.
-- Chuan hoa `tests/api/publicpage/public.api.spec.ts` va `tests/api/payment/payment.api.spec.ts` sang `MySqlDbClient`, bo `DatabaseHelper` legacy trong API suite.
+- Chuan hoa `tests/api/public/public.api.spec.ts` va `tests/api/payment/payment.api.spec.ts` sang `MySqlDbClient`, bo `DatabaseHelper` legacy trong API suite.
 - Xoa `utils/api/apiAuthHelper.ts` vi khong con duoc su dung trong API suite da chuan hoa.
 - Chuyen cac spec OTP chinh (`auth.api`, `admin-profile.api`, `staff-profile.api`, `customer-profile.api`) sang doc OTP qua hook chinh thuc thay vi pin hash DB.
 - Chuyen `admin-contract.api.spec.ts` sang mau fixture chung `adminApi + cleanupRegistry`.

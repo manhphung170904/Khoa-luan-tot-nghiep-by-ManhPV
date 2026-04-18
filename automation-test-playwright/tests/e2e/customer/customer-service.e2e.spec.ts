@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { CustomerServicePage } from "@pages/customer/CustomerServicePage";
 import {
   cleanupTempCustomerProfileUser,
@@ -47,3 +48,5 @@ test.describe("Customer Service E2E @regression", () => {
     await servicePage.expectRequestDisabled("Phòng Gym");
   });
 });
+
+

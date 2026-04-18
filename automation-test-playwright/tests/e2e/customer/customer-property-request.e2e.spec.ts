@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { CustomerPropertyRequestListPage } from "@pages/customer/CustomerPropertyRequestListPage";
@@ -110,3 +110,5 @@ test.describe("Customer Property Request E2E @regression", () => {
     expect(rows[0]?.contract_id).toBe(contractRows[0]!.id);
   });
 });
+
+

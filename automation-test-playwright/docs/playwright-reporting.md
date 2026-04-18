@@ -8,10 +8,9 @@
 - Trace khi retry lan dau
 
 ## 2. Vi tri luu file
-- HTML report: `playwright-report/`
-- JUnit: `reports/junit/results.xml`
-- Artifact khi fail: `artifacts/test-results/`
-- Storage state: `playwright/.auth/`
+- HTML report: `.runtime/playwright-report/`
+- JUnit: `.runtime/reports/junit/results.xml`
+- Artifact khi fail: `.runtime/test-results/`
 
 ## 3. Lenh mo report
 ```bash

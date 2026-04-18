@@ -139,7 +139,7 @@ Coverage status meanings:
 
 | Module | Method | Path | Kind | Expected role | Test file | Coverage |
 | --- | --- | --- | --- | --- | --- | --- |
-| Public building search | `GET` | `/api/v1/public/buildings` | readonly | public | `tests/api/publicpage/public.api.spec.ts` | partial |
+| Public building search | `GET` | `/api/v1/public/buildings` | readonly | public | `tests/api/public/public.api.spec.ts` | partial |
 
 ## Notes
 

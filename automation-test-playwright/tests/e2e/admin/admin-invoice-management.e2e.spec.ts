@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { env } from "@config/env";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { AdminInvoiceDetailPage } from "@pages/admin/AdminInvoiceDetailPage";
@@ -243,3 +244,5 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     }).toBe("OVERDUE");
   });
 });
+
+

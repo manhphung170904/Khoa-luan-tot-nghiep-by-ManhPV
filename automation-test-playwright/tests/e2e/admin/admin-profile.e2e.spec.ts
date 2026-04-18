@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { AdminProfilePage } from "@pages/admin/AdminProfilePage";
@@ -141,3 +142,5 @@ test.describe("Admin Profile E2E @regression", () => {
     await expect(page).toHaveURL(/\/admin\/|\/login-success/);
   });
 });
+
+

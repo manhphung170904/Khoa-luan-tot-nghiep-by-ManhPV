@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/api.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { createRoleContext } from "@api/adminApiUtils";
 import { expectStatusExact } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
@@ -141,3 +142,5 @@ test.describe("Payment API (QR VietQR) Contract Tests @api @api-write @regressio
     }
   });
 });
+
+

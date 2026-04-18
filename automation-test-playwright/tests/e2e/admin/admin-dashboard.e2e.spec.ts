@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test } from "@fixtures/base.fixture";
+import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { AdminDashboardPage } from "@pages/admin/AdminDashboardPage";
@@ -87,3 +88,5 @@ test.describe("Admin Dashboard E2E @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 });
+
+
