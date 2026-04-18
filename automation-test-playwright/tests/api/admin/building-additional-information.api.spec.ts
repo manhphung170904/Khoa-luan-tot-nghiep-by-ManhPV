@@ -7,7 +7,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
-test.describe.serial("Admin Building Additional Information API @extended", () => {
+test.describe("Admin Building Additional Information API @extended", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -392,7 +392,6 @@ test.describe.serial("Admin Building Additional Information API @extended", () =
         }
       }
     });
-    test.fail(true, "Backend/runtime currently accepts oversized planning-map upload instead of returning 400.");
     await expectApiErrorBody(oversizedUpload, {
       status: 400,
       code: "BAD_REQUEST",

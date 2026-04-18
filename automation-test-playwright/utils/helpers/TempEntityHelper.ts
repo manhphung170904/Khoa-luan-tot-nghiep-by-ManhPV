@@ -1,6 +1,7 @@
 import { expect, type APIRequestContext, type APIResponse } from "@playwright/test";
 import { TestDataFactory } from "./TestDataFactory";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { cleanupDatabaseScope, type CleanupScope } from "@db/TestDataCleanup";
 
 type DanhSachPhanTrang<T> = {
   content?: T[];
@@ -75,6 +76,21 @@ export class TempEntityHelper {
     }
   }
 
+  private static async deleteWithFallback(
+    request: APIRequestContext,
+    url: string,
+    acceptedStatuses: number[],
+    fallbackScope: CleanupScope,
+    label: string
+  ): Promise<void> {
+    const response = await request.delete(url, { failOnStatusCode: false });
+    if (acceptedStatuses.includes(response.status())) {
+      return;
+    }
+
+    await cleanupDatabaseScope(fallbackScope);
+  }
+
   static async layMotStaffIdDangTonTai(request: APIRequestContext): Promise<number> {
     const response = await request.get("/api/v1/admin/staff", {
       params: { page: 1, size: 20, role: "STAFF" }
@@ -112,8 +128,13 @@ export class TempEntityHelper {
   static async xoaStaffTam(request: APIRequestContext, id?: number): Promise<void> {
     if (!id) return;
     await this.safe(async () => {
-      const response = await request.delete(`/api/v1/admin/staff/${id}`);
-      expect([200, 204, 404]).toContain(response.status());
+      await this.deleteWithFallback(
+        request,
+        `/api/v1/admin/staff/${id}`,
+        [200, 204, 404],
+        { staffIds: [id] },
+        `Staff ${id}`
+      );
     }, `Staff ${id}`);
   }
 
@@ -141,8 +162,13 @@ export class TempEntityHelper {
   static async xoaCustomerTam(request: APIRequestContext, id?: number): Promise<void> {
     if (!id) return;
     await this.safe(async () => {
-      const response = await request.delete(`/api/v1/admin/customers/${id}`);
-      expect([200, 204, 404]).toContain(response.status());
+      await this.deleteWithFallback(
+        request,
+        `/api/v1/admin/customers/${id}`,
+        [200, 204, 404],
+        { customerIds: [id] },
+        `Customer ${id}`
+      );
     }, `Customer ${id}`);
   }
 
@@ -169,8 +195,13 @@ export class TempEntityHelper {
   static async xoaBuildingTam(request: APIRequestContext, id?: number): Promise<void> {
     if (!id) return;
     await this.safe(async () => {
-      const response = await request.delete(`/api/v1/admin/buildings/${id}`);
-      expect([200, 204, 404]).toContain(response.status());
+      await this.deleteWithFallback(
+        request,
+        `/api/v1/admin/buildings/${id}`,
+        [200, 204, 404],
+        { buildingIds: [id] },
+        `Building ${id}`
+      );
     }, `Building ${id}`);
   }
 

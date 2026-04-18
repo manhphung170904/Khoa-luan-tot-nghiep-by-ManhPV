@@ -232,7 +232,6 @@ test.describe.serial("Admin Customer API Tests @regression", () => {
   });
 
   test("[CUS_012] DELETE /customers/{id} should block delete when sale contracts exist on temp data", async () => {
-    test.fail(true, "Backend currently checks rent contracts only and may still allow delete despite existing sale contract.");
     const customerWithSaleContract = await TempEntityHelper.taoSaleContractTam(admin);
 
     try {

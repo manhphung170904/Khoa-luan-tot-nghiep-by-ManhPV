@@ -47,8 +47,6 @@ test.describe("Public Page API Tests @api-read @regression", () => {
     test("[API_TC_027] [Boundary] Search with invalid propertyType returns a valid empty result set @extended", async ({
       anonymousApi
     }) => {
-      test.fail(true, "Known defect: invalid propertyType currently triggers 500 instead of an empty successful response.");
-
       const response = await anonymousApi.get("/api/v1/public/buildings", {
         params: {
           propertyType: "INVALID_TYPE"

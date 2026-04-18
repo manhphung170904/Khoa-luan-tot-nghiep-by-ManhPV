@@ -6,7 +6,7 @@ import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { expectStatusExact } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
-test.describe.serial("Authentication Web Flow Contract Tests @api-write @otp @regression", () => {
+test.describe("Authentication Web Flow Contract Tests @api-write @otp @regression", () => {
   const validUser = {
     username: `testuser_auth_${Date.now()}`,
     password: "Password@123",
@@ -62,6 +62,33 @@ test.describe.serial("Authentication Web Flow Contract Tests @api-write @otp @re
     await MySqlDbClient.close();
   });
 
+  async function ensureValidUserRegistered(request: APIRequestContext): Promise<void> {
+    const existingRows = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM customer WHERE username = ? AND email = ?",
+      [validUser.username, validUser.email]
+    );
+    if (Number(existingRows[0]?.count ?? 0) > 0) {
+      return;
+    }
+
+    const ticket = await issueRegistrationTicket(request, validUser.email);
+    const response = await request.post("/auth/register/complete", {
+      form: {
+        ticket,
+        email: validUser.email,
+        fullName: validUser.fullName,
+        username: validUser.username,
+        password: validUser.password,
+        confirmPassword: validUser.password
+      },
+      failOnStatusCode: false,
+      maxRedirects: 0
+    });
+
+    expectStatusExact(response, 302, "Registration bootstrap should redirect to login-success");
+    expect(response.headers().location).toContain("/login-success");
+  }
+
   test.describe("1. Login + Authentication", () => {
     test("[API_TC_001] [Happy Path] Login with valid credentials returns JWT cookies and redirect @smoke", async ({
       request
@@ -107,7 +134,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api-write @otp @re
     });
   });
 
-  test.describe("2. Registration + Database Chaining", () => {
+  test.describe.serial("2. Registration + Database Chaining", () => {
     test("[API_TC_004] [Happy Path] Send registration OTP and persist pending verification row", async ({
       request
     }) => {
@@ -220,8 +247,6 @@ test.describe.serial("Authentication Web Flow Contract Tests @api-write @otp @re
     test("[API_TC_008] [Happy Path] Request forgot password and check OTP row in DB", async ({
       request
     }) => {
-      test.fail(true, "Known defect: MVC POST /auth/forgot-password is not permitAll in security config, so anonymous requests are redirected to /login.");
-
       expect(validLocalEmail).toBeTruthy();
       const response = await request.post("/auth/forgot-password", {
         form: { email: validLocalEmail },
@@ -272,6 +297,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api-write @otp @re
     test("[API_TC_011] [Happy Path] Reset password with valid OTP redirects to login and updates credentials", async ({
       request
     }) => {
+      await ensureValidUserRegistered(request);
       const nextPassword = "Password@456";
 
       const forgotPasswordResponse = await request.post("/api/v1/auth/forgot-password", {

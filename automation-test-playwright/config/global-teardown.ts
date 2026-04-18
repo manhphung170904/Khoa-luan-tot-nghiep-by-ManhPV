@@ -1,5 +1,6 @@
 import type { FullConfig } from "@playwright/test";
 import { MySqlDbClient } from "../utils/db/MySqlDbClient";
+import { cleanupDatabaseScope } from "../utils/db/TestDataCleanup";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -101,99 +102,95 @@ async function cleanupUploadedTestFiles(): Promise<void> {
   console.log(`[Global Teardown] Deleted ${deletedCount}/${filesToDelete.length} uploaded test file(s).`);
 }
 
+type SweepScope = {
+  buildingIds: number[];
+  customerIds: number[];
+  staffIds: number[];
+  emails: string[];
+};
+
+async function collectSweepScope(): Promise<SweepScope> {
+  const buildingRows = await MySqlDbClient.query<{ id: number }>(
+    `
+      SELECT id
+      FROM building
+      WHERE name LIKE 'PW Building %'
+         OR tax_code LIKE 'PW-%'
+    `
+  );
+
+  const customerRows = await MySqlDbClient.query<{ id: number; email: string | null }>(
+    `
+      SELECT id, email
+      FROM customer
+      WHERE full_name LIKE 'PW Customer %'
+         OR username LIKE 'pwcust%'
+         OR username LIKE 'e2e_register%'
+         OR email LIKE 'pw-customer-%@example.com'
+         OR email LIKE 'e2e_register%@example.com'
+    `
+  );
+
+  const staffRows = await MySqlDbClient.query<{ id: number; email: string | null }>(
+    `
+      SELECT id, email
+      FROM staff
+      WHERE full_name LIKE 'PW %'
+         OR email LIKE 'pw-%@example.com'
+    `
+  );
+
+  const verificationRows = await MySqlDbClient.query<{ email: string }>(
+    `
+      SELECT DISTINCT email
+      FROM email_verification
+      WHERE email LIKE 'pw-%@example.com'
+         OR email LIKE 'e2e_register%@example.com'
+    `
+  );
+
+  const emails = [
+    ...customerRows.map((row) => row.email ?? "").filter(Boolean),
+    ...staffRows.map((row) => row.email ?? "").filter(Boolean),
+    ...verificationRows.map((row) => row.email)
+  ];
+
+  return {
+    buildingIds: buildingRows.map((row) => row.id),
+    customerIds: customerRows.map((row) => row.id),
+    staffIds: staffRows.map((row) => row.id),
+    emails
+  };
+}
+
 export default async function globalTeardown(_config: FullConfig): Promise<void> {
   console.log("\n[Global Teardown] Starting test data sweep...");
 
   try {
     await cleanupUploadedTestFiles();
 
-    // 1. Identification
-    const testBuildingIds = (await MySqlDbClient.query<{ id: number }>(
-      "SELECT id FROM building WHERE name LIKE 'PW %'"
-    )).map(r => r.id);
+    const scope = await collectSweepScope();
 
-    const testCustomerIds = (await MySqlDbClient.query<{ id: number }>(
-      "SELECT id FROM customer WHERE full_name LIKE 'PW %' OR username LIKE 'pwcust%'"
-    )).map(r => r.id);
-
-    const testStaffIds = (await MySqlDbClient.query<{ id: number }>(
-      "SELECT id FROM staff WHERE full_name LIKE 'PW %' AND (username LIKE 'staff%' OR username LIKE 'admin%')"
-    )).map(r => r.id);
-
-    if (testBuildingIds.length === 0 && testCustomerIds.length === 0 && testStaffIds.length === 0) {
+    if (
+      scope.buildingIds.length === 0 &&
+      scope.customerIds.length === 0 &&
+      scope.staffIds.length === 0 &&
+      scope.emails.length === 0
+    ) {
       console.log("[Global Teardown] No orphaned test data found.");
       return;
     }
 
-    console.log(`[Global Teardown] Cleaning up: ${testBuildingIds.length} Buildings, ${testCustomerIds.length} Customers, ${testStaffIds.length} Staff members.`);
+    console.log(
+      `[Global Teardown] Cleaning up: ${scope.buildingIds.length} building(s), ${scope.customerIds.length} customer(s), ${scope.staffIds.length} staff member(s), ${scope.emails.length} verification email bucket(s).`
+    );
 
-    // 2. Ordered Deletion (Bottom-up to respect FK constraints)
-    
-    // Invoices and Meters
-    if (testCustomerIds.length > 0) {
-      await MySqlDbClient.execute(`DELETE FROM invoice_detail WHERE invoice_id IN (SELECT id FROM invoice WHERE customer_id IN (${testCustomerIds.join(",")}))`);
-      await MySqlDbClient.execute(`DELETE FROM invoice WHERE customer_id IN (${testCustomerIds.join(",")})`);
-      await MySqlDbClient.execute(`DELETE FROM utility_meter WHERE contract_id IN (SELECT id FROM contract WHERE customer_id IN (${testCustomerIds.join(",")}))`);
-    }
-
-    // Requests and Contracts
-    const idListFilter = (ids: number[]) => ids.length > 0 ? ids.join(",") : "0";
-    
-    await MySqlDbClient.execute(`
-      DELETE FROM property_request 
-      WHERE customer_id IN (${idListFilter(testCustomerIds)}) 
-         OR building_id IN (${idListFilter(testBuildingIds)})
-         OR processed_by IN (${idListFilter(testStaffIds)})
-    `);
-
-    await MySqlDbClient.execute(`
-      DELETE FROM contract 
-      WHERE customer_id IN (${idListFilter(testCustomerIds)}) 
-         OR building_id IN (${idListFilter(testBuildingIds)})
-         OR staff_id IN (${idListFilter(testStaffIds)})
-    `);
-
-    await MySqlDbClient.execute(`
-      DELETE FROM sale_contract 
-      WHERE customer_id IN (${idListFilter(testCustomerIds)}) 
-         OR building_id IN (${idListFilter(testBuildingIds)})
-         OR staff_id IN (${idListFilter(testStaffIds)})
-    `);
-
-    // Assignments
-    await MySqlDbClient.execute(`
-      DELETE FROM assignment_building 
-      WHERE building_id IN (${idListFilter(testBuildingIds)}) 
-         OR staff_id IN (${idListFilter(testStaffIds)})
-    `);
-
-    await MySqlDbClient.execute(`
-      DELETE FROM assignment_customer 
-      WHERE customer_id IN (${idListFilter(testCustomerIds)}) 
-         OR staff_id IN (${idListFilter(testStaffIds)})
-    `);
-
-    // Building metadata
-    if (testBuildingIds.length > 0) {
-      const bIds = testBuildingIds.join(",");
-      await MySqlDbClient.execute(`DELETE FROM rent_area WHERE building_id IN (${bIds})`);
-      await MySqlDbClient.execute(`DELETE FROM nearby_amenity WHERE building_id IN (${bIds})`);
-      await MySqlDbClient.execute(`DELETE FROM planning_map WHERE building_id IN (${bIds})`);
-      await MySqlDbClient.execute(`DELETE FROM legal_authority WHERE building_id IN (${bIds})`);
-      await MySqlDbClient.execute(`DELETE FROM supplier WHERE building_id IN (${bIds})`);
-      await MySqlDbClient.execute(`DELETE FROM building WHERE id IN (${bIds})`);
-    }
-
-    // Core Entities
-    if (testCustomerIds.length > 0) {
-      await MySqlDbClient.execute(`DELETE FROM customer WHERE id IN (${testCustomerIds.join(",")})`);
-    }
-    if (testStaffIds.length > 0) {
-      await MySqlDbClient.execute(`DELETE FROM staff WHERE id IN (${testStaffIds.join(",")})`);
-    }
+    await cleanupDatabaseScope(scope, { logPrefix: "[Global Teardown]", log: true });
 
     console.log("[Global Teardown] Cleanup completed successfully.");
   } catch (error) {
     console.error("[Global Teardown Error] SQL sweep failed:", error);
+  } finally {
+    await MySqlDbClient.close().catch(() => {});
   }
 }

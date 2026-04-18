@@ -11,6 +11,20 @@ const directories = [
   runtimePaths.htmlReportDir
 ];
 
+async function safeRemoveDirectory(targetPath: string, label: string): Promise<void> {
+  try {
+    await fs.rm(path.resolve(targetPath), { recursive: true, force: true });
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "EPERM" || code === "EBUSY") {
+      console.warn(`[Global Setup] Skip removing ${label} because files are in use.`);
+      return;
+    }
+
+    throw error;
+  }
+}
+
 async function pruneHistoricalRuns(keepLatest = 5): Promise<void> {
   const artifactsRoot = path.resolve(runtimePaths.artifactsRootDir);
 
@@ -30,7 +44,9 @@ async function pruneHistoricalRuns(keepLatest = 5): Promise<void> {
       .sort((left, right) => right.mtimeMs - left.mtimeMs)
       .slice(keepLatest);
 
-    await Promise.all(staleRuns.map((run) => fs.rm(run.fullPath, { recursive: true, force: true })));
+    await Promise.all(
+      staleRuns.map((run, index) => safeRemoveDirectory(run.fullPath, `historical test-results run #${index + 1}`))
+    );
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
       throw error;
@@ -41,8 +57,8 @@ async function pruneHistoricalRuns(keepLatest = 5): Promise<void> {
 export default async function globalSetup(_config: FullConfig): Promise<void> {
   // Keep top-level reports fresh each run so local debugging stays tidy.
   await Promise.all([
-    fs.rm(path.resolve(runtimePaths.htmlReportDir), { recursive: true, force: true }),
-    fs.rm(path.resolve(path.dirname(runtimePaths.junitReportFile)), { recursive: true, force: true })
+    safeRemoveDirectory(runtimePaths.htmlReportDir, "HTML report"),
+    safeRemoveDirectory(path.dirname(runtimePaths.junitReportFile), "JUnit report")
   ]);
 
   await Promise.all(

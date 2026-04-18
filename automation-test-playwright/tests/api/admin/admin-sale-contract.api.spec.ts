@@ -429,8 +429,6 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
   });
 
   test("[SC_018] DELETE /sale-contracts/{id} should reject nonexistent id", async () => {
-    test.fail(true, "Known defect: delete nonexistent sale contract is not guarded explicitly by the service.");
-
     const response = await admin.delete("/api/v1/admin/sale-contracts/999999999", {
       failOnStatusCode: false
     });
