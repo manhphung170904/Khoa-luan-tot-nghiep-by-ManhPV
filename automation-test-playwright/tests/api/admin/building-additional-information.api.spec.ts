@@ -7,7 +7,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
-test.describe.serial("Admin Building Additional Information API @api @extended", () => {
+test.describe.serial("Admin Building Additional Information API @extended", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -461,5 +461,6 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
     expect(missingPlanningMapError.message).toMatch(/planning|map|ban do|bản đồ|quy hoạch|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
   });
 });
+
 
 

@@ -45,7 +45,7 @@ Chi tiet kien truc xem them trong `docs/architecture.md`.
 - `@smoke`: luong rat quan trong, chay nhanh.
 - `@regression`: bo hoi quy.
 - `@extended`: nhom mo rong, co the chay sau.
-- `@api`, `@api-read`, `@api-write`, `@otp`: tag dang duoc dung trong API suite.
+- `@api-read`, `@api-write`, `@otp`: tag dang duoc dung trong API suite.
 
 ## 4. Huong dan viet POM
 - Moi POM chi chiu trach nhiem cho mot page.

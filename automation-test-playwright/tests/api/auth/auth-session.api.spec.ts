@@ -16,9 +16,9 @@ const scenarios: RoleScenario[] = [
   { role: "customer", expectedRoleCode: "CUSTOMER" }
 ];
 
-test.describe("REST Auth Session API @api @regression", () => {
+test.describe("REST Auth Session API @regression", () => {
   for (const scenario of scenarios) {
-    test(`API-AUTH-REST-${scenario.expectedRoleCode} login/me/logout works with cookie session @smoke @regression`, async ({
+    test(`API-AUTH-REST-${scenario.expectedRoleCode} login/me/logout works with cookie session @smoke`, async ({
       anonymousApi
     }) => {
       const { response, username } = await ApiSessionHelper.loginAsRole(anonymousApi, scenario.role);
@@ -60,7 +60,7 @@ test.describe("REST Auth Session API @api @regression", () => {
     });
   }
 
-  test("API-AUTH-REST-VAL-001 rejects blank login DTO @regression", async ({ anonymousApi }) => {
+  test("API-AUTH-REST-VAL-001 rejects blank login DTO", async ({ anonymousApi }) => {
     const response = await anonymousApi.post("/api/v1/auth/login", {
       failOnStatusCode: false,
       data: {
@@ -77,7 +77,7 @@ test.describe("REST Auth Session API @api @regression", () => {
     });
   });
 
-  test("API-AUTH-REST-VAL-002 rejects wrong credential on REST login @regression", async ({ anonymousApi }) => {
+  test("API-AUTH-REST-VAL-002 rejects wrong credential on REST login", async ({ anonymousApi }) => {
     const response = await anonymousApi.post("/api/v1/auth/login", {
       failOnStatusCode: false,
       data: {
@@ -96,7 +96,7 @@ test.describe("REST Auth Session API @api @regression", () => {
     );
   });
 
-  test("API-AUTH-REST-SEC-001 rejects anonymous me access @smoke @regression", async ({ anonymousApi }) => {
+  test("API-AUTH-REST-SEC-001 rejects anonymous me access @smoke", async ({ anonymousApi }) => {
     const response = await anonymousApi.get("/api/v1/auth/me", {
       failOnStatusCode: false,
       maxRedirects: 0
@@ -109,7 +109,7 @@ test.describe("REST Auth Session API @api @regression", () => {
     });
   });
 
-  test("API-AUTH-REST-OTP-001 forgot-password returns success and persists pending OTP for existing email @regression", async ({
+  test("API-AUTH-REST-OTP-001 forgot-password returns success and persists pending OTP for existing email", async ({
     anonymousApi
   }) => {
     const customers = await MySqlDbClient.query<{ email: string }>(
@@ -150,7 +150,7 @@ test.describe("REST Auth Session API @api @regression", () => {
     expect(afterRows[0]!.total).toBeGreaterThan(0);
   });
 
-  test("API-AUTH-REST-OTP-002 forgot-password keeps success contract for unknown email @regression", async ({
+  test("API-AUTH-REST-OTP-002 forgot-password keeps success contract for unknown email", async ({
     anonymousApi
   }) => {
     const email = `pw-missing-${Date.now()}@example.com`;
@@ -178,5 +178,6 @@ test.describe("REST Auth Session API @api @regression", () => {
     expect(afterRows[0]!.total).toBe(beforeRows[0]!.total);
   });
 });
+
 
 

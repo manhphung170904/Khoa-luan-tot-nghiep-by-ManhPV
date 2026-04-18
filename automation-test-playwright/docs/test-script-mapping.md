@@ -16,7 +16,6 @@ Dieu nay giup de truy vet:
 
 ## Quy uoc tag cho API roadmap
 
-- `@api`: danh dau test thuoc API suite.
 - `@smoke`: hop nhanh, uu tien `auth`, `public`, `security matrix`, `readonly` mau.
 - `@regression`: happy path, negative path, business rule chinh.
 - `@extended`: upload, boundary sau, trigger batch, defect-driven, conflict hiem.

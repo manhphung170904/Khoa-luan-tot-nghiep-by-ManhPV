@@ -5,7 +5,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin Contract API Tests @api @api-write @regression", () => {
+test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
   test("[CTR_001] POST /contracts rejects anonymous create", async ({ request }) => {
     const response = await request.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,
@@ -370,5 +370,6 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
     }
   });
 });
+
 
 

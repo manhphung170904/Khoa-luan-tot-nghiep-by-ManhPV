@@ -15,9 +15,9 @@ const readOnlyModules: ReadonlyModule[] = [
   { id: "API-STF-READ-005", name: "Invoice", path: "/api/v1/staff/invoices?page=1&size=5" }
 ];
 
-test.describe("Staff API Read-only Contract Tests @api @regression", () => {
+test.describe("Staff API Read-only Contract Tests @regression", () => {
   for (const module of readOnlyModules) {
-    test(`${module.id} rejects anonymous access with API auth status @smoke @regression`, async ({ anonymousApi }) => {
+    test(`${module.id} rejects anonymous access with API auth status @smoke`, async ({ anonymousApi }) => {
       const response = await anonymousApi.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
       await expectApiErrorBody(response, {
         status: 401,
@@ -25,7 +25,7 @@ test.describe("Staff API Read-only Contract Tests @api @regression", () => {
       });
     });
 
-    test(`${module.id} rejects customer role @regression`, async ({ customerApi }) => {
+    test(`${module.id} rejects customer role`, async ({ customerApi }) => {
       const response = await customerApi.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
       await expectApiErrorBody(response, {
         status: 403,
@@ -33,7 +33,7 @@ test.describe("Staff API Read-only Contract Tests @api @regression", () => {
       });
     });
 
-    test(`${module.id} returns JSON payload for staff @smoke @regression`, async ({ staffApi }) => {
+    test(`${module.id} returns JSON payload for staff @smoke`, async ({ staffApi }) => {
       const response = await staffApi.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
       expect(response.headers()["content-type"] ?? "").toContain("application/json");
       const body = await expectPageBody<{
@@ -60,5 +60,6 @@ test.describe("Staff API Read-only Contract Tests @api @regression", () => {
     });
   }
 });
+
 
 

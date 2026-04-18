@@ -21,7 +21,7 @@ type ExistingIdentity = {
   phone: string;
 };
 
-test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression", () => {
+test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () => {
   let bootstrapAdminContext: APIRequestContext;
   let tempAdminContext: APIRequestContext;
   let tempAdmin: TempAdmin;
@@ -510,5 +510,6 @@ test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression",
     currentPassword = nextPassword;
   });
 });
+
 
 

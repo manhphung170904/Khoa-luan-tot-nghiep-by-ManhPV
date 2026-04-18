@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
+test.describe.serial("Admin Sale Contract API Tests @regression", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -442,5 +442,6 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
     });
   });
 });
+
 
 

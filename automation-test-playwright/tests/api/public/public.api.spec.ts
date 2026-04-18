@@ -2,9 +2,9 @@ import { expect, test } from "@fixtures/api.fixture";
 import { expectArrayBody, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
-test.describe("Public Page API Tests @api @api-read @regression", () => {
+test.describe("Public Page API Tests @api-read @regression", () => {
   test.describe("GET /api/v1/public/buildings", () => {
-    test("[API_TC_026] [Happy Path] Search public buildings and cross-check DB results @smoke @regression", async ({
+    test("[API_TC_026] [Happy Path] Search public buildings and cross-check DB results @smoke", async ({
       anonymousApi
     }) => {
       const wardRows = await MySqlDbClient.query<{ ward: string }>(
@@ -58,7 +58,7 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
       expect(data.length).toBeGreaterThanOrEqual(0);
     });
 
-    test("[API_TC_028] [Happy Path] Page endpoint returns paged public buildings @regression", async ({ anonymousApi }) => {
+    test("[API_TC_028] [Happy Path] Page endpoint returns paged public buildings", async ({ anonymousApi }) => {
       const response = await anonymousApi.get("/api/v1/public/buildings/page", {
         params: {
           page: 1,
@@ -83,7 +83,7 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
       }
     });
 
-    test("[API_TC_029] [Happy Path] Filters endpoint exposes public metadata @regression", async ({ anonymousApi }) => {
+    test("[API_TC_029] [Happy Path] Filters endpoint exposes public metadata", async ({ anonymousApi }) => {
       const response = await anonymousApi.get("/api/v1/public/buildings/filters");
       const data = await expectObjectBody<{
         districts?: unknown[];
@@ -104,5 +104,6 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
     });
   });
 });
+
 
 

@@ -17,7 +17,7 @@ type TempCustomer = {
   phone: string;
 };
 
-test.describe.serial("Customer Profile API Tests @api @api-write @otp @regression", () => {
+test.describe.serial("Customer Profile API Tests @api-write @otp @regression", () => {
   let bootstrapAdmin: APIRequestContext;
   let customerContext: APIRequestContext;
   let managerStaffId = 0;
@@ -337,5 +337,6 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
     expect(newHashRows[0]!.password).toBe(oldHash);
   });
 });
+
 
 

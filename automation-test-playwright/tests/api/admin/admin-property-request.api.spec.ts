@@ -6,12 +6,12 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "../_fixtures/propertyRequestScenario";
 
-test.describe("Admin Property Request API @api @regression", () => {
+test.describe("Admin Property Request API @regression", () => {
   test.afterAll(async () => {
     await MySqlDbClient.close();
   });
 
-  test("API-ADM-PRQ-001 rejects anonymous list access with API auth status @regression", async ({ playwright }) => {
+  test("API-ADM-PRQ-001 rejects anonymous list access with API auth status", async ({ playwright }) => {
     const context = await createAnonymousContext(playwright);
     try {
       const response = await context.get("/api/v1/admin/property-requests?page=1&size=5", {
@@ -28,7 +28,7 @@ test.describe("Admin Property Request API @api @regression", () => {
     }
   });
 
-  test("API-ADM-PRQ-002 lists pending requests and exposes page shape @regression", async ({ playwright }) => {
+  test("API-ADM-PRQ-002 lists pending requests and exposes page shape", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const response = await scenario.admin.get("/api/v1/admin/property-requests?page=1&size=10&status=PENDING", {
@@ -289,5 +289,6 @@ test.describe("Admin Property Request API @api @regression", () => {
     }
   });
 });
+
 
 

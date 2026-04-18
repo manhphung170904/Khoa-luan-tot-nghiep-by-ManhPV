@@ -6,7 +6,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { env } from "@config/env";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
-test.describe("Payment API (QR VietQR) Contract Tests @api @api-write @regression", () => {
+test.describe("Payment API (QR VietQR) Contract Tests @api-write @regression", () => {
   let adminContext: APIRequestContext;
   let customerUsername = env.customerUsername;
   let customerInvoiceId: number;
@@ -39,7 +39,7 @@ test.describe("Payment API (QR VietQR) Contract Tests @api @api-write @regressio
     await MySqlDbClient.close();
   });
 
-  test("API-PAY-001 rejects anonymous QR access @regression", async ({ playwright }) => {
+  test("API-PAY-001 rejects anonymous QR access", async ({ playwright }) => {
     const anonymous = await playwright.request.newContext({ baseURL: env.baseUrl });
     try {
       const response = await anonymous.get(`/payment-demo/qr/${customerInvoiceId}`, {
@@ -53,7 +53,7 @@ test.describe("Payment API (QR VietQR) Contract Tests @api @api-write @regressio
     }
   });
 
-  test("API-PAY-002 rejects admin access to customer QR @regression", async ({ playwright }) => {
+  test("API-PAY-002 rejects admin access to customer QR", async ({ playwright }) => {
     const admin = await createRoleContext(playwright, "admin");
     try {
       const response = await admin.get(`/payment-demo/qr/${customerInvoiceId}`, {
@@ -67,7 +67,7 @@ test.describe("Payment API (QR VietQR) Contract Tests @api @api-write @regressio
     }
   });
 
-  test("API-PAY-003 returns 404 for missing invoice id @regression", async ({ playwright }) => {
+  test("API-PAY-003 returns 404 for missing invoice id", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer", customerUsername);
     try {
       const response = await customer.get(`/payment-demo/qr/${nonexistentInvoiceId}`, {
@@ -81,7 +81,7 @@ test.describe("Payment API (QR VietQR) Contract Tests @api @api-write @regressio
     }
   });
 
-  test("API-PAY-004 renders QR HTML for customer-owned invoice @smoke @regression", async ({ playwright }) => {
+  test("API-PAY-004 renders QR HTML for customer-owned invoice @smoke", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer", customerUsername);
     try {
       const response = await customer.get(`/payment-demo/qr/${customerInvoiceId}`, {
@@ -101,7 +101,7 @@ test.describe("Payment API (QR VietQR) Contract Tests @api @api-write @regressio
     }
   });
 
-  test("API-PAY-005 confirms QR payment and redirects to invoice list @regression", async ({ playwright }) => {
+  test("API-PAY-005 confirms QR payment and redirects to invoice list", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer", customerUsername);
     try {
       const pageResponse = await customer.get(`/payment-demo/qr/${customerInvoiceId}`, {
@@ -142,5 +142,6 @@ test.describe("Payment API (QR VietQR) Contract Tests @api @api-write @regressio
     }
   });
 });
+
 
 

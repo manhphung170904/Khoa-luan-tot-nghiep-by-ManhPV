@@ -6,7 +6,7 @@ import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { expectStatusExact } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
-test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @otp @regression", () => {
+test.describe.serial("Authentication Web Flow Contract Tests @api-write @otp @regression", () => {
   const validUser = {
     username: `testuser_auth_${Date.now()}`,
     password: "Password@123",
@@ -63,7 +63,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
   });
 
   test.describe("1. Login + Authentication", () => {
-    test("[API_TC_001] [Happy Path] Login with valid credentials returns JWT cookies and redirect @smoke @regression", async ({
+    test("[API_TC_001] [Happy Path] Login with valid credentials returns JWT cookies and redirect @smoke", async ({
       request
     }) => {
       const response = await request.post("/login", {
@@ -82,7 +82,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
       expect(cookieString).toContain("estate_refresh_token=");
     });
 
-    test("[API_TC_002] [Negative] Blank username/password returns login error redirect @regression", async ({
+    test("[API_TC_002] [Negative] Blank username/password returns login error redirect", async ({
       request
     }) => {
       const response = await request.post("/login", {
@@ -95,7 +95,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
       expect(response.headers().location).toContain("errorMessage");
     });
 
-    test("[API_TC_003] [Negative] Wrong credentials are rejected @regression", async ({ request }) => {
+    test("[API_TC_003] [Negative] Wrong credentials are rejected", async ({ request }) => {
       const response = await request.post("/login", {
         form: { username: env.adminUsername, password: "bad-password-123" },
         failOnStatusCode: false,
@@ -108,7 +108,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
   });
 
   test.describe("2. Registration + Database Chaining", () => {
-    test("[API_TC_004] [Happy Path] Send registration OTP and persist pending verification row @regression", async ({
+    test("[API_TC_004] [Happy Path] Send registration OTP and persist pending verification row", async ({
       request
     }) => {
       const response = await request.post("/auth/register/send-code", {
@@ -148,7 +148,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
       expect(registrationTicket).not.toBe("");
     });
 
-    test("[API_TC_006] [Happy Path] Complete registration and verify customer row created @regression", async ({
+    test("[API_TC_006] [Happy Path] Complete registration and verify customer row created", async ({
       request
     }) => {
       expect(registrationTicket).not.toBe("");
@@ -178,7 +178,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
       expect(createdRows.length).toBe(1);
     });
 
-    test("[API_TC_007] [Negative] Complete registration fails when passwords do not match @regression", async ({
+    test("[API_TC_007] [Negative] Complete registration fails when passwords do not match", async ({
       request
     }) => {
       const isolatedUser = {
@@ -217,7 +217,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
   });
 
   test.describe("3. Forgot Password + Reset Password", () => {
-    test("[API_TC_008] [Happy Path] Request forgot password and check OTP row in DB @regression", async ({
+    test("[API_TC_008] [Happy Path] Request forgot password and check OTP row in DB", async ({
       request
     }) => {
       test.fail(true, "Known defect: MVC POST /auth/forgot-password is not permitAll in security config, so anonymous requests are redirected to /login.");
@@ -269,7 +269,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
       expect(response.headers().location).toContain("errorMessage");
     });
 
-    test("[API_TC_011] [Happy Path] Reset password with valid OTP redirects to login and updates credentials @regression", async ({
+    test("[API_TC_011] [Happy Path] Reset password with valid OTP redirects to login and updates credentials", async ({
       request
     }) => {
       const nextPassword = "Password@456";
@@ -319,7 +319,7 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
   });
 
   test.describe("4. Logout", () => {
-    test("[API_TC_010] [Security] Logout clears auth cookies and redirects to login @smoke @regression", async ({
+    test("[API_TC_010] [Security] Logout clears auth cookies and redirects to login @smoke", async ({
       request
     }) => {
       const loginResponse = await request.post("/login", {
@@ -344,5 +344,6 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
     });
   });
 });
+
 
 

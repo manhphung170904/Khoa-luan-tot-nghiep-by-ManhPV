@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin Invoice API Tests @api @regression", () => {
+test.describe.serial("Admin Invoice API Tests @regression", () => {
   let admin: APIRequestContext;
 
   const now = new Date();
@@ -460,5 +460,6 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
     }
   });
 });
+
 
 

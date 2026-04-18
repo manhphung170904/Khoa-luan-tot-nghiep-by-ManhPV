@@ -16,7 +16,7 @@ type TempStaff = {
   phone: string;
 };
 
-test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression", () => {
+test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () => {
   let bootstrapAdmin: APIRequestContext;
   let staffContext: APIRequestContext;
   let tempStaff: TempStaff;
@@ -327,5 +327,6 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
     currentPassword = newPassword;
   });
 });
+
 
 

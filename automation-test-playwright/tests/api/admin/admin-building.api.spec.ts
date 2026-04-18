@@ -8,7 +8,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin Building API Tests @api @regression", () => {
+test.describe.serial("Admin Building API Tests @regression", () => {
   let admin: APIRequestContext;
   let createdBuildingId = 0;
   let createdBuildingName = "";
@@ -514,5 +514,6 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
     });
   });
 });
+
 
 
