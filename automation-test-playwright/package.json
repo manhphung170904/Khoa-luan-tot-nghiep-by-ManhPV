@@ -5,9 +5,7 @@
   "description": "Playwright + TypeScript automation testing framework for MoonNest",
   "scripts": {
     "typecheck": "tsc -p . --noEmit",
-    "test:setup": "playwright test --project auth-setup",
     "test": "playwright test",
-    "test:ui": "playwright test tests/functional --project functional --grep \"UI-\"",
     "test:api": "playwright test tests/api",
     "test:api:auth": "playwright test tests/api/auth --project api",
     "test:api:public": "playwright test tests/api/publicpage --project api",
@@ -20,7 +18,6 @@
     "test:api:extended": "playwright test tests/api --project api --grep \"@extended\"",
     "test:api:destructive": "playwright test tests/api --grep \"API-007|API-009|API-010|API-011|API-012|API-014|API-016|API-018|API-020|API-022|API-023|API-024|API-026|API-027|API-029\"",
     "test:e2e": "playwright test tests/e2e",
-    "test:functional": "playwright test tests/functional",
     "test:regression": "playwright test --grep \"@regression\"",
     "test:smoke": "playwright test --grep \"@smoke\"",
     "test:regression:core": "playwright test --grep \"@regression\" --grep-invert \"@extended|@smoke\"",

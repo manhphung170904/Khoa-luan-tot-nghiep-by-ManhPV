@@ -35,17 +35,6 @@ jobs:
         working-directory: automation-test-playwright
         run: npm run typecheck
 
-      - name: Tao session dang nhap
-        working-directory: automation-test-playwright
-        env:
-          APP_ENV: test
-          BASE_URL: ${{ secrets.SUNTOWER_BASE_URL }}
-          ADMIN_USERNAME: ${{ secrets.SUNTOWER_ADMIN_USERNAME }}
-          STAFF_USERNAME: ${{ secrets.SUNTOWER_STAFF_USERNAME }}
-          CUSTOMER_USERNAME: ${{ secrets.SUNTOWER_CUSTOMER_USERNAME }}
-          DEFAULT_PASSWORD: ${{ secrets.SUNTOWER_DEFAULT_PASSWORD }}
-        run: npm run test:setup
-
       - name: Chay regression suite
         working-directory: automation-test-playwright
         env:

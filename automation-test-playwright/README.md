@@ -35,16 +35,15 @@ automation-test-playwright/
 |   `-- staff/
 |-- reports/
 |-- test-data/
-|   |-- buildings.json
-|   |-- crud.json
-|   `-- users.json
+|   `-- files/
 |-- tests/
 |   |-- api/
 |   |-- e2e/
-|   |-- functional/
-|   |   `-- setup/
-|   `-- ui/
+|   |   `-- _fixtures/
+|   `-- _fixtures/
 |-- utils/
+|   |-- api/
+|   |-- db/
 |   |-- fixtures/
 |   `-- helpers/
 |-- .env.example
@@ -56,20 +55,19 @@ automation-test-playwright/
 ## 3. Y nghia tung nhom thu muc
 - `pages/`: chua Page Object Model theo module nghiep vu.
 - `pages/core/`: chua BasePage, shell page, routed page, CRUD base page.
-- `tests/ui/`: test giao dien va dieu huong.
 - `tests/api/`: test endpoint va response.
-- `tests/functional/`: test logic nghiep vu theo chuc nang.
 - `tests/e2e/`: test hanh trinh nguoi dung dau cuoi.
-- `tests/regression/`: test hoi quy cho cac luong quan trong.
-- `tests/setup/`: tao session dang nhap va cac buoc khoi tao dung chung.
+- `tests/api/_fixtures`, `tests/e2e/_fixtures`: du lieu va helper phuc vu tung nhom suite.
 - `utils/helpers/`: helper dung chung cho login, assert, data, session.
 - `utils/fixtures/`: fixture de tai su dung page/session.
-- `test-data/`: du lieu co dinh phuc vu test.
+- `utils/api/`: helper API, endpoint catalog, contract utility.
+- `utils/db/`: ket noi va truy van DB phuc vu xac minh du lieu.
+- `test-data/files/`: file mau cho cac case upload va validation.
 - `config/`: cau hinh moi truong, retry, setup/teardown.
 - `artifacts/`, `reports/`: luu ket qua chay, screenshot, trace, video, report.
 
 ## 4. Nhung thanh phan da du cho mot framework day du
-- Phan tach test theo 5 nhom: UI, API, Functional, E2E, Regression.
+- Phan tach test theo 2 nhom chinh: API va E2E.
 - POM theo module nghiep vu.
 - Helper chung cho login, assertion, page flow.
 - Co session luu tru bang `storageState`.
@@ -85,7 +83,6 @@ automation-test-playwright/
 npm install
 npx playwright install chromium
 npm run typecheck
-npm run test:setup
 npm run test
 ```
 
@@ -102,9 +99,7 @@ npm run test:api:destructive
 
 Cac lenh thuong dung:
 ```bash
-npm run test:ui
 npm run test:api
-npm run test:functional
 npm run test:e2e
 npm run test:regression
 npm run test:smoke
@@ -118,7 +113,7 @@ Framework tao 3 file session trong `playwright/.auth/`:
 - `staff.json`
 - `customer.json`
 
-Nhung file nay duoc tao boi `tests/setup/auth.setup.ts` va duoc dung de tang toc do chay lai suite, giam viec dang nhap lap di lap lai.
+Nhung file nay duoc test tai su dung de giam viec dang nhap lap di lap lai giua cac luong role-based.
 
 ## 7. Quy uoc quan trong
 - Moi test case phai giu `Test ID` va `Test Name`.

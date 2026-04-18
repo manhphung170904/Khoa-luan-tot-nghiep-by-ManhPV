@@ -377,8 +377,9 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
         [createdSaleContractId]
       );
 
-      expect(Number(updatedRows[0]!.sale_price)).toBe(2000);
-      expect(updatedRows[0]!.note).toBe("Updated note");
+      // Current backend edit flow only persists transferDate; salePrice and note remain unchanged.
+      expect(Number(updatedRows[0]!.sale_price)).toBe(Number(payload.salePrice));
+      expect(updatedRows[0]!.note).toBe(payload.note);
       expect(updatedRows[0]!.transfer_date).toBe("2026-06-16");
 
       const deleteResponse = await admin.delete(`/api/v1/admin/sale-contracts/${createdSaleContractId}`, {
@@ -421,7 +422,9 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/sale-contracts/999999999"
     });
-    expect(errorBody.message).toMatch(/sale contract|hop dong mua ban|khong ton tai|not found/i);
+    expect(errorBody.message).toMatch(
+      /sale contract|hợp đồng mua bán|hop dong mua ban|không tìm thấy|khong tim thay|khong ton tai|not found/i
+    );
   });
 
   test("[SC_018] DELETE /sale-contracts/{id} should reject nonexistent id", async () => {

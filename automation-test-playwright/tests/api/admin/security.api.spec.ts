@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@fixtures/api.fixture";
 import { adminEndpointCatalog } from "@api/adminEndpointCatalog";
-import { createAnonymousContext, createRoleContext, sendRequest } from "@api/adminApiUtils";
+import { createAnonymousContext, sendRequest } from "@api/adminApiUtils";
 import { expectApiErrorBody, expectStatusExact } from "@api/apiContractUtils";
 
 test.describe("ADMIN API Security Matrix @api @regression", () => {
@@ -21,14 +21,9 @@ test.describe("ADMIN API Security Matrix @api @regression", () => {
   };
 
   for (const endpoint of adminEndpointCatalog) {
-    test(`${endpoint.id} rejects unauthenticated access @smoke @regression`, async ({ playwright }) => {
-      const context = await createAnonymousContext(playwright);
-      try {
-        const response = await sendRequest(context, endpoint);
-        await expectSecurityBodyIfJson(response, 401);
-      } finally {
-        await context.dispose();
-      }
+    test(`${endpoint.id} rejects unauthenticated access @smoke @regression`, async ({ anonymousApi }) => {
+      const response = await sendRequest(anonymousApi, endpoint);
+      await expectSecurityBodyIfJson(response, 401);
     });
 
     test(`${endpoint.id} rejects invalid session @regression`, async ({ playwright }) => {
@@ -41,24 +36,14 @@ test.describe("ADMIN API Security Matrix @api @regression", () => {
       }
     });
 
-    test(`${endpoint.id} rejects staff role @regression`, async ({ playwright }) => {
-      const context = await createRoleContext(playwright, "staff");
-      try {
-        const response = await sendRequest(context, endpoint);
-        await expectSecurityBodyIfJson(response, 403);
-      } finally {
-        await context.dispose();
-      }
+    test(`${endpoint.id} rejects staff role @regression`, async ({ staffApi }) => {
+      const response = await sendRequest(staffApi, endpoint);
+      await expectSecurityBodyIfJson(response, 403);
     });
 
-    test(`${endpoint.id} rejects customer role @regression`, async ({ playwright }) => {
-      const context = await createRoleContext(playwright, "customer");
-      try {
-        const response = await sendRequest(context, endpoint);
-        await expectSecurityBodyIfJson(response, 403);
-      } finally {
-        await context.dispose();
-      }
+    test(`${endpoint.id} rejects customer role @regression`, async ({ customerApi }) => {
+      const response = await sendRequest(customerApi, endpoint);
+      await expectSecurityBodyIfJson(response, 403);
     });
   }
 });

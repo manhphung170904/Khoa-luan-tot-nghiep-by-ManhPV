@@ -6,6 +6,7 @@ import com.estate.repository.entity.EmailVerificationEntity;
 import com.estate.service.OtpTestSupportService;
 import com.estate.service.ProfileOtpService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -20,6 +21,7 @@ import java.util.Locale;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class ProfileOtpServiceImpl implements ProfileOtpService {
     private static final String STATUS_PENDING = "PENDING";
     private static final String STATUS_USED = "USED";
@@ -61,7 +63,7 @@ public class ProfileOtpServiceImpl implements ProfileOtpService {
                 "This code will expire in 10 minutes.\n" +
                 "If you did not request this code, you can ignore this email."
         );
-        mailSender.send(message);
+        sendMailOrSkipForTest(normalizedEmail, purpose, message);
     }
 
     @Override
@@ -99,5 +101,17 @@ public class ProfileOtpServiceImpl implements ProfileOtpService {
 
     private String normalizeEmail(String email) {
         return StringUtils.hasText(email) ? email.trim().toLowerCase(Locale.ROOT) : null;
+    }
+
+    private void sendMailOrSkipForTest(String email, String purpose, SimpleMailMessage message) {
+        try {
+            mailSender.send(message);
+        } catch (RuntimeException ex) {
+            if (otpTestSupportServiceProvider.getIfAvailable() != null) {
+                log.warn("Skipping OTP email send for {} purpose {} in test-support mode: {}", email, purpose, ex.getMessage());
+                return;
+            }
+            throw ex;
+        }
     }
 }

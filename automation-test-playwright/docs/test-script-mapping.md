@@ -4,11 +4,10 @@ Moi test trong framework duoc giu theo mau:
 - `TEST-ID Test Name`
 
 Vi du:
-- `UI-001 Login Page Rendering`
-- `API-005 Admin Building List and Search APIs`
-- `FUN-003 Admin Building Management Lifecycle`
-- `E2E-006 Staff Daily Work Journey`
-- `REG-003 Admin Core CRUD Stability`
+- `API-AUTH-REST-ADMIN login/me/logout works with cookie session`
+- `API-CUS-PRQ-003 submits and lists a RENT property request`
+- `[E2E-ADM-BLD-001] admin can filter buildings and open detail from search results`
+- `[E2E-CUS-PAY-003] customer confirms QR payment and invoice becomes paid`
 
 Dieu nay giup de truy vet:
 - tu test case trong bang kiem thu

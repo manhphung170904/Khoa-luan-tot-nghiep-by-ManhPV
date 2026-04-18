@@ -11,6 +11,8 @@ import com.estate.service.OtpTestSupportService;
 import com.estate.service.RegistrationService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +28,7 @@ import java.util.UUID;
 @Service
 @Transactional
 public class RegistrationServiceImpl implements RegistrationService {
+    private static final Logger log = LoggerFactory.getLogger(RegistrationServiceImpl.class);
     private static final int MIN_PASSWORD_LENGTH = 8;
     private static final String PURPOSE_REGISTER = "REGISTER";
     private static final String STATUS_PENDING = "PENDING";
@@ -171,7 +174,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                         "Mã có hiệu lực trong 10 phút.\n" +
                         "Nếu bạn không yêu cầu, hãy bỏ qua email này."
         );
-        mailSender.send(message);
+        sendMailOrSkipForTest(toEmail, PURPOSE_REGISTER, message);
     }
 
     private String generateOtp() {
@@ -199,5 +202,17 @@ public class RegistrationServiceImpl implements RegistrationService {
             return at > 0 ? email.substring(0, at) : email;
         }
         return "Customer";
+    }
+
+    private void sendMailOrSkipForTest(String email, String purpose, SimpleMailMessage message) {
+        try {
+            mailSender.send(message);
+        } catch (RuntimeException ex) {
+            if (otpTestSupportService != null) {
+                log.warn("Skipping OTP email send for {} purpose {} in test-support mode: {}", email, purpose, ex.getMessage());
+                return;
+            }
+            throw ex;
+        }
     }
 }

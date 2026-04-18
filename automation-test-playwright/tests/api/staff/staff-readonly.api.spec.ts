@@ -1,5 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
+import { test, expect } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectPageBody, expectStatusExact } from "@api/apiContractUtils";
 
 type ReadonlyModule = {
@@ -18,66 +17,46 @@ const readOnlyModules: ReadonlyModule[] = [
 
 test.describe("Staff API Read-only Contract Tests @api @regression", () => {
   for (const module of readOnlyModules) {
-    test(`${module.id} rejects anonymous access with API auth status @smoke @regression`, async ({ playwright }) => {
-      const context = await createAnonymousContext(playwright);
-      try {
-        const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        await expectApiErrorBody(response, {
-          status: 401,
-          code: "UNAUTHORIZED"
-        });
-      } finally {
-        await context.dispose();
+    test(`${module.id} rejects anonymous access with API auth status @smoke @regression`, async ({ anonymousApi }) => {
+      const response = await anonymousApi.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
+      await expectApiErrorBody(response, {
+        status: 401,
+        code: "UNAUTHORIZED"
+      });
+    });
+
+    test(`${module.id} rejects customer role @regression`, async ({ customerApi }) => {
+      const response = await customerApi.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
+      await expectApiErrorBody(response, {
+        status: 403,
+        code: "FORBIDDEN"
+      });
+    });
+
+    test(`${module.id} returns JSON payload for staff @smoke @regression`, async ({ staffApi }) => {
+      const response = await staffApi.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
+      expect(response.headers()["content-type"] ?? "").toContain("application/json");
+      const body = await expectPageBody<{
+        content?: Array<Record<string, unknown>>;
+        totalElements?: number;
+      }>(response, { status: 200 });
+      expect(Array.isArray(body.content)).toBeTruthy();
+      expect(typeof body.totalElements).toBe("number");
+      if ((body.content?.length ?? 0) > 0) {
+        expect(typeof body.content?.[0]?.id).toBe("number");
       }
     });
 
-    test(`${module.id} rejects customer role @regression`, async ({ playwright }) => {
-      const context = await createRoleContext(playwright, "customer");
-      try {
-        const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        await expectApiErrorBody(response, {
-          status: 403,
-          code: "FORBIDDEN"
-        });
-      } finally {
-        await context.dispose();
-      }
-    });
+    test(`${module.id} rejects unsupported write path @extended`, async ({ staffApi }) => {
+      const response = await staffApi.post(`${module.path}/add`, {
+        failOnStatusCode: false,
+        maxRedirects: 0,
+        data: { attack: "should-not-exist" }
+      });
 
-    test(`${module.id} returns JSON payload for staff @smoke @regression`, async ({ playwright }) => {
-      const context = await createRoleContext(playwright, "staff");
-      try {
-        const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        expect(response.headers()["content-type"] ?? "").toContain("application/json");
-        const body = await expectPageBody<{
-          content?: Array<Record<string, unknown>>;
-          totalElements?: number;
-        }>(response, { status: 200 });
-        expect(Array.isArray(body.content)).toBeTruthy();
-        expect(typeof body.totalElements).toBe("number");
-        if ((body.content?.length ?? 0) > 0) {
-          expect(typeof body.content?.[0]?.id).toBe("number");
-        }
-      } finally {
-        await context.dispose();
-      }
-    });
-
-    test(`${module.id} rejects unsupported write path @extended`, async ({ playwright }) => {
-      const context = await createRoleContext(playwright, "staff");
-      try {
-        const response = await context.post(`${module.path}/add`, {
-          failOnStatusCode: false,
-          maxRedirects: 0,
-          data: { attack: "should-not-exist" }
-        });
-
-        const expectedStatus = module.id === "API-STF-READ-005" ? 500 : 302;
-        expectStatusExact(response, expectedStatus, `${module.name} readonly API should not expose synthetic write route`);
-        expect(response.status()).not.toBe(200);
-      } finally {
-        await context.dispose();
-      }
+      const expectedStatus = module.id === "API-STF-READ-005" ? 500 : 302;
+      expectStatusExact(response, expectedStatus, `${module.name} readonly API should not expose synthetic write route`);
+      expect(response.status()).not.toBe(200);
     });
   }
 });

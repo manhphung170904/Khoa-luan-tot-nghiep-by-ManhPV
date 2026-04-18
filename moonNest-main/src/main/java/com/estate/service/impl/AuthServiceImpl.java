@@ -13,6 +13,8 @@ import com.estate.service.AuthService;
 import com.estate.service.OtpTestSupportService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +30,7 @@ import java.util.Optional;
 @Service
 @Transactional
 public class AuthServiceImpl implements AuthService {
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
     private static final int MIN_PASSWORD_LENGTH = 8;
     private static final String PURPOSE_RESET_PASSWORD = "RESET_PASSWORD";
     private static final String STATUS_PENDING = "PENDING";
@@ -165,7 +168,7 @@ public class AuthServiceImpl implements AuthService {
                 "If you did not request this action, you can ignore this email."
         );
 
-        mailSender.send(message);
+        sendMailOrSkipForTest(toEmail, PURPOSE_RESET_PASSWORD, message);
     }
 
     private boolean isLocalAccount(String email) {
@@ -261,5 +264,17 @@ public class AuthServiceImpl implements AuthService {
 
     private String normalizeEmail(String email) {
         return StringUtils.hasText(email) ? email.trim().toLowerCase(Locale.ROOT) : null;
+    }
+
+    private void sendMailOrSkipForTest(String email, String purpose, SimpleMailMessage message) {
+        try {
+            mailSender.send(message);
+        } catch (RuntimeException ex) {
+            if (otpTestSupportService != null) {
+                log.warn("Skipping OTP email send for {} purpose {} in test-support mode: {}", email, purpose, ex.getMessage());
+                return;
+            }
+            throw ex;
+        }
     }
 }

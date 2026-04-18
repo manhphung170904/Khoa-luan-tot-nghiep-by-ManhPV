@@ -2,11 +2,9 @@
 
 ## 1. Cach them mot test moi
 ### Buoc 1: Xac dinh loai test
-- `tests/ui`: neu kiem tra giao dien, form, dieu huong.
 - `tests/api`: neu kiem tra endpoint.
-- `tests/functional`: neu kiem tra mot logic nghiep vu ro rang.
 - `tests/e2e`: neu kiem tra hanh trinh dau cuoi.
-- `tests/regression`: neu la luong quan trong can giu on dinh sau moi lan sua.
+- Gan tag `@smoke`, `@regression`, `@extended` theo muc do uu tien va do phu.
 
 ### Buoc 2: Kiem tra POM
 - Neu page da ton tai, tai su dung page object hien co.
@@ -14,7 +12,7 @@
 - Neu chi khac route, uu tien ke thua tu class routed trong `pages/core/`.
 
 ### Buoc 3: Them du lieu test
-- Du lieu co dinh dat trong `test-data/*.json`.
+- File mau cho upload dat trong `test-data/files/`.
 - Du lieu dong dat trong `TestDataFactory`.
 
 ### Buoc 4: Viet test
@@ -24,9 +22,9 @@
 
 ## 2. Quy uoc dat ten
 ### File test
-- `ui-master.spec.ts`
-- `api-master.api.spec.ts`
-- `regression-suite.spec.ts`
+- `admin-building.api.spec.ts`
+- `customer-profile.api.spec.ts`
+- `admin-building-management.e2e.spec.ts`
 
 ### Page object
 - `LoginPage.ts`
@@ -40,7 +38,7 @@
 - `@smoke`: luong rat quan trong, chay nhanh.
 - `@regression`: bo hoi quy.
 - `@extended`: nhom mo rong, co the chay sau.
-- `@ui`, `@api`, `@functional`, `@e2e`: tag theo loai test neu can bo sung sau.
+- `@api`, `@api-read`, `@api-write`, `@otp`: tag dang duoc dung trong API suite.
 
 ## 4. Huong dan viet POM
 - Moi POM chi chiu trach nhiem cho mot page.
@@ -77,13 +75,11 @@ $env:ALLOW_DESTRUCTIVE_TESTS="true"
 - Khong duoc bat tren moi truong dang dung tai khoan that cua nguoi dung.
 
 ## 7. Session va dang nhap nhanh
-- Session duoc tao tai `tests/setup/auth.setup.ts`.
 - Auth state luu trong `playwright/.auth/`.
-- Test nen tai su dung `PageScenarioHelper` va auth state da duoc tao san.
+- Test nen tai su dung `PageScenarioHelper`, `AuthSessionHelper`, fixture, va auth state hien co khi phu hop.
 
 ## 8. Quy trinh de nghi truoc khi merge
 1. `npm run typecheck`
-2. `npm run test:setup`
-3. `npm run test:smoke`
-4. `npm run test:regression`
-5. Mo HTML report de kiem tra lai ket qua
+2. `npm run test:smoke`
+3. `npm run test:regression`
+4. Mo HTML report de kiem tra lai ket qua

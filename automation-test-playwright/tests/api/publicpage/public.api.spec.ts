@@ -1,22 +1,18 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@fixtures/api.fixture";
 import { expectArrayBody, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
 test.describe("Public Page API Tests @api @api-read @regression", () => {
-  test.afterAll(async () => {
-    await MySqlDbClient.close();
-  });
-
   test.describe("GET /api/v1/public/buildings", () => {
     test("[API_TC_026] [Happy Path] Search public buildings and cross-check DB results @smoke @regression", async ({
-      request
+      anonymousApi
     }) => {
       const wardRows = await MySqlDbClient.query<{ ward: string }>(
         "SELECT ward FROM building WHERE ward IS NOT NULL AND ward <> '' LIMIT 1"
       );
       const ward = wardRows.length > 0 ? wardRows[0]!.ward : "Ward 1";
 
-      const response = await request.get("/api/v1/public/buildings", {
+      const response = await anonymousApi.get("/api/v1/public/buildings", {
         params: {
           ward
         }
@@ -49,11 +45,11 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
     });
 
     test("[API_TC_027] [Boundary] Search with invalid propertyType returns a valid empty result set @extended", async ({
-      request
+      anonymousApi
     }) => {
       test.fail(true, "Known defect: invalid propertyType currently triggers 500 instead of an empty successful response.");
 
-      const response = await request.get("/api/v1/public/buildings", {
+      const response = await anonymousApi.get("/api/v1/public/buildings", {
         params: {
           propertyType: "INVALID_TYPE"
         }
@@ -62,8 +58,8 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
       expect(data.length).toBeGreaterThanOrEqual(0);
     });
 
-    test("[API_TC_028] [Happy Path] Page endpoint returns paged public buildings @regression", async ({ request }) => {
-      const response = await request.get("/api/v1/public/buildings/page", {
+    test("[API_TC_028] [Happy Path] Page endpoint returns paged public buildings @regression", async ({ anonymousApi }) => {
+      const response = await anonymousApi.get("/api/v1/public/buildings/page", {
         params: {
           page: 1,
           size: 5
@@ -87,8 +83,8 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
       }
     });
 
-    test("[API_TC_029] [Happy Path] Filters endpoint exposes public metadata @regression", async ({ request }) => {
-      const response = await request.get("/api/v1/public/buildings/filters");
+    test("[API_TC_029] [Happy Path] Filters endpoint exposes public metadata @regression", async ({ anonymousApi }) => {
+      const response = await anonymousApi.get("/api/v1/public/buildings/filters");
       const data = await expectObjectBody<{
         districts?: unknown[];
         wards?: unknown[];

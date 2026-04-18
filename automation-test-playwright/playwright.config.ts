@@ -32,26 +32,7 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "auth-setup",
-      testMatch: /tests\/e2e\/setup\/.*\.setup\.ts/,
-      retries: 0,
-      workers: 1,
-      use: {
-        ...devices["Desktop Chrome"]
-      }
-    },
-    {
-      name: "functional",
-      dependencies: ["auth-setup"],
-      testMatch: /tests\/functional\/.*\.spec\.ts/,
-      retries: env.retryPolicy.ui,
-      use: {
-        ...devices["Desktop Chrome"]
-      }
-    },
-    {
       name: "e2e",
-      dependencies: ["auth-setup"],
       testMatch: /tests\/e2e\/.*\.spec\.ts/,
       retries: env.retryPolicy.e2e,
       use: {
