@@ -9,7 +9,7 @@ export class BasePage {
   }
 
   async visit(path: string): Promise<void> {
-    await this.page.goto(path, { waitUntil: "commit", timeout: env.navigationTimeout });
+    await this.page.goto(path, { waitUntil: "domcontentloaded", timeout: env.navigationTimeout });
   }
 
   locator(selector: string): Locator {
@@ -71,5 +71,18 @@ export class BasePage {
 
   async cancelSweetAlert(): Promise<void> {
     await this.page.locator(".swal2-cancel").click();
+  }
+
+  async dismissSweetAlertIfPresent(): Promise<void> {
+    const popup = this.page.locator(".swal2-popup.swal2-show");
+    if (!(await popup.count())) {
+      return;
+    }
+
+    const confirmButton = this.page.locator(".swal2-confirm");
+    if (await confirmButton.count()) {
+      await confirmButton.click();
+      await expect(popup).toBeHidden();
+    }
   }
 }

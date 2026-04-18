@@ -24,6 +24,7 @@ export class LoginPage extends BasePage {
   }
 
   async login(username: string, password: string): Promise<void> {
+    await this.dismissSweetAlertIfPresent();
     await this.usernameInput.fill(username);
     await this.passwordInput.fill(password);
     await this.submitButton.click();
@@ -38,8 +39,15 @@ export class LoginPage extends BasePage {
   }
 
   async assertLoaded(): Promise<void> {
+    await expect(this.page).toHaveURL(/\/login/);
     await expect(this.usernameInput).toBeVisible();
     await expect(this.passwordInput).toBeVisible();
     await expect(this.submitButton).toBeVisible();
+    await this.dismissSweetAlertIfPresent();
+  }
+
+  async expectPopupContains(text: string | RegExp): Promise<void> {
+    await expect(this.toastPopup()).toBeVisible();
+    await expect(this.toastPopup()).toContainText(text);
   }
 }

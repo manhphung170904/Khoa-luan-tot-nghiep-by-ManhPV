@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { BasePage } from "./BasePage";
 import { OptionalActionHelper } from "@helpers/OptionalActionHelper";
+import { BasePage } from "./BasePage";
 
 export class CrudListPage extends BasePage {
   readonly tableBody: Locator;
@@ -12,12 +12,12 @@ export class CrudListPage extends BasePage {
     super(page);
     this.tableBody = page.locator("tbody");
     this.filterForm = page.locator("form").first();
-    this.searchButton = page.getByRole("button", { name: /tìm kiếm|search/i });
-    this.resetButton = page.getByRole("button", { name: /reset/i });
+    this.searchButton = page.locator("form button[type='submit'], .btn-filter.btn-search");
+    this.resetButton = page.locator(".btn-filter.btn-reset, form button[type='reset']");
   }
 
   async search(): Promise<void> {
-    await this.searchButton.click({ force: true });
+    await this.searchButton.first().click({ force: true });
   }
 
   async searchIfAvailable(): Promise<boolean> {
@@ -31,7 +31,7 @@ export class CrudListPage extends BasePage {
 
   async resetFilters(): Promise<void> {
     if (await this.resetButton.count()) {
-      await this.resetButton.click();
+      await this.resetButton.first().click();
     }
   }
 

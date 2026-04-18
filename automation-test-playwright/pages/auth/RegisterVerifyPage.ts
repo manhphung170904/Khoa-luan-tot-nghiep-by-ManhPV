@@ -1,4 +1,4 @@
-﻿import { type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { BasePage } from "../core/BasePage";
 
 export class RegisterVerifyPage extends BasePage {
@@ -11,7 +11,7 @@ export class RegisterVerifyPage extends BasePage {
     this.verifyButton = this.anyLocator(
       '[data-testid="register-verify-submit"]',
       'form[action="/auth/register/verify"] button[type="submit"]',
-      'button.submit',
+      "button.submit",
       'button:has-text("Xác nhận")'
     ).first();
   }
@@ -20,8 +20,24 @@ export class RegisterVerifyPage extends BasePage {
     await this.visit(`/register/verify?email=${encodeURIComponent(email)}`);
   }
 
+  async expectLoaded(email?: string): Promise<void> {
+    await expect(this.page).toHaveURL(/\/register\/verify/);
+    await expect(this.otpInput).toBeVisible();
+    await expect(this.verifyButton).toBeVisible();
+    await this.dismissSweetAlertIfPresent();
+    if (email) {
+      await expect(this.page.locator("body")).toContainText(email);
+    }
+  }
+
   async verifyOtp(otp: string): Promise<void> {
+    await this.dismissSweetAlertIfPresent();
     await this.otpInput.fill(otp);
     await this.verifyButton.click();
+  }
+
+  async expectPopupContains(text: string | RegExp): Promise<void> {
+    await expect(this.toastPopup()).toBeVisible();
+    await expect(this.toastPopup()).toContainText(text);
   }
 }

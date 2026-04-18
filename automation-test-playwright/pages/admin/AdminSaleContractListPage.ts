@@ -1,18 +1,71 @@
-import { expect } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { RoutedCrudListPage } from "../core/RoutedCrudListPage";
 
 export class AdminSaleContractListPage extends RoutedCrudListPage {
   protected readonly path = "/admin/sale-contract/list";
+  readonly addButton: Locator;
+  readonly tableBody: Locator;
+
+  constructor(page: Page) {
+    super(page);
+    this.addButton = this.page.locator(".btn-add");
+    this.tableBody = this.page.locator("#saleContractTableBody");
+  }
 
   async expectLoaded(): Promise<void> {
-    await expect(this.page.locator("#saleContractTableBody")).toBeVisible();
+    await expect(this.page).toHaveURL(/\/admin\/sale-contract\/(list|search)/);
+    await expect(this.tableBody).toBeVisible();
+  }
+
+  async waitForTableData(): Promise<void> {
+    await expect(async () => {
+      const hasRows = (await this.page.locator("#saleContractTableBody tr").count()) > 0;
+      const hasEmpty = await this.page.locator(".empty-state").isVisible().catch(() => false);
+      expect(hasRows || hasEmpty).toBeTruthy();
+    }).toPass();
+  }
+
+  async openAddForm(): Promise<void> {
+    await this.addButton.click();
+  }
+
+  async filterByCustomer(customerId: number | string): Promise<void> {
+    await this.selectFilter("customerId", String(customerId));
+  }
+
+  async filterByBuilding(buildingId: number | string): Promise<void> {
+    await this.selectFilter("buildingId", String(buildingId));
+  }
+
+  async filterByStaff(staffId: number | string): Promise<void> {
+    await this.selectFilter("staffId", String(staffId));
+  }
+
+  async filterByStatus(status: "0" | "1"): Promise<void> {
+    await this.selectFilter("status", status);
+  }
+
+  async submitFilters(): Promise<void> {
+    await this.search();
+  }
+
+  rowBySaleContractText(text: string): Locator {
+    return this.page.locator("#saleContractTableBody tr").filter({ hasText: text }).first();
   }
 
   async openDetail(text: string): Promise<void> {
     await this.clickRowLink(text, "/admin/sale-contract/");
   }
 
-  async openFirstDetail(): Promise<void> {
-    await this.clickFirstRowLink("/admin/sale-contract/");
+  async openEdit(text: string): Promise<void> {
+    await this.clickRowLink(text, "/admin/sale-contract/edit/");
+  }
+
+  async deleteSaleContract(text: string): Promise<void> {
+    await this.rowBySaleContractText(text).locator(".btn-delete").click();
+  }
+
+  async expectSweetAlertContains(text: string | RegExp): Promise<void> {
+    await expect(this.page.locator(".swal2-popup")).toContainText(text);
   }
 }
