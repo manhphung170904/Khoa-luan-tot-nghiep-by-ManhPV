@@ -140,6 +140,7 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
   test("[CUS-PRO-001B] username update for local customer stays blocked even with valid OTP", async () => {
     await sendOtp("PROFILE_USERNAME");
     const otp = await ApiOtpAccessHelper.latestOtp(customerContext, tempCustomer.email, "PROFILE_USERNAME");
+    const originalUsername = tempCustomer.username;
 
     const response = await customerContext.put("/api/v1/customer/profile/username", {
       failOnStatusCode: false,
@@ -148,11 +149,15 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp
       }
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/username"
     });
+    expect(errorBody.message).toMatch(/username|dang nhap|tài khoản|tai khoan|mật khẩu|mat khau/i);
+
+    const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [tempCustomer.id]);
+    expect(rows[0]!.username).toBe(originalUsername);
   });
 
   test("[CUS-PRO-002] updates email with valid current password", async () => {
@@ -176,6 +181,7 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
   });
 
   test("[CUS-PRO-003] rejects email update with wrong current password", async () => {
+    const originalEmail = tempCustomer.email;
     const response = await customerContext.put("/api/v1/customer/profile/email", {
       failOnStatusCode: false,
       data: {
@@ -183,11 +189,15 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         password: "wrong-password-123"
       }
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/email"
     });
+    expect(errorBody.message).toMatch(/password|mật khẩu|mat khau|hiện tại|hien tai|khong dung/i);
+
+    const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM customer WHERE id = ?", [tempCustomer.id]);
+    expect(rows[0]!.email).toBe(originalEmail);
   });
 
   test("[CUS-PRO-004] updates phone with valid OTP", async () => {
@@ -214,6 +224,7 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
   });
 
   test("[CUS-PRO-004A] rejects phone update with invalid OTP", async () => {
+    const originalPhone = tempCustomer.phone;
     const response = await customerContext.put("/api/v1/customer/profile/phone-number", {
       failOnStatusCode: false,
       data: {
@@ -221,11 +232,15 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp: "111111"
       }
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/phone-number"
     });
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han/i);
+
+    const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempCustomer.id]);
+    expect(rows[0]!.phone).toBe(originalPhone);
   });
 
   test("[CUS-PRO-005] updates password with valid OTP and changes DB hash", async ({ playwright }) => {
@@ -275,6 +290,8 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
   test("[CUS-PRO-006] rejects password update when confirmation does not match", async () => {
     await sendOtp("PROFILE_PASSWORD");
     const otp = await ApiOtpAccessHelper.latestOtp(customerContext, tempCustomer.email, "PROFILE_PASSWORD");
+    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    const oldHash = oldHashRows[0]!.password;
 
     const response = await customerContext.put("/api/v1/customer/profile/password", {
       failOnStatusCode: false,
@@ -285,14 +302,20 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp
       }
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/password"
     });
+    expect(errorBody.message).toMatch(/confirm|khớp|khop|xác nhận|xac nhan|mật khẩu xác nhận/i);
+
+    const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    expect(newHashRows[0]!.password).toBe(oldHash);
   });
 
   test("[CUS-PRO-007] rejects password update with invalid OTP", async () => {
+    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    const oldHash = oldHashRows[0]!.password;
     const response = await customerContext.put("/api/v1/customer/profile/password", {
       failOnStatusCode: false,
       data: {
@@ -302,10 +325,14 @@ test.describe.serial("Customer Profile API Tests @api @api-write @otp @regressio
         otp: "111111"
       }
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/password"
     });
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|không hợp lệ|khong hop le/i);
+
+    const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    expect(newHashRows[0]!.password).toBe(oldHash);
   });
 });

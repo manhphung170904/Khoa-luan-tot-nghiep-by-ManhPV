@@ -31,63 +31,96 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
   });
 
   test("[CUS_002] POST /customers rejects empty staffIds", async () => {
+    const username = `cus_empty_staff_${Date.now()}`;
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildCustomerPayload({ staffIds: [] })
+      data: TestDataFactory.buildCustomerPayload({ username, staffIds: [] })
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
+    expect(errorBody.message).toMatch(/staff|nhân viên|nhan vien/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [username]);
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
   test("[CUS_009] POST /customers rejects username shorter than 4", async () => {
+    const shortUsername = "abc";
+    const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildCustomerPayload({ username: "abc" })
+      data: TestDataFactory.buildCustomerPayload({ username: shortUsername, staffIds: [tempStaff.id] })
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
+    expect(errorBody.message).toMatch(/username|đăng nhập|dang nhap|ít nhất|it nhat|min/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [shortUsername]);
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
+    await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
   test("[CUS_003] POST /customers rejects password shorter than 6", async () => {
+    const username = `cus_pwd_${Date.now()}`;
+    const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildCustomerPayload({ password: "123" })
+      data: TestDataFactory.buildCustomerPayload({ username, password: "123", staffIds: [tempStaff.id] })
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
+    expect(errorBody.message).toMatch(/password|mat khau|it nhat|min/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [username]);
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
+    await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
   test("[CUS_010] POST /customers rejects oversized email", async () => {
+    const oversizedEmail = `${"a".repeat(95)}@b.com`;
+    const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildCustomerPayload({ email: `${"a".repeat(95)}@b.com` })
+      data: TestDataFactory.buildCustomerPayload({ email: oversizedEmail, staffIds: [tempStaff.id] })
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
+    expect(errorBody.message).toMatch(/email|địa chỉ email|dia chi email|không hợp lệ|khong hop le|tối đa|toi da/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE email = ?", [oversizedEmail]);
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
+    await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
   test("[CUS_011] POST /customers rejects invalid phone format", async () => {
+    const invalidPhone = "9999999999";
+    const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildCustomerPayload({ phone: "9999999999" })
+      data: TestDataFactory.buildCustomerPayload({ phone: invalidPhone, staffIds: [tempStaff.id] })
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
+    expect(errorBody.message).toMatch(/phone|điện thoại|dien thoai|không hợp lệ|khong hop le/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE phone = ?", [invalidPhone]);
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
+    await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
   test("[CUS_004] POST /customers creates customer and supports list/search/delete flow", async () => {
@@ -121,11 +154,17 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
         failOnStatusCode: false,
         data: customerPayload
       });
-      await expectApiErrorBody(duplicateResponse, {
+      const duplicateError = await expectApiErrorBody<{ message?: string }>(duplicateResponse, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/customers"
       });
+      expect(duplicateError.message).toMatch(/username|email|phone|ten dang nhap|tên đăng nhập|ton tai|tồn tại|trung/i);
+      const duplicateRows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM customer WHERE username = ? OR email = ? OR phone = ?",
+        [String(customerPayload.username), String(customerPayload.email), String(customerPayload.phone)]
+      );
+      expect(Number(duplicateRows[0]?.count ?? 0)).toBe(1);
 
       const listResponse = await admin.get("/api/v1/admin/customers", {
         failOnStatusCode: false,
@@ -145,11 +184,18 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
         const deleteWithContract = await admin.delete(`/api/v1/admin/customers/${customerWithContract.customer.id}`, {
           failOnStatusCode: false
         });
-        await expectApiErrorBody(deleteWithContract, {
+        const deleteWithContractError = await expectApiErrorBody<{ message?: string }>(deleteWithContract, {
           status: 400,
           code: "BAD_REQUEST",
           path: `/api/v1/admin/customers/${customerWithContract.customer.id}`
         });
+        expect(deleteWithContractError.message).toMatch(/contract|hợp đồng|hop dong|không thể xóa khách hàng đang có hợp đồng liên quan|khong the xoa khach hang dang co hop dong lien quan/i);
+
+        const stillExistsRows = await MySqlDbClient.query<{ count: number }>(
+          "SELECT COUNT(*) AS count FROM customer WHERE id = ?",
+          [customerWithContract.customer.id]
+        );
+        expect(Number(stillExistsRows[0]?.count ?? 0)).toBe(1);
       } finally {
         await TempEntityHelper.xoaContractTam(admin, customerWithContract);
       }
@@ -157,11 +203,12 @@ test.describe.serial("Admin Customer API Tests @api @regression", () => {
       const missingDelete = await admin.delete("/api/v1/admin/customers/999999", {
         failOnStatusCode: false
       });
-      await expectApiErrorBody(missingDelete, {
+      const missingDeleteError = await expectApiErrorBody<{ message?: string }>(missingDelete, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/customers/999999"
       });
+      expect(missingDeleteError.message).toMatch(/customer|khách hàng|khach hang|không tồn tại|khong ton tai|không tìm thấy|khong tim thay|not found/i);
 
       const deleteResponse = await admin.delete(`/api/v1/admin/customers/${createdCustomerId}`, {
         failOnStatusCode: false

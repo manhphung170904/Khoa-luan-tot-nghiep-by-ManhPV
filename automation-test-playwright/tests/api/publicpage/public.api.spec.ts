@@ -24,11 +24,21 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
       const data = await expectArrayBody<Record<string, unknown>>(response, 200);
 
       if (data.length > 0) {
-        expect(data[0]).toHaveProperty("id");
-        expect(data[0]).toHaveProperty("name");
-        expect(data[0]).toHaveProperty("address");
-        expect(data[0]).toHaveProperty("propertyType");
-        expect(data[0]).toHaveProperty("transactionType");
+        expect(typeof data[0]!.id).toBe("number");
+        expect(typeof data[0]!.name).toBe("string");
+        expect(String(data[0]!.name)).not.toHaveLength(0);
+        expect(typeof data[0]!.address).toBe("string");
+        expect(String(data[0]!.address)).not.toHaveLength(0);
+        expect(typeof data[0]!.propertyType).toBe("string");
+        expect(typeof data[0]!.transactionType).toBe("string");
+
+        const returnedIds = data.map((item) => Number(item.id)).filter((id) => Number.isFinite(id));
+        const dbRows = await MySqlDbClient.query<{ id: number }>(
+          "SELECT id FROM building WHERE LOWER(ward) LIKE ?",
+          [`%${ward.toLowerCase()}%`]
+        );
+        const dbIds = new Set(dbRows.map((row) => row.id));
+        expect(returnedIds.every((id) => dbIds.has(id))).toBeTruthy();
 
         const countRows = await MySqlDbClient.query<{ total: number }>(
           "SELECT COUNT(*) AS total FROM building WHERE LOWER(ward) LIKE ?",
@@ -59,12 +69,21 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
           size: 5
         }
       });
-      const data = await expectPageBody(response, { status: 200 });
+      const data = await expectPageBody<{
+        content?: Array<Record<string, unknown>>;
+        pageNumber?: number;
+        pageSize?: number;
+        totalElements?: number;
+      }>(response, { status: 200 });
+      expect(Array.isArray(data.content)).toBeTruthy();
+      expect((data.content?.length ?? 0)).toBeLessThanOrEqual(5);
+      expect(typeof data.totalElements).toBe("number");
       if ((data.content?.length ?? 0) > 0) {
         const first = data.content?.[0] as Record<string, unknown>;
-        expect(first.id).toBeTruthy();
-        expect(first.name).toBeTruthy();
-        expect(first.propertyType).toBeTruthy();
+        expect(typeof first.id).toBe("number");
+        expect(typeof first.name).toBe("string");
+        expect(typeof first.propertyType).toBe("string");
+        expect(typeof first.transactionType).toBe("string");
       }
     });
 
@@ -82,6 +101,10 @@ test.describe("Public Page API Tests @api @api-read @regression", () => {
       expect(Array.isArray(data.streets)).toBeTruthy();
       expect(Array.isArray(data.directions)).toBeTruthy();
       expect(Array.isArray(data.levels)).toBeTruthy();
+      if ((data.districts?.length ?? 0) > 0) {
+        const firstDistrict = data.districts?.[0] as Record<string, unknown>;
+        expect(firstDistrict).toBeTruthy();
+      }
     });
   });
 });

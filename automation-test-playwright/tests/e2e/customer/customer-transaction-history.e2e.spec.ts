@@ -71,6 +71,14 @@ test.describe("Customer Transaction History E2E @regression", () => {
     await transactionPage.expectDetailModalContains(tempContract!.building.name);
     await transactionPage.expectDetailModalContains(`Mã hóa đơn: ${invoiceId}`);
     await transactionPage.closeDetailModal();
+
+    const rows = await MySqlDbClient.query<{ status: string; payment_method: string; transaction_code: string }>(
+      "SELECT status, payment_method, transaction_code FROM invoice WHERE id = ?",
+      [invoiceId]
+    );
+    expect(rows[0]?.status).toBe("PAID");
+    expect(rows[0]?.payment_method).toBe("BANK_QR");
+    expect(rows[0]?.transaction_code).toBe(`E2E-TX-${invoiceId}`);
   });
 
   test("[E2E-CUS-TXN-002] customer can filter transactions by invoice period", async ({ page }) => {
@@ -81,6 +89,16 @@ test.describe("Customer Transaction History E2E @regression", () => {
     await transactionPage.submitFilters();
     await transactionPage.expectResultCountBanner(1);
     await expect(transactionPage.rowByBuildingName(tempContract!.building.name)).toBeVisible();
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM invoice
+        WHERE id = ? AND month = ? AND year = ? AND status = 'PAID'
+      `,
+      [invoiceId, invoiceMonth, invoiceYear]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-CUS-TXN-003] customer sees empty state for unmatched transaction filter and can reset filters", async ({

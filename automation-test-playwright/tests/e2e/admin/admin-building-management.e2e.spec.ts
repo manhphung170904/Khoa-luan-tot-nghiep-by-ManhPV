@@ -71,6 +71,7 @@ test.describe("Admin Building Management E2E @regression", () => {
     const listPage = new AdminBuildingListPage(page);
     const formPage = new AdminBuildingFormPage(page);
     const buildingName = TestDataFactory.taoTenToaNha("E2E Building");
+    const taxCode = `TAX-${Date.now()}`;
 
     await page.goto("/admin/building/list");
     await listPage.openAddForm();
@@ -86,7 +87,7 @@ test.describe("Admin Building Management E2E @regression", () => {
       floorArea: 450,
       level: "A",
       direction: "DONG",
-      taxCode: `TAX-${Date.now()}`,
+      taxCode,
       linkOfBuilding: "https://example.com/building"
     });
     await formPage.fillRentFields({
@@ -101,13 +102,22 @@ test.describe("Admin Building Management E2E @regression", () => {
     });
     await formPage.setCoordinates(21.0686, 105.8033);
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/thành công|thêm bất động sản/i);
+    await formPage.expectSweetAlertContains(/thành công|thanh cong/i);
 
-    const rows = await MySqlDbClient.query<{ id: number }>(
-      "SELECT id FROM building WHERE name = ? ORDER BY id DESC LIMIT 1",
+    const rows = await MySqlDbClient.query<{ id: number; transaction_type: string; floor_area: number; tax_code: string }>(
+      `
+        SELECT id, transaction_type, floor_area, tax_code
+        FROM building
+        WHERE name = ?
+        ORDER BY id DESC
+        LIMIT 1
+      `,
       [buildingName]
     );
     expect(rows.length).toBe(1);
+    expect(rows[0]!.transaction_type).toBe("FOR_RENT");
+    expect(Number(rows[0]!.floor_area)).toBe(450);
+    expect(rows[0]!.tax_code).toBe(taxCode);
     cleanupBuildingIds.add(rows[0]!.id);
   });
 
@@ -136,14 +146,15 @@ test.describe("Admin Building Management E2E @regression", () => {
       rentAreaValues: "70,140"
     });
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/cập nhật bất động sản|thành công/i);
+    await formPage.expectSweetAlertContains(/thành công|thanh cong/i);
 
-    const rows = await MySqlDbClient.query<{ name: string; floor_area: number }>(
-      "SELECT name, floor_area FROM building WHERE id = ?",
+    const rows = await MySqlDbClient.query<{ name: string; floor_area: number; rent_price: number }>(
+      "SELECT name, floor_area, rent_price FROM building WHERE id = ?",
       [tempBuilding.id]
     );
     expect(rows[0]?.name).toBe(updatedName);
     expect(Number(rows[0]?.floor_area ?? 0)).toBe(999);
+    expect(Number(rows[0]?.rent_price ?? 0)).toBe(1300000);
   });
 
   test("[E2E-ADM-BLD-004] active-contract building edit page shows the lock banner", async ({ page }) => {
@@ -166,7 +177,7 @@ test.describe("Admin Building Management E2E @regression", () => {
     await listPage.waitForTableData();
     await listPage.deleteBuilding(tempBuilding.name);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xóa bất động sản|thành công/i);
+    await listPage.expectSweetAlertContains(/thành công|thanh cong/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM building WHERE id = ?", [tempBuilding.id]);

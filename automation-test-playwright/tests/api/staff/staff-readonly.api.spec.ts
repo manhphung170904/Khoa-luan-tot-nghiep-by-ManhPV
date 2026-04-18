@@ -48,7 +48,16 @@ test.describe("Staff API Read-only Contract Tests @api @regression", () => {
       const context = await createRoleContext(playwright, "staff");
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
-        await expectPageBody(response, { status: 200 });
+        expect(response.headers()["content-type"] ?? "").toContain("application/json");
+        const body = await expectPageBody<{
+          content?: Array<Record<string, unknown>>;
+          totalElements?: number;
+        }>(response, { status: 200 });
+        expect(Array.isArray(body.content)).toBeTruthy();
+        expect(typeof body.totalElements).toBe("number");
+        if ((body.content?.length ?? 0) > 0) {
+          expect(typeof body.content?.[0]?.id).toBe("number");
+        }
       } finally {
         await context.dispose();
       }
@@ -65,6 +74,7 @@ test.describe("Staff API Read-only Contract Tests @api @regression", () => {
 
         const expectedStatus = module.id === "API-STF-READ-005" ? 500 : 302;
         expectStatusExact(response, expectedStatus, `${module.name} readonly API should not expose synthetic write route`);
+        expect(response.status()).not.toBe(200);
       } finally {
         await context.dispose();
       }

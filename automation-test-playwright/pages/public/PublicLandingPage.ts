@@ -15,7 +15,6 @@ export class PublicLandingPage extends BasePage {
   readonly emptyState: Locator;
   readonly paginationContainer: Locator;
   readonly paginationButtons: Locator;
-  readonly activePaginationButton: Locator;
   readonly detailModal: Locator;
   readonly detailModalTitle: Locator;
   readonly detailModalBody: Locator;
@@ -35,7 +34,6 @@ export class PublicLandingPage extends BasePage {
     this.emptyState = this.page.locator(".empty-state");
     this.paginationContainer = this.page.locator("#paginationContainer");
     this.paginationButtons = this.paginationContainer.locator("button");
-    this.activePaginationButton = this.paginationContainer.locator('button[style*="background:var(--primary)"]');
     this.detailModal = this.page.locator("#modalContainer .modal.show");
     this.detailModalTitle = this.detailModal.locator(".modal-title");
     this.detailModalBody = this.detailModal.locator(".modal-body");
@@ -138,7 +136,7 @@ export class PublicLandingPage extends BasePage {
         const cards = await this.buildingCards.count();
         const emptyVisible = await this.emptyState.isVisible().catch(() => false);
         const summary = (await this.totalBuilding.textContent())?.trim() ?? "";
-        return cards > 0 || emptyVisible || /Tìm thấy/i.test(summary);
+        return cards > 0 || emptyVisible || /Tìm thấy|Tim thay/i.test(summary);
       })
       .toBeTruthy();
   }
@@ -177,7 +175,10 @@ export class PublicLandingPage extends BasePage {
   }
 
   async activePaginationText(): Promise<string> {
-    return ((await this.activePaginationButton.first().textContent()) ?? "").trim();
+    return this.paginationButtons.evaluateAll((buttons) => {
+      const activeButton = buttons.find((button) => button.getAttribute("style")?.includes("font-weight:700"));
+      return activeButton?.textContent?.trim() ?? "";
+    });
   }
 
   async isFilterCollapsed(): Promise<boolean> {

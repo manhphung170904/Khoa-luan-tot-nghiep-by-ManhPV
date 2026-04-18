@@ -1,4 +1,4 @@
-import { test, type APIRequestContext } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { StaffSaleContractListPage } from "@pages/staff/StaffSaleContractListPage";
@@ -35,6 +35,12 @@ test.describe("Staff Sale Contract List E2E @regression", () => {
     await saleContractPage.expectLoaded();
     await saleContractPage.waitForTableData();
     await saleContractPage.expectRowVisible(tempSaleContract!.building.name);
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM sale_contract WHERE id = ? AND staff_id = ? AND customer_id = ? AND building_id = ?",
+      [tempSaleContract!.id, tempSaleContract!.staff.id, tempSaleContract!.customer.id, tempSaleContract!.building.id]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-STF-SALE-002] staff can filter sale contracts by customer and building", async ({ page }) => {

@@ -67,12 +67,12 @@ test.describe("Customer Profile E2E @regression", () => {
 
     await profilePage.openUsernameModal();
     await profilePage.sendOtpFromModal("username");
-    await profilePage.expectSweetAlertContains(/OTP|gui ma|gửi mã/i);
+    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_USERNAME");
     await profilePage.submitUsernameChange(`cust${Date.now().toString().slice(-7)}`, otp);
-    await profilePage.expectSweetAlertContains(/lỗi|loi|thất bại|th.t b.i|error|đã có mật khẩu/i);
+    await profilePage.expectSweetAlertContains(/loi|that bai|error|da co mat khau/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const dbRows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [tempUser.id]);
@@ -90,12 +90,12 @@ test.describe("Customer Profile E2E @regression", () => {
 
     await profilePage.openPhoneModal();
     await profilePage.sendOtpFromModal("phone");
-    await profilePage.expectSweetAlertContains(/OTP|gui ma|gửi mã/i);
+    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PHONE");
     await profilePage.submitPhoneChange(newPhone, otp);
-    await profilePage.expectSweetAlertContains(/thanh cong|c.p nh.t s./i);
+    await profilePage.expectSweetAlertContains(/thanh cong|cap nhat so/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempUser!.id]);
       return rows[0]?.phone ?? "";
@@ -117,15 +117,25 @@ test.describe("Customer Profile E2E @regression", () => {
 
     const profilePage = new CustomerProfilePage(page);
     const newPassword = "NewCustomerPwd1!";
+    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempUser.id]);
+    const oldHash = oldHashRows[0]!.password;
 
     await profilePage.openPasswordModal();
     await profilePage.sendOtpFromModal("password");
-    await profilePage.expectSweetAlertContains(/OTP|gui ma|gửi mã/i);
+    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PASSWORD");
     await profilePage.submitPasswordChange(newPassword, newPassword, otp);
-    await profilePage.expectSweetAlertContains(/thanh cong|m.t kh.u/i);
+    await profilePage.expectSweetAlertContains(/thanh cong|mat khau/i);
+    await expect.poll(async () => {
+      const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempUser!.id]);
+      return rows[0]?.password ?? "";
+    }).not.toBe(oldHash);
+
+    await AuthSessionHelper.logoutUi(page);
+    await loginAsTempUser(page, tempUser.username, tempUser.password);
+    await page.waitForURL(/\/login\?errorMessage=/);
 
     await AuthSessionHelper.logoutUi(page);
     await loginAsTempUser(page, tempUser.username, newPassword);

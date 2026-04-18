@@ -42,31 +42,41 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: { ...TestDataFactory.buildInvoicePayload(), month: "Muoi Hai" }
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string; errors?: Array<{ field?: string }> }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/invoices"
     });
+    expect(errorBody.message).toMatch(/month|tháng|thang|integer/i);
   });
 
   test("[INV_015] POST /invoices rejects current-month invoice creation", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
       const response = await admin.post("/api/v1/admin/invoices", {
         failOnStatusCode: false,
         data: TestDataFactory.buildInvoicePayload({
           contractId: temp.id,
           customerId: temp.customer.id,
-          month: now.getMonth() + 1,
-          year: now.getFullYear(),
-          dueDate: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-28`
+          month: currentMonth,
+          year: currentYear,
+          dueDate: `${currentYear}-${String(currentMonth).padStart(2, "0")}-28`
         })
       });
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
+      expect(errorBody.message).toMatch(/current|tháng hiện tại|thang hien tai|liền trước|lien truoc|invoice month/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
+        [temp.id, currentMonth, currentYear]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -83,11 +93,12 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           dueDate
         })
       });
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
+      expect(errorBody.message).toMatch(/contract|hợp đồng|hop dong|không tìm thấy|khong tim thay/i);
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -104,11 +115,12 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           dueDate
         })
       });
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
+      expect(errorBody.message).toMatch(/customer|khách hàng|khach hang|không khớp|khong khop|hợp đồng|hop dong/i);
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -126,11 +138,18 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           dueDate: sameMonthDueDate
         })
       });
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
+      expect(errorBody.message).toMatch(/due|han thanh toan|hạn thanh toán|ngay|ngày|sau thang lap hoa don|sau tháng lập hóa đơn/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
+        [temp.id, prevMonth, prevYear]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -288,11 +307,12 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
         failOnStatusCode: false,
         data: payload
       });
-      await expectApiErrorBody(duplicateResponse, {
+      const duplicateError = await expectApiErrorBody<{ message?: string }>(duplicateResponse, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
+      expect(duplicateError.message).toMatch(/duplicate|ton tai|tồn tại|da co|đã có|trung|hoa don|hóa đơn|thang|tháng|nam|năm/i);
 
       const listResponse = await admin.get("/api/v1/admin/invoices", {
         failOnStatusCode: false,
@@ -390,11 +410,19 @@ test.describe.serial("Admin Invoice API Tests @api @regression", () => {
           totalAmount: 99999
         }
       });
-      await expectApiErrorBody(updatePaidResponse, {
+      const updatePaidError = await expectApiErrorBody<{ message?: string }>(updatePaidResponse, {
         status: 400,
         code: "BAD_REQUEST",
         path: `/api/v1/admin/invoices/${createdInvoiceId}`
       });
+      expect(updatePaidError.message).toMatch(/paid|da thanh toan|đã thanh toán|khong the cap nhat|không thể cập nhật|dang cho xu ly|đang chờ xử lý/i);
+
+      const unchangedRows = await MySqlDbClient.query<{ total_amount: number; status: string }>(
+        "SELECT total_amount, status FROM invoice WHERE id = ?",
+        [createdInvoiceId]
+      );
+      expect(Number(unchangedRows[0]!.total_amount)).toBe(19999);
+      expect(unchangedRows[0]!.status).toBe("PAID");
 
       const statusUpdateResponse = await admin.put("/api/v1/admin/invoices/status", {
         failOnStatusCode: false

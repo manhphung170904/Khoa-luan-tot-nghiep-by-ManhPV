@@ -88,7 +88,24 @@ export class StaffProfilePage extends StaffRoutedPage {
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {
     await this.waitForSweetAlert();
-    await expect(this.toastPopup()).toContainText(text);
+    const popup = this.toastPopup();
+    const rawText = ((await popup.textContent()) ?? "").trim();
+    const normalize = (value: string): string =>
+      value
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+
+    const normalizedText = normalize(rawText);
+    if (typeof text === "string") {
+      expect(rawText.includes(text) || normalizedText.includes(normalize(text))).toBeTruthy();
+      return;
+    }
+
+    const normalizedPattern = new RegExp(normalize(text.source), text.flags.replace("g", ""));
+    expect(text.test(rawText) || normalizedPattern.test(normalizedText)).toBeTruthy();
   }
 
   async confirmSweetAlertIfPresent(): Promise<void> {

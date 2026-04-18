@@ -82,11 +82,22 @@ test.describe("Customer Property Request API @api @regression", () => {
         data: TestDataFactory.buildPropertyRequestPayload({ buildingId: scenario.buildingId }, "RENT")
       });
 
-      await expectApiErrorBody(duplicateResponse, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(duplicateResponse, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/customer/property-requests"
       });
+      expect(errorBody.message).toMatch(/Đã tồn tại|yêu cầu|đang chờ xử lý|pending|ton tai|yeu cau/i);
+
+      const duplicateRows = await MySqlDbClient.query<{ count: number }>(
+        `
+          SELECT COUNT(*) AS count
+          FROM property_request
+          WHERE customer_id = ? AND building_id = ? AND status = ?
+        `,
+        [scenario.customerId, scenario.buildingId, "PENDING"]
+      );
+      expect(Number(duplicateRows[0]?.count ?? 0)).toBe(1);
     } finally {
       await scenario.cleanup();
     }

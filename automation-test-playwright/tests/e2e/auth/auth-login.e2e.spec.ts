@@ -1,4 +1,5 @@
-import { test, type APIRequestContext } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
+import { MySqlDbClient } from "@db/MySqlDbClient";
 import { LoginPage } from "@pages/auth/LoginPage";
 import {
   cleanupTempCustomerProfileUser,
@@ -22,6 +23,7 @@ test.describe("Auth Login E2E @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
+    await MySqlDbClient.close();
   });
 
   test("[E2E-AUTH-LOGIN-001] login page supports navigation to register and forgot password", async ({ page }) => {
@@ -43,7 +45,9 @@ test.describe("Auth Login E2E @regression", () => {
     await loginPage.assertLoaded();
     await loginPage.login("unknown-user", "wrong-password");
     await page.waitForURL(/\/login\?errorMessage=/);
-    await loginPage.expectPopupContains(/Đăng nhập thất bại|Sai tài khoản hoặc mật khẩu|Tài khoản không tồn tại/i);
+    await loginPage.expectPopupContains(
+      /đăng nhập thất bại|dang nhap that bai|sai tài khoản hoặc mật khẩu|sai tai khoan hoac mat khau|tài khoản không tồn tại|tai khoan khong ton tai/i
+    );
   });
 
   test("[E2E-AUTH-LOGIN-003] valid local customer login redirects to customer home", async ({ page }) => {
@@ -53,5 +57,6 @@ test.describe("Auth Login E2E @regression", () => {
     await loginPage.open();
     await loginPage.login(tempUser.username, tempUser.password);
     await page.waitForURL(/\/customer\/home/);
+    await expect(page).toHaveURL(/\/customer\/home/);
   });
 });

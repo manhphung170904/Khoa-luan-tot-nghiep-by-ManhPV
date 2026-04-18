@@ -267,13 +267,17 @@ export class TempEntityHelper {
     const taoResponse = await request.post("/api/v1/admin/sale-contracts", { data: payload });
     expect(taoResponse.status()).toBe(200);
 
-    const timResponse = await request.get("/api/v1/admin/sale-contracts", {
-      params: { page: 1, size: 20, customerName: customer.fullName }
-    });
-    const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
-    const saleContract = this
-      .layNoiDung(duLieu)
-      .find((item) => item.customer === customer.fullName || item.building === building.name);
+    const saleContractRows = await MySqlDbClient.query<{ id: number }>(
+      `
+        SELECT id
+        FROM sale_contract
+        WHERE building_id = ? AND customer_id = ? AND staff_id = ?
+        ORDER BY id DESC
+        LIMIT 1
+      `,
+      [building.id, customer.id, staff.id]
+    );
+    const saleContract = saleContractRows[0];
 
     expect(saleContract?.id, "Khong tim thay id cua sale contract vua tao").toBeTruthy();
     return { id: Number(saleContract!.id), staff, customer, building };

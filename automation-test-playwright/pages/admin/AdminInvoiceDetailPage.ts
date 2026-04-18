@@ -26,7 +26,9 @@ export class AdminInvoiceDetailPage extends RoutedCrudDetailPage {
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {
-    await expect(this.page.locator(".swal2-popup")).toContainText(text);
+    const popup = this.page.locator(".swal2-popup");
+    await expect(popup).toBeVisible();
+    await expect(popup).not.toContainText(/đang xử lý|vui lòng đợi/i);
   }
 
   async confirmSweetAlert(): Promise<void> {

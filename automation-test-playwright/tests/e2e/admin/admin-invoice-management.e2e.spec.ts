@@ -101,11 +101,11 @@ test.describe("Admin Invoice Management E2E @regression", () => {
       waterUsage: 8
     });
     await formPage.submitInvoice();
-    await formPage.expectSweetAlertContains(/thêm hóa đơn thành công|thành công/i);
+    await formPage.expectSweetAlertContains(/thÃªm hÃ³a Ä‘Æ¡n thÃ nh cÃ´ng|thÃ nh cÃ´ng/i);
 
-    const rows = await MySqlDbClient.query<{ id: number }>(
+    const rows = await MySqlDbClient.query<{ id: number; status: string }>(
       `
-        SELECT id
+        SELECT id, status
         FROM invoice
         WHERE contract_id = ? AND customer_id = ? AND month = ? AND year = ?
         ORDER BY id DESC
@@ -115,6 +115,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     );
 
     expect(rows.length).toBe(1);
+    expect(rows[0]!.status).toBe("PENDING");
     createdInvoices.push({
       id: rows[0]!.id,
       contractId: contract.id,
@@ -144,7 +145,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
       waterUsage: 10
     });
     await formPage.submitInvoice();
-    await formPage.expectSweetAlertContains(/cập nhật hóa đơn thành công|thành công/i);
+    await formPage.expectSweetAlertContains(/cáº­p nháº­t hÃ³a Ä‘Æ¡n thÃ nh cÃ´ng|thÃ nh cÃ´ng/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ due_date: string }>(
@@ -184,7 +185,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     await detailPage.expectLoaded(invoice.id);
     await detailPage.confirmInvoicePaid();
     await detailPage.confirmSweetAlert();
-    await detailPage.expectSweetAlertContains(/xác nhận thanh toán|thành công/i);
+    await detailPage.expectSweetAlertContains(/xÃ¡c nháº­n thanh toÃ¡n|thÃ nh cÃ´ng/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);
@@ -210,7 +211,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     await listPage.waitForTableData();
     await page.locator("#invoiceTableBody tr").filter({ hasText: contract.building.name }).first().locator(".btn-delete").click();
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xóa hóa đơn thành công|thành công/i);
+    await listPage.expectSweetAlertContains(/xÃ³a hÃ³a Ä‘Æ¡n thÃ nh cÃ´ng|thÃ nh cÃ´ng/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);
@@ -234,7 +235,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     await page.goto("/admin/invoice/list");
     await listPage.updateStatuses();
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/cập nhật thành công|thành công/i);
+    await listPage.expectSweetAlertContains(/cáº­p nháº­t thÃ nh cÃ´ng|thÃ nh cÃ´ng/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);

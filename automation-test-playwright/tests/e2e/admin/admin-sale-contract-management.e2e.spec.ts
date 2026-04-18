@@ -123,11 +123,11 @@ test.describe("Admin Sale Contract Management E2E @regression", () => {
     await formPage.fillSalePrice(3600000000);
     await formPage.fillNote("Playwright sale contract note");
     await formPage.submitSaleContract();
-    await formPage.expectSweetAlertContains(/thành công|thanh cong|thêm hợp đồng|them hop dong/i);
+    await formPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|thÃªm há»£p Ä‘á»“ng|them hop dong/i);
 
-    const rows = await MySqlDbClient.query<{ id: number }>(
+    const rows = await MySqlDbClient.query<{ id: number; sale_price: number }>(
       `
-        SELECT id
+        SELECT id, sale_price
         FROM sale_contract
         WHERE customer_id = ? AND building_id = ?
         ORDER BY id DESC
@@ -136,6 +136,7 @@ test.describe("Admin Sale Contract Management E2E @regression", () => {
       [scenario.customer.id, scenario.building.id]
     );
     expect(rows.length).toBe(1);
+    expect(Number(rows[0]!.sale_price)).toBe(3600000000);
     cleanupSaleContractIds.add(rows[0]!.id);
   });
 
@@ -151,7 +152,7 @@ test.describe("Admin Sale Contract Management E2E @regression", () => {
     await formPage.expectEditLoaded(tempSaleContract.id);
     await formPage.fillTransferDate("2026-06-16");
     await formPage.submitSaleContract();
-    await formPage.expectSweetAlertContains(/thành công|thanh cong|cập nhật|cap nhat/i);
+    await formPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|cáº­p nháº­t|cap nhat/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ transfer_date: string }>(
@@ -169,12 +170,23 @@ test.describe("Admin Sale Contract Management E2E @regression", () => {
     cleanupBuildingIds.add(tempSaleContract.building.id);
     cleanupCustomerIds.add(tempSaleContract.customer.id);
 
+    const beforeRows = await MySqlDbClient.query<{ transfer_date: string | null }>(
+      "SELECT DATE_FORMAT(transfer_date, '%Y-%m-%d') AS transfer_date FROM sale_contract WHERE id = ?",
+      [tempSaleContract.id]
+    );
+
     const formPage = new AdminSaleContractFormPage(page);
     await page.goto(`/admin/sale-contract/edit/${tempSaleContract.id}`);
     await formPage.expectEditLoaded(tempSaleContract.id);
     await formPage.fillTransferDate("2025-01-01");
     await formPage.submitSaleContract();
-    await formPage.expectSweetAlertContains(/ngày bàn giao|ngay ban giao|không hợp lệ|khong hop le|transfer date/i);
+    await formPage.expectSweetAlertContains(/ngÃ y bÃ n giao|ngay ban giao|khÃ´ng há»£p lá»‡|khong hop le|transfer date/i);
+
+    const afterRows = await MySqlDbClient.query<{ transfer_date: string | null }>(
+      "SELECT DATE_FORMAT(transfer_date, '%Y-%m-%d') AS transfer_date FROM sale_contract WHERE id = ?",
+      [tempSaleContract.id]
+    );
+    expect(afterRows[0]?.transfer_date ?? null).toBe(beforeRows[0]?.transfer_date ?? null);
   });
 
   test("[E2E-ADM-SCT-005] admin can delete a sale contract from the detail page", async ({ page }) => {
@@ -189,7 +201,7 @@ test.describe("Admin Sale Contract Management E2E @regression", () => {
     await detailPage.expectLoaded(tempSaleContract.id);
     await detailPage.deleteSaleContract();
     await detailPage.confirmSweetAlert();
-    await detailPage.expectSweetAlertContains(/thành công|thanh cong|xóa hợp đồng mua bán thành công/i);
+    await detailPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|xÃ³a há»£p Ä‘á»“ng mua bÃ¡n thÃ nh cÃ´ng/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM sale_contract WHERE id = ?", [tempSaleContract.id]);

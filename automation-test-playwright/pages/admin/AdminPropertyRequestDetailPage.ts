@@ -68,15 +68,11 @@ export class AdminPropertyRequestDetailPage extends RoutedCrudDetailPage {
     const normalizedText = normalize(popupText);
 
     if (typeof text === "string") {
-      expect(rawText.includes(text) || normalizedText.includes(normalize(text)) || normalizedText.length > 0).toBeTruthy();
+      expect(rawText.includes(text) || normalizedText.includes(normalize(text))).toBeTruthy();
       return;
     }
 
-    const normalizedPattern = new RegExp(text.source, text.flags.replace("g", ""));
-    const hasKnownSuccessMessage =
-      normalizedText.includes("da tu choi") ||
-      normalizedText.includes("thanh cong") ||
-      normalizedText.includes("rejected");
-    expect(text.test(rawText) || normalizedPattern.test(normalizedText) || hasKnownSuccessMessage || normalizedText.length > 0).toBeTruthy();
+    const normalizedPattern = new RegExp(normalize(text.source), text.flags.replace("g", ""));
+    expect(text.test(rawText) || normalizedPattern.test(normalizedText)).toBeTruthy();
   }
 }

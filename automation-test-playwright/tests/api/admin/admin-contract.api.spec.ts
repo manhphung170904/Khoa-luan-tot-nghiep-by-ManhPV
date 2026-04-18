@@ -19,30 +19,52 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
   });
 
   test("[CTR_002] POST /contracts rejects negative rentPrice", async ({ adminApi }) => {
+    const payload = TestDataFactory.buildContractPayload({ rentPrice: -5 });
     const response = await adminApi.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildContractPayload({ rentPrice: -5 })
+      data: payload
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts"
     });
+    expect(errorBody.message).toMatch(/rent|giá|gia|price/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND rent_price = ?",
+      [payload.customerId, payload.buildingId, payload.rentPrice]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[CTR_005] POST /contracts rejects endDate before startDate", async ({ adminApi }) => {
+  test("[CTR_005] POST /contracts rejects endDate before startDate", async ({ adminApi, cleanupRegistry }) => {
+    const temp = await TempEntityHelper.taoContractTam(adminApi);
+    cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
+
+    const payload = TestDataFactory.buildContractPayload({
+      customerId: temp.customer.id,
+      buildingId: temp.building.id,
+      staffId: temp.staff.id,
+      startDate: "2026-06-01",
+      endDate: "2026-05-01"
+    });
     const response = await adminApi.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildContractPayload({
-        startDate: "2026-06-01",
-        endDate: "2026-05-01"
-      })
+      data: payload
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts"
     });
+    expect(errorBody.message).toMatch(/end|start|ngày|ngay/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND start_date = ? AND end_date = ?",
+      [payload.customerId, payload.buildingId, payload.startDate, payload.endDate]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
   test("[CTR_011] GET /contracts/metadata returns select options shape", async ({ adminApi }) => {
@@ -70,11 +92,18 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
           staffId: temp.staff.id
         })
       });
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
+      expect(errorBody.message).toMatch(/building|bất động sản|bat dong san|tòa nhà|toa nha/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
+        [temp.customer.id, 999999, temp.staff.id]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {}
   });
 
@@ -90,11 +119,18 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
           staffId: temp.staff.id
         })
       });
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
+      expect(errorBody.message).toMatch(/customer|khách hàng|khach hang|không tìm thấy|khong tim thay/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
+        [999999, temp.building.id, temp.staff.id]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {}
   });
 
@@ -113,11 +149,18 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
           staffId: outsiderStaff.id
         })
       });
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
+      expect(errorBody.message).toMatch(/staff|phan cong|building|toa nha/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
+        [managedContract.customer.id, managedContract.building.id, outsiderStaff.id]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {}
   });
 
@@ -142,29 +185,49 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
           staffId: contractStaff.id
         })
       });
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
+      expect(errorBody.message).toMatch(/staff|phan cong|customer|khach hang/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
+        [tempCustomer.id, tempBuilding.id, contractStaff.id]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {}
   });
 
-  test("[CTR_014] PUT /contracts/{id} rejects nonexistent contract", async ({ adminApi }) => {
+  test("[CTR_014] PUT /contracts/{id} rejects nonexistent contract", async ({ adminApi, cleanupRegistry }) => {
+    const tempStaff = await TempEntityHelper.taoStaffTam(adminApi);
+    const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
+    await TempEntityHelper.capNhatPhanCongBuilding(adminApi, tempStaff.id, [tempBuilding.id]);
+    const tempCustomer = await TempEntityHelper.taoCustomerTam(adminApi, tempStaff.id);
+    await TempEntityHelper.capNhatPhanCongCustomer(adminApi, tempStaff.id, [tempCustomer.id]);
+    cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, {
+      id: 0,
+      staff: tempStaff,
+      customer: tempCustomer,
+      building: tempBuilding
+    }));
+
     const response = await adminApi.put("/api/v1/admin/contracts/999999999", {
       failOnStatusCode: false,
       data: TestDataFactory.buildContractPayload({
-        customerId: 1,
-        buildingId: 1,
-        staffId: 1
+        customerId: tempCustomer.id,
+        buildingId: tempBuilding.id,
+        staffId: tempStaff.id
       })
     });
 
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts/999999999"
     });
+    expect(errorBody.message).toMatch(/contract|hop dong|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
   });
 
   test("[CTR_006] contract create/list/filter/update/status/delete lifecycle with temp data", async ({
@@ -279,11 +342,12 @@ test.describe.serial("Admin Contract API Tests @api @api-write @regression", () 
       const missingDelete = await adminApi.delete("/api/v1/admin/contracts/999999", {
         failOnStatusCode: false
       });
-      await expectApiErrorBody(missingDelete, {
+      const missingDeleteError = await expectApiErrorBody<{ message?: string }>(missingDelete, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts/999999"
       });
+      expect(missingDeleteError.message).toMatch(/contract|hop dong|hợp đồng|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
 
       const deleteResponse = await adminApi.delete(`/api/v1/admin/contracts/${createdContractId}`, {
         failOnStatusCode: false

@@ -105,11 +105,12 @@ test.describe("REST Auth Session API @api @regression", () => {
         }
       });
 
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/auth/login"
       });
+      expect(errorBody.message).toMatch(/credential|username|password|tên đăng nhập|mật khẩu|dang nhap|mat khau|khong dung/i);
     } finally {
       await context.dispose();
     }
@@ -170,6 +171,12 @@ test.describe("REST Auth Session API @api @regression", () => {
       );
       expect(otpRows.length).toBeGreaterThan(0);
       expect(otpRows[0]!.status).toBe("PENDING");
+
+      const afterRows = await MySqlDbClient.query<{ total: number }>(
+        "SELECT COUNT(*) AS total FROM email_verification WHERE email = ? AND purpose = ?",
+        [email, "RESET_PASSWORD"]
+      );
+      expect(afterRows[0]!.total).toBeGreaterThan(0);
     } finally {
       await context.dispose();
     }

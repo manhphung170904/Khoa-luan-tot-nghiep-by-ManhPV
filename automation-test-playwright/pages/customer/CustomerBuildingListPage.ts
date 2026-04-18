@@ -42,7 +42,7 @@ export class CustomerBuildingListPage extends RoutedCrudListPage {
   }
 
   async expectDetailModalContains(name: string): Promise<void> {
-    const modal = this.page.locator(".modal.show").filter({ hasText: name }).first();
+    const modal = this.page.locator("#modalContainer .modal.show").first();
     await expect(modal).toBeVisible();
     await expect(modal).toContainText(name);
   }

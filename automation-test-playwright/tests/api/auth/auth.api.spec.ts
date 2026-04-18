@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
 import { env } from "@config/env";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
@@ -15,6 +15,27 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
 
   let validLocalEmail = "";
   let registrationTicket = "";
+
+  async function issueRegistrationTicket(request: APIRequestContext, email: string): Promise<string> {
+    const sendResponse = await request.post("/auth/register/send-code", {
+      form: { email },
+      failOnStatusCode: false,
+      maxRedirects: 0
+    });
+    expectStatusExact(sendResponse, 302, "Registration OTP send should redirect to verify");
+
+    const otp = await ApiOtpAccessHelper.latestOtp(request, email, "REGISTER");
+    const verifyResponse = await request.post("/auth/register/verify", {
+      form: { email, otp },
+      failOnStatusCode: false,
+      maxRedirects: 0
+    });
+    expectStatusExact(verifyResponse, 302, "Registration OTP verify should redirect to complete");
+
+    const ticketMatch = verifyResponse.headers().location.match(/ticket=([^&]+)/);
+    expect(ticketMatch).not.toBeNull();
+    return ticketMatch?.[1] ?? "";
+  }
 
   test.beforeAll(async () => {
     const customers = await MySqlDbClient.query<{ email: string }>(
@@ -159,13 +180,21 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
     test("[API_TC_007] [Negative] Complete registration fails when passwords do not match @regression", async ({
       request
     }) => {
+      const isolatedUser = {
+        username: `testuser_auth_mismatch_${Date.now()}`,
+        password: "Password@123",
+        email: `testauth_mismatch_${Date.now()}@example.com`,
+        fullName: "Bot Testing"
+      };
+      const mismatchTicket = await issueRegistrationTicket(request, isolatedUser.email);
+
       const response = await request.post("/auth/register/complete", {
         form: {
-          ticket: registrationTicket || "invalid_ticket",
-          email: validUser.email,
-          fullName: validUser.fullName,
-          username: `${validUser.username}_failed`,
-          password: validUser.password,
+          ticket: mismatchTicket,
+          email: isolatedUser.email,
+          fullName: isolatedUser.fullName,
+          username: `${isolatedUser.username}_failed`,
+          password: isolatedUser.password,
           confirmPassword: "WrongConfirm!"
         },
         failOnStatusCode: false,
@@ -175,6 +204,14 @@ test.describe.serial("Authentication Web Flow Contract Tests @api @api-write @ot
       expectStatusExact(response, 302, "Registration complete mismatch should redirect with error");
       expect(response.headers().location).toContain("/register/complete");
       expect(response.headers().location).toContain("errorMessage");
+
+      const createdRows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM customer WHERE email = ? OR username = ?",
+        [isolatedUser.email, `${isolatedUser.username}_failed`]
+      );
+      expect(Number(createdRows[0]?.count ?? 0)).toBe(0);
+
+      await MySqlDbClient.execute("DELETE FROM email_verification WHERE email = ?", [isolatedUser.email]);
     });
   });
 

@@ -47,10 +47,22 @@ test.describe("Customer API Read-only Contract Tests @api @regression", () => {
       const context = await createRoleContext(playwright, "customer");
       try {
         const response = await context.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
+        expect(response.headers()["content-type"] ?? "").toContain("application/json");
         if (module.expectsPage) {
-          await expectPageBody(response, { status: 200 });
+          const body = await expectPageBody<{
+            content?: Array<Record<string, unknown>>;
+            totalElements?: number;
+          }>(response, { status: 200 });
+          expect(Array.isArray(body.content)).toBeTruthy();
+          expect(typeof body.totalElements).toBe("number");
+          if ((body.content?.length ?? 0) > 0) {
+            expect(typeof body.content?.[0]?.id).toBe("number");
+          }
         } else {
-          await expectArrayBody(response, 200);
+          const body = await expectArrayBody<Record<string, unknown>>(response, 200);
+          if (body.length > 0) {
+            expect(typeof body[0]!.id).toBe("number");
+          }
         }
       } finally {
         await context.dispose();

@@ -65,11 +65,12 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: invalidPayload
       });
 
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
+      expect(errorBody.message).toMatch(/name|tên bất động sản|ten bat dong san|district|quận|quan|required|bắt buộc|bat buoc/i);
     });
 
     test("[BLD_012] POST /buildings rejects missing latitude and longitude", async () => {
@@ -82,11 +83,12 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: invalidPayload
       });
 
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
+      expect(errorBody.message).toMatch(/latitude|longitude|tọa độ|toa do|required|bắt buộc|bat buoc/i);
     });
 
     test("[BLD_013] POST /buildings rejects blank ward and street", async () => {
@@ -95,11 +97,12 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: { ...validPayload, ward: "", street: "" }
       });
 
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
+      expect(errorBody.message).toMatch(/ward|street|phường|phuong|đường|duong|bắt buộc|bat buoc|không được để trống|khong duoc de trong/i);
     });
 
     test("[BLD_014] POST /buildings fails on unsupported propertyType", async () => {
@@ -117,11 +120,12 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: { ...validPayload, numberOfFloor: -99 }
       });
 
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
+      expect(errorBody.message).toMatch(/floor|tang|so tang|số tầng|>=\s*0|khong am|không âm|number/i);
     });
 
     test("[BLD_004] POST /buildings creates building and persists to DB", async () => {
@@ -170,7 +174,7 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
     test("[BLD_005] GET /buildings lists the created building", async () => {
       const response = await admin.get("/api/v1/admin/buildings", {
         failOnStatusCode: false,
-        params: { page: 1, size: 100 }
+        params: { page: 1, size: 100, name: createdBuildingName }
       });
 
       const data = await expectPageBody<{
@@ -240,11 +244,12 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         data: { ...validPayload, id: null }
       });
 
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/999999999"
       });
+      expect(errorBody.message).toMatch(/building|toa nha|bat dong san|bất động sản|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
     });
 
     test("[BLD_008] PUT /buildings/{id} blocks sold building updates with temp sale-contract data", async () => {
@@ -270,11 +275,15 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
           )
         });
 
-        await expectApiErrorBody(response, {
+        const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
           status: 400,
           code: "BAD_REQUEST",
           path: `/api/v1/admin/buildings/${tempSaleContract.building.id}`
         });
+        expect(errorBody.message).toMatch(/sold|đã bán|da ban|sale contract|hợp đồng mua bán|hop dong mua ban/i);
+
+        const rows = await MySqlDbClient.query<{ name: string }>("SELECT name FROM building WHERE id = ?", [tempSaleContract.building.id]);
+        expect(rows[0]?.name).toBe(tempSaleContract.building.name);
       } finally {
         await TempEntityHelper.xoaSaleContractTam(admin, tempSaleContract);
       }
@@ -315,11 +324,15 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
           failOnStatusCode: false
         });
 
-        await expectApiErrorBody(response, {
+        const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
           status: 400,
           code: "BAD_REQUEST",
           path: `/api/v1/admin/buildings/${tempContract.building.id}`
         });
+        expect(errorBody.message).toMatch(/hợp đồng|hop dong|liên quan|lien quan|contract/i);
+
+        const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM building WHERE id = ?", [tempContract.building.id]);
+        expect(Number(rows[0]?.count ?? 0)).toBe(1);
       } finally {
         await TempEntityHelper.xoaContractTam(admin, tempContract);
       }
@@ -354,11 +367,12 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         failOnStatusCode: false
       });
 
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/999999"
       });
+      expect(errorBody.message).toMatch(/building|toa nha|bat dong san|bất động sản|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
     });
 
     test("[BLD_011] DELETE /buildings/{id} deletes created building", async () => {
@@ -407,11 +421,12 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
+      expect(errorBody.message).toMatch(/file|tep|tệp|anh|ảnh|empty|rong|rỗng|chon|chọn/i);
     });
 
     test("[BLD_U02] POST /buildings/image rejects unsupported mime type", async () => {
@@ -422,11 +437,12 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
+      expect(errorBody.message).toMatch(/image|mime|type|dinh dang|tệp|tep|jpg|png|webp|hỗ trợ|ho tro/i);
     });
 
     test("[BLD_U07] POST /buildings/image rejects invalid extension even with image mime", async () => {
@@ -437,11 +453,12 @@ test.describe.serial("Admin Building API Tests @api @regression", () => {
         }
       });
 
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
+      expect(errorBody.message).toMatch(/extension|file|jpg|jpeg|dinh dang/i);
     });
 
     test("[BLD_U03] POST /buildings/image currently accepts corrupt JPG content when mime/ext pass", async () => {

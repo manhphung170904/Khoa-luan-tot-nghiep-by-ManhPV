@@ -131,6 +131,7 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
   });
 
   test("[STF-PRO-003] rejects invalid OTP for username update", async () => {
+    const originalUsername = tempStaff.username;
     const response = await staffContext.put("/api/v1/staff/profile/username", {
       failOnStatusCode: false,
       data: {
@@ -138,11 +139,15 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp: "111111"
       }
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/username"
     });
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc/i);
+
+    const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempStaff.id]);
+    expect(rows[0]!.username).toBe(originalUsername);
   });
 
   test("[STF-PRO-004] updates username with valid OTP", async () => {
@@ -169,6 +174,7 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
   });
 
   test("[STF-PRO-005] rejects email update with wrong current password", async () => {
+    const originalEmail = tempStaff.email;
     const response = await staffContext.put("/api/v1/staff/profile/email", {
       failOnStatusCode: false,
       data: {
@@ -176,11 +182,15 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         password: "wrong-password"
       }
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/email"
     });
+    expect(errorBody.message).toMatch(/password|mật khẩu|mat khau|hiện tại|hien tai|khong dung/i);
+
+    const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM staff WHERE id = ?", [tempStaff.id]);
+    expect(rows[0]!.email).toBe(originalEmail);
   });
 
   test("[STF-PRO-006] updates email with valid current password", async () => {
@@ -227,6 +237,7 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
   });
 
   test("[STF-PRO-007A] rejects phone update with invalid OTP", async () => {
+    const originalPhone = tempStaff.phone;
     const response = await staffContext.put("/api/v1/staff/profile/phone-number", {
       failOnStatusCode: false,
       data: {
@@ -234,16 +245,22 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp: "111111"
       }
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/phone-number"
     });
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han/i);
+
+    const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempStaff.id]);
+    expect(rows[0]!.phone).toBe(originalPhone);
   });
 
   test("[STF-PRO-008] rejects password update when new password is too short", async () => {
     await sendOtp("PROFILE_PASSWORD");
     const otp = await ApiOtpAccessHelper.latestOtp(staffContext, tempStaff.email, "PROFILE_PASSWORD");
+    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
+    const oldHash = oldHashRows[0]!.password;
 
     const response = await staffContext.put("/api/v1/staff/profile/password", {
       failOnStatusCode: false,
@@ -254,11 +271,15 @@ test.describe.serial("Staff Profile API Tests @api @api-write @otp @regression",
         otp
       }
     });
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/password"
     });
+    expect(errorBody.message).toMatch(/short|ngắn|ngan|ít nhất|it nhat|min|ký tự|ky tu/i);
+
+    const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
+    expect(newHashRows[0]!.password).toBe(oldHash);
   });
 
   test("[STF-PRO-009] updates password with valid OTP", async ({ playwright }) => {

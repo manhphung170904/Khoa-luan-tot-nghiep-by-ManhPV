@@ -71,7 +71,7 @@ test.describe("Admin Customer Management E2E @regression", () => {
     });
     await formPage.selectStaffIds([manager.id]);
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/thêm khách hàng|thành công/i);
+    await formPage.expectSweetAlertContains(/thÃªm khÃ¡ch hÃ ng|thÃ nh cÃ´ng/i);
 
     const rows = await MySqlDbClient.query<{ id: number }>(
       "SELECT id FROM customer WHERE username = ? LIMIT 1",
@@ -79,6 +79,12 @@ test.describe("Admin Customer Management E2E @regression", () => {
     );
     expect(rows.length).toBe(1);
     cleanupCustomerIds.add(rows[0]!.id);
+
+    const assignments = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM assignment_customer WHERE staff_id = ? AND customer_id = ?",
+      [manager.id, rows[0]!.id]
+    );
+    expect(Number(assignments[0]?.count ?? 0)).toBeGreaterThan(0);
   });
 
   test("[E2E-ADM-CUS-002] admin can search a customer and open its detail page", async ({ page }) => {
@@ -114,7 +120,13 @@ test.describe("Admin Customer Management E2E @regression", () => {
       email: String(payload.email)
     });
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/lỗi|error|nhân viên/i);
+    await formPage.expectSweetAlertContains(/lá»—i|error|nhÃ¢n viÃªn/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM customer WHERE username = ? OR email = ?",
+      [String(payload.username), String(payload.email)]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
   test("[E2E-ADM-CUS-004] admin can delete a customer from the search page", async ({ page }) => {
@@ -127,7 +139,7 @@ test.describe("Admin Customer Management E2E @regression", () => {
     await listPage.waitForTableData();
     await listPage.deleteCustomer(customer.fullName);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xóa khách hàng|thành công/i);
+    await listPage.expectSweetAlertContains(/xÃ³a khÃ¡ch hÃ ng|thÃ nh cÃ´ng/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM customer WHERE id = ?", [customer.id]);

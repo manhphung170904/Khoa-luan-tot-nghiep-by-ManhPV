@@ -35,6 +35,7 @@ test.describe("Admin Report E2E @regression", () => {
     const reportPage = new AdminReportPage(page);
     await reportPage.expectLoaded();
     await reportPage.expectOverviewVisible();
+    await expect(page).toHaveURL(/\/admin\/report/);
   });
 
   test("[E2E-ADM-RPT-002] admin can switch report year from selector", async ({ page }) => {

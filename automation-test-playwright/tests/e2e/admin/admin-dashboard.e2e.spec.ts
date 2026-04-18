@@ -50,6 +50,7 @@ test.describe("Admin Dashboard E2E @regression", () => {
     const dashboardPage = new AdminDashboardPage(page);
     await dashboardPage.expectLoaded();
     await dashboardPage.expectOverviewVisible();
+    await expect(page).toHaveURL(/\/admin\/dashboard/);
   });
 
   test("[E2E-ADM-DSH-002] admin can navigate to management lists from KPI cards", async ({ page }) => {
@@ -78,5 +79,11 @@ test.describe("Admin Dashboard E2E @regression", () => {
     await dashboardPage.expectRecentBuildingVisible(tempBuildingName);
     await dashboardPage.openRecentBuilding(tempBuildingName);
     await expect(page).toHaveURL(new RegExp(`/admin/building/${tempBuildingId}$`));
+
+    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM building WHERE id = ? AND name = ?", [
+      tempBuildingId,
+      tempBuildingName
+    ]);
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 });

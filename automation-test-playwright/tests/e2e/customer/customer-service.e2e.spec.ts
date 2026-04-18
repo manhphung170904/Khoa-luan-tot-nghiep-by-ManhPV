@@ -1,4 +1,4 @@
-import { test, type APIRequestContext } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
 import { CustomerServicePage } from "@pages/customer/CustomerServicePage";
 import {
   cleanupTempCustomerProfileUser,
@@ -37,6 +37,7 @@ test.describe("Customer Service E2E @regression", () => {
     await servicePage.expectCardVisible("Đỗ Xe Ô Tô");
     await servicePage.expectCardVisible("Internet Tốc Độ Cao");
     await servicePage.expectCardVisible("Phòng Gym");
+    await expect(page).toHaveURL(/\/customer\/service/);
   });
 
   test("[E2E-CUS-SRV-002] built-in unavailable service buttons stay disabled", async ({ page }) => {

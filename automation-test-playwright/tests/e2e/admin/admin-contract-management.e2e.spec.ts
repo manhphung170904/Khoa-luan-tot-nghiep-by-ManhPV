@@ -125,11 +125,13 @@ test.describe("Admin Contract Management E2E @regression", () => {
     await formPage.fillRentPrice(1450000);
     await formPage.fillDates("2026-06-01", "2026-12-31");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/thành công|thanh cong|thêm hợp đồng|them hop dong/i);
+    await formPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|thÃªm há»£p Ä‘á»“ng|them hop dong/i);
 
-    const rows = await MySqlDbClient.query<{ id: number }>(
+    const rows = await MySqlDbClient.query<{ id: number; rent_price: number; start_date: string; end_date: string }>(
       `
-        SELECT id
+        SELECT id, rent_price,
+               DATE_FORMAT(start_date, '%Y-%m-%d') AS start_date,
+               DATE_FORMAT(end_date, '%Y-%m-%d') AS end_date
         FROM contract
         WHERE customer_id = ? AND building_id = ?
         ORDER BY id DESC
@@ -139,6 +141,9 @@ test.describe("Admin Contract Management E2E @regression", () => {
     );
 
     expect(rows.length).toBe(1);
+    expect(Number(rows[0]!.rent_price)).toBe(1450000);
+    expect(rows[0]!.start_date).toBe("2026-06-01");
+    expect(rows[0]!.end_date).toBe("2026-12-31");
     cleanupContractIds.add(rows[0]!.id);
   });
 
@@ -157,7 +162,13 @@ test.describe("Admin Contract Management E2E @regression", () => {
     await formPage.fillRentPrice(1500000);
     await formPage.fillDates("2026-09-01", "2026-08-01");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/ngày kết thúc|ngay ket thuc|cảnh báo|canh bao/i);
+    await formPage.expectSweetAlertContains(/ngÃ y káº¿t thÃºc|ngay ket thuc|cáº£nh bÃ¡o|canh bao/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND rent_price = ?",
+      [scenario.customer.id, scenario.building.id, 1500000]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
   test("[E2E-ADM-CTR-004] admin can edit an active contract", async ({ page }) => {
@@ -174,14 +185,15 @@ test.describe("Admin Contract Management E2E @regression", () => {
     await formPage.fillRentPrice(2500000);
     await formPage.selectStatus("ACTIVE");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/thành công|thanh cong|cập nhật|cap nhat/i);
+    await formPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|cáº­p nháº­t|cap nhat/i);
 
-    const rows = await MySqlDbClient.query<{ rent_price: number; end_date: string }>(
-      "SELECT rent_price, DATE_FORMAT(end_date, '%Y-%m-%d') AS end_date FROM contract WHERE id = ?",
+    const rows = await MySqlDbClient.query<{ rent_price: number; end_date: string; status: string }>(
+      "SELECT rent_price, DATE_FORMAT(end_date, '%Y-%m-%d') AS end_date, status FROM contract WHERE id = ?",
       [tempContract.id]
     );
     expect(Number(rows[0]!.rent_price)).toBe(2500000);
     expect(rows[0]!.end_date).toBe("2026-11-30");
+    expect(rows[0]!.status).toBe("ACTIVE");
   });
 
   test("[E2E-ADM-CTR-005] expired contract edit page shows the lock banner", async ({ page }) => {
@@ -211,7 +223,7 @@ test.describe("Admin Contract Management E2E @regression", () => {
     await detailPage.expectLoaded(tempContract.id);
     await detailPage.deleteContract();
     await detailPage.confirmSweetAlert();
-    await detailPage.expectSweetAlertContains(/thành công|thanh cong|xóa hợp đồng thành công/i);
+    await detailPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|xÃ³a há»£p Ä‘á»“ng thÃ nh cÃ´ng/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM contract WHERE id = ?", [tempContract.id]);

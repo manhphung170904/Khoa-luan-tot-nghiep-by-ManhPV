@@ -1,4 +1,4 @@
-import { test, type APIRequestContext } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { StaffDashboardPage } from "@pages/staff/StaffDashboardPage";
@@ -34,5 +34,6 @@ test.describe("Staff Dashboard E2E @regression", () => {
     const dashboardPage = new StaffDashboardPage(page);
     await dashboardPage.expectLoaded();
     await dashboardPage.expectSummarySectionsVisible();
+    await expect(page).toHaveURL(/\/staff\/dashboard/);
   });
 });

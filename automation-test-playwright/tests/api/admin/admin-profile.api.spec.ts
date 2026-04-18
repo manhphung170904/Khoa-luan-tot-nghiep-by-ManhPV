@@ -198,6 +198,10 @@ test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression",
   });
 
   test("[PRF_002] PUT /username rejects invalid OTP", async () => {
+    const originalRows = await MySqlDbClient.query<{ username: string }>(
+      "SELECT username FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
     const response = await tempAdminContext.put("/api/v1/admin/profile/username", {
       failOnStatusCode: false,
       data: {
@@ -206,11 +210,18 @@ test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression",
       }
     });
 
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|không hợp lệ|khong hop le/i);
+
+    const latestRows = await MySqlDbClient.query<{ username: string }>(
+      "SELECT username FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
+    expect(latestRows[0]?.username).toBe(originalRows[0]?.username);
   });
 
   test("[PRF_011] PUT /username updates username when OTP is valid", async () => {
@@ -256,14 +267,25 @@ test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression",
       }
     });
 
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
+    expect(errorBody.message).toMatch(/username|tên đăng nhập|ten dang nhap|dang nhap|đã được sử dụng|da duoc su dung|ton tai|trung/i);
+
+    const latestRows = await MySqlDbClient.query<{ username: string }>(
+      "SELECT username FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
+    expect(latestRows[0]?.username).toBe(tempAdmin.username);
   });
 
   test("[PRF_003] PUT /phone-number rejects invalid OTP", async () => {
+    const originalRows = await MySqlDbClient.query<{ phone: string }>(
+      "SELECT phone FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
     const response = await tempAdminContext.put("/api/v1/admin/profile/phone-number", {
       failOnStatusCode: false,
       data: {
@@ -272,11 +294,18 @@ test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression",
       }
     });
 
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han|không tìm thấy|khong tim thay/i);
+
+    const latestRows = await MySqlDbClient.query<{ phone: string }>(
+      "SELECT phone FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
+    expect(latestRows[0]?.phone).toBe(originalRows[0]?.phone);
   });
 
   test("[PRF_012] PUT /phone-number updates phone when OTP is valid", async () => {
@@ -322,14 +351,25 @@ test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression",
       }
     });
 
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
+    expect(errorBody.message).toMatch(/phone|điện thoại|dien thoai|đã được sử dụng|da duoc su dung|tồn tại|ton tai|trùng|trung/i);
+
+    const latestRows = await MySqlDbClient.query<{ phone: string }>(
+      "SELECT phone FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
+    expect(latestRows[0]?.phone).toBe(tempAdmin.phone);
   });
 
   test("[PRF_004] PUT /email rejects incorrect current password", async () => {
+    const originalRows = await MySqlDbClient.query<{ email: string }>(
+      "SELECT email FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
     const response = await tempAdminContext.put("/api/v1/admin/profile/email", {
       failOnStatusCode: false,
       data: {
@@ -338,11 +378,18 @@ test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression",
       }
     });
 
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
+    expect(errorBody.message).toMatch(/password|mat khau|mật khẩu|hien tai|hiện tại|incorrect|khong dung|không đúng|sai/i);
+
+    const latestRows = await MySqlDbClient.query<{ email: string }>(
+      "SELECT email FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
+    expect(latestRows[0]?.email).toBe(originalRows[0]?.email);
   });
 
   test("[PRF_014] PUT /email updates email when current password is valid", async () => {
@@ -379,14 +426,25 @@ test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression",
       }
     });
 
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
+    expect(errorBody.message).toMatch(/email|ton tai|trung/i);
+
+    const latestRows = await MySqlDbClient.query<{ email: string }>(
+      "SELECT email FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
+    expect(latestRows[0]?.email).toBe(tempAdmin.email);
   });
 
   test("[PRF_010] PUT /password rejects invalid OTP", async () => {
+    const originalRows = await MySqlDbClient.query<{ password: string }>(
+      "SELECT password FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
     const response = await tempAdminContext.put("/api/v1/admin/profile/password", {
       failOnStatusCode: false,
       data: {
@@ -397,11 +455,18 @@ test.describe.serial("Admin Profile API Tests @api @api-write @otp @regression",
       }
     });
 
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/password"
     });
+    expect(errorBody.message).toMatch(/otp|ma|mã|xac thuc|xác thực|het han|hết hạn|khong tim thay|không tìm thấy/i);
+
+    const latestRows = await MySqlDbClient.query<{ password: string }>(
+      "SELECT password FROM staff WHERE id = ? LIMIT 1",
+      [tempAdmin.id]
+    );
+    expect(latestRows[0]?.password).toBe(originalRows[0]?.password);
   });
 
   test("[PRF_013] PUT /password updates password when OTP is valid and marks OTP used", async ({ playwright }) => {

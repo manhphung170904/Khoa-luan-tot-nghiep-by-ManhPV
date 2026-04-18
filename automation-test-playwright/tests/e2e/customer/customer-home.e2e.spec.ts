@@ -1,4 +1,4 @@
-import { test, type APIRequestContext } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
 import { CustomerHomePage } from "@pages/customer/CustomerHomePage";
 import {
   cleanupTempCustomerProfileUser,
@@ -35,6 +35,7 @@ test.describe("Customer Home E2E @regression", () => {
     const homePage = new CustomerHomePage(page);
     await homePage.expectLoaded();
     await homePage.expectDashboardSectionsVisible();
+    await expect(page).toHaveURL(/\/customer\/home/);
   });
 
   test("[E2E-CUS-HOME-002] customer can navigate from home to contracts and buildings", async ({ page }) => {
@@ -42,8 +43,9 @@ test.describe("Customer Home E2E @regression", () => {
     await homePage.expectLoaded();
     await homePage.openContracts();
     await page.waitForURL(/\/customer\/contract\/list|\/customer\/contracts/);
+
     await page.goto("/customer/home");
     await homePage.openBuildings();
-    await page.waitForURL(/\/customer\/building\/list/);
+    await page.waitForURL(/\/customer\/building\/list|\/customer\/buildings/);
   });
 });

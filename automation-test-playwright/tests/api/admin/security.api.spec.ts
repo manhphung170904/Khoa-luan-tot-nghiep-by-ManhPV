@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { adminEndpointCatalog } from "@api/adminEndpointCatalog";
 import { createAnonymousContext, createRoleContext, sendRequest } from "@api/adminApiUtils";
 import { expectApiErrorBody, expectStatusExact } from "@api/apiContractUtils";
@@ -10,6 +10,7 @@ test.describe("ADMIN API Security Matrix @api @regression", () => {
     const contentType = response.headers()["content-type"] ?? "";
     if (!contentType.includes("application/json")) {
       expectStatusExact(response, status, "Security response must return expected status");
+      expect(response.status()).not.toBe(200);
       return;
     }
 

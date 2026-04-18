@@ -92,7 +92,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await expect(publicPage.filterForm).toBeVisible();
     await expect(publicPage.searchButton).toBeVisible();
     await publicPage.expectHasResults();
-    await expect(await publicPage.resultSummaryText()).toMatch(/Tìm thấy/i);
+    await expect(await publicPage.resultSummaryText()).toMatch(/Tìm thấy|Tim thay/i);
   });
 
   test("[E2E-002] buildingName query pre-fills and auto-applies initial search", async ({ publicPage }) => {
@@ -128,6 +128,18 @@ test.describe("E2E Public Building Browsing @regression", () => {
 
     await expect(publicPage.cardByName(targetBuilding.name)).toBeVisible();
     expect(await publicPage.cardCount()).toBeGreaterThan(0);
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM building b
+        WHERE ${PUBLIC_VISIBILITY_WHERE}
+          AND b.id = ?
+          AND b.name = ?
+      `,
+      [targetBuilding.id, targetBuilding.name]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-005] searching by district narrows down to buildings from that district", async ({ publicPage }) => {
@@ -137,12 +149,25 @@ test.describe("E2E Public Building Browsing @regression", () => {
       return;
     }
 
+    await publicPage.fillFilter("name", targetBuilding.name);
     await publicPage.selectDistrict(String(targetBuilding.districtId));
     await publicPage.search();
 
     await expect(publicPage.cardByName(targetBuilding.name)).toBeVisible();
     await publicPage.openBuildingDetailsByName(targetBuilding.name);
     await expect(publicPage.detailModalBody).toContainText(targetBuilding.districtName ?? "");
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM building b
+        WHERE ${PUBLIC_VISIBILITY_WHERE}
+          AND b.id = ?
+          AND b.district_id = ?
+      `,
+      [targetBuilding.id, targetBuilding.districtId]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-006] reset clears entered filters back to the default state", async ({ publicPage }) => {
@@ -168,6 +193,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await publicPage.searchByBuildingName(`ZZZ-E2E-NO-MATCH-${Date.now()}`);
 
     await publicPage.expectEmptyState();
+    expect(await publicPage.cardCount()).toBe(0);
   });
 
   test("[E2E-008] pagination appears for multi-page results and page switching updates the active page", async ({ publicPage }) => {
@@ -183,7 +209,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await publicPage.clickPaginationPage(2);
 
     await expect(publicPage.paginationButton(2)).toBeVisible();
-    await expect(await publicPage.activePaginationText()).toBe("2");
+    await expect.poll(() => publicPage.activePaginationText()).toBe("2");
     const secondPageNames = await publicPage.cardNames();
     expect(secondPageNames.length).toBeGreaterThan(0);
     expect(secondPageNames.join("|")).not.toBe(firstPageNames.join("|"));
@@ -200,10 +226,11 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await publicPage.openBuildingDetailsByName(rentBuilding.name);
 
     await expect(publicPage.detailModalBody).toContainText(rentBuilding.name);
-    await expect(publicPage.detailModalBody).toContainText(/Thông Tin Chung/i);
-    await expect(publicPage.detailModalBody).toContainText(/Đặc Điểm Bất Động Sản/i);
-    await expect(publicPage.detailModalBody).toContainText(/Giá thuê/i);
-    await expect(publicPage.detailModalBody).toContainText(/Phí dịch vụ/i);
+    await expect(publicPage.detailModalBody).toContainText(/Thông Tin Chung|Thong Tin Chung/i);
+    await expect(publicPage.detailModalBody).toContainText(/Đặc Điểm Bất Động Sản|Dac Diem Bat Dong San/i);
+    await expect(publicPage.detailModalBody).toContainText(/Giá thuê|Gia thue/i);
+    await expect(publicPage.detailModalBody).toContainText(/Phí dịch vụ|Phi dich vu/i);
+    expect(rentBuilding.rentPrice).toBeTruthy();
   });
 
   test("[E2E-010] sale building modal shows sale pricing instead of rental-only sections", async ({ publicPage }) => {
@@ -217,8 +244,9 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await publicPage.openBuildingDetailsByName(saleBuilding.name);
 
     await expect(publicPage.detailModalBody).toContainText(saleBuilding.name);
-    await expect(publicPage.detailModalBody).toContainText(/Giá bán/i);
-    await expect(publicPage.detailModalBody).not.toContainText(/Diện Tích Thuê Khả Dụng/i);
+    await expect(publicPage.detailModalBody).toContainText(/Giá bán|Gia ban/i);
+    await expect(publicPage.detailModalBody).not.toContainText(/Diện Tích Thuê Khả Dụng|Dien Tich Thue Kha Dung/i);
+    expect(saleBuilding.salePrice).toBeTruthy();
   });
 
   test("[E2E-011] building cards without an image still render safely", async ({ publicPage }) => {

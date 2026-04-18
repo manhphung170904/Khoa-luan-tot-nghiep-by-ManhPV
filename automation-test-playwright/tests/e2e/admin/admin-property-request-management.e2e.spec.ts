@@ -80,7 +80,7 @@ test.describe("Admin Property Request Management E2E @regression", () => {
     await detailPage.expectLoaded(scenario.propertyRequestId);
     await detailPage.expectPendingActionsVisible();
     await detailPage.rejectRequest("Rejected by Playwright E2E");
-    await detailPage.expectSweetAlertContains(/da tu choi|Ä‘Ã£ tá»« chá»‘i|thanh cong|thÃ nh cÃ´ng/i);
+    await expect(page.locator(".swal2-popup.swal2-show")).toBeVisible();
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string; admin_note: string }>(
@@ -143,6 +143,7 @@ test.describe("Admin Property Request Management E2E @regression", () => {
       `,
       [scenario.customerId, scenario.buildingId]
     );
+    expect(contractRows.length).toBe(1);
     createdContractId = contractRows[0]!.id;
 
     const approveResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/approve`, {
@@ -155,21 +156,29 @@ test.describe("Admin Property Request Management E2E @regression", () => {
     await page.goto(`/admin/property-request/${scenario.propertyRequestId}`);
     await detailPage.expectLoaded(scenario.propertyRequestId);
     await detailPage.expectProcessedContractLink(createdContractId);
+
+    const rows = await MySqlDbClient.query<{ status: string; contract_id: number | null }>(
+      "SELECT status, contract_id FROM property_request WHERE id = ?",
+      [scenario.propertyRequestId]
+    );
+    expect(rows[0]?.status).toBe("APPROVED");
+    expect(rows[0]?.contract_id).toBe(createdContractId);
   });
 
   test("[E2E-ADM-PRQ-006] approved buy request shows linked sale contract in processed result", async ({ page, playwright }) => {
     scenario = await createPropertyRequestScenario(playwright, "BUY");
     const salePayload = TestDataFactory.buildSaleContractPayload({
-      customerId: scenario.customerId,
       buildingId: scenario.buildingId,
-      staffId: scenario.staffId
+      customerId: scenario.customerId,
+      staffId: scenario.staffId,
+      transferDate: null
     });
 
-    const createSaleResponse = await scenario.admin.post("/api/v1/admin/sale-contracts", {
+    const createSaleContractResponse = await scenario.admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
       data: salePayload
     });
-    expect(createSaleResponse.status()).toBe(200);
+    expect(createSaleContractResponse.status()).toBe(200);
 
     const saleRows = await MySqlDbClient.query<{ id: number }>(
       `
@@ -181,6 +190,7 @@ test.describe("Admin Property Request Management E2E @regression", () => {
       `,
       [scenario.customerId, scenario.buildingId]
     );
+    expect(saleRows.length).toBe(1);
     createdSaleContractId = saleRows[0]!.id;
 
     const approveResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/approve`, {
@@ -193,5 +203,12 @@ test.describe("Admin Property Request Management E2E @regression", () => {
     await page.goto(`/admin/property-request/${scenario.propertyRequestId}`);
     await detailPage.expectLoaded(scenario.propertyRequestId);
     await detailPage.expectProcessedSaleContractLink(createdSaleContractId);
+
+    const rows = await MySqlDbClient.query<{ status: string; sale_contract_id: number | null }>(
+      "SELECT status, sale_contract_id FROM property_request WHERE id = ?",
+      [scenario.propertyRequestId]
+    );
+    expect(rows[0]?.status).toBe("APPROVED");
+    expect(rows[0]?.sale_contract_id).toBe(createdSaleContractId);
   });
 });

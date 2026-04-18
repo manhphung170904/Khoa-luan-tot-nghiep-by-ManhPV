@@ -35,6 +35,12 @@ test.describe("Staff Contract List E2E @regression", () => {
     await contractPage.expectLoaded();
     await contractPage.waitForTableData();
     await expect(contractPage.rowByContractText(tempContract!.customer.fullName)).toBeVisible();
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM contract WHERE id = ? AND staff_id = ? AND customer_id = ?",
+      [tempContract!.id, tempContract!.staff.id, tempContract!.customer.id]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-STF-CTR-002] staff can filter contract by customer, building, and status", async ({ page }) => {

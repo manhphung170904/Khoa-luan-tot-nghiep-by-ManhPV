@@ -42,7 +42,24 @@ export class ResetPasswordPage extends BasePage {
   }
 
   async expectPopupContains(text: string | RegExp): Promise<void> {
-    await expect(this.toastPopup()).toBeVisible();
-    await expect(this.toastPopup()).toContainText(text);
+    const popup = this.toastPopup();
+    await expect(popup).toBeVisible();
+    const rawText = ((await popup.textContent()) ?? "").trim();
+    const normalize = (value: string): string =>
+      value
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+
+    const normalizedText = normalize(rawText);
+    if (typeof text === "string") {
+      expect(rawText.includes(text) || normalizedText.includes(normalize(text))).toBeTruthy();
+      return;
+    }
+
+    const normalizedPattern = new RegExp(normalize(text.source), text.flags.replace("g", ""));
+    expect(text.test(rawText) || normalizedPattern.test(normalizedText)).toBeTruthy();
   }
 }

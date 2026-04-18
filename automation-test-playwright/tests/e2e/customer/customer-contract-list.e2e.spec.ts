@@ -35,6 +35,12 @@ test.describe("Customer Contract List E2E @regression", () => {
     await contractPage.expectLoaded();
     await contractPage.waitForContractData();
     await expect(contractPage.cardByBuildingName(tempContract!.building.name)).toBeVisible();
+
+    const rows = await MySqlDbClient.query<{ status: string }>(
+      "SELECT status FROM contract WHERE id = ? AND customer_id = ?",
+      [tempContract!.id, tempContract!.customer.id]
+    );
+    expect(rows[0]?.status).toBe("ACTIVE");
   });
 
   test("[E2E-CUS-CTR-002] customer can filter contracts by building and status", async ({ page }) => {
@@ -45,6 +51,16 @@ test.describe("Customer Contract List E2E @regression", () => {
     await contractPage.submitFilters();
     await contractPage.waitForContractData();
     await expect(contractPage.cardByBuildingName(tempContract!.building.name)).toBeVisible();
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM contract
+        WHERE id = ? AND building_id = ? AND status = 'ACTIVE'
+      `,
+      [tempContract!.id, tempContract!.building.id]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-CUS-CTR-003] unmatched contract filter shows empty state", async ({ page }) => {

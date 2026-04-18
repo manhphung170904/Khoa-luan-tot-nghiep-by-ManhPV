@@ -47,11 +47,12 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
           authorityType: "NOTARY"
         }
       });
-      await expectApiErrorBody(invalidAuthorityName, {
+      const invalidAuthorityError = await expectApiErrorBody<{ message?: string }>(invalidAuthorityName, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/building-additional-information/legal-authorities"
       });
+      expect(invalidAuthorityError.message).toMatch(/authority|name|ten|do dai|max/i);
 
       const createLegalAuthority = await admin.post("/api/v1/admin/building-additional-information/legal-authorities", {
         failOnStatusCode: false,
@@ -117,6 +118,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
       );
       expect(deleteLegalAuthority.status()).toBe(200);
       expect(await deleteLegalAuthority.text()).toBe("");
+      const deletedLegalAuthorityRows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM legal_authority WHERE id = ?",
+        [legalAuthorityId]
+      );
+      expect(Number(deletedLegalAuthorityRows[0]?.count ?? 0)).toBe(0);
       legalAuthorityId = 0;
 
       const createAmenity = await admin.post("/api/v1/admin/building-additional-information/nearby-amenities", {
@@ -174,6 +180,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
       );
       expect(deleteAmenity.status()).toBe(200);
       expect(await deleteAmenity.text()).toBe("");
+      const deletedAmenityRows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM nearby_amenity WHERE id = ?",
+        [amenityId]
+      );
+      expect(Number(deletedAmenityRows[0]?.count ?? 0)).toBe(0);
       amenityId = 0;
 
       const createSupplier = await admin.post("/api/v1/admin/building-additional-information/suppliers", {
@@ -227,6 +238,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
       );
       expect(deleteSupplier.status()).toBe(200);
       expect(await deleteSupplier.text()).toBe("");
+      const deletedSupplierRows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM supplier WHERE id = ?",
+        [supplierId]
+      );
+      expect(Number(deletedSupplierRows[0]?.count ?? 0)).toBe(0);
       supplierId = 0;
 
       const createPlanningMap = await admin.post("/api/v1/admin/building-additional-information/planning-maps", {
@@ -291,6 +307,11 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
       );
       expect(deletePlanningMap.status()).toBe(200);
       expect(await deletePlanningMap.text()).toBe("");
+      const deletedPlanningMapRows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM planning_map WHERE id = ?",
+        [planningMapId]
+      );
+      expect(Number(deletedPlanningMapRows[0]?.count ?? 0)).toBe(0);
       planningMapId = 0;
     } finally {
       if (legalAuthorityId) {
@@ -336,11 +357,12 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
         file: ApiFileFixtures.invalidText()
       }
     });
-    await expectApiErrorBody(invalidMime, {
+    const invalidMimeError = await expectApiErrorBody<{ message?: string }>(invalidMime, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/planning-maps/image"
     });
+    expect(invalidMimeError.message).toMatch(/image|mime|type|định dạng|dinh dang|jpg|png|webp/i);
 
     const invalidExtension = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -352,11 +374,12 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
         }
       }
     });
-    await expectApiErrorBody(invalidExtension, {
+    const invalidExtensionError = await expectApiErrorBody<{ message?: string }>(invalidExtension, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/planning-maps/image"
     });
+    expect(invalidExtensionError.message).toMatch(/extension|jpg|jpeg|file|dinh dang/i);
 
     const oversizedUpload = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -397,39 +420,43 @@ test.describe.serial("Admin Building Additional Information API @api @extended",
         data: { buildingId: 999999, authorityName: "Missing", authorityType: "NOTARY" }
       }
     );
-    await expectApiErrorBody(missingLegalAuthority, {
+    const missingLegalAuthorityError = await expectApiErrorBody<{ message?: string }>(missingLegalAuthority, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/legal-authorities/999999"
     });
+    expect(missingLegalAuthorityError.message).toMatch(/legal|authority|cơ quan pháp lý|co quan phap ly|không tìm thấy|khong tim thay|not found/i);
 
     const missingAmenity = await admin.delete(
       "/api/v1/admin/building-additional-information/nearby-amenities/999999",
       { failOnStatusCode: false }
     );
-    await expectApiErrorBody(missingAmenity, {
+    const missingAmenityError = await expectApiErrorBody<{ message?: string }>(missingAmenity, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/nearby-amenities/999999"
     });
+    expect(missingAmenityError.message).toMatch(/amenity|tiện ích|tien ich|lân cận|lan can|không tìm thấy|khong tim thay|not found/i);
 
     const missingSupplier = await admin.delete("/api/v1/admin/building-additional-information/suppliers/999999", {
       failOnStatusCode: false
     });
-    await expectApiErrorBody(missingSupplier, {
+    const missingSupplierError = await expectApiErrorBody<{ message?: string }>(missingSupplier, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/suppliers/999999"
     });
+    expect(missingSupplierError.message).toMatch(/supplier|nhà cung cấp|nha cung cap|không tìm thấy|khong tim thay|not found/i);
 
     const missingPlanningMap = await admin.delete(
       "/api/v1/admin/building-additional-information/planning-maps/999999",
       { failOnStatusCode: false }
     );
-    await expectApiErrorBody(missingPlanningMap, {
+    const missingPlanningMapError = await expectApiErrorBody<{ message?: string }>(missingPlanningMap, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/planning-maps/999999"
     });
+    expect(missingPlanningMapError.message).toMatch(/planning|map|ban do|bản đồ|quy hoạch|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
   });
 });

@@ -35,6 +35,12 @@ test.describe("Staff Building List E2E @regression", () => {
     await buildingPage.expectLoaded();
     await buildingPage.waitForBuildingData();
     await expect(buildingPage.cardByBuildingName(tempContract!.building.name)).toBeVisible();
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM contract WHERE id = ? AND staff_id = ? AND building_id = ?",
+      [tempContract!.id, tempContract!.staff.id, tempContract!.building.id]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-STF-BLD-002] staff can filter building by name and open detail modal", async ({ page }) => {

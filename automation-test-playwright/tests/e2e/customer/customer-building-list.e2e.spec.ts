@@ -35,6 +35,16 @@ test.describe("Customer Building List E2E @regression", () => {
     await buildingPage.expectLoaded();
     await buildingPage.waitForBuildingData();
     await expect(buildingPage.cardByBuildingName(tempContract!.building.name)).toBeVisible();
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM contract
+        WHERE id = ? AND customer_id = ? AND building_id = ?
+      `,
+      [tempContract!.id, tempContract!.customer.id, tempContract!.building.id]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-CUS-BLD-002] customer can filter by building name and open detail modal", async ({ page }) => {
@@ -45,6 +55,16 @@ test.describe("Customer Building List E2E @regression", () => {
     await buildingPage.waitForBuildingData();
     await buildingPage.openBuildingDetail(tempContract!.building.name);
     await buildingPage.expectDetailModalContains(tempContract!.building.name);
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM building
+        WHERE id = ? AND name = ?
+      `,
+      [tempContract!.building.id, tempContract!.building.name]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-CUS-BLD-003] unmatched building search shows empty state", async ({ page }) => {

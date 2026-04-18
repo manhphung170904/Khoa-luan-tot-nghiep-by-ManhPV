@@ -122,14 +122,20 @@ test.describe("Payment API (QR VietQR) Contract Tests @api @api-write @regressio
       expectStatusExact(response, 302, "QR confirmation should redirect after success");
       expect(response.headers().location ?? "").toContain("/customer/invoice/list?paySuccess");
 
-      const rows = await MySqlDbClient.query<{ status: string; payment_method: string; transaction_code: string | null }>(
-        "SELECT status, payment_method, transaction_code FROM invoice WHERE id = ?",
+      const rows = await MySqlDbClient.query<{
+        status: string;
+        payment_method: string;
+        transaction_code: string | null;
+        paid_date: string | null;
+      }>(
+        "SELECT status, payment_method, transaction_code, paid_date FROM invoice WHERE id = ?",
         [customerInvoiceId]
       );
       expect(rows.length).toBe(1);
       expect(rows[0]!.status).toBe("PAID");
       expect(rows[0]!.payment_method).toBe("BANK_QR");
       expect(rows[0]!.transaction_code).toMatch(new RegExp(`^QR-${customerInvoiceId}-\\d{14}$`));
+      expect(rows[0]!.paid_date).toBeTruthy();
     } finally {
       await customer.dispose();
     }

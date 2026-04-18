@@ -120,6 +120,13 @@ test.describe("Admin Property Request API @api @regression", () => {
       const detail = await expectObjectBody<{ status?: string; adminNote?: string }>(detailResponse, 200, ["status"]);
       expect(detail.status).toBe("REJECTED");
       expect(detail.adminNote).toBe("Contract data mismatch");
+
+      const rows = await MySqlDbClient.query<{ status: string; admin_note: string }>(
+        "SELECT status, admin_note FROM property_request WHERE id = ?",
+        [scenario.propertyRequestId]
+      );
+      expect(rows[0]?.status).toBe("REJECTED");
+      expect(rows[0]?.admin_note).toBe("Contract data mismatch");
     } finally {
       await scenario.cleanup();
     }
@@ -175,6 +182,13 @@ test.describe("Admin Property Request API @api @regression", () => {
       const detail = await expectObjectBody<{ status?: string; contractId?: number }>(detailResponse, 200, ["status"]);
       expect(detail.status).toBe("APPROVED");
       expect(detail.contractId).toBe(contractId);
+
+      const rows = await MySqlDbClient.query<{ status: string; contract_id: number }>(
+        "SELECT status, contract_id FROM property_request WHERE id = ?",
+        [scenario.propertyRequestId]
+      );
+      expect(rows[0]?.status).toBe("APPROVED");
+      expect(rows[0]?.contract_id).toBe(contractId);
 
       const pendingResponse = await scenario.admin.get("/api/v1/admin/property-requests/pending-count", {
         failOnStatusCode: false,
@@ -242,6 +256,13 @@ test.describe("Admin Property Request API @api @regression", () => {
       const detail = await expectObjectBody<{ status?: string; saleContractId?: number }>(detailResponse, 200, ["status"]);
       expect(detail.status).toBe("APPROVED");
       expect(detail.saleContractId).toBe(saleContractId);
+
+      const rows = await MySqlDbClient.query<{ status: string; sale_contract_id: number }>(
+        "SELECT status, sale_contract_id FROM property_request WHERE id = ?",
+        [scenario.propertyRequestId]
+      );
+      expect(rows[0]?.status).toBe("APPROVED");
+      expect(rows[0]?.sale_contract_id).toBe(saleContractId);
     } finally {
       await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]).catch(() => {});
       if (saleContractId) {

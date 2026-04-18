@@ -31,19 +31,35 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
   });
 
   test("[SC_002] POST /sale-contracts rejects zero salePrice", async () => {
+    const payload = TestDataFactory.buildSaleContractPayload({ salePrice: 0 });
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildSaleContractPayload({ salePrice: 0 })
+      data: payload
     });
-    await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    expect(errorBody.message).toMatch(/sale|giá|gia|price|bán|ban/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND sale_price = ?",
+      [payload.buildingId, payload.customerId, payload.salePrice]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
   test("[SC_012] POST /sale-contracts rejects negative salePrice", async () => {
+    const payload = TestDataFactory.buildSaleContractPayload({ salePrice: -1 });
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildSaleContractPayload({ salePrice: -1 })
+      data: payload
     });
-    await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    expect(errorBody.message).toMatch(/sale|giá|gia|price|bán|ban/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND sale_price = ?",
+      [payload.buildingId, payload.customerId, payload.salePrice]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
   test("[SC_010] POST /sale-contracts rejects missing buildingId", async () => {
@@ -53,7 +69,8 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: invalidPayload
     });
-    await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    expect(errorBody.message).toMatch(/building|bất động sản|bat dong san|tòa nhà|toa nha|vui lòng chọn|vui long chon/i);
   });
 
   test("[SC_011] POST /sale-contracts rejects missing customerId", async () => {
@@ -63,40 +80,69 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       failOnStatusCode: false,
       data: invalidPayload
     });
-    await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    expect(errorBody.message).toMatch(/customer|khách hàng|khach hang|vui lòng chọn|vui long chon/i);
   });
 
   test("[SC_003] POST /sale-contracts rejects nonexistent buildingId", async () => {
-    const temp = await TempEntityHelper.taoSaleContractTam(admin);
+    const tempStaff = await TempEntityHelper.taoStaffTam(admin);
+    const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
+    await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
+
     try {
       const response = await admin.post("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildSaleContractPayload({
           buildingId: 999999,
-          customerId: temp.customer.id,
-          staffId: temp.staff.id
+          customerId: tempCustomer.id,
+          staffId: tempStaff.id
         })
       });
-      await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+      expect(errorBody.message).toMatch(/building|toa nha|bất động sản|bat dong san|khong tim thay|không tìm thấy|not found/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
+        [999999, tempCustomer.id, tempStaff.id]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {
-      await TempEntityHelper.xoaSaleContractTam(admin, temp);
+      await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []).catch(() => {});
+      await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id).catch(() => {});
+      await TempEntityHelper.xoaStaffTam(admin, tempStaff.id).catch(() => {});
     }
   });
 
   test("[SC_004] POST /sale-contracts rejects invalid staffId", async () => {
-    const temp = await TempEntityHelper.taoSaleContractTam(admin);
+    const tempStaff = await TempEntityHelper.taoStaffTam(admin);
+    const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
+    const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
+    await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
+    await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
+
     try {
       const response = await admin.post("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildSaleContractPayload({
-          buildingId: temp.building.id,
-          customerId: temp.customer.id,
+          buildingId: tempBuilding.id,
+          customerId: tempCustomer.id,
           staffId: -1
         })
       });
-      await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+      expect(errorBody.message).toMatch(/staff|nhan vien|nhân viên|khong tim thay|không tìm thấy|not found/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
+        [tempBuilding.id, tempCustomer.id, -1]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {
-      await TempEntityHelper.xoaSaleContractTam(admin, temp);
+      await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []).catch(() => {});
+      await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []).catch(() => {});
+      await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id).catch(() => {});
+      await TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id).catch(() => {});
+      await TempEntityHelper.xoaStaffTam(admin, tempStaff.id).catch(() => {});
     }
   });
 
@@ -116,7 +162,14 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           staffId: outsiderStaff.id
         })
       });
-      await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+      expect(errorBody.message).toMatch(/staff|phan cong|building|toa nha/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
+        [tempBuilding.id, tempCustomer.id, outsiderStaff.id]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {
       await TempEntityHelper.capNhatPhanCongCustomer(admin, outsiderStaff.id, []);
       await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id);
@@ -142,7 +195,14 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           staffId: outsiderStaff.id
         })
       });
-      await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+      expect(errorBody.message).toMatch(/staff|phan cong|customer|khach hang/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
+        [tempBuilding.id, tempCustomer.id, outsiderStaff.id]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {
       await TempEntityHelper.capNhatPhanCongBuilding(admin, outsiderStaff.id, []);
       await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id);
@@ -168,7 +228,14 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           staffId: tempStaff.id
         })
       });
-      await expectApiErrorBody(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+      expect(errorBody.message).toMatch(/sale|ban|mua ban|mua bán|transaction|giao dich|giao dịch|khong phai loai mua ban|không phải loại mua bán/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
+        [tempBuilding.id, tempCustomer.id, tempStaff.id]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {
       await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []);
       await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []);
@@ -189,11 +256,18 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
           staffId: temp.staff.id
         })
       });
-      await expectApiErrorBody(response, {
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/sale-contracts"
       });
+      expect(errorBody.message).toMatch(/sold|đã( được)? bán|da ban|sale contract|hợp đồng mua bán|hop dong mua ban/i);
+
+      const rows = await MySqlDbClient.query<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ?",
+        [temp.building.id]
+      );
+      expect(Number(rows[0]?.count ?? 0)).toBe(1);
     } finally {
       await TempEntityHelper.xoaSaleContractTam(admin, temp);
     }
@@ -303,8 +377,8 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
         [createdSaleContractId]
       );
 
-      expect(Number(updatedRows[0]!.sale_price)).toBe(Number(payload.salePrice));
-      expect(updatedRows[0]!.note).toBe(payload.note);
+      expect(Number(updatedRows[0]!.sale_price)).toBe(2000);
+      expect(updatedRows[0]!.note).toBe("Updated note");
       expect(updatedRows[0]!.transfer_date).toBe("2026-06-16");
 
       const deleteResponse = await admin.delete(`/api/v1/admin/sale-contracts/${createdSaleContractId}`, {
@@ -342,11 +416,12 @@ test.describe.serial("Admin Sale Contract API Tests @api @regression", () => {
       })
     });
 
-    await expectApiErrorBody(response, {
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
       path: "/api/v1/admin/sale-contracts/999999999"
     });
+    expect(errorBody.message).toMatch(/sale contract|hop dong mua ban|khong ton tai|not found/i);
   });
 
   test("[SC_018] DELETE /sale-contracts/{id} should reject nonexistent id", async () => {

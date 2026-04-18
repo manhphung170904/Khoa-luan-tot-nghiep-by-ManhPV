@@ -64,7 +64,7 @@ test.describe("Staff Invoice List E2E @regression", () => {
     await expect(invoicePage.rowByInvoiceId(invoice.id)).toContainText(contract.customer.fullName);
     await invoicePage.openViewModal(invoice.id);
     await expect(invoicePage.visibleModal()).toContainText(contract.building.name);
-    await expect(invoicePage.visibleModal()).toContainText("Chi tiết các khoản phí");
+    await expect(invoicePage.visibleModal()).toContainText(/Chi tiết hóa đơn|Chi tiet hoa don/i);
   });
 
   test("[E2E-STF-INV-002] staff can create a new invoice from the add modal", async ({ page }) => {
@@ -88,7 +88,7 @@ test.describe("Staff Invoice List E2E @regression", () => {
     });
     await invoicePage.chooseAddStatus("PENDING");
     await invoicePage.submitAddInvoice();
-    await invoicePage.expectSweetAlertContains(/thêm hóa đơn thành công|thành công/i);
+    await invoicePage.expectSweetAlertContains(/thành công|thanh cong/i);
 
     const rows = await MySqlDbClient.query<{ id: number }>(
       `
@@ -133,7 +133,17 @@ test.describe("Staff Invoice List E2E @regression", () => {
       waterUsage: 7
     });
     await invoicePage.submitAddInvoice();
-    await invoicePage.expectSweetAlertContains(/lỗi|đã tồn tại|error/i);
+    await invoicePage.expectSweetAlertContains(/lỗi|loi|đã tồn tại|da ton tai|error/i);
+
+    const rows = await MySqlDbClient.query<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM invoice
+        WHERE contract_id = ? AND customer_id = ? AND month = ? AND year = ?
+      `,
+      [contract.id, contract.customer.id, existingInvoice.month, existingInvoice.year]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-STF-INV-004] staff can edit invoice usage, due date, and status", async ({ page }) => {
@@ -157,7 +167,7 @@ test.describe("Staff Invoice List E2E @regression", () => {
       status: "PAID"
     });
     await invoicePage.saveVisibleEditForm();
-    await invoicePage.expectSweetAlertContains(/cập nhật hóa đơn thành công|thành công/i);
+    await invoicePage.expectSweetAlertContains(/thành công|thanh cong/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string; due_date: string }>(
@@ -181,7 +191,7 @@ test.describe("Staff Invoice List E2E @regression", () => {
     await invoicePage.waitForTableData();
     await invoicePage.deleteInvoice(invoice.id);
     await invoicePage.confirmSweetAlert();
-    await invoicePage.expectSweetAlertContains(/xóa hóa đơn thành công|thành công/i);
+    await invoicePage.expectSweetAlertContains(/thành công|thanh cong/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);

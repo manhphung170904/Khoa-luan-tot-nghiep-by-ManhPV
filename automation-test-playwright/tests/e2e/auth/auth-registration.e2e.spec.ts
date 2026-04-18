@@ -28,6 +28,14 @@ async function cleanupRegistrationUser(user: RegistrationUser): Promise<void> {
   await MySqlDbClient.execute("DELETE FROM email_verification WHERE email = ?", [user.email]);
 }
 
+async function assertNoRegisteredCustomer(user: RegistrationUser): Promise<void> {
+  const rows = await MySqlDbClient.query<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM customer WHERE email = ? OR username = ?",
+    [user.email, user.username]
+  );
+  expect(Number(rows[0]?.count ?? 0)).toBe(0);
+}
+
 async function completeRegistrationFlow(
   page: Page,
   request: APIRequestContext,
@@ -68,6 +76,18 @@ test.describe("Auth Registration E2E @regression", () => {
         [user.email, user.username]
       );
       expect(createdRows.length).toBe(1);
+
+      const otpRows = await MySqlDbClient.query<{ status: string }>(
+        `
+          SELECT status
+          FROM email_verification
+          WHERE email = ? AND purpose = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        [user.email, "REGISTER"]
+      );
+      expect(otpRows[0]?.status).toBe("USED");
     } finally {
       await cleanupRegistrationUser(user);
     }
@@ -86,7 +106,23 @@ test.describe("Auth Registration E2E @regression", () => {
       await verifyPage.expectLoaded(user.email);
       await verifyPage.verifyOtp("000000");
       await page.waitForURL(/\/register\/verify\?/);
-      await verifyPage.expectPopupContains(/Xác thực thất bại|OTP|mã/i);
+      await verifyPage.expectPopupContains(
+        /xác thực thất bại|xac thuc that bai|otp không hợp lệ|otp khong hop le|mã otp không hợp lệ|ma otp khong hop le/i
+      );
+      await expect(page).not.toHaveURL(/\/register\/complete\?/);
+
+      const otpRows = await MySqlDbClient.query<{ status: string }>(
+        `
+          SELECT status
+          FROM email_verification
+          WHERE email = ? AND purpose = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        [user.email, "REGISTER"]
+      );
+      expect(otpRows[0]?.status).toBe("PENDING");
+      await assertNoRegisteredCustomer(user);
     } finally {
       await cleanupRegistrationUser(user);
     }
@@ -103,6 +139,15 @@ test.describe("Auth Registration E2E @regression", () => {
       await loginPage.assertLoaded();
       await loginPage.login(user.username, user.password);
       await page.waitForURL(/\/customer\/home/);
+
+      await page.context().clearCookies();
+      await loginPage.open();
+      await loginPage.assertLoaded();
+      await loginPage.login(user.username, "WrongPassword!123");
+      await page.waitForURL(/\/login\?errorMessage=/);
+      await loginPage.expectPopupContains(
+        /đăng nhập thất bại|dang nhap that bai|sai tài khoản hoặc mật khẩu|sai tai khoan hoac mat khau/i
+      );
     } finally {
       await cleanupRegistrationUser(user);
     }

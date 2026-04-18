@@ -69,9 +69,17 @@ test.describe("Customer Invoice Payment E2E @regression", () => {
 
     await invoicePage.openFirstPaymentModal();
     const modalText = await invoicePage.visibleModalText();
-    expect(modalText).toContain("Chi Tiết Hóa Đơn");
+    expect(modalText).toMatch(/invoice|chi ti.t|hoa .on/i);
     expect(modalText).toContain(contract.building.name);
-    expect(modalText).toContain("TỔNG CỘNG");
+    expect(modalText).toMatch(/TỔNG CỘNG|tong cong|total/i);
+    expect(modalText).toContain(String(invoice.id));
+
+    const invoiceRows = await MySqlDbClient.query<{ status: string; total_amount: number }>(
+      "SELECT status, total_amount FROM invoice WHERE id = ?",
+      [invoice.id]
+    );
+    expect(invoiceRows[0]?.status).toBe("PENDING");
+    expect(Number(invoiceRows[0]?.total_amount ?? 0)).toBeGreaterThan(0);
   });
 
   test("[E2E-CUS-PAY-002] customer can move from payment modal to QR payment page", async ({ page }) => {
@@ -92,6 +100,12 @@ test.describe("Customer Invoice Payment E2E @regression", () => {
 
     await qrPage.expectLoaded(invoice.id);
     await qrPage.expectMetaContains(new RegExp(`MOONNEST INV ${invoice.id}`));
+
+    const invoiceRows = await MySqlDbClient.query<{ status: string }>(
+      "SELECT status FROM invoice WHERE id = ?",
+      [invoice.id]
+    );
+    expect(invoiceRows[0]?.status).toBe("PENDING");
   });
 
   test("[E2E-CUS-PAY-003] customer confirms QR payment and invoice becomes paid", async ({ page }) => {
@@ -113,11 +127,28 @@ test.describe("Customer Invoice Payment E2E @regression", () => {
 
     await qrPage.confirmPayment();
     await expect(page).toHaveURL(/\/customer\/invoice\/list\?paySuccess/);
-    await expect(page.locator(".swal2-popup")).toContainText(/thanh toán thành công/i);
+    await expect(page.locator(".swal2-popup")).toContainText(/Thanh toán thành công|thanh toan thanh cong|paySuccess/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);
-      return rows[0]?.status ?? "";
-    }).toBe("PAID");
+      const rows = await MySqlDbClient.query<{
+        status: string;
+        payment_method: string | null;
+        transaction_code: string | null;
+        paid_date: string | null;
+      }>("SELECT status, payment_method, transaction_code, paid_date FROM invoice WHERE id = ?", [invoice.id]);
+      return rows[0] ?? null;
+    }).toMatchObject({
+      status: "PAID",
+      payment_method: "BANK_QR"
+    });
+
+    const paidRows = await MySqlDbClient.query<{
+      status: string;
+      payment_method: string | null;
+      transaction_code: string | null;
+      paid_date: string | null;
+    }>("SELECT status, payment_method, transaction_code, paid_date FROM invoice WHERE id = ?", [invoice.id]);
+    expect(paidRows[0]?.transaction_code).toMatch(new RegExp(`^QR-${invoice.id}-\\d{14}$`));
+    expect(paidRows[0]?.paid_date).toBeTruthy();
 
     await invoicePage.expectEmptyState();
   });

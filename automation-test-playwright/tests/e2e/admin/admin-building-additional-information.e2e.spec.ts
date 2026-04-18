@@ -157,6 +157,13 @@ test.describe("Admin Building Additional Information E2E @regression", () => {
       [buildingId, amenityName]
     );
     cleanupIds.amenity.push(amenityRows[0]!.id);
+    const createdAmenityRows = await MySqlDbClient.query<{ name: string; amenity_type: string; distance_meter: number }>(
+      "SELECT name, amenity_type, distance_meter FROM nearby_amenity WHERE id = ?",
+      [amenityRows[0]!.id]
+    );
+    expect(createdAmenityRows[0]?.name).toBe(amenityName);
+    expect(createdAmenityRows[0]?.amenity_type).toBe("PARK");
+    expect(Number(createdAmenityRows[0]?.distance_meter)).toBe(500);
 
     await additionalInfoPage.addSupplier({
       name: supplierName,
@@ -173,6 +180,13 @@ test.describe("Admin Building Additional Information E2E @regression", () => {
       [buildingId, supplierName]
     );
     cleanupIds.supplier.push(supplierRows[0]!.id);
+    const createdSupplierRows = await MySqlDbClient.query<{ name: string; service_type: string; email: string }>(
+      "SELECT name, service_type, email FROM supplier WHERE id = ?",
+      [supplierRows[0]!.id]
+    );
+    expect(createdSupplierRows[0]?.name).toBe(supplierName);
+    expect(createdSupplierRows[0]?.service_type).toBe("CLEANING");
+    expect(createdSupplierRows[0]?.email).toBe("supplier-e2e@example.com");
 
     await additionalInfoPage.expectCounterValue("amenity", 1);
     await additionalInfoPage.expectCounterValue("supplier", 1);
@@ -198,6 +212,13 @@ test.describe("Admin Building Additional Information E2E @regression", () => {
       [buildingId, mapType]
     );
     cleanupIds.planning.push(planningRows[0]!.id);
+    const createdPlanningRows = await MySqlDbClient.query<{ map_type: string; issued_by: string; image_url: string }>(
+      "SELECT map_type, issued_by, image_url FROM planning_map WHERE id = ?",
+      [planningRows[0]!.id]
+    );
+    expect(createdPlanningRows[0]?.map_type).toBe(mapType);
+    expect(createdPlanningRows[0]?.issued_by).toBe("Construction Department");
+    expect(createdPlanningRows[0]?.image_url).toContain("map1.jpg");
     await additionalInfoPage.expectCounterValue("planning", 1);
 
     await additionalInfoPage.deletePlanningMap(mapType);
@@ -205,6 +226,13 @@ test.describe("Admin Building Additional Information E2E @regression", () => {
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM planning_map WHERE id = ?", [planningRows[0]!.id]);
       return rows.length;
+    }).toBe(0);
+    await expect.poll(async () => {
+      const rows = await MySqlDbClient.query<{ total: number }>(
+        "SELECT COUNT(*) AS total FROM planning_map WHERE building_id = ?",
+        [buildingId]
+      );
+      return Number(rows[0]?.total ?? 0);
     }).toBe(0);
     await additionalInfoPage.expectCounterValue("planning", 0);
   });
