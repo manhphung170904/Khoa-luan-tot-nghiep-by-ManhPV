@@ -7,7 +7,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Staff Contract List E2E @regression", () => {
+test.describe("Staff - E2E danh sach contract @regression", () => {
   let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
 
@@ -31,7 +31,7 @@ test.describe("Staff Contract List E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-STF-CTR-001] staff sees assigned contracts", async ({ page }) => {
+  test("[E2E-STF-CTR-001] staff sees duoc giao contracts", async ({ page }) => {
     const contractPage = new StaffContractListPage(page);
     await contractPage.expectLoaded();
     await contractPage.waitForTableData();
@@ -44,7 +44,7 @@ test.describe("Staff Contract List E2E @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-STF-CTR-002] staff can filter contract by customer, building, and status", async ({ page }) => {
+  test("[E2E-STF-CTR-002] staff co loc contract theo customer, building va status", async ({ page }) => {
     const contractPage = new StaffContractListPage(page);
     await contractPage.expectLoaded();
     await contractPage.filterByCustomer(tempContract!.customer.id);
@@ -55,7 +55,7 @@ test.describe("Staff Contract List E2E @regression", () => {
     await expect(contractPage.rowByContractText(tempContract!.customer.fullName)).toBeVisible();
   });
 
-  test("[E2E-STF-CTR-003] staff can open contract detail modal from list", async ({ page }) => {
+  test("[E2E-STF-CTR-003] staff co mo contract chi tiet modal tu danh sach", async ({ page }) => {
     const contractPage = new StaffContractListPage(page);
     await contractPage.expectLoaded();
     await contractPage.waitForTableData();

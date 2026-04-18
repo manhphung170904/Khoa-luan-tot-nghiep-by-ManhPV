@@ -7,7 +7,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Customer Contract List E2E @regression", () => {
+test.describe("Customer - E2E danh sach contract @regression", () => {
   let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
 
@@ -44,7 +44,7 @@ test.describe("Customer Contract List E2E @regression", () => {
     expect(rows[0]?.status).toBe("ACTIVE");
   });
 
-  test("[E2E-CUS-CTR-002] customer can filter contracts by building and status", async ({ page }) => {
+  test("[E2E-CUS-CTR-002] customer co the loc contract theo building va status", async ({ page }) => {
     const contractPage = new CustomerContractListPage(page);
     await contractPage.expectLoaded();
     await contractPage.filterByBuilding(tempContract!.building.id);
@@ -64,7 +64,7 @@ test.describe("Customer Contract List E2E @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-CUS-CTR-003] unmatched contract filter shows empty state", async ({ page }) => {
+  test("[E2E-CUS-CTR-003] bo loc contract khong khop hien trang thai rong", async ({ page }) => {
     const contractPage = new CustomerContractListPage(page);
     await contractPage.expectLoaded();
     await contractPage.filterByStatus("EXPIRED");

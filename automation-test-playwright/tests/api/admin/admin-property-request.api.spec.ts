@@ -6,12 +6,12 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
-test.describe("Admin Property Request API @regression", () => {
+test.describe("Admin - kiem thu API property request @regression", () => {
   test.afterAll(async () => {
     await MySqlDbClient.close();
   });
 
-  test("API-ADM-PRQ-001 rejects anonymous list access with API auth status", async ({ playwright }) => {
+  test("API-ADM-PRQ-001 tu choi truy cap danh sach anonymous voi trang thai auth API", async ({ playwright }) => {
     const context = await createAnonymousContext(playwright);
     try {
       const response = await context.get("/api/v1/admin/property-requests?page=1&size=5", {
@@ -28,7 +28,7 @@ test.describe("Admin Property Request API @regression", () => {
     }
   });
 
-  test("API-ADM-PRQ-002 lists pending requests and exposes page shape", async ({ playwright }) => {
+  test("API-ADM-PRQ-002 liet ke property request dang cho va tra ve dung cau truc trang", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const response = await scenario.admin.get("/api/v1/admin/property-requests?page=1&size=10&status=PENDING", {
@@ -42,7 +42,7 @@ test.describe("Admin Property Request API @regression", () => {
     }
   });
 
-  test("API-ADM-PRQ-003 returns detail and contract autofill for RENT request @extended", async ({ playwright }) => {
+  test("API-ADM-PRQ-003 tra ve chi tiet va contract autofill cho property request RENT @extended", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
@@ -79,7 +79,7 @@ test.describe("Admin Property Request API @regression", () => {
     }
   });
 
-  test("API-ADM-PRQ-004 returns sale contract autofill for BUY request @extended", async ({ playwright }) => {
+  test("API-ADM-PRQ-004 tra ve sale contract autofill cho property request BUY @extended", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "BUY");
     try {
       const response = await scenario.admin.get(
@@ -99,7 +99,7 @@ test.describe("Admin Property Request API @regression", () => {
     }
   });
 
-  test("API-ADM-PRQ-005 rejects a pending request and updates detail status @extended", async ({ playwright }) => {
+  test("API-ADM-PRQ-005 tu choi property request dang cho va cap nhat status chi tiet @extended", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const rejectResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/reject`, {
@@ -132,7 +132,7 @@ test.describe("Admin Property Request API @regression", () => {
     }
   });
 
-  test("API-ADM-PRQ-006 approves a RENT request when linked contract matches request @extended", async ({ playwright }) => {
+  test("API-ADM-PRQ-006 duyet property request RENT khi linked contract khop voi request @extended", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     let contractId = 0;
 
@@ -206,7 +206,7 @@ test.describe("Admin Property Request API @regression", () => {
     }
   });
 
-  test("API-ADM-PRQ-007 approves a BUY request when linked sale contract matches request @extended", async ({ playwright }) => {
+  test("API-ADM-PRQ-007 duyet property request BUY khi linked sale contract khop voi request @extended", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "BUY");
     let saleContractId = 0;
 
@@ -272,7 +272,7 @@ test.describe("Admin Property Request API @regression", () => {
     }
   });
 
-  test("API-ADM-PRQ-008 returns 400 for missing request id @extended", async ({ playwright }) => {
+  test("API-ADM-PRQ-008 tra ve 400 voi request id khong ton tai @extended", async ({ playwright }) => {
     const admin = await createRoleContext(playwright, "admin");
     try {
       const response = await admin.get("/api/v1/admin/property-requests/999999999", {

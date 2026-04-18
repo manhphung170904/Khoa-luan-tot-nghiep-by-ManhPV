@@ -12,7 +12,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Auth Password Reset E2E @regression", () => {
+test.describe("Auth - E2E dat lai mat khau @regression", () => {
   let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
@@ -34,7 +34,7 @@ test.describe("Auth Password Reset E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-AUTH-RST-001] forgot password redirects user to reset form for valid email", async ({ page }) => {
+  test("[E2E-AUTH-RST-001] quen mat khau dieu huong nguoi dung den form dat lai voi email hop le", async ({ page }) => {
     const forgotPage = new ForgotPasswordPage(page);
     const resetPage = new ResetPasswordPage(page);
 
@@ -57,7 +57,7 @@ test.describe("Auth Password Reset E2E @regression", () => {
     expect(otpRows[0]?.status).toBe("PENDING");
   });
 
-  test("[E2E-AUTH-RST-002] reset password flow succeeds with OTP from test hook and new login works", async ({
+  test("[E2E-AUTH-RST-002] luong dat lai password thanh cong voi OTP tu test hook va dang nhap bang password moi hoat dong", async ({
     page,
     request
   }) => {
@@ -92,7 +92,7 @@ test.describe("Auth Password Reset E2E @regression", () => {
     await page.waitForURL(/\/customer\/home/);
   });
 
-  test("[E2E-AUTH-RST-003] reset password client validation blocks mismatched confirmation", async ({ page }) => {
+  test("[E2E-AUTH-RST-003] kiem tra phia client cua dat lai password chan gia tri xac nhan khong khop", async ({ page }) => {
     const forgotPage = new ForgotPasswordPage(page);
     const resetPage = new ResetPasswordPage(page);
 

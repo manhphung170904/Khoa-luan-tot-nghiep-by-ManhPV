@@ -5,7 +5,7 @@ import { CustomerPropertyRequestListPage } from "@pages/customer/CustomerPropert
 import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
 import { loginAsTempUser } from "@data/profileTempUsers";
 
-test.describe("Customer Property Request E2E @regression", () => {
+test.describe("Customer - E2E property request @regression", () => {
   let scenario: PropertyRequestScenario | null = null;
   let createdContractId = 0;
 
@@ -43,7 +43,7 @@ test.describe("Customer Property Request E2E @regression", () => {
     await requestPage.expectCancelButtonVisible(scenario!.propertyRequestId);
   });
 
-  test("[E2E-CUS-REQ-002] customer can cancel a pending property request", async ({ page }) => {
+  test("[E2E-CUS-REQ-002] customer co co thecel pending property request", async ({ page }) => {
     const requestPage = new CustomerPropertyRequestListPage(page);
     await requestPage.expectLoaded();
     await requestPage.cancelRequest(scenario!.propertyRequestId);
@@ -62,7 +62,7 @@ test.describe("Customer Property Request E2E @regression", () => {
     expect(rows[0]?.status).toBe("CANCELLED");
   });
 
-  test("[E2E-CUS-REQ-003] approved property request is visible without cancel action", async ({ page }) => {
+  test("[E2E-CUS-REQ-003] approved property request is visible without co thecel action", async ({ page }) => {
     const contractPayload = TestDataFactory.buildContractPayload({
       customerId: scenario!.customerId,
       buildingId: scenario!.buildingId,

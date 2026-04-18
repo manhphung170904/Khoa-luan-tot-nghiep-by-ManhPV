@@ -61,12 +61,12 @@ async function completeRegistrationFlow(
   await page.waitForURL(/\/customer\/home/);
 }
 
-test.describe("Auth Registration E2E @regression", () => {
+test.describe("Auth - E2E dang ky @regression", () => {
   test.afterEach(async () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-AUTH-REG-001] user can complete local registration through OTP flow", async ({ page, request }) => {
+  test("[E2E-AUTH-REG-001] user co complete local registration through OTP luong", async ({ page, request }) => {
     const user = buildRegistrationUser("e2e_register");
 
     try {
@@ -94,7 +94,7 @@ test.describe("Auth Registration E2E @regression", () => {
     }
   });
 
-  test("[E2E-AUTH-REG-002] register verify shows error popup for invalid OTP", async ({ page }) => {
+  test("[E2E-AUTH-REG-002] xac minh dang ky hien popup loi voi OTP khong hop le", async ({ page }) => {
     const registerPage = new RegisterPage(page);
     const verifyPage = new RegisterVerifyPage(page);
     const user = buildRegistrationUser("e2e_register_invalid");
@@ -129,7 +129,7 @@ test.describe("Auth Registration E2E @regression", () => {
     }
   });
 
-  test("[E2E-AUTH-REG-003] completed registration account can log in from login page", async ({ page, request }) => {
+  test("[E2E-AUTH-REG-003] tai khoan da dang ky hoan tat co the dang nhap tu trang dang nhap", async ({ page, request }) => {
     const user = buildRegistrationUser("e2e_register_login");
     const loginPage = new LoginPage(page);
 

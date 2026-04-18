@@ -5,8 +5,8 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
-  test("[CTR_001] POST /contracts rejects anonymous create", async ({ request }) => {
+test.describe.serial("Admin - kiem thu API contract @api-write @regression", () => {
+  test("[CTR_001] POST /contracts tu choi chua dang nhap tao", async ({ request }) => {
     const response = await request.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,
       data: TestDataFactory.buildContractPayload()
@@ -18,7 +18,7 @@ test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
     });
   });
 
-  test("[CTR_002] POST /contracts rejects negative rentPrice", async ({ adminApi }) => {
+  test("[CTR_002] POST /contracts tu choi negative rentPrice", async ({ adminApi }) => {
     const payload = TestDataFactory.buildContractPayload({ rentPrice: -5 });
     const response = await adminApi.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,
@@ -38,7 +38,7 @@ test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[CTR_005] POST /contracts rejects endDate before startDate", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR_005] POST /contracts tu choi endDate before startDate", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
     cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
 
@@ -67,7 +67,7 @@ test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[CTR_011] GET /contracts/metadata returns select options shape", async ({ adminApi }) => {
+  test("[CTR_011] GET /contracts/metadata tra ve select options shape", async ({ adminApi }) => {
     const response = await adminApi.get("/api/v1/admin/contracts/metadata", {
       failOnStatusCode: false
     });
@@ -80,7 +80,7 @@ test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
     expect(Array.isArray(body.staffs)).toBeTruthy();
   });
 
-  test("[CTR_003] POST /contracts rejects nonexistent buildingId", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR_003] POST /contracts tu choi khong ton tai buildingId", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
     cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
     try {
@@ -107,7 +107,7 @@ test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
     } finally {}
   });
 
-  test("[CTR_004] POST /contracts rejects nonexistent customerId", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR_004] POST /contracts tu choi khong ton tai customerId", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
     cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
     try {
@@ -134,7 +134,7 @@ test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
     } finally {}
   });
 
-  test("[CTR_012] POST /contracts rejects staff outside building assignment", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR_012] POST /contracts tu choi staff outside building assignment", async ({ adminApi, cleanupRegistry }) => {
     const managedContract = await TempEntityHelper.taoContractTam(adminApi);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(adminApi);
     cleanupRegistry.add(() => TempEntityHelper.xoaStaffTam(adminApi, outsiderStaff.id));
@@ -164,7 +164,7 @@ test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
     } finally {}
   });
 
-  test("[CTR_013] POST /contracts rejects staff outside customer assignment", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR_013] POST /contracts tu choi staff outside customer assignment", async ({ adminApi, cleanupRegistry }) => {
     const assignedManager = await TempEntityHelper.taoStaffTam(adminApi);
     const contractStaff = await TempEntityHelper.taoStaffTam(adminApi);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
@@ -200,7 +200,7 @@ test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
     } finally {}
   });
 
-  test("[CTR_014] PUT /contracts/{id} rejects nonexistent contract", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR_014] PUT /contracts/{id} tu choi khong ton tai contract", async ({ adminApi, cleanupRegistry }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(adminApi);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
     await TempEntityHelper.capNhatPhanCongBuilding(adminApi, tempStaff.id, [tempBuilding.id]);
@@ -230,7 +230,7 @@ test.describe.serial("Admin Contract API Tests @api-write @regression", () => {
     expect(errorBody.message).toMatch(/contract|hop dong|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
   });
 
-  test("[CTR_006] contract create/list/filter/update/status/delete lifecycle with temp data", async ({
+  test("[CTR_006] contract tao/danh sach/loc/cap nhat/status/xoa theo vong doi voi du lieu tam", async ({
     adminApi,
     cleanupRegistry
   }) => {

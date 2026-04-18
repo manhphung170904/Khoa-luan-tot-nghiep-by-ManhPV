@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin Invoice API Tests @regression", () => {
+test.describe.serial("Admin - kiem thu API invoice @regression", () => {
   let admin: APIRequestContext;
 
   const now = new Date();
@@ -26,7 +26,7 @@ test.describe.serial("Admin Invoice API Tests @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[INV_001] POST /invoices rejects anonymous create", async ({ request }) => {
+  test("[INV_001] POST /invoices tu choi chua dang nhap tao", async ({ request }) => {
     const response = await request.post("/api/v1/admin/invoices", {
       failOnStatusCode: false,
       data: TestDataFactory.buildInvoicePayload()
@@ -38,7 +38,7 @@ test.describe.serial("Admin Invoice API Tests @regression", () => {
     });
   });
 
-  test("[INV_002] POST /invoices rejects invalid month type", async () => {
+  test("[INV_002] POST /invoices tu choi kieu month khong hop le", async () => {
     const response = await admin.post("/api/v1/admin/invoices", {
       failOnStatusCode: false,
       data: { ...TestDataFactory.buildInvoicePayload(), month: "Muoi Hai" }
@@ -51,7 +51,7 @@ test.describe.serial("Admin Invoice API Tests @regression", () => {
     expect(errorBody.message).toMatch(/month|tháng|thang|integer/i);
   });
 
-  test("[INV_015] POST /invoices rejects current-month invoice creation", async () => {
+  test("[INV_015] POST /invoices tu choi current-month invoice creation", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
       const currentMonth = now.getMonth() + 1;
@@ -83,7 +83,7 @@ test.describe.serial("Admin Invoice API Tests @regression", () => {
     }
   });
 
-  test("[INV_003] POST /invoices rejects nonexistent contractId", async () => {
+  test("[INV_003] POST /invoices tu choi khong ton tai contractId", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.post("/api/v1/admin/invoices", {
@@ -105,7 +105,7 @@ test.describe.serial("Admin Invoice API Tests @regression", () => {
     }
   });
 
-  test("[INV_004] POST /invoices rejects mismatched customerId", async () => {
+  test("[INV_004] POST /invoices tu choi mismatched customerId", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.post("/api/v1/admin/invoices", {
@@ -127,7 +127,7 @@ test.describe.serial("Admin Invoice API Tests @regression", () => {
     }
   });
 
-  test("[INV_005] POST /invoices rejects dueDate within invoice month", async () => {
+  test("[INV_005] POST /invoices tu choi dueDate within invoice month", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
       const sameMonthDueDate = `${prevYear}-${String(prevMonth).padStart(2, "0")}-15`;
@@ -156,7 +156,7 @@ test.describe.serial("Admin Invoice API Tests @regression", () => {
     }
   });
 
-  test("[INV_016] PUT /invoices/{id} rejects nonexistent invoice", async () => {
+  test("[INV_016] PUT /invoices/{id} tu choi khong ton tai invoice", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.put("/api/v1/admin/invoices/999999", {
@@ -178,7 +178,7 @@ test.describe.serial("Admin Invoice API Tests @regression", () => {
     }
   });
 
-  test("[INV_017] DELETE /invoices/{id} rejects nonexistent invoice", async () => {
+  test("[INV_017] DELETE /invoices/{id} tu choi invoice khong ton tai", async () => {
     const response = await admin.delete("/api/v1/admin/invoices/999999", {
       failOnStatusCode: false
     });
@@ -246,7 +246,7 @@ test.describe.serial("Admin Invoice API Tests @regression", () => {
     }
   });
 
-  test("[INV_006] invoice create/list/filter/update/confirm/delete lifecycle with temp contract", async () => {
+  test("[INV_006] invoice tao/danh sach/loc/cap nhat/xac nhan/xoa theo vong doi voi temp contract", async () => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     let createdInvoiceId = 0;
 

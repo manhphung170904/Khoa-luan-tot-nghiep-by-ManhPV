@@ -18,7 +18,7 @@ type TempCustomer = Awaited<ReturnType<typeof TempEntityHelper.taoCustomerTam>>;
 type TempBuilding = Awaited<ReturnType<typeof TempEntityHelper.taoBuildingTam>>;
 type TempSaleContract = Awaited<ReturnType<typeof TempEntityHelper.taoSaleContractTam>>;
 
-test.describe("Admin Sale Contract Management E2E @regression", () => {
+test.describe("Admin - E2E quan ly sale contract @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupSaleContractIds = new Set<number>();
@@ -93,7 +93,7 @@ test.describe("Admin Sale Contract Management E2E @regression", () => {
     return { staff, customer, building };
   }
 
-  test("[E2E-ADM-SCT-001] admin can search a sale contract and open detail", async ({ page }) => {
+  test("[E2E-ADM-SCT-001] admin co tim sale contract va mo chi tiet", async ({ page }) => {
     const tempSaleContract: TempSaleContract = await TempEntityHelper.taoSaleContractTam(bootstrapAdminApi);
     cleanupSaleContractIds.add(tempSaleContract.id);
     cleanupStaffIds.add(tempSaleContract.staff.id);
@@ -111,7 +111,7 @@ test.describe("Admin Sale Contract Management E2E @regression", () => {
     await detailPage.expectLoaded(tempSaleContract.id);
   });
 
-  test("[E2E-ADM-SCT-002] admin can create a sale contract from the add form", async ({ page }) => {
+  test("[E2E-ADM-SCT-002] admin co tao sale contract tu add form", async ({ page }) => {
     const scenario = await createAssignableScenario();
     const formPage = new AdminSaleContractFormPage(page);
 
@@ -141,7 +141,7 @@ test.describe("Admin Sale Contract Management E2E @regression", () => {
     cleanupSaleContractIds.add(rows[0]!.id);
   });
 
-  test("[E2E-ADM-SCT-003] admin can update transfer date on the edit form", async ({ page }) => {
+  test("[E2E-ADM-SCT-003] admin co cap nhat transfer date on edit form", async ({ page }) => {
     const tempSaleContract: TempSaleContract = await TempEntityHelper.taoSaleContractTam(bootstrapAdminApi);
     cleanupSaleContractIds.add(tempSaleContract.id);
     cleanupStaffIds.add(tempSaleContract.staff.id);
@@ -164,7 +164,7 @@ test.describe("Admin Sale Contract Management E2E @regression", () => {
     }).toBe("2026-06-16");
   });
 
-  test("[E2E-ADM-SCT-004] invalid transfer date before signed date is blocked on edit", async ({ page }) => {
+  test("[E2E-ADM-SCT-004] khong sua transfer date som hon signed date", async ({ page }) => {
     const tempSaleContract: TempSaleContract = await TempEntityHelper.taoSaleContractTam(bootstrapAdminApi);
     cleanupSaleContractIds.add(tempSaleContract.id);
     cleanupStaffIds.add(tempSaleContract.staff.id);
@@ -190,7 +190,7 @@ test.describe("Admin Sale Contract Management E2E @regression", () => {
     expect(afterRows[0]?.transfer_date ?? null).toBe(beforeRows[0]?.transfer_date ?? null);
   });
 
-  test("[E2E-ADM-SCT-005] admin can delete a sale contract from the detail page", async ({ page }) => {
+  test("[E2E-ADM-SCT-005] admin co xoa sale contract tu trang chi tiet", async ({ page }) => {
     const tempSaleContract: TempSaleContract = await TempEntityHelper.taoSaleContractTam(bootstrapAdminApi);
     cleanupSaleContractIds.add(tempSaleContract.id);
     cleanupStaffIds.add(tempSaleContract.staff.id);

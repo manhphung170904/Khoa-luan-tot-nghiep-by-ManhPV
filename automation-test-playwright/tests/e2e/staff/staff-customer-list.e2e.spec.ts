@@ -7,7 +7,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Staff Customer List E2E @regression", () => {
+test.describe("Staff - E2E danh sach customer @regression", () => {
   let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
 
@@ -31,7 +31,7 @@ test.describe("Staff Customer List E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-STF-CUS-001] staff sees assigned customers", async ({ page }) => {
+  test("[E2E-STF-CUS-001] staff sees duoc giao customers", async ({ page }) => {
     const customerPage = new StaffCustomerListPage(page);
     await customerPage.expectLoaded();
     await customerPage.waitForTableData();
@@ -44,7 +44,7 @@ test.describe("Staff Customer List E2E @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-STF-CUS-002] staff can search customer and open detail modal", async ({ page }) => {
+  test("[E2E-STF-CUS-002] staff co tim customer va mo chi tiet modal", async ({ page }) => {
     const customerPage = new StaffCustomerListPage(page);
     await customerPage.expectLoaded();
     await customerPage.filterByFullName(tempContract!.customer.fullName);

@@ -7,7 +7,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
-test.describe("Admin Building Additional Information API @extended", () => {
+test.describe("Admin - kiem thu API building additional information @extended", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -19,7 +19,7 @@ test.describe("Admin Building Additional Information API @extended", () => {
     await MySqlDbClient.close();
   });
 
-  test("[BAI_001] full CRUD lifecycle for legal authority, nearby amenity, supplier, planning map with temp building", async ({
+  test("[BAI_001] vong doi CRUD day du cho legal authority, nearby amenity, supplier, planning map with temp building", async ({
     request
   }) => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_RENT");
@@ -339,7 +339,7 @@ test.describe("Admin Building Additional Information API @extended", () => {
     }
   });
 
-  test("[BAI_002] planning map image upload validates auth, mime, size, and accepts real JPG", async ({ request }) => {
+  test("[BAI_002] planning map image upload kiem tra auth, mime, kich thuoc va chap nhan JPG that", async ({ request }) => {
     const anonymousUpload = await request.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
       multipart: {
@@ -412,7 +412,7 @@ test.describe("Admin Building Additional Information API @extended", () => {
     expect(validUploadBody.data?.filename).toMatch(/^planning_.*\.jpg$/);
   });
 
-  test("[BAI_003] additional information endpoints return 400 for missing resources", async () => {
+  test("[BAI_003] additional information endpoints tra ve 400 for thieu resources", async () => {
     const missingLegalAuthority = await admin.put(
       "/api/v1/admin/building-additional-information/legal-authorities/999999",
       {

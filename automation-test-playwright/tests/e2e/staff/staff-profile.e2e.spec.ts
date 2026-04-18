@@ -12,7 +12,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Staff Profile E2E @regression", () => {
+test.describe("Staff - E2E profile @regression", () => {
   let adminApi: APIRequestContext;
   let tempUser: TempStaffProfileUser | null = null;
 
@@ -36,7 +36,7 @@ test.describe("Staff Profile E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-STF-PRO-001] staff profile renders current account information", async ({ page }) => {
+  test("[E2E-STF-PRO-001] staff profile hien current account information", async ({ page }) => {
     if (!tempUser) {
       return;
     }
@@ -50,7 +50,7 @@ test.describe("Staff Profile E2E @regression", () => {
     expect(values.phone).toBe(tempUser.phone);
   });
 
-  test("[E2E-STF-PRO-002] errorMessage query shows an error SweetAlert", async ({ page }) => {
+  test("[E2E-STF-PRO-002] errorMessage query hien an error SweetAlert", async ({ page }) => {
     const profilePage = new StaffProfilePage(page);
     await page.goto("/staff/profile?errorMessage=Cap%20nhat%20that%20bai");
 
@@ -58,7 +58,7 @@ test.describe("Staff Profile E2E @regression", () => {
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-STF-PRO-003] staff can update username with a valid OTP", async ({ page }) => {
+  test("[E2E-STF-PRO-003] staff co cap nhat username voi OTP hop le", async ({ page }) => {
     if (!tempUser) {
       return;
     }
@@ -80,7 +80,7 @@ test.describe("Staff Profile E2E @regression", () => {
     }).toBe(nextUsername);
   });
 
-  test("[E2E-STF-PRO-004] staff can update phone number with a valid OTP", async ({ page }) => {
+  test("[E2E-STF-PRO-004] staff co cap nhat phone number voi OTP hop le", async ({ page }) => {
     if (!tempUser) {
       return;
     }
@@ -102,7 +102,7 @@ test.describe("Staff Profile E2E @regression", () => {
     }).toBe(newPhone);
   });
 
-  test("[E2E-STF-PRO-005] client-side validation blocks mismatched password confirmation", async ({ page }) => {
+  test("[E2E-STF-PRO-005] client-side validation chan mismatched password confirmation", async ({ page }) => {
     const profilePage = new StaffProfilePage(page);
 
     await profilePage.submitPasswordChange("ValidPass1!", "DifferentPass1!", "000000");
@@ -110,7 +110,7 @@ test.describe("Staff Profile E2E @regression", () => {
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-STF-PRO-006] staff can update password with a valid OTP and log in again", async ({ page }) => {
+  test("[E2E-STF-PRO-006] staff co the cap nhat password voi OTP hop le va dang nhap lai", async ({ page }) => {
     if (!tempUser) {
       return;
     }

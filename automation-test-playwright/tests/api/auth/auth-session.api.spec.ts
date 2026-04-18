@@ -16,9 +16,9 @@ const scenarios: RoleScenario[] = [
   { role: "customer", expectedRoleCode: "CUSTOMER" }
 ];
 
-test.describe("REST Auth Session API @regression", () => {
+test.describe("Auth - kiem thu REST session API @regression", () => {
   for (const scenario of scenarios) {
-    test(`API-AUTH-REST-${scenario.expectedRoleCode} login/me/logout works with cookie session @smoke`, async ({
+    test(`API-AUTH-REST-${scenario.expectedRoleCode} luong dang nhap/me/dang xuat hoat dong voi cookie session @smoke`, async ({
       anonymousApi
     }) => {
       const { response, username } = await ApiSessionHelper.loginAsRole(anonymousApi, scenario.role);
@@ -60,7 +60,7 @@ test.describe("REST Auth Session API @regression", () => {
     });
   }
 
-  test("API-AUTH-REST-VAL-001 rejects blank login DTO", async ({ anonymousApi }) => {
+  test("API-AUTH-REST-VAL-001 tu choi DTO dang nhap rong", async ({ anonymousApi }) => {
     const response = await anonymousApi.post("/api/v1/auth/login", {
       failOnStatusCode: false,
       data: {
@@ -77,7 +77,7 @@ test.describe("REST Auth Session API @regression", () => {
     });
   });
 
-  test("API-AUTH-REST-VAL-002 rejects wrong credential on REST login", async ({ anonymousApi }) => {
+  test("API-AUTH-REST-VAL-002 tu choi credential sai tren REST dang nhap", async ({ anonymousApi }) => {
     const response = await anonymousApi.post("/api/v1/auth/login", {
       failOnStatusCode: false,
       data: {
@@ -96,7 +96,7 @@ test.describe("REST Auth Session API @regression", () => {
     );
   });
 
-  test("API-AUTH-REST-SEC-001 rejects anonymous me access @smoke", async ({ anonymousApi }) => {
+  test("API-AUTH-REST-SEC-001 tu choi truy cap me anonymous @smoke", async ({ anonymousApi }) => {
     const response = await anonymousApi.get("/api/v1/auth/me", {
       failOnStatusCode: false,
       maxRedirects: 0
@@ -109,7 +109,7 @@ test.describe("REST Auth Session API @regression", () => {
     });
   });
 
-  test("API-AUTH-REST-OTP-001 forgot-password returns success and persists pending OTP for existing email", async ({
+  test("API-AUTH-REST-OTP-001 quen mat khau tra ve thanh cong va luu OTP dang cho cho email ton tai", async ({
     anonymousApi
   }) => {
     const customers = await MySqlDbClient.query<{ email: string }>(
@@ -150,7 +150,7 @@ test.describe("REST Auth Session API @regression", () => {
     expect(afterRows[0]!.total).toBeGreaterThan(0);
   });
 
-  test("API-AUTH-REST-OTP-002 forgot-password keeps success contract for unknown email", async ({
+  test("API-AUTH-REST-OTP-002 quen mat khau van giu contract thanh cong voi email khong ton tai", async ({
     anonymousApi
   }) => {
     const email = `pw-missing-${Date.now()}@example.com`;

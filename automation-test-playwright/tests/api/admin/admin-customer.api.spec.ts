@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin Customer API Tests @regression", () => {
+test.describe.serial("Admin - kiem thu API customer @regression", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -19,7 +19,7 @@ test.describe.serial("Admin Customer API Tests @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[CUS_001] POST /customers rejects anonymous create", async ({ request }) => {
+  test("[CUS_001] POST /customers tu choi chua dang nhap tao", async ({ request }) => {
     const response = await request.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload()
@@ -31,7 +31,7 @@ test.describe.serial("Admin Customer API Tests @regression", () => {
     });
   });
 
-  test("[CUS_002] POST /customers rejects empty staffIds", async () => {
+  test("[CUS_002] POST /customers tu choi empty staffIds", async () => {
     const username = `cus_empty_staff_${Date.now()}`;
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
@@ -48,7 +48,7 @@ test.describe.serial("Admin Customer API Tests @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[CUS_009] POST /customers rejects username shorter than 4", async () => {
+  test("[CUS_009] POST /customers tu choi username shorter than 4", async () => {
     const shortUsername = "abc";
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
@@ -67,7 +67,7 @@ test.describe.serial("Admin Customer API Tests @regression", () => {
     await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS_003] POST /customers rejects password shorter than 6", async () => {
+  test("[CUS_003] POST /customers tu choi password shorter than 6", async () => {
     const username = `cus_pwd_${Date.now()}`;
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
@@ -86,7 +86,7 @@ test.describe.serial("Admin Customer API Tests @regression", () => {
     await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS_010] POST /customers rejects oversized email", async () => {
+  test("[CUS_010] POST /customers tu choi oversized email", async () => {
     const oversizedEmail = `${"a".repeat(95)}@b.com`;
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
@@ -105,7 +105,7 @@ test.describe.serial("Admin Customer API Tests @regression", () => {
     await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS_011] POST /customers rejects invalid phone format", async () => {
+  test("[CUS_011] POST /customers tu choi dinh dang phone khong hop le", async () => {
     const invalidPhone = "9999999999";
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
@@ -124,7 +124,7 @@ test.describe.serial("Admin Customer API Tests @regression", () => {
     await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS_004] POST /customers creates customer and supports list/search/delete flow", async () => {
+  test("[CUS_004] POST /customers tao customer va ho tro danh sach/tim/xoa luong", async () => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const customerPayload = TestDataFactory.buildCustomerPayload({ staffIds: [tempStaff.id] });
     let createdCustomerId = 0;
@@ -231,7 +231,7 @@ test.describe.serial("Admin Customer API Tests @regression", () => {
     }
   });
 
-  test("[CUS_012] DELETE /customers/{id} should block delete when sale contracts exist on temp data", async () => {
+  test("[CUS_012] DELETE /customers/{id} phai chan xoa khi sale contract ton tai trong du lieu tam", async () => {
     const customerWithSaleContract = await TempEntityHelper.taoSaleContractTam(admin);
 
     try {

@@ -17,7 +17,7 @@ type TempCustomer = {
   phone: string;
 };
 
-test.describe.serial("Customer Profile API Tests @api-write @otp @regression", () => {
+test.describe.serial("Customer - kiem thu API profile @api-write @otp @regression", () => {
   let bootstrapAdmin: APIRequestContext;
   let customerContext: APIRequestContext;
   let managerStaffId = 0;
@@ -80,7 +80,7 @@ test.describe.serial("Customer Profile API Tests @api-write @otp @regression", (
     await MySqlDbClient.close();
   });
 
-  test("[CUS-PRO-001] rejects anonymous access to customer profile mutation endpoints", async ({ request }) => {
+  test("[CUS-PRO-001] tu choi truy cap khi chua dang nhap den cac endpoint mutation cua customer profile", async ({ request }) => {
     const usernameResponse = await request.put("/api/v1/customer/profile/username", {
       failOnStatusCode: false,
       data: {
@@ -132,13 +132,13 @@ test.describe.serial("Customer Profile API Tests @api-write @otp @regression", (
     });
   });
 
-  test("[CUS-PRO-001A] sends OTP for phone update and marks row pending", async () => {
+  test("[CUS-PRO-001A] sends OTP for phone cap nhat va marks row pending", async () => {
     await sendOtp("PROFILE_PHONE");
     const latest = await ApiOtpHelper.latest(tempCustomer.email, "PROFILE_PHONE");
     expect(latest?.status).toBe("PENDING");
   });
 
-  test("[CUS-PRO-001B] username update for local customer stays blocked even with valid OTP", async () => {
+  test("[CUS-PRO-001B] username cap nhat for local customer stays chaned even voi hop le OTP", async () => {
     await sendOtp("PROFILE_USERNAME");
     const otp = await ApiOtpAccessHelper.latestOtp(customerContext, tempCustomer.email, "PROFILE_USERNAME");
     const originalUsername = tempCustomer.username;
@@ -161,7 +161,7 @@ test.describe.serial("Customer Profile API Tests @api-write @otp @regression", (
     expect(rows[0]!.username).toBe(originalUsername);
   });
 
-  test("[CUS-PRO-002] updates email with valid current password", async () => {
+  test("[CUS-PRO-002] cap nhat email voi hop le current password", async () => {
     const newEmail = `customer-update-${Date.now()}@example.com`;
     const response = await customerContext.put("/api/v1/customer/profile/email", {
       failOnStatusCode: false,
@@ -181,7 +181,7 @@ test.describe.serial("Customer Profile API Tests @api-write @otp @regression", (
     tempCustomer.email = newEmail;
   });
 
-  test("[CUS-PRO-003] rejects email update with wrong current password", async () => {
+  test("[CUS-PRO-003] tu choi email cap nhat with wrong current password", async () => {
     const originalEmail = tempCustomer.email;
     const response = await customerContext.put("/api/v1/customer/profile/email", {
       failOnStatusCode: false,
@@ -201,7 +201,7 @@ test.describe.serial("Customer Profile API Tests @api-write @otp @regression", (
     expect(rows[0]!.email).toBe(originalEmail);
   });
 
-  test("[CUS-PRO-004] updates phone with valid OTP", async () => {
+  test("[CUS-PRO-004] cap nhat phone voi hop le OTP", async () => {
     await sendOtp("PROFILE_PHONE");
     const otp = await ApiOtpAccessHelper.latestOtp(customerContext, tempCustomer.email, "PROFILE_PHONE");
 
@@ -224,7 +224,7 @@ test.describe.serial("Customer Profile API Tests @api-write @otp @regression", (
     tempCustomer.phone = newPhone;
   });
 
-  test("[CUS-PRO-004A] rejects phone update with invalid OTP", async () => {
+  test("[CUS-PRO-004A] tu choi phone cap nhat voi khong hop le OTP", async () => {
     const originalPhone = tempCustomer.phone;
     const response = await customerContext.put("/api/v1/customer/profile/phone-number", {
       failOnStatusCode: false,
@@ -244,7 +244,7 @@ test.describe.serial("Customer Profile API Tests @api-write @otp @regression", (
     expect(rows[0]!.phone).toBe(originalPhone);
   });
 
-  test("[CUS-PRO-005] updates password with valid OTP and changes DB hash", async ({ playwright }) => {
+  test("[CUS-PRO-005] cap nhat password voi hop le OTP va changes DB hash", async ({ playwright }) => {
     const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     const oldHash = oldHashRows[0]!.password;
 
@@ -288,7 +288,7 @@ test.describe.serial("Customer Profile API Tests @api-write @otp @regression", (
     currentPassword = newPassword;
   });
 
-  test("[CUS-PRO-006] rejects password update when confirmation does not match", async () => {
+  test("[CUS-PRO-006] tu choi password cap nhat when confirmation does not match", async () => {
     await sendOtp("PROFILE_PASSWORD");
     const otp = await ApiOtpAccessHelper.latestOtp(customerContext, tempCustomer.email, "PROFILE_PASSWORD");
     const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
@@ -314,7 +314,7 @@ test.describe.serial("Customer Profile API Tests @api-write @otp @regression", (
     expect(newHashRows[0]!.password).toBe(oldHash);
   });
 
-  test("[CUS-PRO-007] rejects password update with invalid OTP", async () => {
+  test("[CUS-PRO-007] tu choi password cap nhat voi khong hop le OTP", async () => {
     const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     const oldHash = oldHashRows[0]!.password;
     const response = await customerContext.put("/api/v1/customer/profile/password", {

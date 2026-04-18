@@ -9,7 +9,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Customer Service E2E @regression", () => {
+test.describe("Customer - E2E service @regression", () => {
   let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
@@ -32,7 +32,7 @@ test.describe("Customer Service E2E @regression", () => {
     await adminApi.dispose();
   });
 
-  test("[E2E-CUS-SRV-001] customer service page renders key service cards", async ({ page }) => {
+  test("[E2E-CUS-SRV-001] customer service trang hien key service cards", async ({ page }) => {
     const servicePage = new CustomerServicePage(page);
     await servicePage.expectLoaded();
     await servicePage.expectCardVisible("Đỗ Xe Ô Tô");

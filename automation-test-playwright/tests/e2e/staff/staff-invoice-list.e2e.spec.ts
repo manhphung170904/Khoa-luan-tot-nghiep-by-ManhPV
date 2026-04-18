@@ -13,7 +13,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
-test.describe("Staff Invoice List E2E @regression", () => {
+test.describe("Staff - E2E danh sach invoice @regression", () => {
   let adminApi: APIRequestContext;
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
@@ -45,7 +45,7 @@ test.describe("Staff Invoice List E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-STF-INV-001] staff sees assigned invoice rows and can open the detail modal", async ({ page }) => {
+  test("[E2E-STF-INV-001] staff thay cac dong invoice duoc giao va co mo chi tiet modal", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -68,7 +68,7 @@ test.describe("Staff Invoice List E2E @regression", () => {
     await expect(invoicePage.visibleModal()).toContainText(/Chi tiết hóa đơn|Chi tiet hoa don/i);
   });
 
-  test("[E2E-STF-INV-002] staff can create a new invoice from the add modal", async ({ page }) => {
+  test("[E2E-STF-INV-002] staff co tao new invoice tu add modal", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -113,7 +113,7 @@ test.describe("Staff Invoice List E2E @regression", () => {
     });
   });
 
-  test("[E2E-STF-INV-003] duplicate invoice creation shows a business error", async ({ page }) => {
+  test("[E2E-STF-INV-003] duplicate invoice creation hien business error", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -147,7 +147,7 @@ test.describe("Staff Invoice List E2E @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-STF-INV-004] staff can edit invoice usage, due date, and status", async ({ page }) => {
+  test("[E2E-STF-INV-004] staff co edit invoice usage, due date, va status", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -179,7 +179,7 @@ test.describe("Staff Invoice List E2E @regression", () => {
     }).toBe(`PAID|${updatedDueDate}`);
   });
 
-  test("[E2E-STF-INV-005] staff can delete an owned invoice from the list", async ({ page }) => {
+  test("[E2E-STF-INV-005] staff co xoa an owned invoice tu danh sach", async ({ page }) => {
     if (!contract) {
       return;
     }

@@ -7,7 +7,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempSaleContract = Awaited<ReturnType<typeof TempEntityHelper.taoSaleContractTam>>;
 
-test.describe("Staff Sale Contract List E2E @regression", () => {
+test.describe("Staff - E2E danh sach sale contract @regression", () => {
   let adminApi: APIRequestContext;
   let tempSaleContract: TempSaleContract | null = null;
 
@@ -31,7 +31,7 @@ test.describe("Staff Sale Contract List E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-STF-SALE-001] staff sees assigned sale contracts in list", async ({ page }) => {
+  test("[E2E-STF-SALE-001] staff sees duoc giao sale contracts in danh sach", async ({ page }) => {
     const saleContractPage = new StaffSaleContractListPage(page);
     await saleContractPage.expectLoaded();
     await saleContractPage.waitForTableData();
@@ -44,7 +44,7 @@ test.describe("Staff Sale Contract List E2E @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-STF-SALE-002] staff can filter sale contracts by customer and building", async ({ page }) => {
+  test("[E2E-STF-SALE-002] staff co the loc sale contract theo customer va building", async ({ page }) => {
     const saleContractPage = new StaffSaleContractListPage(page);
     await saleContractPage.expectLoaded();
     await saleContractPage.filterByCustomerId(tempSaleContract!.customer.id);
@@ -53,7 +53,7 @@ test.describe("Staff Sale Contract List E2E @regression", () => {
     await saleContractPage.expectRowVisible(tempSaleContract!.building.name);
   });
 
-  test("[E2E-STF-SALE-003] staff can open sale contract detail modal", async ({ page }) => {
+  test("[E2E-STF-SALE-003] staff co mo sale contract chi tiet modal", async ({ page }) => {
     const saleContractPage = new StaffSaleContractListPage(page);
     await saleContractPage.expectLoaded();
     await saleContractPage.openDetail(tempSaleContract!.building.name);

@@ -16,7 +16,7 @@ type TempStaff = {
   phone: string;
 };
 
-test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () => {
+test.describe.serial("Staff - kiem thu API profile @api-write @otp @regression", () => {
   let bootstrapAdmin: APIRequestContext;
   let staffContext: APIRequestContext;
   let tempStaff: TempStaff;
@@ -75,7 +75,7 @@ test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () =
     await MySqlDbClient.close();
   });
 
-  test("[STF-PRO-001] rejects anonymous access to staff profile mutation endpoints", async ({ request }) => {
+  test("[STF-PRO-001] tu choi truy cap khi chua dang nhap den cac endpoint mutation cua staff profile", async ({ request }) => {
     const usernameResponse = await request.put("/api/v1/staff/profile/username", {
       failOnStatusCode: false,
       data: {
@@ -125,13 +125,13 @@ test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () =
     });
   });
 
-  test("[STF-PRO-002] sends OTP for username update and marks row pending", async () => {
+  test("[STF-PRO-002] sends OTP for username cap nhat va marks row pending", async () => {
     await sendOtp("PROFILE_USERNAME");
     const latest = await ApiOtpHelper.latest(tempStaff.email, "PROFILE_USERNAME");
     expect(latest?.status).toBe("PENDING");
   });
 
-  test("[STF-PRO-003] rejects invalid OTP for username update", async () => {
+  test("[STF-PRO-003] tu choi OTP khong hop le khi cap nhat username", async () => {
     const originalUsername = tempStaff.username;
     const response = await staffContext.put("/api/v1/staff/profile/username", {
       failOnStatusCode: false,
@@ -151,7 +151,7 @@ test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () =
     expect(rows[0]!.username).toBe(originalUsername);
   });
 
-  test("[STF-PRO-004] updates username with valid OTP", async () => {
+  test("[STF-PRO-004] cap nhat username voi hop le OTP", async () => {
     await sendOtp("PROFILE_USERNAME");
     const otp = await ApiOtpAccessHelper.latestOtp(staffContext, tempStaff.email, "PROFILE_USERNAME");
 
@@ -174,7 +174,7 @@ test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () =
     tempStaff.username = nextUsername;
   });
 
-  test("[STF-PRO-005] rejects email update with wrong current password", async () => {
+  test("[STF-PRO-005] tu choi email cap nhat with wrong current password", async () => {
     const originalEmail = tempStaff.email;
     const response = await staffContext.put("/api/v1/staff/profile/email", {
       failOnStatusCode: false,
@@ -194,7 +194,7 @@ test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () =
     expect(rows[0]!.email).toBe(originalEmail);
   });
 
-  test("[STF-PRO-006] updates email with valid current password", async () => {
+  test("[STF-PRO-006] cap nhat email voi hop le current password", async () => {
     const newEmail = `staff-update-${Date.now()}@example.com`;
     const response = await staffContext.put("/api/v1/staff/profile/email", {
       failOnStatusCode: false,
@@ -214,7 +214,7 @@ test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () =
     tempStaff.email = newEmail;
   });
 
-  test("[STF-PRO-007] updates phone with valid OTP", async () => {
+  test("[STF-PRO-007] cap nhat phone voi hop le OTP", async () => {
     await sendOtp("PROFILE_PHONE");
     const otp = await ApiOtpAccessHelper.latestOtp(staffContext, tempStaff.email, "PROFILE_PHONE");
 
@@ -237,7 +237,7 @@ test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () =
     tempStaff.phone = nextPhone;
   });
 
-  test("[STF-PRO-007A] rejects phone update with invalid OTP", async () => {
+  test("[STF-PRO-007A] tu choi phone cap nhat voi khong hop le OTP", async () => {
     const originalPhone = tempStaff.phone;
     const response = await staffContext.put("/api/v1/staff/profile/phone-number", {
       failOnStatusCode: false,
@@ -257,7 +257,7 @@ test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () =
     expect(rows[0]!.phone).toBe(originalPhone);
   });
 
-  test("[STF-PRO-008] rejects password update when new password is too short", async () => {
+  test("[STF-PRO-008] tu choi password cap nhat when new password is too short", async () => {
     await sendOtp("PROFILE_PASSWORD");
     const otp = await ApiOtpAccessHelper.latestOtp(staffContext, tempStaff.email, "PROFILE_PASSWORD");
     const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
@@ -283,7 +283,7 @@ test.describe.serial("Staff Profile API Tests @api-write @otp @regression", () =
     expect(newHashRows[0]!.password).toBe(oldHash);
   });
 
-  test("[STF-PRO-009] updates password with valid OTP", async ({ playwright }) => {
+  test("[STF-PRO-009] cap nhat password voi hop le OTP", async ({ playwright }) => {
     const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
     const oldHash = oldHashRows[0]!.password;
 

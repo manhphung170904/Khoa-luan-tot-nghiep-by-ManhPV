@@ -22,7 +22,7 @@ import {
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
-test.describe("Admin Invoice Management E2E @regression", () => {
+test.describe("Admin - E2E quan ly invoice @regression", () => {
   let adminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   let contract: TempContract | null = null;
@@ -58,7 +58,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-INV-001] admin list renders invoices and filter can narrow by customer", async ({ page }) => {
+  test("[E2E-ADM-INV-001] danh sach invoice cua admin hien du lieu va co the loc theo customer", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -80,7 +80,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     await expect(page.locator("#invoiceTableBody tr").filter({ hasText: contract.building.name }).first()).toContainText(contract.customer.fullName);
   });
 
-  test("[E2E-ADM-INV-002] admin can create a new invoice from the add form", async ({ page }) => {
+  test("[E2E-ADM-INV-002] admin co tao new invoice tu add form", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -127,7 +127,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     });
   });
 
-  test("[E2E-ADM-INV-003] admin can edit a pending invoice through the edit form", async ({ page }) => {
+  test("[E2E-ADM-INV-003] admin co edit pending invoice through edit form", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -157,7 +157,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     }).toBe(updatedDueDate);
   });
 
-  test("[E2E-ADM-INV-004] paid invoice edit page shows the non-pending warning", async ({ page }) => {
+  test("[E2E-ADM-INV-004] da thanh toan invoice edit trang hien non-pending warning", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -173,7 +173,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     await formPage.expectWarningVisible();
   });
 
-  test("[E2E-ADM-INV-005] admin can confirm invoice payment from the detail page", async ({ page }) => {
+  test("[E2E-ADM-INV-005] admin co xac nhan thanh toan invoice tu trang chi tiet", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -194,7 +194,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     }).toBe("PAID");
   });
 
-  test("[E2E-ADM-INV-006] admin can delete an invoice from the list", async ({ page }) => {
+  test("[E2E-ADM-INV-006] admin co xoa an invoice tu danh sach", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -222,7 +222,7 @@ test.describe("Admin Invoice Management E2E @regression", () => {
     createdInvoices = createdInvoices.filter((item) => item.id !== invoice.id);
   });
 
-  test("[E2E-ADM-INV-007] admin can update overdue statuses from the list page", async ({ page }) => {
+  test("[E2E-ADM-INV-007] admin co cap nhat overdue statuses tu danh sach trang", async ({ page }) => {
     if (!contract) {
       return;
     }

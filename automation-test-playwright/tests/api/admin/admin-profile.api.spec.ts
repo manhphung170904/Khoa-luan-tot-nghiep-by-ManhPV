@@ -21,7 +21,7 @@ type ExistingIdentity = {
   phone: string;
 };
 
-test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () => {
+test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression", () => {
   let bootstrapAdminContext: APIRequestContext;
   let tempAdminContext: APIRequestContext;
   let tempAdmin: TempAdmin;
@@ -115,7 +115,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     await MySqlDbClient.close();
   });
 
-  test("[PRF_005] PUT /email rejects anonymous access", async ({ request }) => {
+  test("[PRF_005] PUT /email tu choi truy cap khi chua dang nhap", async ({ request }) => {
     const response = await request.put("/api/v1/admin/profile/email", {
       failOnStatusCode: false,
       data: {
@@ -131,7 +131,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     });
   });
 
-  test("[PRF_006] PUT /username rejects anonymous access", async ({ request }) => {
+  test("[PRF_006] PUT /username tu choi truy cap khi chua dang nhap", async ({ request }) => {
     const response = await request.put("/api/v1/admin/profile/username", {
       failOnStatusCode: false,
       data: {
@@ -147,7 +147,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     });
   });
 
-  test("[PRF_007] PUT /password rejects anonymous access", async ({ request }) => {
+  test("[PRF_007] PUT /password tu choi truy cap khi chua dang nhap", async ({ request }) => {
     const response = await request.put("/api/v1/admin/profile/password", {
       failOnStatusCode: false,
       data: {
@@ -165,7 +165,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     });
   });
 
-  test("[PRF_009] PUT /phone-number rejects anonymous access", async ({ request }) => {
+  test("[PRF_009] PUT /phone-number tu choi truy cap khi chua dang nhap", async ({ request }) => {
     const response = await request.put("/api/v1/admin/profile/phone-number", {
       failOnStatusCode: false,
       data: {
@@ -181,7 +181,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     });
   });
 
-  test("[PRF_001] POST /otp/{purpose} sends OTP for profile username and persists pending row", async () => {
+  test("[PRF_001] POST /otp/{purpose} sends OTP for profile username va duoc giu pending row", async () => {
     await sendOtp("PROFILE_USERNAME");
 
     const latest = await ApiOtpHelper.latest(tempAdmin.email, "PROFILE_USERNAME");
@@ -189,7 +189,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     expect(latest?.status).toBe("PENDING");
   });
 
-  test("[PRF_008] POST /otp/{purpose} currently accepts arbitrary non-blank purpose", async () => {
+  test("[PRF_008] POST /otp/{purpose} currently chap nhan arbitrary non-blank purpose", async () => {
     const purpose = `PROFILE_CUSTOM_${Date.now()}`;
     await sendOtp(purpose);
 
@@ -198,7 +198,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     expect(latest?.status).toBe("PENDING");
   });
 
-  test("[PRF_002] PUT /username rejects invalid OTP", async () => {
+  test("[PRF_002] PUT /username tu choi OTP khong hop le", async () => {
     const originalRows = await MySqlDbClient.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
@@ -225,7 +225,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     expect(latestRows[0]?.username).toBe(originalRows[0]?.username);
   });
 
-  test("[PRF_011] PUT /username updates username when OTP is valid", async () => {
+  test("[PRF_011] PUT /username cap nhat username khi OTP hop le", async () => {
     await sendOtp("PROFILE_USERNAME");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_USERNAME");
 
@@ -256,7 +256,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     tempAdmin.username = nextUsername;
   });
 
-  test("[PRF_015] PUT /username rejects duplicate username even with valid OTP", async () => {
+  test("[PRF_015] PUT /username tu choi duplicate username even voi hop le OTP", async () => {
     await sendOtp("PROFILE_USERNAME");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_USERNAME");
 
@@ -282,7 +282,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     expect(latestRows[0]?.username).toBe(tempAdmin.username);
   });
 
-  test("[PRF_003] PUT /phone-number rejects invalid OTP", async () => {
+  test("[PRF_003] PUT /phone-number tu choi OTP khong hop le", async () => {
     const originalRows = await MySqlDbClient.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
@@ -309,7 +309,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     expect(latestRows[0]?.phone).toBe(originalRows[0]?.phone);
   });
 
-  test("[PRF_012] PUT /phone-number updates phone when OTP is valid", async () => {
+  test("[PRF_012] PUT /phone-number cap nhat phone khi OTP hop le", async () => {
     await sendOtp("PROFILE_PHONE");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_PHONE");
 
@@ -340,7 +340,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     tempAdmin.phone = nextPhone;
   });
 
-  test("[PRF_016] PUT /phone-number rejects duplicate phone even with valid OTP", async () => {
+  test("[PRF_016] PUT /phone-number tu choi duplicate phone even voi hop le OTP", async () => {
     await sendOtp("PROFILE_PHONE");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_PHONE");
 
@@ -366,7 +366,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     expect(latestRows[0]?.phone).toBe(tempAdmin.phone);
   });
 
-  test("[PRF_004] PUT /email rejects incorrect current password", async () => {
+  test("[PRF_004] PUT /email tu choi incorrect current password", async () => {
     const originalRows = await MySqlDbClient.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
@@ -393,7 +393,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     expect(latestRows[0]?.email).toBe(originalRows[0]?.email);
   });
 
-  test("[PRF_014] PUT /email updates email when current password is valid", async () => {
+  test("[PRF_014] PUT /email cap nhat email khi current password hop le", async () => {
     const nextEmail = `pw-admin-profile-updated-${Date.now()}@example.com`;
     const response = await tempAdminContext.put("/api/v1/admin/profile/email", {
       failOnStatusCode: false,
@@ -418,7 +418,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     tempAdmin.email = nextEmail;
   });
 
-  test("[PRF_017] PUT /email rejects duplicate email with correct current password", async () => {
+  test("[PRF_017] PUT /email tu choi duplicate email with correct current password", async () => {
     const response = await tempAdminContext.put("/api/v1/admin/profile/email", {
       failOnStatusCode: false,
       data: {
@@ -441,7 +441,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     expect(latestRows[0]?.email).toBe(tempAdmin.email);
   });
 
-  test("[PRF_010] PUT /password rejects invalid OTP", async () => {
+  test("[PRF_010] PUT /password tu choi OTP khong hop le", async () => {
     const originalRows = await MySqlDbClient.query<{ password: string }>(
       "SELECT password FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
@@ -470,7 +470,7 @@ test.describe.serial("Admin Profile API Tests @api-write @otp @regression", () =
     expect(latestRows[0]?.password).toBe(originalRows[0]?.password);
   });
 
-  test("[PRF_013] PUT /password updates password when OTP is valid and marks OTP used", async ({ playwright }) => {
+  test("[PRF_013] PUT /password cap nhat password khi OTP hop le va danh dau OTP da dung", async ({ playwright }) => {
     await sendOtp("PROFILE_PASSWORD");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_PASSWORD");
     const nextPassword = "NewPassword123!";

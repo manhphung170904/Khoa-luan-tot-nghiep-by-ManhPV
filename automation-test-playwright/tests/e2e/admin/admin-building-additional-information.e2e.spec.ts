@@ -30,7 +30,7 @@ async function deleteAdditionalRecord(adminApi: APIRequestContext, type: Additio
   });
 }
 
-test.describe("Admin Building Additional Information E2E @regression", () => {
+test.describe("Admin - E2E building additional information @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   let buildingId: number | null = null;
@@ -79,7 +79,7 @@ test.describe("Admin Building Additional Information E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-BAI-001] admin can load additional information page and all sections", async ({ page }) => {
+  test("[E2E-ADM-BAI-001] admin co the tai trang additional information va tat ca muc", async ({ page }) => {
     const additionalInfoPage = new AdminBuildingAdditionalInfoPage(page);
     await additionalInfoPage.expectLoaded(buildingName);
     await additionalInfoPage.expectAllSectionsVisible();
@@ -89,7 +89,7 @@ test.describe("Admin Building Additional Information E2E @regression", () => {
     await additionalInfoPage.expectCounterValue("supplier", 0);
   });
 
-  test("[E2E-ADM-BAI-002] admin can create and edit legal authority", async ({ page }) => {
+  test("[E2E-ADM-BAI-002] admin co tao va edit legal authority", async ({ page }) => {
     const additionalInfoPage = new AdminBuildingAdditionalInfoPage(page);
     const authorityName = `E2E Legal ${Date.now()}`;
     const updatedName = `${authorityName} Updated`;
@@ -128,7 +128,7 @@ test.describe("Admin Building Additional Information E2E @regression", () => {
     await additionalInfoPage.expectCounterValue("legal", 1);
   });
 
-  test("[E2E-ADM-BAI-003] admin validates supplier email and can create amenity and supplier", async ({ page }) => {
+  test("[E2E-ADM-BAI-003] admin kiem tra supplier email va co tao amenity va supplier", async ({ page }) => {
     const additionalInfoPage = new AdminBuildingAdditionalInfoPage(page);
     const amenityName = `E2E Park ${Date.now()}`;
     const supplierName = `E2E Supplier ${Date.now()}`;
@@ -193,7 +193,7 @@ test.describe("Admin Building Additional Information E2E @regression", () => {
     await additionalInfoPage.expectCounterValue("supplier", 1);
   });
 
-  test("[E2E-ADM-BAI-004] admin can create and delete planning map", async ({ page }) => {
+  test("[E2E-ADM-BAI-004] admin co tao va xoa planning map", async ({ page }) => {
     const additionalInfoPage = new AdminBuildingAdditionalInfoPage(page);
     const mapType = `E2E Planning ${Date.now()}`;
 

@@ -6,12 +6,12 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
-test.describe("Customer Property Request API @regression", () => {
+test.describe("Customer - kiem thu API property request @regression", () => {
   test.afterAll(async () => {
     await MySqlDbClient.close();
   });
 
-  test("API-CUS-PRQ-001 rejects anonymous submit with API auth status", async ({ playwright }) => {
+  test("API-CUS-PRQ-001 tu choi anonymous submit with API auth status", async ({ playwright }) => {
     const context = await createAnonymousContext(playwright);
     try {
       const response = await context.post("/api/v1/customer/property-requests", {
@@ -30,7 +30,7 @@ test.describe("Customer Property Request API @regression", () => {
     }
   });
 
-  test("API-CUS-PRQ-002 validates required buildingId", async ({ playwright }) => {
+  test("API-CUS-PRQ-002 kiem tra required buildingId", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const response = await scenario.customer.post("/api/v1/customer/property-requests", {
@@ -49,7 +49,7 @@ test.describe("Customer Property Request API @regression", () => {
     }
   });
 
-  test("API-CUS-PRQ-003 submits and lists a RENT property request", async ({ playwright }) => {
+  test("API-CUS-PRQ-003 submits va lists RENT property request", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const listResponse = await scenario.customer.get("/api/v1/customer/property-requests", {
@@ -73,7 +73,7 @@ test.describe("Customer Property Request API @regression", () => {
     }
   });
 
-  test("API-CUS-PRQ-004 rejects duplicate pending request with business validation @extended", async ({ playwright }) => {
+  test("API-CUS-PRQ-004 tu choi duplicate pending request with business validation @extended", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const duplicateResponse = await scenario.customer.post("/api/v1/customer/property-requests", {

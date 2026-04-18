@@ -14,7 +14,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin Customer Management E2E @regression", () => {
+test.describe("Admin - E2E quan ly customer @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupStaffIds = new Set<number>();
@@ -50,7 +50,7 @@ test.describe("Admin Customer Management E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-CUS-001] admin can create a customer from the add form", async ({ page }) => {
+  test("[E2E-ADM-CUS-001] admin co tao customer tu add form", async ({ page }) => {
     const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
     cleanupStaffIds.add(manager.id);
 
@@ -88,7 +88,7 @@ test.describe("Admin Customer Management E2E @regression", () => {
     expect(Number(assignments[0]?.count ?? 0)).toBeGreaterThan(0);
   });
 
-  test("[E2E-ADM-CUS-002] admin can search a customer and open its detail page", async ({ page }) => {
+  test("[E2E-ADM-CUS-002] admin co tim customer va mo trang chi tiet", async ({ page }) => {
     const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
     cleanupStaffIds.add(manager.id);
     const customer = await TempEntityHelper.taoCustomerTam(bootstrapAdminApi, manager.id);
@@ -105,7 +105,7 @@ test.describe("Admin Customer Management E2E @regression", () => {
     await detailPage.expectLoaded(customer.id);
   });
 
-  test("[E2E-ADM-CUS-003] customer add validation shows an error when no staff is selected", async ({ page }) => {
+  test("[E2E-ADM-CUS-003] customer add validation hien an error when no staff is selected", async ({ page }) => {
     const formPage = new AdminCustomerFormPage(page);
     const payload = TestDataFactory.buildCustomerPayload({
       username: `nostaff${String(Date.now()).slice(-6)}`
@@ -130,7 +130,7 @@ test.describe("Admin Customer Management E2E @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[E2E-ADM-CUS-004] admin can delete a customer from the search page", async ({ page }) => {
+  test("[E2E-ADM-CUS-004] admin co xoa customer tu tim trang", async ({ page }) => {
     const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
     cleanupStaffIds.add(manager.id);
     const customer = await TempEntityHelper.taoCustomerTam(bootstrapAdminApi, manager.id);

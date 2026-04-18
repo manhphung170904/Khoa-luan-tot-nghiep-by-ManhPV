@@ -15,7 +15,7 @@ import {
 } from "@data/profileTempUsers";
 import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
 
-test.describe("Admin Property Request Management E2E @regression", () => {
+test.describe("Admin - E2E quan ly property request @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   let scenario: PropertyRequestScenario | null = null;
@@ -58,7 +58,7 @@ test.describe("Admin Property Request Management E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-PRQ-001] admin can filter pending property requests and open detail", async ({ page, playwright }) => {
+  test("[E2E-ADM-PRQ-001] admin co the loc property request dang cho va mo chi tiet", async ({ page, playwright }) => {
     scenario = await createPropertyRequestScenario(playwright, "RENT");
 
     const listPage = new AdminPropertyRequestListPage(page);
@@ -73,7 +73,7 @@ test.describe("Admin Property Request Management E2E @regression", () => {
     await detailPage.expectLoaded(scenario.propertyRequestId);
   });
 
-  test("[E2E-ADM-PRQ-002] admin can reject a pending property request with reason", async ({ page, playwright }) => {
+  test("[E2E-ADM-PRQ-002] admin co the tu choi property request dang cho kem ly do", async ({ page, playwright }) => {
     scenario = await createPropertyRequestScenario(playwright, "RENT");
     const detailPage = new AdminPropertyRequestDetailPage(page);
 
@@ -92,7 +92,7 @@ test.describe("Admin Property Request Management E2E @regression", () => {
     }).toBe("REJECTED|Rejected by Playwright E2E");
   });
 
-  test("[E2E-ADM-PRQ-003] rent request detail links to prefilled contract add form", async ({ page, playwright }) => {
+  test("[E2E-ADM-PRQ-003] rent request chi tiet links den prefilled contract add form", async ({ page, playwright }) => {
     scenario = await createPropertyRequestScenario(playwright, "RENT");
     const detailPage = new AdminPropertyRequestDetailPage(page);
     const contractFormPage = new AdminContractFormPage(page);
@@ -106,7 +106,7 @@ test.describe("Admin Property Request Management E2E @regression", () => {
     await expect(page.locator("[name='customerId']")).toHaveValue(String(scenario.customerId));
   });
 
-  test("[E2E-ADM-PRQ-004] buy request detail links to prefilled sale contract add form", async ({ page, playwright }) => {
+  test("[E2E-ADM-PRQ-004] buy request chi tiet links den prefilled sale contract add form", async ({ page, playwright }) => {
     scenario = await createPropertyRequestScenario(playwright, "BUY");
     const detailPage = new AdminPropertyRequestDetailPage(page);
     const saleFormPage = new AdminSaleContractFormPage(page);
@@ -120,7 +120,7 @@ test.describe("Admin Property Request Management E2E @regression", () => {
     await expect(page.locator("[name='customerId']")).toHaveValue(String(scenario.customerId));
   });
 
-  test("[E2E-ADM-PRQ-005] approved rent request shows linked contract in processed result", async ({ page, playwright }) => {
+  test("[E2E-ADM-PRQ-005] approved rent request hien linked contract in processed result", async ({ page, playwright }) => {
     scenario = await createPropertyRequestScenario(playwright, "RENT");
     const contractPayload = TestDataFactory.buildContractPayload({
       customerId: scenario.customerId,
@@ -166,7 +166,7 @@ test.describe("Admin Property Request Management E2E @regression", () => {
     expect(rows[0]?.contract_id).toBe(createdContractId);
   });
 
-  test("[E2E-ADM-PRQ-006] approved buy request shows linked sale contract in processed result", async ({ page, playwright }) => {
+  test("[E2E-ADM-PRQ-006] approved buy request hien linked sale contract in processed result", async ({ page, playwright }) => {
     scenario = await createPropertyRequestScenario(playwright, "BUY");
     const salePayload = TestDataFactory.buildSaleContractPayload({
       buildingId: scenario.buildingId,

@@ -14,7 +14,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin Staff Management E2E @regression", () => {
+test.describe("Admin - E2E quan ly staff @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupStaffIds = new Set<number>();
@@ -64,7 +64,7 @@ test.describe("Admin Staff Management E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-STF-001] admin can create a staff account from the add form", async ({ page }) => {
+  test("[E2E-ADM-STF-001] admin co tao staff account tu add form", async ({ page }) => {
     const listPage = new AdminStaffListPage(page);
     const formPage = new AdminStaffFormPage(page);
     const payload = TestDataFactory.buildAdminStaffPayload({
@@ -94,7 +94,7 @@ test.describe("Admin Staff Management E2E @regression", () => {
     cleanupStaffIds.add(rows[0]!.id);
   });
 
-  test("[E2E-ADM-STF-002] admin can search a staff member and open the detail page", async ({ page }) => {
+  test("[E2E-ADM-STF-002] admin co tim staff va mo trang chi tiet", async ({ page }) => {
     const staff = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
     cleanupStaffIds.add(staff.id);
 
@@ -109,7 +109,7 @@ test.describe("Admin Staff Management E2E @regression", () => {
     await detailPage.expectLoaded(staff.id);
   });
 
-  test("[E2E-ADM-STF-003] admin can update customer and building assignments from staff detail", async ({ page }) => {
+  test("[E2E-ADM-STF-003] admin co cap nhat assignment customer va building tu staff chi tiet", async ({ page }) => {
     const targetStaff = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
     cleanupStaffIds.add(targetStaff.id);
     const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
@@ -151,7 +151,7 @@ test.describe("Admin Staff Management E2E @regression", () => {
     }).toBe(true);
   });
 
-  test("[E2E-ADM-STF-004] admin can delete a staff member from the search page", async ({ page }) => {
+  test("[E2E-ADM-STF-004] admin co xoa staff thanh vien tu tim trang", async ({ page }) => {
     const staff = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
 
     const listPage = new AdminStaffListPage(page);

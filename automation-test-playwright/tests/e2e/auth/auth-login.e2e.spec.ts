@@ -9,7 +9,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Auth Login E2E @regression", () => {
+test.describe("Auth - E2E dang nhap @regression", () => {
   let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
@@ -27,7 +27,7 @@ test.describe("Auth Login E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-AUTH-LOGIN-001] login page supports navigation to register and forgot password", async ({ page }) => {
+  test("[E2E-AUTH-LOGIN-001] trang dang nhap ho tro dieu huong den trang dang ky va quen mat khau", async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.open();
     await loginPage.assertLoaded();
@@ -40,7 +40,7 @@ test.describe("Auth Login E2E @regression", () => {
     await page.waitForURL(/\/forgot-password/);
   });
 
-  test("[E2E-AUTH-LOGIN-002] invalid credentials show login failure popup", async ({ page }) => {
+  test("[E2E-AUTH-LOGIN-002] credentials khong hop le hien popup dang nhap that bai", async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.open();
     await loginPage.assertLoaded();
@@ -51,7 +51,7 @@ test.describe("Auth Login E2E @regression", () => {
     );
   });
 
-  test("[E2E-AUTH-LOGIN-003] valid local customer login redirects to customer home", async ({ page }) => {
+  test("[E2E-AUTH-LOGIN-003] dang nhap local customer hop le dieu huong den trang chu customer", async ({ page }) => {
     tempUser = await createTempCustomerProfileUser(adminApi);
 
     const loginPage = new LoginPage(page);

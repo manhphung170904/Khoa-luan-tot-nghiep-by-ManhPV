@@ -7,7 +7,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Customer Building List E2E @regression", () => {
+test.describe("Customer - E2E danh sach building @regression", () => {
   let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
 
@@ -31,7 +31,7 @@ test.describe("Customer Building List E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-CUS-BLD-001] customer sees assigned building cards", async ({ page }) => {
+  test("[E2E-CUS-BLD-001] customer nhin thay cac building duoc gan", async ({ page }) => {
     const buildingPage = new CustomerBuildingListPage(page);
     await buildingPage.expectLoaded();
     await buildingPage.waitForBuildingData();
@@ -48,7 +48,7 @@ test.describe("Customer Building List E2E @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-CUS-BLD-002] customer can filter by building name and open detail modal", async ({ page }) => {
+  test("[E2E-CUS-BLD-002] customer co loc theo ten building va mo modal chi tiet", async ({ page }) => {
     const buildingPage = new CustomerBuildingListPage(page);
     await buildingPage.expectLoaded();
     await buildingPage.filterByName(tempContract!.building.name);
@@ -68,7 +68,7 @@ test.describe("Customer Building List E2E @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-CUS-BLD-003] unmatched building search shows empty state", async ({ page }) => {
+  test("[E2E-CUS-BLD-003] tim kiem building khong khop se hien empty trang thai", async ({ page }) => {
     const buildingPage = new CustomerBuildingListPage(page);
     await buildingPage.expectLoaded();
     await buildingPage.filterByName(`no-match-${Date.now()}`);

@@ -18,7 +18,7 @@ type TempCustomer = Awaited<ReturnType<typeof TempEntityHelper.taoCustomerTam>>;
 type TempBuilding = Awaited<ReturnType<typeof TempEntityHelper.taoBuildingTam>>;
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Admin Contract Management E2E @regression", () => {
+test.describe("Admin - E2E quan ly contract @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupContractIds = new Set<number>();
@@ -93,7 +93,7 @@ test.describe("Admin Contract Management E2E @regression", () => {
     return { staff, customer, building };
   }
 
-  test("[E2E-ADM-CTR-001] admin can search a contract and open its detail page", async ({ page }) => {
+  test("[E2E-ADM-CTR-001] admin co tim contract va mo trang chi tiet", async ({ page }) => {
     const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
@@ -111,7 +111,7 @@ test.describe("Admin Contract Management E2E @regression", () => {
     await detailPage.expectLoaded(tempContract.id);
   });
 
-  test("[E2E-ADM-CTR-002] admin can create a contract from the add form", async ({ page }) => {
+  test("[E2E-ADM-CTR-002] admin co tao contract tu add form", async ({ page }) => {
     const scenario = await createAssignableScenario();
     const formPage = new AdminContractFormPage(page);
 
@@ -148,7 +148,7 @@ test.describe("Admin Contract Management E2E @regression", () => {
     cleanupContractIds.add(rows[0]!.id);
   });
 
-  test("[E2E-ADM-CTR-003] invalid contract date range is blocked on the add form", async ({ page }) => {
+  test("[E2E-ADM-CTR-003] contract date range khong hop le bi chan tren form them moi", async ({ page }) => {
     const scenario = await createAssignableScenario();
     const formPage = new AdminContractFormPage(page);
 
@@ -172,7 +172,7 @@ test.describe("Admin Contract Management E2E @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[E2E-ADM-CTR-004] admin can edit an active contract", async ({ page }) => {
+  test("[E2E-ADM-CTR-004] admin co edit an active contract", async ({ page }) => {
     const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
@@ -197,7 +197,7 @@ test.describe("Admin Contract Management E2E @regression", () => {
     expect(rows[0]!.status).toBe("ACTIVE");
   });
 
-  test("[E2E-ADM-CTR-005] expired contract edit page shows the lock banner", async ({ page }) => {
+  test("[E2E-ADM-CTR-005] expired contract edit trang hien lock banner", async ({ page }) => {
     const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
@@ -212,7 +212,7 @@ test.describe("Admin Contract Management E2E @regression", () => {
     await formPage.expectExpiredBanner();
   });
 
-  test("[E2E-ADM-CTR-006] admin can delete a contract from the detail page", async ({ page }) => {
+  test("[E2E-ADM-CTR-006] admin co xoa contract tu trang chi tiet", async ({ page }) => {
     const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);

@@ -13,7 +13,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
-test.describe("Customer Invoice Payment E2E @regression", () => {
+test.describe("thanh toan - E2E customer thanh toan invoice @regression", () => {
   let adminApi: APIRequestContext;
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
@@ -45,7 +45,7 @@ test.describe("Customer Invoice Payment E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-CUS-PAY-001] customer invoice list renders unpaid stats and modal details", async ({ page }) => {
+  test("[E2E-CUS-PAY-001] danh sach invoice cua customer hien thong ke chua thanh toan va chi tiet modal", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -83,7 +83,7 @@ test.describe("Customer Invoice Payment E2E @regression", () => {
     expect(Number(invoiceRows[0]?.total_amount ?? 0)).toBeGreaterThan(0);
   });
 
-  test("[E2E-CUS-PAY-002] customer can move from payment modal to QR payment page", async ({ page }) => {
+  test("[E2E-CUS-PAY-002] customer co move tu payment modal den QR payment trang", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -109,7 +109,7 @@ test.describe("Customer Invoice Payment E2E @regression", () => {
     expect(invoiceRows[0]?.status).toBe("PENDING");
   });
 
-  test("[E2E-CUS-PAY-003] customer confirms QR payment and invoice becomes paid", async ({ page }) => {
+  test("[E2E-CUS-PAY-003] customer confirms QR payment va invoice becomes da thanh toan", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -154,7 +154,7 @@ test.describe("Customer Invoice Payment E2E @regression", () => {
     await invoicePage.expectEmptyState();
   });
 
-  test("[E2E-CUS-PAY-004] customer without unpaid invoices sees the empty state", async ({ page }) => {
+  test("[E2E-CUS-PAY-004] customer without unpaid invoices sees empty trang thai", async ({ page }) => {
     const invoicePage = new CustomerInvoicePage(page);
 
     await page.goto("/customer/invoice/list");

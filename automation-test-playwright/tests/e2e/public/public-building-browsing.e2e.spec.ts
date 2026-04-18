@@ -74,7 +74,7 @@ const getVisibleBuildingCount = async (): Promise<number> => {
   return Number(rows[0]?.total ?? 0);
 };
 
-test.describe("E2E Public Building Browsing @regression", () => {
+test.describe("Public - E2E duyet building public @regression", () => {
   test.beforeEach(async ({ publicPage }) => {
     await publicPage.open();
     await publicPage.expectResultsLoaded();
@@ -84,7 +84,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-001] Public landing page renders default filters and initial result list", async ({ page, publicPage }) => {
+  test("[E2E-001] Public landing trang hien mac dinh loc va initial result danh sach", async ({ page, publicPage }) => {
     const total = await getVisibleBuildingCount();
     expect(total).toBeGreaterThan(0);
 
@@ -95,7 +95,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await expect(await publicPage.resultSummaryText()).toMatch(/Tìm thấy|Tim thay/i);
   });
 
-  test("[E2E-002] buildingName query pre-fills and auto-applies initial search", async ({ publicPage }) => {
+  test("[E2E-002] buildingName query pre-fills va auto-applies initial tim", async ({ publicPage }) => {
     const targetBuilding = await getSingleVisibleBuilding();
     test.skip(!targetBuilding, "Khong co du lieu building public de test.");
     if (!targetBuilding) {
@@ -109,7 +109,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await expect(publicPage.cardByName(targetBuilding.name)).toBeVisible();
   });
 
-  test("[E2E-003] filter metadata dropdowns are populated from the public filters API", async ({ publicPage }) => {
+  test("[E2E-003] dropdown metadata bo loc duoc nap tu public loc API", async ({ publicPage }) => {
     await expect.poll(() => publicPage.optionCount("districtId")).toBeGreaterThan(1);
     await expect.poll(() => publicPage.optionCount("ward")).toBeGreaterThan(1);
     await expect.poll(() => publicPage.optionCount("street")).toBeGreaterThan(1);
@@ -117,7 +117,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await expect.poll(() => publicPage.optionCount("level")).toBeGreaterThan(1);
   });
 
-  test("[E2E-004] search by exact building name returns the matching public card", async ({ publicPage }) => {
+  test("[E2E-004] tim theo ten building chinh xac tra ve dung public card", async ({ publicPage }) => {
     const targetBuilding = await getSingleVisibleBuilding();
     test.skip(!targetBuilding, "Khong co du lieu building public de test.");
     if (!targetBuilding) {
@@ -142,7 +142,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-005] searching by district narrows down to buildings from that district", async ({ publicPage }) => {
+  test("[E2E-005] tim theo district thu hep ve cac building trong district do", async ({ publicPage }) => {
     const targetBuilding = await getSingleVisibleBuilding("b.district_id IS NOT NULL");
     test.skip(!targetBuilding?.districtId, "Khong co building public co district de test.");
     if (!targetBuilding?.districtId) {
@@ -170,7 +170,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-006] reset clears entered filters back to the default state", async ({ publicPage }) => {
+  test("[E2E-006] dat lai xoa bo loc da nhap ve trang thai mac dinh", async ({ publicPage }) => {
     const targetBuilding = await getSingleVisibleBuilding("b.district_id IS NOT NULL");
     test.skip(!targetBuilding?.districtId, "Khong co building public co district de test.");
     if (!targetBuilding?.districtId) {
@@ -189,14 +189,14 @@ test.describe("E2E Public Building Browsing @regression", () => {
     expect(await publicPage.selectedValue("districtId")).toBe("");
   });
 
-  test("[E2E-007] a no-match search shows the empty state message", async ({ publicPage }) => {
+  test("[E2E-007] tim khong khop hien thong bao empty trang thai", async ({ publicPage }) => {
     await publicPage.searchByBuildingName(`ZZZ-E2E-NO-MATCH-${Date.now()}`);
 
     await publicPage.expectEmptyState();
     expect(await publicPage.cardCount()).toBe(0);
   });
 
-  test("[E2E-008] pagination appears for multi-page results and page switching updates the active page", async ({ publicPage }) => {
+  test("[E2E-008] phan trang hien khi ket qua co nhieu trang va chuyen trang cap nhat active trang", async ({ publicPage }) => {
     const total = await getVisibleBuildingCount();
     test.skip(total <= 9, "So luong building public hien tai chua vuot qua 1 trang.");
 
@@ -215,7 +215,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     expect(secondPageNames.join("|")).not.toBe(firstPageNames.join("|"));
   });
 
-  test("[E2E-009] clicking a rental building opens the detail modal with core information and pricing", async ({ publicPage }) => {
+  test("[E2E-009] mo building cho thue mo chi tiet modal voi thong tin chinh va gia", async ({ publicPage }) => {
     const rentBuilding = await getSingleVisibleBuilding("b.transaction_type = 'FOR_RENT'");
     test.skip(!rentBuilding, "Khong co building FOR_RENT public de test.");
     if (!rentBuilding) {
@@ -233,7 +233,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     expect(rentBuilding.rentPrice).toBeTruthy();
   });
 
-  test("[E2E-010] sale building modal shows sale pricing instead of rental-only sections", async ({ publicPage }) => {
+  test("[E2E-010] chi tiet modal building ban hien gia ban thay vi cac muc chi danh cho thue", async ({ publicPage }) => {
     const saleBuilding = await getSingleVisibleBuilding("b.transaction_type = 'FOR_SALE'");
     test.skip(!saleBuilding, "Khong co building FOR_SALE public de test.");
     if (!saleBuilding) {
@@ -249,7 +249,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     expect(saleBuilding.salePrice).toBeTruthy();
   });
 
-  test("[E2E-011] building cards without an image still render safely", async ({ publicPage }) => {
+  test("[E2E-011] building card khong co image van hien an toan", async ({ publicPage }) => {
     const buildingWithoutImage = await getSingleVisibleBuilding("(b.image IS NULL OR TRIM(b.image) = '')");
     test.skip(!buildingWithoutImage, "Khong co building public khong co image de test.");
     if (!buildingWithoutImage) {
@@ -264,7 +264,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await expect(targetCard.locator(".building-image .bi-building")).toBeVisible();
   });
 
-  test("[E2E-012] filter panel collapse state persists after reload via localStorage", async ({ publicPage }) => {
+  test("[E2E-012] trang thai thu gon bo loc duoc giu sau khi tai lai qua localStorage", async ({ publicPage }) => {
     await expect(await publicPage.isFilterCollapsed()).toBeFalsy();
 
     await publicPage.toggleFilterPanel();
@@ -276,7 +276,7 @@ test.describe("E2E Public Building Browsing @regression", () => {
     await expect.poll(() => publicPage.isFilterCollapsed()).toBeTruthy();
   });
 
-  test("[E2E-013] zero and inverted numeric ranges do not break the UI search flow", async ({ page, publicPage }) => {
+  test("[E2E-013] khoang so bang 0 hoac dao nguoc khong lam vo luong tim kiem UI", async ({ page, publicPage }) => {
     let dialogMessage = "";
     page.on("dialog", async (dialog) => {
       dialogMessage = dialog.message();

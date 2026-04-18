@@ -12,7 +12,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin Profile E2E @regression", () => {
+test.describe("Admin - E2E profile @regression", () => {
   let adminApi: APIRequestContext;
   let tempUser: TempStaffProfileUser | null = null;
 
@@ -36,7 +36,7 @@ test.describe("Admin Profile E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-PRO-001] admin profile renders current account information", async ({ page }) => {
+  test("[E2E-ADM-PRO-001] admin profile hien current account information", async ({ page }) => {
     if (!tempUser) {
       return;
     }
@@ -50,7 +50,7 @@ test.describe("Admin Profile E2E @regression", () => {
     expect(values.phone).toBe(tempUser.phone);
   });
 
-  test("[E2E-ADM-PRO-002] successMessage query shows a success SweetAlert", async ({ page }) => {
+  test("[E2E-ADM-PRO-002] successMessage query hien success SweetAlert", async ({ page }) => {
     const profilePage = new AdminProfilePage(page);
     await page.goto("/admin/profile?successMessage=Cap%20nhat%20thanh%20cong");
 
@@ -58,7 +58,7 @@ test.describe("Admin Profile E2E @regression", () => {
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-ADM-PRO-003] admin can update username with a valid OTP", async ({ page }) => {
+  test("[E2E-ADM-PRO-003] admin co cap nhat username voi OTP hop le", async ({ page }) => {
     if (!tempUser) {
       return;
     }
@@ -80,7 +80,7 @@ test.describe("Admin Profile E2E @regression", () => {
     }).toBe(nextUsername);
   });
 
-  test("[E2E-ADM-PRO-004] admin can update phone number with a valid OTP", async ({ page }) => {
+  test("[E2E-ADM-PRO-004] admin co cap nhat phone number voi OTP hop le", async ({ page }) => {
     if (!tempUser) {
       return;
     }
@@ -102,7 +102,7 @@ test.describe("Admin Profile E2E @regression", () => {
     }).toBe(newPhone);
   });
 
-  test("[E2E-ADM-PRO-005] client-side validation blocks mismatched password confirmation", async ({ page }) => {
+  test("[E2E-ADM-PRO-005] client-side validation chan mismatched password confirmation", async ({ page }) => {
     const profilePage = new AdminProfilePage(page);
 
     await profilePage.submitPasswordChange("ValidPass1!", "DifferentPass1!", "000000");
@@ -110,7 +110,7 @@ test.describe("Admin Profile E2E @regression", () => {
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-ADM-PRO-006] admin can update password with a valid OTP and log in again", async ({ page }) => {
+  test("[E2E-ADM-PRO-006] admin co the cap nhat password voi OTP hop le va dang nhap lai", async ({ page }) => {
     if (!tempUser) {
       return;
     }

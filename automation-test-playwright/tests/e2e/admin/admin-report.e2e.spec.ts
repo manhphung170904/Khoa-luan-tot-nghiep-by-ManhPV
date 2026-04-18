@@ -9,7 +9,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin Report E2E @regression", () => {
+test.describe("Admin - E2E report @regression", () => {
   let adminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
 
@@ -32,14 +32,14 @@ test.describe("Admin Report E2E @regression", () => {
     await adminApi.dispose();
   });
 
-  test("[E2E-ADM-RPT-001] admin report renders KPI and analytics sections", async ({ page }) => {
+  test("[E2E-ADM-RPT-001] admin report hien KPI va analytics muc", async ({ page }) => {
     const reportPage = new AdminReportPage(page);
     await reportPage.expectLoaded();
     await reportPage.expectOverviewVisible();
     await expect(page).toHaveURL(/\/admin\/report/);
   });
 
-  test("[E2E-ADM-RPT-002] admin can switch report year from selector", async ({ page }) => {
+  test("[E2E-ADM-RPT-002] admin co switch report year tu selector", async ({ page }) => {
     const reportPage = new AdminReportPage(page);
     await reportPage.expectLoaded();
 
@@ -53,7 +53,7 @@ test.describe("Admin Report E2E @regression", () => {
     await reportPage.expectYearSelected(targetYear);
   });
 
-  test("[E2E-ADM-RPT-003] admin can trigger browser print from report page", async ({ page }) => {
+  test("[E2E-ADM-RPT-003] admin co trigger browser print tu report trang", async ({ page }) => {
     const reportPage = new AdminReportPage(page);
     await reportPage.expectLoaded();
 

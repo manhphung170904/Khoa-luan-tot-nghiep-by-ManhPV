@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin Staff API Tests @regression", () => {
+test.describe.serial("Admin - kiem thu API staff @regression", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -19,7 +19,7 @@ test.describe.serial("Admin Staff API Tests @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[STF_001] POST /staff rejects anonymous create", async ({ request }) => {
+  test("[STF_001] POST /staff tu choi chua dang nhap tao", async ({ request }) => {
     const response = await request.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
       data: TestDataFactory.buildAdminStaffPayload()
@@ -31,7 +31,7 @@ test.describe.serial("Admin Staff API Tests @regression", () => {
     });
   });
 
-  test("[STF_002] POST /staff rejects username shorter than 4", async () => {
+  test("[STF_002] POST /staff tu choi username shorter than 4", async () => {
     const shortUsername = "abc";
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -48,7 +48,7 @@ test.describe.serial("Admin Staff API Tests @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF_017] POST /staff rejects password shorter than 6", async () => {
+  test("[STF_017] POST /staff tu choi password shorter than 6", async () => {
     const username = `stf_pwd_${Date.now()}`;
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -65,7 +65,7 @@ test.describe.serial("Admin Staff API Tests @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF_003] POST /staff rejects invalid phone format", async () => {
+  test("[STF_003] POST /staff tu choi dinh dang phone khong hop le", async () => {
     const invalidPhone = "1987654321";
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -82,7 +82,7 @@ test.describe.serial("Admin Staff API Tests @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF_018] POST /staff rejects fullName longer than 100 chars", async () => {
+  test("[STF_018] POST /staff tu choi fullName longer than 100 chars", async () => {
     const oversizeName = "A".repeat(101);
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -96,7 +96,7 @@ test.describe.serial("Admin Staff API Tests @regression", () => {
     expect(errorBody.message).toMatch(/full.?name|họ tên|ho ten|tối đa|toi da|ký tự|ky tu/i);
   });
 
-  test("[STF_015] POST /staff accepts username length 4 boundary", async () => {
+  test("[STF_015] POST /staff chap nhan username length 4 boundary", async () => {
     const username = `ab${String(Date.now()).slice(-2)}`;
     const payload = TestDataFactory.buildAdminStaffPayload({
       username,
@@ -120,7 +120,7 @@ test.describe.serial("Admin Staff API Tests @regression", () => {
     await admin.delete(`/api/v1/admin/staff/${rows[0]!.id}`, { failOnStatusCode: false });
   });
 
-  test("[STF_016] POST /staff rejects username longer than 30", async () => {
+  test("[STF_016] POST /staff tu choi username longer than 30", async () => {
     const longUsername = "a".repeat(31);
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -137,7 +137,7 @@ test.describe.serial("Admin Staff API Tests @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF_019] PUT /staff/{id}/assignments/buildings blocks removing active-contract building", async () => {
+  test("[STF_019] PUT /staff/{id}/assignments/buildings chan removing active-contract building", async () => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.put(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`, {
@@ -161,7 +161,7 @@ test.describe.serial("Admin Staff API Tests @regression", () => {
     }
   });
 
-  test("[STF_020] PUT /staff/{id}/assignments/customers blocks removing active-contract customer", async () => {
+  test("[STF_020] PUT /staff/{id}/assignments/customers chan removing active-contract customer", async () => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.put(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`, {
@@ -185,7 +185,7 @@ test.describe.serial("Admin Staff API Tests @regression", () => {
     }
   });
 
-  test("[STF_004] POST /staff creates staff and supports full assignment lifecycle", async () => {
+  test("[STF_004] POST /staff tao staff va ho tro day du vong doi assignment", async () => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_RENT");
     const tempManager = await TempEntityHelper.taoStaffTam(admin);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempManager.id);

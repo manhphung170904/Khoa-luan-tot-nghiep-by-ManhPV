@@ -14,7 +14,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin Building Management E2E @regression", () => {
+test.describe("Admin - E2E quan ly building @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupBuildingIds = new Set<number>();
@@ -49,7 +49,7 @@ test.describe("Admin Building Management E2E @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-BLD-001] admin can filter buildings and open detail from search results", async ({ page }) => {
+  test("[E2E-ADM-BLD-001] admin co the loc building va mo chi tiet tu ket qua tim", async ({ page }) => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(bootstrapAdminApi, "FOR_RENT");
     cleanupBuildingIds.add(tempBuilding.id);
 
@@ -68,7 +68,7 @@ test.describe("Admin Building Management E2E @regression", () => {
     await detailPage.expectLoaded(tempBuilding.id);
   });
 
-  test("[E2E-ADM-BLD-002] admin can create a new rental building from the add form", async ({ page }) => {
+  test("[E2E-ADM-BLD-002] admin co tao new rental building tu add form", async ({ page }) => {
     const listPage = new AdminBuildingListPage(page);
     const formPage = new AdminBuildingFormPage(page);
     const buildingName = TestDataFactory.taoTenToaNha("E2E Building");
@@ -122,7 +122,7 @@ test.describe("Admin Building Management E2E @regression", () => {
     cleanupBuildingIds.add(rows[0]!.id);
   });
 
-  test("[E2E-ADM-BLD-003] admin can edit an unlocked building", async ({ page }) => {
+  test("[E2E-ADM-BLD-003] admin co edit an unlocked building", async ({ page }) => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(bootstrapAdminApi, "FOR_RENT");
     cleanupBuildingIds.add(tempBuilding.id);
 
@@ -158,7 +158,7 @@ test.describe("Admin Building Management E2E @regression", () => {
     expect(Number(rows[0]?.rent_price ?? 0)).toBe(1300000);
   });
 
-  test("[E2E-ADM-BLD-004] active-contract building edit page shows the lock banner", async ({ page }) => {
+  test("[E2E-ADM-BLD-004] active-contract building edit trang hien lock banner", async ({ page }) => {
     const tempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
     cleanupContracts.push(tempContract);
 
@@ -168,7 +168,7 @@ test.describe("Admin Building Management E2E @regression", () => {
     await formPage.expectLockBanner();
   });
 
-  test("[E2E-ADM-BLD-005] admin can delete an unlocked building from the list", async ({ page }) => {
+  test("[E2E-ADM-BLD-005] admin co xoa an unlocked building tu danh sach", async ({ page }) => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(bootstrapAdminApi, "FOR_RENT");
 
     const listPage = new AdminBuildingListPage(page);

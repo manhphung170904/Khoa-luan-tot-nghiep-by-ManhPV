@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin Sale Contract API Tests @regression", () => {
+test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -19,7 +19,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[SC_001] POST /sale-contracts rejects anonymous create", async ({ request }) => {
+  test("[SC_001] POST /sale-contracts tu choi tao moi khi chua dang nhap", async ({ request }) => {
     const response = await request.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
       data: TestDataFactory.buildSaleContractPayload()
@@ -31,7 +31,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     });
   });
 
-  test("[SC_002] POST /sale-contracts rejects zero salePrice", async () => {
+  test("[SC_002] POST /sale-contracts tu choi salePrice bang 0", async () => {
     const payload = TestDataFactory.buildSaleContractPayload({ salePrice: 0 });
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
@@ -47,7 +47,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC_012] POST /sale-contracts rejects negative salePrice", async () => {
+  test("[SC_012] POST /sale-contracts tu choi salePrice am", async () => {
     const payload = TestDataFactory.buildSaleContractPayload({ salePrice: -1 });
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
@@ -63,7 +63,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC_010] POST /sale-contracts rejects missing buildingId", async () => {
+  test("[SC_010] POST /sale-contracts tu choi khi thieu buildingId", async () => {
     const invalidPayload = TestDataFactory.buildSaleContractPayload() as Record<string, unknown>;
     delete invalidPayload.buildingId;
     const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -74,7 +74,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     expect(errorBody.message).toMatch(/building|bất động sản|bat dong san|tòa nhà|toa nha|vui lòng chọn|vui long chon/i);
   });
 
-  test("[SC_011] POST /sale-contracts rejects missing customerId", async () => {
+  test("[SC_011] POST /sale-contracts tu choi khi thieu customerId", async () => {
     const invalidPayload = TestDataFactory.buildSaleContractPayload() as Record<string, unknown>;
     delete invalidPayload.customerId;
     const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -85,7 +85,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     expect(errorBody.message).toMatch(/customer|khách hàng|khach hang|vui lòng chọn|vui long chon/i);
   });
 
-  test("[SC_003] POST /sale-contracts rejects nonexistent buildingId", async () => {
+  test("[SC_003] POST /sale-contracts tu choi buildingId khong ton tai", async () => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
@@ -114,7 +114,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     }
   });
 
-  test("[SC_004] POST /sale-contracts rejects invalid staffId", async () => {
+  test("[SC_004] POST /sale-contracts tu choi staffId khong hop le", async () => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
@@ -147,7 +147,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     }
   });
 
-  test("[SC_013] POST /sale-contracts rejects staff outside building assignment", async () => {
+  test("[SC_013] POST /sale-contracts tu choi staff khong duoc phan cong building", async () => {
     const assignedManager = await TempEntityHelper.taoStaffTam(admin);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
@@ -180,7 +180,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     }
   });
 
-  test("[SC_014] POST /sale-contracts rejects staff outside customer assignment", async () => {
+  test("[SC_014] POST /sale-contracts tu choi staff khong duoc phan cong customer", async () => {
     const assignedManager = await TempEntityHelper.taoStaffTam(admin);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
@@ -213,7 +213,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     }
   });
 
-  test("[SC_015] POST /sale-contracts rejects rent building", async () => {
+  test("[SC_015] POST /sale-contracts tu choi building cho thue", async () => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_RENT");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
@@ -246,7 +246,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     }
   });
 
-  test("[SC_016] POST /sale-contracts rejects duplicate sale on sold building", async () => {
+  test("[SC_016] POST /sale-contracts tu choi tao trung giao dich ban tren building da ban", async () => {
     const temp = await TempEntityHelper.taoSaleContractTam(admin);
     try {
       const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -274,7 +274,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     }
   });
 
-  test("[SC_005] sale contract create/list/filter/update-delete lifecycle with temp data", async () => {
+  test("[SC_005] vong doi tao liet ke loc cap nhat xoa sale contract voi du lieu tam", async () => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
@@ -407,7 +407,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     }
   });
 
-  test("[SC_017] PUT /sale-contracts/{id} rejects nonexistent id", async () => {
+  test("[SC_017] PUT /sale-contracts/{id} tu choi id khong ton tai", async () => {
     const response = await admin.put("/api/v1/admin/sale-contracts/999999999", {
       failOnStatusCode: false,
       data: TestDataFactory.buildSaleContractPayload({
@@ -428,7 +428,7 @@ test.describe.serial("Admin Sale Contract API Tests @regression", () => {
     );
   });
 
-  test("[SC_018] DELETE /sale-contracts/{id} should reject nonexistent id", async () => {
+  test("[SC_018] DELETE /sale-contracts/{id} phai tu choi id khong ton tai", async () => {
     const response = await admin.delete("/api/v1/admin/sale-contracts/999999999", {
       failOnStatusCode: false
     });

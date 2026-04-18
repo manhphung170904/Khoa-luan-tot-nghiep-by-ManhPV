@@ -9,7 +9,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Customer Home E2E @regression", () => {
+test.describe("Customer - E2E home @regression", () => {
   let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
@@ -32,14 +32,14 @@ test.describe("Customer Home E2E @regression", () => {
     await adminApi.dispose();
   });
 
-  test("[E2E-CUS-HOME-001] customer home renders dashboard sections", async ({ page }) => {
+  test("[E2E-CUS-HOME-001] customer home hien dashboard muc", async ({ page }) => {
     const homePage = new CustomerHomePage(page);
     await homePage.expectLoaded();
     await homePage.expectDashboardSectionsVisible();
     await expect(page).toHaveURL(/\/customer\/home/);
   });
 
-  test("[E2E-CUS-HOME-002] customer can navigate from home to contracts and buildings", async ({ page }) => {
+  test("[E2E-CUS-HOME-002] customer co navigate tu home den contracts va buildings", async ({ page }) => {
     const homePage = new CustomerHomePage(page);
     await homePage.expectLoaded();
     await homePage.openContracts();
