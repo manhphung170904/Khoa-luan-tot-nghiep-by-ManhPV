@@ -13,12 +13,14 @@
 
 ### Buoc 3: Them du lieu test
 - File mau cho upload dat trong `test-data/files/`.
+- Helper/scenario du lieu dung chung dat trong `test-data/`.
 - Du lieu dong dat trong `TestDataFactory`.
+- Xem `test-data/README.md` neu can chon dung cho dat file moi.
 
 ### Buoc 4: Viet test
 - Giu ten test theo mau: `TEST-ID Test Name`.
 - Moi test phai co assertion ro rang.
-- Neu test co login lap lai, uu tien fixture trong `utils/fixtures/` va helper trong `PageScenarioHelper`.
+- Neu test co login lap lai, uu tien fixture trong `fixtures/` va helper trong `PageScenarioHelper`.
 
 ## 2. Quy uoc dat ten
 ### File test
@@ -35,9 +37,9 @@
 - Dat ten theo tac vu: `AuthSessionHelper`, `AssertionHelper`, `TestDataFactory`.
 
 ## 2.1. Dat file vao dung nhom
-- `utils/fixtures/`: fixture cap framework, co the dung lai cho nhieu suite.
+- `fixtures/`: fixture cap framework, co the dung lai cho nhieu suite.
 - `utils/helpers/`: helper tong quat, khong phu thuoc truc tiep vao fixture lifecycle.
-- `tests/api/_fixtures/`, `tests/e2e/_fixtures/`: bootstrap hoac scenario chi phuc vu tung suite cu the.
+- `test-data/`: file fixture va helper/scenario bootstrap du lieu dung chung.
 
 Chi tiet kien truc xem them trong `docs/architecture.md`.
 
@@ -84,6 +86,7 @@ $env:ALLOW_DESTRUCTIVE_TESTS="true"
 ## 7. Session va dang nhap nhanh
 - Test nen uu tien import `@fixtures/api.fixture` cho API suite va `@fixtures/base.fixture` cho E2E suite.
 - Runtime output va report duoc gom trong `.runtime/`.
+- HTML/JUnit report top-level se duoc lam moi moi lan chay; `.runtime/test-results/` chi giu lai mot so run gan day.
 - Test nen tai su dung `PageScenarioHelper`, `AuthSessionHelper`, va fixture hien co khi phu hop.
 
 ## 8. Quy trinh de nghi truoc khi merge

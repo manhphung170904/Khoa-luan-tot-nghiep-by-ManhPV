@@ -19,13 +19,14 @@ automation-test-playwright/
 |   |-- global-setup.ts
 |   `-- global-teardown.ts
 |-- docs/
+|   |-- api-coverage-matrix.md
 |   |-- architecture.md
 |   |-- huong-dan-framework.md
-|   |-- playwright-reporting.md
-|   |-- pom-classes.md
-|   |-- regression-suite.md
-|   `-- test-script-mapping.md
+|   `-- playwright-reporting.md
 |-- .runtime/
+|-- fixtures/
+|   |-- api.fixture.ts
+|   `-- base.fixture.ts
 |-- pages/
 |   |-- admin/
 |   |-- auth/
@@ -34,16 +35,16 @@ automation-test-playwright/
 |   |-- public/
 |   `-- staff/
 |-- test-data/
-|   `-- files/
+|   |-- files/
+|   |-- invoiceTempData.ts
+|   |-- profileTempUsers.ts
+|   `-- propertyRequestScenario.ts
 |-- tests/
 |   |-- api/
-|   |-- e2e/
-|   |-- api/_fixtures/
-|   `-- e2e/_fixtures/
+|   `-- e2e/
 |-- utils/
 |   |-- api/
 |   |-- db/
-|   |-- fixtures/
 |   `-- helpers/
 |-- .env.example
 |-- package.json
@@ -56,12 +57,11 @@ automation-test-playwright/
 - `pages/core/`: chua BasePage, shell page, routed page, CRUD base page.
 - `tests/api/`: test endpoint va response.
 - `tests/e2e/`: test hanh trinh nguoi dung dau cuoi.
-- `tests/api/_fixtures`, `tests/e2e/_fixtures`: du lieu va helper phuc vu tung nhom suite.
+- `fixtures/`: Playwright fixture dung chung cho API va E2E.
 - `utils/helpers/`: helper dung chung cho login, assert, data, session.
-- `utils/fixtures/`: fixture de tai su dung page/session.
 - `utils/api/`: helper API, endpoint catalog, contract utility.
 - `utils/db/`: ket noi va truy van DB phuc vu xac minh du lieu.
-- `test-data/files/`: file mau cho cac case upload va validation.
+- `test-data/`: file fixture va helper/scenario du lieu dung chung cho test.
 - `config/`: cau hinh moi truong, retry, setup/teardown.
 - `.runtime/`: luu ket qua chay, screenshot, trace, video, HTML report, JUnit report.
 

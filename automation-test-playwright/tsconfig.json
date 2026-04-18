@@ -27,6 +27,7 @@
     "pages/**/*.ts",
     "utils/**/*.ts",
     "tests/**/*.ts",
+    "test-data/**/*.ts",
     "test-data/**/*.json"
   ],
   "exclude": [

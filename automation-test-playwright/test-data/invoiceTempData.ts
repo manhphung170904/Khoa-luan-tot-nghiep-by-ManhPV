@@ -60,12 +60,12 @@ export function buildManagedInvoicePayload(
   const waterAmount = waterUsage * DEFAULT_CONTRACT_VALUES.waterFee;
 
   const details = [
-    { description: "Tiền thuê mặt bằng", amount: rentAmount },
-    { description: "Phí dịch vụ", amount: DEFAULT_CONTRACT_VALUES.serviceFee },
-    { description: "Phí gửi ô tô", amount: DEFAULT_CONTRACT_VALUES.carFee },
-    { description: "Phí gửi xe máy", amount: DEFAULT_CONTRACT_VALUES.motorbikeFee },
-    { description: "Phí điện", amount: electricityAmount },
-    { description: "Phí nước", amount: waterAmount }
+    { description: "Tien thue mat bang", amount: rentAmount },
+    { description: "Phi dich vu", amount: DEFAULT_CONTRACT_VALUES.serviceFee },
+    { description: "Phi gui o to", amount: DEFAULT_CONTRACT_VALUES.carFee },
+    { description: "Phi gui xe may", amount: DEFAULT_CONTRACT_VALUES.motorbikeFee },
+    { description: "Phi dien", amount: electricityAmount },
+    { description: "Phi nuoc", amount: waterAmount }
   ];
 
   const totalAmount = details.reduce((sum, item) => sum + Number(item.amount), 0);

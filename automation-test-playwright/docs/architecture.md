@@ -19,25 +19,26 @@ Framework duoc to chuc theo huong:
 - Mac dinh import `test`, `expect` tu `@fixtures/base.fixture`.
 - Khi can page object co san, uu tien dung fixture hoac POM thay vi viet locator truc tiep trong test.
 
+### `fixtures/`
+- Day la lop Playwright fixture dung chung cap framework.
+- Chua reusable test context nhu `adminApi`, `staffApi`, `customerApi`, `anonymousApi`, va page-level fixture.
+- Spec nen import tu `@fixtures/*` thay vi tuong tac truc tiep voi `playwright.request.newContext()` o tung file.
+
 ### `pages/`
 - Chua Page Object Model theo module.
 - `pages/core/` la lop nen: base page, routed page, shell page, CRUD abstractions.
 - POM chi nen mo ta thao tac UI va state UI, khong nen chua business workflow phuc tap hoac DB assertion.
-
-### `utils/fixtures/`
-- Day la lop framework-level reusable.
-- Chi dat vao day nhung fixture co gia tri dung lai cho nhieu file, nhieu suite.
-- Vi du: auth API context, page object fixture, cleanup registry, reusable page/session fixture.
 
 ### `utils/helpers/`
 - Day la helper dung chung cap framework.
 - Phu hop cho utility co the duoc goi tu nhieu suite khac nhau.
 - Vi du: `TempEntityHelper`, `TestDataFactory`, `AssertionHelper`, `AuthHelper`.
 
-### `tests/*/_fixtures/`
-- Day la support theo suite, khong phai framework chung.
-- Chi dat vao day khi logic phuc vu mot nhom test cu the, co context nghiep vu rieng.
-- Vi du: bootstrap temp user cho profile E2E, scenario invoice tam thoi cho payment E2E.
+### `test-data/`
+- Day la noi chua file fixture va helper/scenario du lieu dung chung.
+- Phu hop cho upload fixture file, temp user bootstrap, property request scenario, invoice scenario.
+- Khi logic chua duoc dung lai va chu yeu phuc vu setup du lieu test, dat o day se gon hon viec mo them mot tang thu muc moi.
+- Xem them `test-data/README.md` de phan biet file fixture va helper bootstrap.
 
 ### `utils/db/`
 - Chua DB client va logic truy van dung chung.
@@ -49,7 +50,7 @@ Framework duoc to chuc theo huong:
 
 ## 3. Quy uoc dat code dung cho framework va dung cho suite
 
-### Dat trong `utils/fixtures/` neu:
+### Dat trong `fixtures/` neu:
 - Dung lai cho nhieu module.
 - Khong gan chat vao mot file spec hay mot nghiep vu duy nhat.
 - La cach framework cap `test context` cho suite.
@@ -59,10 +60,10 @@ Framework duoc to chuc theo huong:
 - Khong can buoc vao Playwright fixture lifecycle.
 - Co the duoc goi tu API, E2E, hoac script support.
 
-### Dat trong `tests/api/_fixtures/` hoac `tests/e2e/_fixtures/` neu:
-- Logic chi phuc vu mot nhom test.
-- Co nhieu chi tiet nghiep vu/tam thoi.
-- Neu dua len `utils/` se lam framework-level abstraction bi "phinh" va mat trong tam.
+### Dat trong `test-data/` neu:
+- Can file fixture hoac helper bootstrap du lieu duoc goi tu nhieu spec.
+- Logic chu yeu phuc vu tao scenario du lieu, temp user, temp contract, temp invoice.
+- Chua can tach thanh mot tang rieng vi pham vi van nho va ro.
 
 ## 4. Khi nao dung `TempEntityHelper`
 - Dung khi test can tao du lieu tam de co tinh doc lap.
@@ -88,11 +89,12 @@ Khong nen verify DB neu:
 ## 6. Luong viet test moi de nghi
 1. Xac dinh test thuoc `api` hay `e2e`.
 2. Kiem tra da co fixture/POM/helper nao dung lai duoc chua.
-3. Neu can bootstrap rieng cho mot nhom test, dat trong `_fixtures/` cua suite do.
-4. Neu utility thuc su tong quat, dua vao `utils/helpers/` hoac `utils/fixtures/`.
+3. Neu can bootstrap du lieu dung lai cho nhieu spec, uu tien dat trong `test-data/`.
+4. Neu utility thuc su tong quat, dua vao `utils/helpers/` hoac `fixtures/`.
 5. Chi them DB verification khi no tang gia tri assertion that su.
 
 ## 7. Runtime output
 - Toan bo output runtime duoc gom trong `.runtime/`.
 - Thu muc legacy nhu `artifacts/`, `playwright-report/`, `reports/`, `playwright/` khong con la cau truc chuan.
+- `global-setup` se lam moi HTML/JUnit report va cat bot run cu trong `.runtime/test-results/` de workspace gon hon.
 

@@ -1,4 +1,4 @@
-﻿import { expect, type APIRequestContext, type APIResponse } from "@playwright/test";
+import { expect, type APIRequestContext, type APIResponse } from "@playwright/test";
 import { TestDataFactory } from "./TestDataFactory";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
@@ -65,6 +65,16 @@ export class TempEntityHelper {
     return Array.isArray(duLieu.content) ? duLieu.content : [];
   }
 
+  private static async safe(action: () => Promise<unknown>, label?: string): Promise<void> {
+    try {
+      await action();
+    } catch (e) {
+      if (label) {
+        console.warn(`[Cleanup Warning] ${label} failed:`, e instanceof Error ? e.message : e);
+      }
+    }
+  }
+
   static async layMotStaffIdDangTonTai(request: APIRequestContext): Promise<number> {
     const response = await request.get("/api/v1/admin/staff", {
       params: { page: 1, size: 20, role: "STAFF" }
@@ -100,12 +110,11 @@ export class TempEntityHelper {
   }
 
   static async xoaStaffTam(request: APIRequestContext, id?: number): Promise<void> {
-    if (!id) {
-      return;
-    }
-
-    const response = await request.delete(`/api/v1/admin/staff/${id}`);
-    expect([200, 204, 404]).toContain(response.status());
+    if (!id) return;
+    await this.safe(async () => {
+      const response = await request.delete(`/api/v1/admin/staff/${id}`);
+      expect([200, 204, 404]).toContain(response.status());
+    }, `Staff ${id}`);
   }
 
   static async taoCustomerTam(request: APIRequestContext, staffId?: number): Promise<TempCustomer> {
@@ -130,12 +139,11 @@ export class TempEntityHelper {
   }
 
   static async xoaCustomerTam(request: APIRequestContext, id?: number): Promise<void> {
-    if (!id) {
-      return;
-    }
-
-    const response = await request.delete(`/api/v1/admin/customers/${id}`);
-    expect([200, 204, 404]).toContain(response.status());
+    if (!id) return;
+    await this.safe(async () => {
+      const response = await request.delete(`/api/v1/admin/customers/${id}`);
+      expect([200, 204, 404]).toContain(response.status());
+    }, `Customer ${id}`);
   }
 
   static async taoBuildingTam(
@@ -159,12 +167,11 @@ export class TempEntityHelper {
   }
 
   static async xoaBuildingTam(request: APIRequestContext, id?: number): Promise<void> {
-    if (!id) {
-      return;
-    }
-
-    const response = await request.delete(`/api/v1/admin/buildings/${id}`);
-    expect([200, 204, 404]).toContain(response.status());
+    if (!id) return;
+    await this.safe(async () => {
+      const response = await request.delete(`/api/v1/admin/buildings/${id}`);
+      expect([200, 204, 404]).toContain(response.status());
+    }, `Building ${id}`);
   }
 
   static async capNhatPhanCongBuilding(request: APIRequestContext, staffId: number, buildingIds: number[]): Promise<void> {
@@ -207,13 +214,14 @@ export class TempEntityHelper {
   }
 
   static async xoaContractTam(request: APIRequestContext, temp?: TempContract): Promise<void> {
-    if (!temp) {
-      return;
-    }
+    if (!temp) return;
 
-    await request.delete(`/api/v1/admin/contracts/${temp.id}`);
-    await this.capNhatPhanCongCustomer(request, temp.staff.id, []);
-    await this.capNhatPhanCongBuilding(request, temp.staff.id, []);
+    await this.safe(async () => {
+      await request.delete(`/api/v1/admin/contracts/${temp.id}`);
+    }, `Contract ${temp.id}`);
+
+    await this.safe(() => this.capNhatPhanCongCustomer(request, temp.staff.id, []), "Reset Staff Customer Assignment");
+    await this.safe(() => this.capNhatPhanCongBuilding(request, temp.staff.id, []), "Reset Staff Building Assignment");
     await this.xoaCustomerTam(request, temp.customer.id);
     await this.xoaBuildingTam(request, temp.building.id);
     await this.xoaStaffTam(request, temp.staff.id);
@@ -242,11 +250,12 @@ export class TempEntityHelper {
   }
 
   static async xoaInvoiceTam(request: APIRequestContext, temp?: TempInvoice): Promise<void> {
-    if (!temp) {
-      return;
-    }
+    if (!temp) return;
 
-    await request.delete(`/api/v1/admin/invoices/${temp.id}`);
+    await this.safe(async () => {
+      await request.delete(`/api/v1/admin/invoices/${temp.id}`);
+    }, `Invoice ${temp.id}`);
+
     await this.xoaContractTam(request, temp.contract);
   }
 
@@ -284,13 +293,14 @@ export class TempEntityHelper {
   }
 
   static async xoaSaleContractTam(request: APIRequestContext, temp?: TempSaleContract): Promise<void> {
-    if (!temp) {
-      return;
-    }
+    if (!temp) return;
 
-    await request.delete(`/api/v1/admin/sale-contracts/${temp.id}`);
-    await this.capNhatPhanCongCustomer(request, temp.staff.id, []);
-    await this.capNhatPhanCongBuilding(request, temp.staff.id, []);
+    await this.safe(async () => {
+      await request.delete(`/api/v1/admin/sale-contracts/${temp.id}`);
+    }, `SaleContract ${temp.id}`);
+
+    await this.safe(() => this.capNhatPhanCongCustomer(request, temp.staff.id, []), "Reset Staff Customer Assignment");
+    await this.safe(() => this.capNhatPhanCongBuilding(request, temp.staff.id, []), "Reset Staff Building Assignment");
     await this.xoaCustomerTam(request, temp.customer.id);
     await this.xoaBuildingTam(request, temp.building.id);
     await this.xoaStaffTam(request, temp.staff.id);
@@ -333,12 +343,9 @@ export class TempEntityHelper {
   }
 
   static async xoaPropertyRequestTam(id?: number): Promise<void> {
-    if (!id) {
-      return;
-    }
-
-    await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [id]);
+    if (!id) return;
+    await this.safe(async () => {
+      await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [id]);
+    }, `PropertyRequest ${id}`);
   }
 }
-
-
