@@ -216,7 +216,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
-    expect(errorBody.message).toMatch(/otp|ma|xac thuc|khong hop le/i);
+    expect(errorBody.message).toMatch(/otp|mã|xác thực|không hợp lệ/i);
 
     const latestRows = await MySqlDbClient.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
@@ -273,7 +273,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
-    expect(errorBody.message).toMatch(/username|ten dang nhap|dang nhap|da duoc su dung|ton tai|trung/i);
+    expect(errorBody.message).toMatch(/username|tên đăng nhập|đăng nhập|đã được sử dụng|tồn tại|trùng/i);
 
     const latestRows = await MySqlDbClient.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
@@ -300,7 +300,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|ma|xac thuc|het han|khong tim thay/i);
+    expect(errorBody.message).toMatch(/otp|mã|xác thực|hết hạn|không tìm thấy/i);
 
     const latestRows = await MySqlDbClient.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
@@ -357,7 +357,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/phone|dien thoai|da duoc su dung|ton tai|trung/i);
+    expect(errorBody.message).toMatch(/phone|điện thoại|đã được sử dụng|tồn tại|trùng/i);
 
     const latestRows = await MySqlDbClient.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
@@ -384,7 +384,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|mat khau|hien tai|incorrect|khong dung|sai/i);
+    expect(errorBody.message).toMatch(/password|mật khẩu|hiện tại|incorrect|không đúng|sai/i);
 
     const latestRows = await MySqlDbClient.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
@@ -432,7 +432,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
-    expect(errorBody.message).toMatch(/email|ton tai|trung/i);
+    expect(errorBody.message).toMatch(/email|tồn tại|trùng/i);
 
     const latestRows = await MySqlDbClient.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
@@ -461,7 +461,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/password"
     });
-    expect(errorBody.message).toMatch(/otp|ma|xac thuc|het han|khong tim thay/i);
+    expect(errorBody.message).toMatch(/otp|mã|xác thực|hết hạn|không tìm thấy/i);
 
     const latestRows = await MySqlDbClient.query<{ password: string }>(
       "SELECT password FROM staff WHERE id = ? LIMIT 1",

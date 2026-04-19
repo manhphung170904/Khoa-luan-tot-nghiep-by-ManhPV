@@ -71,7 +71,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/name|ten bat dong san|district|quan|required|bat buoc/i);
+      expect(errorBody.message).toMatch(/name|tên bất động sản|district|quận|required|bắt buộc/i);
     });
 
     test("[BLD-012] - API Admin Building - Coordinates - Missing Latitude and Longitude Validation", async () => {
@@ -89,7 +89,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/latitude|longitude|toa do|required|bat buoc/i);
+      expect(errorBody.message).toMatch(/latitude|longitude|tọa độ|required|bắt buộc/i);
     });
 
     test("[BLD-013] - API Admin Building - Address Fields - Empty Ward and Street Validation", async () => {
@@ -103,7 +103,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/ward|street|phuong|duong|bat buoc|khong duoc de trong/i);
+      expect(errorBody.message).toMatch(/ward|street|phường|đường|bắt buộc|không được để trống/i);
     });
 
     test("[BLD-014] - API Admin Building - Property Type - Unsupported Value Handling", async () => {
@@ -126,7 +126,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/floor|tang|so tang|>=\s*0|khong am|number/i);
+      expect(errorBody.message).toMatch(/floor|tầng|số tầng|>=\s*0|không âm|number/i);
     });
 
     test("[BLD-018] - API Admin Building - Metadata - Filter Options Schema", async () => {
@@ -192,7 +192,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/999999999"
       });
-      expect(errorBody.message).toMatch(/building|toa nha|bat dong san|khong ton tai|khong tim thay|not found/i);
+      expect(errorBody.message).toMatch(/building|tòa nhà|bất động sản|không tồn tại|không tìm thấy|not found/i);
     });
 
     test("[BLD-008] - API Admin Building - Update Building - Sold Building Update Restriction", async () => {
@@ -223,7 +223,7 @@ test.describe("Admin - API Building @regression", () => {
           code: "BAD_REQUEST",
           path: `/api/v1/admin/buildings/${tempSaleContract.building.id}`
         });
-        expect(errorBody.message).toMatch(/sold|da ban|sale contract|hop dong mua ban/i);
+        expect(errorBody.message).toMatch(/sold|đã bán|sale contract|hợp đồng mua bán/i);
 
         const rows = await MySqlDbClient.query<{ name: string }>("SELECT name FROM building WHERE id = ?", [tempSaleContract.building.id]);
         expect(rows[0]?.name).toBe(tempSaleContract.building.name);
@@ -245,7 +245,7 @@ test.describe("Admin - API Building @regression", () => {
           code: "BAD_REQUEST",
           path: `/api/v1/admin/buildings/${tempContract.building.id}`
         });
-        expect(errorBody.message).toMatch(/hop dong|lien quan|contract/i);
+        expect(errorBody.message).toMatch(/hợp đồng|liên quan|contract/i);
 
         const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM building WHERE id = ?", [tempContract.building.id]);
         expect(Number(rows[0]?.count ?? 0)).toBe(1);
@@ -287,7 +287,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/999999"
       });
-      expect(errorBody.message).toMatch(/building|toa nha|bat dong san|khong ton tai|khong tim thay|not found/i);
+      expect(errorBody.message).toMatch(/building|tòa nhà|bất động sản|không tồn tại|không tìm thấy|not found/i);
     });
 
     test.describe.serial("Created Building Lifecycle", () => {
@@ -428,7 +428,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
-      expect(errorBody.message).toMatch(/file|tep|anh|empty|rong|chon/i);
+      expect(errorBody.message).toMatch(/file|tệp|ảnh|empty|rỗng|chọn/i);
     });
 
     test("[BLD-U02] - API Admin Building Image - Media Type - Unsupported Format Validation", async () => {
@@ -444,7 +444,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
-      expect(errorBody.message).toMatch(/image|mime|type|dinh dang|tep|jpg|png|webp|ho tro/i);
+      expect(errorBody.message).toMatch(/image|mime|type|định dạng|tệp|jpg|png|webp|hỗ trợ/i);
     });
 
     test("[BLD-U07] - API Admin Building Image - File Extension - Mismatched Image Extension Validation", async () => {
@@ -460,7 +460,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
-      expect(errorBody.message).toMatch(/extension|file|jpg|jpeg|dinh dang/i);
+      expect(errorBody.message).toMatch(/extension|file|jpg|jpeg|định dạng/i);
     });
 
     test("[BLD-U03] - API Admin Building Image - File Integrity - Corrupted JPG Acceptance Behavior", async () => {

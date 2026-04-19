@@ -145,7 +145,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/username"
     });
-    expect(errorBody.message).toMatch(/otp|ma|xac thuc/i);
+    expect(errorBody.message).toMatch(/otp|mã|xác thực/i);
 
     const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.username).toBe(originalUsername);
@@ -188,7 +188,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|mat khau|hien tai|khong dung/i);
+    expect(errorBody.message).toMatch(/password|mật khẩu|hiện tại|không đúng/i);
 
     const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.email).toBe(originalEmail);
@@ -251,7 +251,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|ma|xac thuc|het han/i);
+    expect(errorBody.message).toMatch(/otp|mã|xác thực|hết hạn/i);
 
     const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.phone).toBe(originalPhone);
@@ -277,7 +277,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/password"
     });
-    expect(errorBody.message).toMatch(/short|ngan|it nhat|min|ky tu/i);
+    expect(errorBody.message).toMatch(/short|ngắn|ít nhất|min|ký tự/i);
 
     const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
     expect(newHashRows[0]!.password).toBe(oldHash);

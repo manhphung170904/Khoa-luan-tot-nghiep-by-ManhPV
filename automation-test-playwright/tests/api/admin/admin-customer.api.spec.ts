@@ -42,7 +42,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/staff|nhan vien/i);
+    expect(errorBody.message).toMatch(/staff|nhân viên/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [username]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -60,7 +60,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/username|dang nhap|it nhat|min/i);
+    expect(errorBody.message).toMatch(/username|đăng nhập|ít nhất|min/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [shortUsername]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -79,7 +79,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/password|mat khau|it nhat|min/i);
+    expect(errorBody.message).toMatch(/password|mật khẩu|ít nhất|min/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [username]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -98,7 +98,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/email|dia chi email|khong hop le|toi da/i);
+    expect(errorBody.message).toMatch(/email|địa chỉ email|không hợp lệ|tối đa/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE email = ?", [oversizedEmail]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -117,7 +117,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/phone|dien thoai|khong hop le/i);
+    expect(errorBody.message).toMatch(/phone|điện thoại|không hợp lệ/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE phone = ?", [invalidPhone]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -160,7 +160,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/customers"
       });
-      expect(duplicateError.message).toMatch(/username|email|phone|ten dang nhap|ton tai|trung/i);
+      expect(duplicateError.message).toMatch(/username|email|phone|tên đăng nhập|tồn tại|trùng/i);
       const duplicateRows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM customer WHERE username = ? OR email = ? OR phone = ?",
         [String(customerPayload.username), String(customerPayload.email), String(customerPayload.phone)]
@@ -190,7 +190,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
           code: "BAD_REQUEST",
           path: `/api/v1/admin/customers/${customerWithContract.customer.id}`
         });
-        expect(deleteWithContractError.message).toMatch(/contract|hop dong|khong the xoa khach hang dang co hop dong lien quan/i);
+        expect(deleteWithContractError.message).toMatch(/contract|hợp đồng|không thể xóa khách hàng đang có hợp đồng liên quan/i);
 
         const stillExistsRows = await MySqlDbClient.query<{ count: number }>(
           "SELECT COUNT(*) AS count FROM customer WHERE id = ?",
@@ -209,7 +209,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/customers/999999"
       });
-      expect(missingDeleteError.message).toMatch(/customer|khach hang|khong ton tai|khong tim thay|not found/i);
+      expect(missingDeleteError.message).toMatch(/customer|khách hàng|không tồn tại|không tìm thấy|not found/i);
 
       const deleteResponse = await admin.delete(`/api/v1/admin/customers/${createdCustomerId}`, {
         failOnStatusCode: false

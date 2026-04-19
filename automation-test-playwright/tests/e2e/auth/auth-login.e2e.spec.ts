@@ -47,7 +47,7 @@ test.describe("Auth - Login @regression", () => {
     await loginPage.login("unknown-user", "wrong-password");
     await page.waitForURL(/\/login\?errorMessage=/);
     await loginPage.expectPopupContains(
-      /dang nhap that bai|sai tai khoan hoac mat khau|tai khoan khong ton tai|login failed/i
+      /đăng nhập thất bại|sai tài khoản hoặc mật khẩu|tài khoản không tồn tại|login failed/i
     );
   });
 

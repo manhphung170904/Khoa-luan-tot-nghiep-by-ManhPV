@@ -53,7 +53,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/building-additional-information/legal-authorities"
       });
-      expect(invalidAuthorityError.message).toMatch(/authority|name|ten|do dai|max/i);
+      expect(invalidAuthorityError.message).toMatch(/authority|name|tên|độ dài|max/i);
 
       const createLegalAuthority = await admin.post("/api/v1/admin/building-additional-information/legal-authorities", {
         failOnStatusCode: false,
@@ -363,7 +363,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/planning-maps/image"
     });
-    expect(invalidMimeError.message).toMatch(/image|mime|type|dinh dang|jpg|png|webp/i);
+    expect(invalidMimeError.message).toMatch(/image|mime|type|định dạng|jpg|png|webp/i);
 
     const invalidExtension = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -380,7 +380,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/planning-maps/image"
     });
-    expect(invalidExtensionError.message).toMatch(/extension|jpg|jpeg|file|dinh dang/i);
+    expect(invalidExtensionError.message).toMatch(/extension|jpg|jpeg|file|định dạng/i);
 
     const oversizedUpload = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -425,7 +425,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/legal-authorities/999999"
     });
-    expect(missingLegalAuthorityError.message).toMatch(/legal|authority|co quan phap ly|khong tim thay|not found/i);
+    expect(missingLegalAuthorityError.message).toMatch(/legal|authority|cơ quan pháp lý|không tìm thấy|not found/i);
 
     const missingAmenity = await admin.delete(
       "/api/v1/admin/building-additional-information/nearby-amenities/999999",
@@ -436,7 +436,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/nearby-amenities/999999"
     });
-    expect(missingAmenityError.message).toMatch(/amenity|tien ich|lan can|khong tim thay|not found/i);
+    expect(missingAmenityError.message).toMatch(/amenity|tiện ích|lân cận|không tìm thấy|not found/i);
 
     const missingSupplier = await admin.delete("/api/v1/admin/building-additional-information/suppliers/999999", {
       failOnStatusCode: false
@@ -446,7 +446,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/suppliers/999999"
     });
-    expect(missingSupplierError.message).toMatch(/supplier|nha cung cap|khong tim thay|not found/i);
+    expect(missingSupplierError.message).toMatch(/supplier|nhà cung cấp|không tìm thấy|not found/i);
 
     const missingPlanningMap = await admin.delete(
       "/api/v1/admin/building-additional-information/planning-maps/999999",
@@ -457,7 +457,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/planning-maps/999999"
     });
-    expect(missingPlanningMapError.message).toMatch(/planning|map|ban do|quy hoach|khong ton tai|khong tim thay|not found/i);
+    expect(missingPlanningMapError.message).toMatch(/planning|map|bản đồ|quy hoạch|không tồn tại|không tìm thấy|not found/i);
   });
 });
 

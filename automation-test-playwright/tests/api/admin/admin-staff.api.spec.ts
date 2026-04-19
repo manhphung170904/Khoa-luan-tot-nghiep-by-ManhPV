@@ -42,7 +42,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/username|dang nhap|it nhat|min/i);
+    expect(errorBody.message).toMatch(/username|đăng nhập|ít nhất|min/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [shortUsername]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -59,7 +59,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/password|mat khau|it nhat|min/i);
+    expect(errorBody.message).toMatch(/password|mật khẩu|ít nhất|min/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [username]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -76,7 +76,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/phone|dien thoai|khong hop le|invalid/i);
+    expect(errorBody.message).toMatch(/phone|điện thoại|không hợp lệ|invalid/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE phone = ?", [invalidPhone]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -93,7 +93,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/full.?name|ho ten|toi da|max|ky tu/i);
+    expect(errorBody.message).toMatch(/full.?name|họ tên|tối đa|max|ký tự/i);
   });
 
   test("[STF-015] - API Admin Staff - Username - Minimum Length Boundary Acceptance", async () => {
@@ -131,7 +131,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/username|dang nhap|toi da|max|do dai/i);
+    expect(errorBody.message).toMatch(/username|đăng nhập|tối đa|max|độ dài/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [longUsername]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -149,7 +149,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`
       });
-      expect(errorBody.message).toMatch(/building|toa nha|contract|hop dong|phan cong/i);
+      expect(errorBody.message).toMatch(/building|tòa nhà|contract|hợp đồng|phân công/i);
 
       const assignmentsResponse = await admin.get(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`, {
         failOnStatusCode: false
@@ -173,7 +173,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`
       });
-      expect(errorBody.message).toMatch(/customer|khach hang|contract|hop dong|phan cong/i);
+      expect(errorBody.message).toMatch(/customer|khách hàng|contract|hợp đồng|phân công/i);
 
       const assignmentsResponse = await admin.get(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`, {
         failOnStatusCode: false
@@ -224,7 +224,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicateUsernameError.message).toMatch(/username|ten dang nhap|dang nhap|ton tai|trung/i);
+      expect(duplicateUsernameError.message).toMatch(/username|tên đăng nhập|đăng nhập|tồn tại|trùng/i);
       const duplicateUsernameRows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE username = ?",
         [String(payload.username)]
@@ -243,7 +243,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicateEmailError.message).toMatch(/email|ton tai|trung/i);
+      expect(duplicateEmailError.message).toMatch(/email|tồn tại|trùng/i);
       const duplicateEmailRows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE email = ?",
         [String(payload.email)]
@@ -262,7 +262,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicatePhoneError.message).toMatch(/phone|dien thoai|ton tai|trung/i);
+      expect(duplicatePhoneError.message).toMatch(/phone|điện thoại|tồn tại|trùng/i);
       const duplicatePhoneRows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE phone = ?",
         [String(payload.phone)]
@@ -348,7 +348,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff/999999/assignments/buildings"
       });
-      expect(assignMissingStaffError.message).toMatch(/staff|nhan vien|khong ton tai|khong tim thay|not found/i);
+      expect(assignMissingStaffError.message).toMatch(/staff|nhân viên|không tồn tại|không tìm thấy|not found/i);
 
       const assignCustomerResponse = await admin.put(`/api/v1/admin/staff/${createdStaffId}/assignments/customers`, {
         failOnStatusCode: false,
@@ -368,7 +368,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/staff/${createdStaffId}`
       });
-      expect(deleteWhileAssignedError.message).toMatch(/assignment|phan cong|contract|hop dong|bat dong san/i);
+      expect(deleteWhileAssignedError.message).toMatch(/assignment|phân công|contract|hợp đồng|bất động sản/i);
 
       const stillExistsRows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE id = ?", [createdStaffId]);
       expect(Number(stillExistsRows[0]?.count ?? 0)).toBe(1);
@@ -381,7 +381,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff/999999"
       });
-      expect(missingDeleteError.message).toMatch(/staff|nhan vien|khong ton tai|khong tim thay|not found/i);
+      expect(missingDeleteError.message).toMatch(/staff|nhân viên|không tồn tại|không tìm thấy|not found/i);
 
       const clearBuildings = await admin.put(`/api/v1/admin/staff/${createdStaffId}/assignments/buildings`, {
         failOnStatusCode: false,

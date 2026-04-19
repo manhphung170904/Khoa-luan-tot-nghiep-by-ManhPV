@@ -48,7 +48,7 @@ test.describe.serial("Admin - API Invoice @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/invoices"
     });
-    expect(errorBody.message).toMatch(/month|thang|integer/i);
+    expect(errorBody.message).toMatch(/month|tháng|integer/i);
   });
 
   test("[INV-015] - API Admin Invoice - Invoice Month - Current Month Creation Restriction", async () => {
@@ -71,7 +71,7 @@ test.describe.serial("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/current|thang hien tai|lien truoc|invoice month/i);
+      expect(errorBody.message).toMatch(/current|tháng hiện tại|liền trước|invoice month/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
@@ -99,7 +99,7 @@ test.describe.serial("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/contract|hop dong|khong tim thay/i);
+      expect(errorBody.message).toMatch(/contract|hợp đồng|không tìm thấy/i);
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -121,7 +121,7 @@ test.describe.serial("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/customer|khach hang|khong khop|hop dong/i);
+      expect(errorBody.message).toMatch(/customer|khách hàng|không khớp|hợp đồng/i);
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
@@ -144,7 +144,7 @@ test.describe.serial("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/due|han thanh toan|ngay|sau thang lap hoa don/i);
+      expect(errorBody.message).toMatch(/due|hạn thanh toán|ngày|sau tháng lập hóa đơn/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
@@ -313,7 +313,7 @@ test.describe.serial("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(duplicateError.message).toMatch(/duplicate|ton tai|da co|trung|hoa don|thang|nam/i);
+      expect(duplicateError.message).toMatch(/duplicate|tồn tại|đã có|trùng|hóa đơn|tháng|năm/i);
 
       const listResponse = await admin.get("/api/v1/admin/invoices", {
         failOnStatusCode: false,
@@ -416,7 +416,7 @@ test.describe.serial("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/invoices/${createdInvoiceId}`
       });
-      expect(updatePaidError.message).toMatch(/paid|da thanh toan|khong the cap nhat|dang cho xu ly/i);
+      expect(updatePaidError.message).toMatch(/paid|đã thanh toán|không thể cập nhật|đang chờ xử lý/i);
 
       const unchangedRows = await MySqlDbClient.query<{ total_amount: number; status: string }>(
         "SELECT total_amount, status FROM invoice WHERE id = ?",

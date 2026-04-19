@@ -29,7 +29,7 @@ test.describe.serial("Admin - API Contract @api-write @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts"
     });
-    expect(errorBody.message).toMatch(/rent|gia|price/i);
+    expect(errorBody.message).toMatch(/rent|giá|price/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND rent_price = ?",
@@ -58,7 +58,7 @@ test.describe.serial("Admin - API Contract @api-write @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts"
     });
-    expect(errorBody.message).toMatch(/end|start|ngay/i);
+    expect(errorBody.message).toMatch(/end|start|ngày/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND start_date = ? AND end_date = ?",
@@ -97,7 +97,7 @@ test.describe.serial("Admin - API Contract @api-write @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
-      expect(errorBody.message).toMatch(/building|bat dong san|toa nha/i);
+      expect(errorBody.message).toMatch(/building|bất động sản|tòa nhà/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
@@ -124,7 +124,7 @@ test.describe.serial("Admin - API Contract @api-write @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
-      expect(errorBody.message).toMatch(/customer|khach hang|khong tim thay/i);
+      expect(errorBody.message).toMatch(/customer|khách hàng|không tìm thấy/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
@@ -154,7 +154,7 @@ test.describe.serial("Admin - API Contract @api-write @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
-      expect(errorBody.message).toMatch(/staff|phan cong|building|toa nha/i);
+      expect(errorBody.message).toMatch(/staff|phân công|building|tòa nhà/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
@@ -190,7 +190,7 @@ test.describe.serial("Admin - API Contract @api-write @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
-      expect(errorBody.message).toMatch(/staff|phan cong|customer|khach hang/i);
+      expect(errorBody.message).toMatch(/staff|phân công|customer|khách hàng/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
@@ -227,7 +227,7 @@ test.describe.serial("Admin - API Contract @api-write @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts/999999999"
     });
-    expect(errorBody.message).toMatch(/contract|hop dong|khong ton tai|khong tim thay|not found/i);
+    expect(errorBody.message).toMatch(/contract|hợp đồng|không tồn tại|không tìm thấy|not found/i);
   });
 
   test("[CTR-006] - API Admin Contract - Contract Lifecycle - Create List Filter Update Status Update and Delete Flow", async ({
@@ -347,7 +347,7 @@ test.describe.serial("Admin - API Contract @api-write @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts/999999"
       });
-      expect(missingDeleteError.message).toMatch(/contract|hop dong|khong ton tai|khong tim thay|not found/i);
+      expect(missingDeleteError.message).toMatch(/contract|hợp đồng|không tồn tại|không tìm thấy|not found/i);
 
       const deleteResponse = await adminApi.delete(`/api/v1/admin/contracts/${createdContractId}`, {
         failOnStatusCode: false

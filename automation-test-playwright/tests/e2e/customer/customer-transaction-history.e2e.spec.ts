@@ -70,7 +70,7 @@ test.describe("Customer - Transaction History @regression", () => {
 
     await transactionPage.openTransactionDetail(tempContract!.building.name);
     await transactionPage.expectDetailModalContains(tempContract!.building.name);
-    await transactionPage.expectDetailModalContains(`Ma hoa don: ${invoiceId}`);
+    await transactionPage.expectDetailModalContains(`Mã hóa đơn: ${invoiceId}`);
     await transactionPage.closeDetailModal();
 
     const rows = await MySqlDbClient.query<{ status: string; payment_method: string; transaction_code: string }>(

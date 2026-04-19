@@ -87,7 +87,7 @@ test.describe("Customer - API Property Request @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/customer/property-requests"
       });
-      expect(errorBody.message).toMatch(/pending|ton tai|yeu cau|dang cho xu ly/i);
+      expect(errorBody.message).toMatch(/pending|tồn tại|yêu cầu|đang chờ xử lý/i);
 
       const duplicateRows = await MySqlDbClient.query<{ count: number }>(
         `

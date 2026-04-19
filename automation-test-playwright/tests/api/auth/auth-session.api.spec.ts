@@ -92,7 +92,7 @@ test.describe("Auth - API REST Session @regression", () => {
       path: "/api/v1/auth/login"
     });
     expect(errorBody.message).toMatch(
-      /credential|username|password|ten dang nhap|mat khau|sai tai khoan hoac mat khau|dang nhap|khong dung/i
+      /credential|username|password|tên đăng nhập|mật khẩu|sai tài khoản hoặc mật khẩu|đăng nhập|không đúng/i
     );
   });
 

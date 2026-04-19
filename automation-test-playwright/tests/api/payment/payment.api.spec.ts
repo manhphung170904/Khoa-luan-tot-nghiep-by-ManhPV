@@ -92,7 +92,7 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
       expect(response.headers()["content-type"] ?? "").toContain("text/html");
 
       const bodyHtml = await response.text();
-      expect(bodyHtml).toMatch(/thanh toan bang qr|qr payment/i);
+      expect(bodyHtml).toMatch(/thanh toán bằng qr|qr payment/i);
       expect(bodyHtml).toContain("img.vietqr.io");
       expect(bodyHtml).toContain(`MOONNEST INV ${customerInvoiceId}`);
       expect(bodyHtml).toContain(`/payment-demo/qr/confirm/${customerInvoiceId}`);

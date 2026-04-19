@@ -70,9 +70,9 @@ test.describe("Customer - Invoice Payment @regression", () => {
 
     await invoicePage.openFirstPaymentModal();
     const modalText = await invoicePage.visibleModalText();
-    expect(modalText).toMatch(/invoice|chi ti.t|hoa .on/i);
+    expect(modalText).toMatch(/invoice|chi tiết|hóa đơn/i);
     expect(modalText).toContain(contract.building.name);
-    expect(modalText).toMatch(/tong cong|total/i);
+    expect(modalText).toMatch(/tổng cộng|total/i);
     expect(modalText).toContain(String(invoice.id));
 
     const invoiceRows = await MySqlDbClient.query<{ status: string; total_amount: number }>(
@@ -128,7 +128,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
 
     await qrPage.confirmPayment();
     await expect(page).toHaveURL(/\/customer\/invoice\/list\?paySuccess/);
-    await expect(page.locator(".swal2-popup")).toContainText(/thanh toan thanh cong|payment success|paysuccess/i);
+    await expect(page.locator(".swal2-popup")).toContainText(/thanh toán thành công|payment success|paysuccess/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{
         status: string;

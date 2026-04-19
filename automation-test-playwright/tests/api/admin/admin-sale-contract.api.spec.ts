@@ -38,7 +38,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
       data: payload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/sale|gia|price|ban/i);
+    expect(errorBody.message).toMatch(/sale|giá|price|bán/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND sale_price = ?",
@@ -54,7 +54,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
       data: payload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/sale|gia|price|ban/i);
+    expect(errorBody.message).toMatch(/sale|giá|price|bán/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND sale_price = ?",
@@ -71,7 +71,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
       data: invalidPayload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/building|bat dong san|toa nha|vui long chon/i);
+    expect(errorBody.message).toMatch(/building|bất động sản|tòa nhà|vui lòng chọn/i);
   });
 
   test("[SC-011] - API Admin Sale Contract - Customer Reference - Missing Customer Validation", async () => {
@@ -82,7 +82,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
       data: invalidPayload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/customer|khach hang|vui long chon/i);
+    expect(errorBody.message).toMatch(/customer|khách hàng|vui lòng chọn/i);
   });
 
   test("[SC-003] - API Admin Sale Contract - Building Reference - Nonexistent Building Validation", async () => {
@@ -100,7 +100,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
         })
       });
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/building|toa nha|bat dong san|khong tim thay|not found/i);
+      expect(errorBody.message).toMatch(/building|tòa nhà|bất động sản|không tìm thấy|not found/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
@@ -131,7 +131,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
         })
       });
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/staff|nhan vien|khong tim thay|not found/i);
+      expect(errorBody.message).toMatch(/staff|nhân viên|không tìm thấy|not found/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
@@ -164,7 +164,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
         })
       });
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/staff|phan cong|building|toa nha/i);
+      expect(errorBody.message).toMatch(/staff|phân công|building|tòa nhà/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
@@ -197,7 +197,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
         })
       });
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/staff|phan cong|customer|khach hang/i);
+      expect(errorBody.message).toMatch(/staff|phân công|customer|khách hàng/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
@@ -230,7 +230,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
         })
       });
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/sale|ban|mua ban|transaction|giao dich|khong phai loai mua ban/i);
+      expect(errorBody.message).toMatch(/sale|bán|mua bán|transaction|giao dịch|không phải loại mua bán/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
@@ -262,7 +262,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/sale-contracts"
       });
-      expect(errorBody.message).toMatch(/sold|da ban|sale contract|hop dong mua ban/i);
+      expect(errorBody.message).toMatch(/sold|đã (được )?bán|sale contract|hợp đồng mua bán/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ?",
@@ -423,7 +423,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/sale-contracts/999999999"
     });
-    expect(errorBody.message).toMatch(/sale contract|hop dong mua ban|khong tim thay|khong ton tai|not found/i);
+    expect(errorBody.message).toMatch(/sale contract|hợp đồng mua bán|không tìm thấy|không tồn tại|not found/i);
   });
 
   test("[SC-018] - API Admin Sale Contract - Delete Sale Contract - Nonexistent ID Rejection", async () => {

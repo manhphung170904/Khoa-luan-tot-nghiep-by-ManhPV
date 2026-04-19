@@ -155,7 +155,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/username"
     });
-    expect(errorBody.message).toMatch(/username|dang nhap|tai khoan|mat khau/i);
+    expect(errorBody.message).toMatch(/username|đăng nhập|tài khoản|mật khẩu/i);
 
     const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.username).toBe(originalUsername);
@@ -195,7 +195,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|mat khau|hien tai|khong dung/i);
+    expect(errorBody.message).toMatch(/password|mật khẩu|hiện tại|không đúng/i);
 
     const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.email).toBe(originalEmail);
@@ -238,7 +238,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|ma|xac thuc|het han/i);
+    expect(errorBody.message).toMatch(/otp|mã|xác thực|hết hạn/i);
 
     const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.phone).toBe(originalPhone);
@@ -308,7 +308,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/password"
     });
-    expect(errorBody.message).toMatch(/confirm|khop|xac nhan|mat khau xac nhan/i);
+    expect(errorBody.message).toMatch(/confirm|khớp|xác nhận|mật khẩu xác nhận/i);
 
     const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(newHashRows[0]!.password).toBe(oldHash);
@@ -331,7 +331,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/password"
     });
-    expect(errorBody.message).toMatch(/otp|ma|xac thuc|khong hop le/i);
+    expect(errorBody.message).toMatch(/otp|mã|xác thực|không hợp lệ/i);
 
     const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(newHashRows[0]!.password).toBe(oldHash);
