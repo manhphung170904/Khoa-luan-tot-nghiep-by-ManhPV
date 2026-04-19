@@ -12,7 +12,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Auth - E2E dat lai mat khau @regression", () => {
+test.describe("Auth - Password Reset @regression", () => {
   let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
@@ -34,7 +34,7 @@ test.describe("Auth - E2E dat lai mat khau @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-AUTH-RST-001] quen mat khau dieu huong nguoi dung den form dat lai voi email hop le", async ({ page }) => {
+  test("[E2E-AUTH-RST-001] - Auth Password Reset - Forgot Password - Valid Email Reset Form Navigation", async ({ page }) => {
     const forgotPage = new ForgotPasswordPage(page);
     const resetPage = new ResetPasswordPage(page);
 
@@ -57,7 +57,7 @@ test.describe("Auth - E2E dat lai mat khau @regression", () => {
     expect(otpRows[0]?.status).toBe("PENDING");
   });
 
-  test("[E2E-AUTH-RST-002] luong dat lai password thanh cong voi OTP tu test hook va dang nhap bang password moi hoat dong", async ({
+  test("[E2E-AUTH-RST-002] - Auth Password Reset - Password Reset - Successful OTP Reset and New Password Login", async ({
     page,
     request
   }) => {
@@ -92,7 +92,7 @@ test.describe("Auth - E2E dat lai mat khau @regression", () => {
     await page.waitForURL(/\/customer\/home/);
   });
 
-  test("[E2E-AUTH-RST-003] kiem tra phia client cua dat lai password chan gia tri xac nhan khong khop", async ({ page }) => {
+  test("[E2E-AUTH-RST-003] - Auth Password Reset - Password Confirmation - Client-Side Mismatch Validation", async ({ page }) => {
     const forgotPage = new ForgotPasswordPage(page);
     const resetPage = new ResetPasswordPage(page);
 

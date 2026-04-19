@@ -12,7 +12,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Customer - E2E profile @regression", () => {
+test.describe("Customer - Profile @regression", () => {
   let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
@@ -36,7 +36,7 @@ test.describe("Customer - E2E profile @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-CUS-PRO-001] customer profile hien current account information", async ({ page }) => {
+  test("[E2E-CUS-PRO-001] - Customer Profile - Profile Overview - Current Account Information Display", async ({ page }) => {
     if (!tempUser) {
       return;
     }
@@ -50,7 +50,7 @@ test.describe("Customer - E2E profile @regression", () => {
     expect(values.phone).toBe(tempUser.phone);
   });
 
-  test("[E2E-CUS-PRO-002] successMessage query hien success SweetAlert", async ({ page }) => {
+  test("[E2E-CUS-PRO-002] - Customer Profile - Success Message - Success SweetAlert Display", async ({ page }) => {
     const profilePage = new CustomerProfilePage(page);
     await page.goto("/customer/profile?successMessage=Cap%20nhat%20thanh%20cong");
 
@@ -58,7 +58,7 @@ test.describe("Customer - E2E profile @regression", () => {
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-CUS-PRO-003] username local customer duoc cap nhat dung voi OTP hop le", async ({ page }) => {
+  test("[E2E-CUS-PRO-003] - Customer Profile - Username Update - Successful Update with Valid OTP", async ({ page }) => {
     if (!tempUser) {
       return;
     }
@@ -81,7 +81,7 @@ test.describe("Customer - E2E profile @regression", () => {
     expect((await profilePage.readProfileValues()).username).toBe(originalValues.username);
   });
 
-  test("[E2E-CUS-PRO-004] customer co cap nhat phone number voi OTP hop le", async ({ page }) => {
+  test("[E2E-CUS-PRO-004] - Customer Profile - Phone Number Update - Successful Update with Valid OTP", async ({ page }) => {
     if (!tempUser) {
       return;
     }
@@ -103,7 +103,7 @@ test.describe("Customer - E2E profile @regression", () => {
     }).toBe(newPhone);
   });
 
-  test("[E2E-CUS-PRO-005] client-side validation chan password confirmation mismatch", async ({ page }) => {
+  test("[E2E-CUS-PRO-005] - Customer Profile - Password Confirmation - Client-Side Mismatch Validation", async ({ page }) => {
     const profilePage = new CustomerProfilePage(page);
 
     await profilePage.submitPasswordChange("ValidPass1!", "DifferentPass1!", "000000");
@@ -111,7 +111,7 @@ test.describe("Customer - E2E profile @regression", () => {
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-CUS-PRO-006] customer co the cap nhat password voi OTP hop le va dang nhap lai", async ({ page }) => {
+  test("[E2E-CUS-PRO-006] - Customer Profile - Password Update - Successful Update with Valid OTP and Re-Login", async ({ page }) => {
     if (!tempUser) {
       return;
     }

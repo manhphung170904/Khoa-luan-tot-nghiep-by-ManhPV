@@ -7,7 +7,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Staff - E2E dashboard @regression", () => {
+test.describe("Staff - Dashboard @regression", () => {
   let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
 
@@ -31,7 +31,7 @@ test.describe("Staff - E2E dashboard @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-STF-DSH-001] staff dashboard hien tong hop stats va tables", async ({ page }) => {
+  test("[E2E-STF-DSH-001] - Staff Dashboard - Overview Widgets - Summary Stats and Tables Display", async ({ page }) => {
     const dashboardPage = new StaffDashboardPage(page);
     await dashboardPage.expectLoaded();
     await dashboardPage.expectSummarySectionsVisible();

@@ -13,7 +13,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
-test.describe("Staff - E2E danh sach invoice @regression", () => {
+test.describe("Staff - Invoice List @regression", () => {
   let adminApi: APIRequestContext;
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
@@ -45,7 +45,7 @@ test.describe("Staff - E2E danh sach invoice @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-STF-INV-001] staff thay cac dong invoice duoc giao va co mo chi tiet modal", async ({ page }) => {
+  test("[E2E-STF-INV-001] - Staff Invoice List - Invoice List - Assigned Invoice Rows and Detail Modal", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -65,10 +65,10 @@ test.describe("Staff - E2E danh sach invoice @regression", () => {
     await expect(invoicePage.rowByInvoiceId(invoice.id)).toContainText(contract.customer.fullName);
     await invoicePage.openViewModal(invoice.id);
     await expect(invoicePage.visibleModal()).toContainText(contract.building.name);
-    await expect(invoicePage.visibleModal()).toContainText(/Chi tiết hóa đơn|Chi tiet hoa don/i);
+    await expect(invoicePage.visibleModal()).toContainText(/chi tiet hoa don|invoice detail/i);
   });
 
-  test("[E2E-STF-INV-002] staff co tao new invoice tu add modal", async ({ page }) => {
+  test("[E2E-STF-INV-002] - Staff Invoice List - Invoice Creation - Create Invoice from Add Modal", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -89,7 +89,7 @@ test.describe("Staff - E2E danh sach invoice @regression", () => {
     });
     await invoicePage.chooseAddStatus("PENDING");
     await invoicePage.submitAddInvoice();
-    await invoicePage.expectSweetAlertContains(/thành công|thanh cong/i);
+    await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number }>(
       `
@@ -113,7 +113,7 @@ test.describe("Staff - E2E danh sach invoice @regression", () => {
     });
   });
 
-  test("[E2E-STF-INV-003] duplicate invoice creation hien business error", async ({ page }) => {
+  test("[E2E-STF-INV-003] - Staff Invoice List - Duplicate Invoice - Business Error Display", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -134,7 +134,7 @@ test.describe("Staff - E2E danh sach invoice @regression", () => {
       waterUsage: 7
     });
     await invoicePage.submitAddInvoice();
-    await invoicePage.expectSweetAlertContains(/lỗi|loi|đã tồn tại|da ton tai|error/i);
+    await invoicePage.expectSweetAlertContains(/loi|da ton tai|error/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       `
@@ -147,7 +147,7 @@ test.describe("Staff - E2E danh sach invoice @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-STF-INV-004] staff co edit invoice usage, due date, va status", async ({ page }) => {
+  test("[E2E-STF-INV-004] - Staff Invoice List - Invoice Edit - Usage Due Date and Status Update", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -168,7 +168,7 @@ test.describe("Staff - E2E danh sach invoice @regression", () => {
       status: "PAID"
     });
     await invoicePage.saveVisibleEditForm();
-    await invoicePage.expectSweetAlertContains(/thành công|thanh cong/i);
+    await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string; due_date: string }>(
@@ -179,7 +179,7 @@ test.describe("Staff - E2E danh sach invoice @regression", () => {
     }).toBe(`PAID|${updatedDueDate}`);
   });
 
-  test("[E2E-STF-INV-005] staff co xoa an owned invoice tu danh sach", async ({ page }) => {
+  test("[E2E-STF-INV-005] - Staff Invoice List - Invoice Deletion - Owned Invoice Deletion from List", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -192,7 +192,7 @@ test.describe("Staff - E2E danh sach invoice @regression", () => {
     await invoicePage.waitForTableData();
     await invoicePage.deleteInvoice(invoice.id);
     await invoicePage.confirmSweetAlert();
-    await invoicePage.expectSweetAlertContains(/thành công|thanh cong/i);
+    await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);

@@ -5,7 +5,7 @@ import { CustomerPropertyRequestListPage } from "@pages/customer/CustomerPropert
 import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
 import { loginAsTempUser } from "@data/profileTempUsers";
 
-test.describe("Customer - E2E property request @regression", () => {
+test.describe("Customer - Property Request @regression", () => {
   let scenario: PropertyRequestScenario | null = null;
   let createdContractId = 0;
 
@@ -34,26 +34,26 @@ test.describe("Customer - E2E property request @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-CUS-REQ-001] customer sees own property request with pending status", async ({ page }) => {
+  test("[E2E-CUS-REQ-001] - Customer Property Request - Property Request List - Pending Request Display", async ({ page }) => {
     const requestPage = new CustomerPropertyRequestListPage(page);
     await requestPage.expectLoaded();
     await requestPage.expectRequestVisible(scenario!.propertyRequestId);
     await requestPage.expectRequestContains(scenario!.propertyRequestId, scenario!.buildingName);
-    await requestPage.expectRequestContains(scenario!.propertyRequestId, /Chờ xử lý|Cho xu ly|PENDING/i);
+    await requestPage.expectRequestContains(scenario!.propertyRequestId, /cho xu ly|pending/i);
     await requestPage.expectCancelButtonVisible(scenario!.propertyRequestId);
   });
 
-  test("[E2E-CUS-REQ-002] customer co co thecel pending property request", async ({ page }) => {
+  test("[E2E-CUS-REQ-002] - Customer Property Request - Property Request Cancellation - Pending Request Cancellation", async ({ page }) => {
     const requestPage = new CustomerPropertyRequestListPage(page);
     await requestPage.expectLoaded();
     await requestPage.cancelRequest(scenario!.propertyRequestId);
     await requestPage.confirmSweetAlert();
-    await expect(requestPage.toastPopup()).toContainText(/Thành công|Hủy yêu cầu bất động sản thành công|thanh cong|da huy yeu cau/i);
+    await expect(requestPage.toastPopup()).toContainText(/thanh cong|da huy yeu cau|success/i);
 
     await page.reload();
     await requestPage.expectLoaded();
     await requestPage.expectRequestVisible(scenario!.propertyRequestId);
-    await requestPage.expectRequestContains(scenario!.propertyRequestId, /Đã hủy|Da huy|CANCELLED/i);
+    await requestPage.expectRequestContains(scenario!.propertyRequestId, /da huy|cancelled/i);
     await requestPage.expectCancelButtonHidden(scenario!.propertyRequestId);
 
     const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM property_request WHERE id = ?", [
@@ -62,7 +62,7 @@ test.describe("Customer - E2E property request @regression", () => {
     expect(rows[0]?.status).toBe("CANCELLED");
   });
 
-  test("[E2E-CUS-REQ-003] approved property request is visible without co thecel action", async ({ page }) => {
+  test("[E2E-CUS-REQ-003] - Customer Property Request - Property Request Visibility - Approved Request Without Cancellation Action", async ({ page }) => {
     const contractPayload = TestDataFactory.buildContractPayload({
       customerId: scenario!.customerId,
       buildingId: scenario!.buildingId,
@@ -99,7 +99,7 @@ test.describe("Customer - E2E property request @regression", () => {
     const requestPage = new CustomerPropertyRequestListPage(page);
     await requestPage.expectLoaded();
     await requestPage.expectRequestVisible(scenario!.propertyRequestId);
-    await requestPage.expectRequestContains(scenario!.propertyRequestId, /Đã duyệt|Da duyet|APPROVED/i);
+    await requestPage.expectRequestContains(scenario!.propertyRequestId, /da duyet|approved/i);
     await requestPage.expectCancelButtonHidden(scenario!.propertyRequestId);
 
     const rows = await MySqlDbClient.query<{ status: string; contract_id: number | null }>(

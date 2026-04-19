@@ -7,7 +7,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempSaleContract = Awaited<ReturnType<typeof TempEntityHelper.taoSaleContractTam>>;
 
-test.describe("Staff - E2E danh sach sale contract @regression", () => {
+test.describe("Staff - Sale Contract List @regression", () => {
   let adminApi: APIRequestContext;
   let tempSaleContract: TempSaleContract | null = null;
 
@@ -31,7 +31,7 @@ test.describe("Staff - E2E danh sach sale contract @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-STF-SALE-001] staff sees duoc giao sale contracts in danh sach", async ({ page }) => {
+  test("[E2E-STF-SALE-001] - Staff Sale Contract List - Assigned Sale Contracts - Assigned Sale Contract Display", async ({ page }) => {
     const saleContractPage = new StaffSaleContractListPage(page);
     await saleContractPage.expectLoaded();
     await saleContractPage.waitForTableData();
@@ -44,7 +44,7 @@ test.describe("Staff - E2E danh sach sale contract @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-STF-SALE-002] staff co the loc sale contract theo customer va building", async ({ page }) => {
+  test("[E2E-STF-SALE-002] - Staff Sale Contract List - Sale Contract Filter - Customer and Building Filtering", async ({ page }) => {
     const saleContractPage = new StaffSaleContractListPage(page);
     await saleContractPage.expectLoaded();
     await saleContractPage.filterByCustomerId(tempSaleContract!.customer.id);
@@ -53,7 +53,7 @@ test.describe("Staff - E2E danh sach sale contract @regression", () => {
     await saleContractPage.expectRowVisible(tempSaleContract!.building.name);
   });
 
-  test("[E2E-STF-SALE-003] staff co mo sale contract chi tiet modal", async ({ page }) => {
+  test("[E2E-STF-SALE-003] - Staff Sale Contract List - Sale Contract Details - Details Modal Display", async ({ page }) => {
     const saleContractPage = new StaffSaleContractListPage(page);
     await saleContractPage.expectLoaded();
     await saleContractPage.openDetail(tempSaleContract!.building.name);

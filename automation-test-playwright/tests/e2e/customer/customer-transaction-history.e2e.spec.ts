@@ -7,7 +7,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
-test.describe("Customer - E2E lich su giao dich @regression", () => {
+test.describe("Customer - Transaction History @regression", () => {
   let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
   let invoiceId: number | null = null;
@@ -60,7 +60,7 @@ test.describe("Customer - E2E lich su giao dich @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-CUS-TXN-001] customer co xem tong hop giao dich da thanh toan va chi tiet invoice", async ({ page }) => {
+  test("[E2E-CUS-TXN-001] - Customer Transaction History - Transaction Summary - Paid Transaction Summary and Invoice Detail Display", async ({ page }) => {
     const transactionPage = new CustomerTransactionHistoryPage(page);
     await transactionPage.expectLoaded();
     await transactionPage.expectSummaryVisible();
@@ -70,7 +70,7 @@ test.describe("Customer - E2E lich su giao dich @regression", () => {
 
     await transactionPage.openTransactionDetail(tempContract!.building.name);
     await transactionPage.expectDetailModalContains(tempContract!.building.name);
-    await transactionPage.expectDetailModalContains(`Mã hóa đơn: ${invoiceId}`);
+    await transactionPage.expectDetailModalContains(`Ma hoa don: ${invoiceId}`);
     await transactionPage.closeDetailModal();
 
     const rows = await MySqlDbClient.query<{ status: string; payment_method: string; transaction_code: string }>(
@@ -82,7 +82,7 @@ test.describe("Customer - E2E lich su giao dich @regression", () => {
     expect(rows[0]?.transaction_code).toBe(`E2E-TX-${invoiceId}`);
   });
 
-  test("[E2E-CUS-TXN-002] customer co the loc giao dich theo ky invoice", async ({ page }) => {
+  test("[E2E-CUS-TXN-002] - Customer Transaction History - Period Filter - Invoice Period Filtering", async ({ page }) => {
     const transactionPage = new CustomerTransactionHistoryPage(page);
     await transactionPage.expectLoaded();
     await transactionPage.filterByMonth(invoiceMonth);
@@ -102,7 +102,7 @@ test.describe("Customer - E2E lich su giao dich @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-CUS-TXN-003] customer thay trang thai rong cho bo loc giao dich khong khop va co the dat lai bo loc", async ({
+  test("[E2E-CUS-TXN-003] - Customer Transaction History - Filter Reset - Empty State and Filter Reset", async ({
     page
   }) => {
     const transactionPage = new CustomerTransactionHistoryPage(page);

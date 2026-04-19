@@ -5,8 +5,8 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin - kiem thu API contract @api-write @regression", () => {
-  test("[CTR_001] POST /contracts tu choi chua dang nhap tao", async ({ request }) => {
+test.describe.serial("Admin - API Contract @api-write @regression", () => {
+  test("[CTR-001] - API Admin Contract - Authentication - Create Contract Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,
       data: TestDataFactory.buildContractPayload()
@@ -18,7 +18,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
     });
   });
 
-  test("[CTR_002] POST /contracts tu choi negative rentPrice", async ({ adminApi }) => {
+  test("[CTR-002] - API Admin Contract - Rent Price - Negative Value Validation", async ({ adminApi }) => {
     const payload = TestDataFactory.buildContractPayload({ rentPrice: -5 });
     const response = await adminApi.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,
@@ -29,7 +29,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts"
     });
-    expect(errorBody.message).toMatch(/rent|giá|gia|price/i);
+    expect(errorBody.message).toMatch(/rent|gia|price/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND rent_price = ?",
@@ -38,7 +38,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[CTR_005] POST /contracts tu choi endDate before startDate", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR-005] - API Admin Contract - Contract Dates - End Date Before Start Date Validation", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
     cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
 
@@ -58,7 +58,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts"
     });
-    expect(errorBody.message).toMatch(/end|start|ngày|ngay/i);
+    expect(errorBody.message).toMatch(/end|start|ngay/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND start_date = ? AND end_date = ?",
@@ -67,7 +67,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[CTR_011] GET /contracts/metadata tra ve select options shape", async ({ adminApi }) => {
+  test("[CTR-011] - API Admin Contract - Metadata - Select Options Schema", async ({ adminApi }) => {
     const response = await adminApi.get("/api/v1/admin/contracts/metadata", {
       failOnStatusCode: false
     });
@@ -80,7 +80,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
     expect(Array.isArray(body.staffs)).toBeTruthy();
   });
 
-  test("[CTR_003] POST /contracts tu choi khong ton tai buildingId", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR-003] - API Admin Contract - Building Reference - Nonexistent Building Validation", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
     cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
     try {
@@ -97,7 +97,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
-      expect(errorBody.message).toMatch(/building|bất động sản|bat dong san|tòa nhà|toa nha/i);
+      expect(errorBody.message).toMatch(/building|bat dong san|toa nha/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
@@ -107,7 +107,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
     } finally {}
   });
 
-  test("[CTR_004] POST /contracts tu choi khong ton tai customerId", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR-004] - API Admin Contract - Customer Reference - Nonexistent Customer Validation", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
     cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
     try {
@@ -124,7 +124,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
-      expect(errorBody.message).toMatch(/customer|khách hàng|khach hang|không tìm thấy|khong tim thay/i);
+      expect(errorBody.message).toMatch(/customer|khach hang|khong tim thay/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
@@ -134,7 +134,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
     } finally {}
   });
 
-  test("[CTR_012] POST /contracts tu choi staff outside building assignment", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR-012] - API Admin Contract - Staff Assignment - Building Assignment Restriction", async ({ adminApi, cleanupRegistry }) => {
     const managedContract = await TempEntityHelper.taoContractTam(adminApi);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(adminApi);
     cleanupRegistry.add(() => TempEntityHelper.xoaStaffTam(adminApi, outsiderStaff.id));
@@ -164,7 +164,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
     } finally {}
   });
 
-  test("[CTR_013] POST /contracts tu choi staff outside customer assignment", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR-013] - API Admin Contract - Staff Assignment - Customer Assignment Restriction", async ({ adminApi, cleanupRegistry }) => {
     const assignedManager = await TempEntityHelper.taoStaffTam(adminApi);
     const contractStaff = await TempEntityHelper.taoStaffTam(adminApi);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
@@ -200,7 +200,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
     } finally {}
   });
 
-  test("[CTR_014] PUT /contracts/{id} tu choi khong ton tai contract", async ({ adminApi, cleanupRegistry }) => {
+  test("[CTR-014] - API Admin Contract - Update Contract - Nonexistent Contract Rejection", async ({ adminApi, cleanupRegistry }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(adminApi);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
     await TempEntityHelper.capNhatPhanCongBuilding(adminApi, tempStaff.id, [tempBuilding.id]);
@@ -227,10 +227,10 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts/999999999"
     });
-    expect(errorBody.message).toMatch(/contract|hop dong|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
+    expect(errorBody.message).toMatch(/contract|hop dong|khong ton tai|khong tim thay|not found/i);
   });
 
-  test("[CTR_006] contract tao/danh sach/loc/cap nhat/status/xoa theo vong doi voi du lieu tam", async ({
+  test("[CTR-006] - API Admin Contract - Contract Lifecycle - Create List Filter Update Status Update and Delete Flow", async ({
     adminApi,
     cleanupRegistry
   }) => {
@@ -347,7 +347,7 @@ test.describe.serial("Admin - kiem thu API contract @api-write @regression", () 
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts/999999"
       });
-      expect(missingDeleteError.message).toMatch(/contract|hop dong|hợp đồng|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
+      expect(missingDeleteError.message).toMatch(/contract|hop dong|khong ton tai|khong tim thay|not found/i);
 
       const deleteResponse = await adminApi.delete(`/api/v1/admin/contracts/${createdContractId}`, {
         failOnStatusCode: false

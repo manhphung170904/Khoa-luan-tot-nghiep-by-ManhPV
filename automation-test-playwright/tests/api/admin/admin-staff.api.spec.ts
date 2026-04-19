@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin - kiem thu API staff @regression", () => {
+test.describe.serial("Admin - API Staff @regression", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -19,7 +19,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[STF_001] POST /staff tu choi chua dang nhap tao", async ({ request }) => {
+  test("[STF-001] - API Admin Staff - Authentication - Create Staff Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
       data: TestDataFactory.buildAdminStaffPayload()
@@ -31,7 +31,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
     });
   });
 
-  test("[STF_002] POST /staff tu choi username shorter than 4", async () => {
+  test("[STF-002] - API Admin Staff - Username - Minimum Length Validation", async () => {
     const shortUsername = "abc";
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -48,7 +48,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF_017] POST /staff tu choi password shorter than 6", async () => {
+  test("[STF-017] - API Admin Staff - Password - Minimum Length Validation", async () => {
     const username = `stf_pwd_${Date.now()}`;
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -65,7 +65,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF_003] POST /staff tu choi dinh dang phone khong hop le", async () => {
+  test("[STF-003] - API Admin Staff - Phone Number - Invalid Format Validation", async () => {
     const invalidPhone = "1987654321";
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -76,13 +76,13 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/phone|điện thoại|dien thoai|không hợp lệ|khong hop le/i);
+    expect(errorBody.message).toMatch(/phone|dien thoai|khong hop le|invalid/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE phone = ?", [invalidPhone]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF_018] POST /staff tu choi fullName longer than 100 chars", async () => {
+  test("[STF-018] - API Admin Staff - Full Name - Maximum Length Validation", async () => {
     const oversizeName = "A".repeat(101);
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -93,10 +93,10 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/full.?name|họ tên|ho ten|tối đa|toi da|ký tự|ky tu/i);
+    expect(errorBody.message).toMatch(/full.?name|ho ten|toi da|max|ky tu/i);
   });
 
-  test("[STF_015] POST /staff chap nhan username length 4 boundary", async () => {
+  test("[STF-015] - API Admin Staff - Username - Minimum Length Boundary Acceptance", async () => {
     const username = `ab${String(Date.now()).slice(-2)}`;
     const payload = TestDataFactory.buildAdminStaffPayload({
       username,
@@ -120,7 +120,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
     await admin.delete(`/api/v1/admin/staff/${rows[0]!.id}`, { failOnStatusCode: false });
   });
 
-  test("[STF_016] POST /staff tu choi username longer than 30", async () => {
+  test("[STF-016] - API Admin Staff - Username - Maximum Length Validation", async () => {
     const longUsername = "a".repeat(31);
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -137,7 +137,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF_019] PUT /staff/{id}/assignments/buildings chan removing active-contract building", async () => {
+  test("[STF-019] - API Admin Staff - Building Assignment - Active Contract Removal Restriction", async () => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.put(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`, {
@@ -161,7 +161,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
     }
   });
 
-  test("[STF_020] PUT /staff/{id}/assignments/customers chan removing active-contract customer", async () => {
+  test("[STF-020] - API Admin Staff - Customer Assignment - Active Contract Removal Restriction", async () => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.put(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`, {
@@ -185,7 +185,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
     }
   });
 
-  test("[STF_004] POST /staff tao staff va ho tro day du vong doi assignment", async () => {
+  test("[STF-004] - API Admin Staff - Staff Lifecycle - Create and Full Assignment Flow", async () => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_RENT");
     const tempManager = await TempEntityHelper.taoStaffTam(admin);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempManager.id);
@@ -224,7 +224,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicateUsernameError.message).toMatch(/username|tên đăng nhập|ten dang nhap|dang nhap|tồn tại|ton tai|trùng|trung/i);
+      expect(duplicateUsernameError.message).toMatch(/username|ten dang nhap|dang nhap|ton tai|trung/i);
       const duplicateUsernameRows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE username = ?",
         [String(payload.username)]
@@ -262,7 +262,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicatePhoneError.message).toMatch(/phone|điện thoại|dien thoai|tồn tại|ton tai|trùng|trung/i);
+      expect(duplicatePhoneError.message).toMatch(/phone|dien thoai|ton tai|trung/i);
       const duplicatePhoneRows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE phone = ?",
         [String(payload.phone)]
@@ -348,7 +348,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff/999999/assignments/buildings"
       });
-      expect(assignMissingStaffError.message).toMatch(/staff|nhan vien|nhân viên|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
+      expect(assignMissingStaffError.message).toMatch(/staff|nhan vien|khong ton tai|khong tim thay|not found/i);
 
       const assignCustomerResponse = await admin.put(`/api/v1/admin/staff/${createdStaffId}/assignments/customers`, {
         failOnStatusCode: false,
@@ -368,7 +368,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/staff/${createdStaffId}`
       });
-      expect(deleteWhileAssignedError.message).toMatch(/assignment|phan cong|phân công|contract|hop dong|bat dong san|bất động sản/i);
+      expect(deleteWhileAssignedError.message).toMatch(/assignment|phan cong|contract|hop dong|bat dong san/i);
 
       const stillExistsRows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE id = ?", [createdStaffId]);
       expect(Number(stillExistsRows[0]?.count ?? 0)).toBe(1);
@@ -381,7 +381,7 @@ test.describe.serial("Admin - kiem thu API staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff/999999"
       });
-      expect(missingDeleteError.message).toMatch(/staff|nhân viên|nhan vien|không tồn tại|khong ton tai|không tìm thấy|khong tim thay|not found/i);
+      expect(missingDeleteError.message).toMatch(/staff|nhan vien|khong ton tai|khong tim thay|not found/i);
 
       const clearBuildings = await admin.put(`/api/v1/admin/staff/${createdStaffId}/assignments/buildings`, {
         failOnStatusCode: false,

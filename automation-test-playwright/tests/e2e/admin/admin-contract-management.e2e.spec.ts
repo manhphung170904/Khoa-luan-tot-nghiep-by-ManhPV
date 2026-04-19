@@ -18,7 +18,7 @@ type TempCustomer = Awaited<ReturnType<typeof TempEntityHelper.taoCustomerTam>>;
 type TempBuilding = Awaited<ReturnType<typeof TempEntityHelper.taoBuildingTam>>;
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Admin - E2E quan ly contract @regression", () => {
+test.describe("Admin - Contract Management @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupContractIds = new Set<number>();
@@ -93,7 +93,7 @@ test.describe("Admin - E2E quan ly contract @regression", () => {
     return { staff, customer, building };
   }
 
-  test("[E2E-ADM-CTR-001] admin co tim contract va mo trang chi tiet", async ({ page }) => {
+  test("[E2E-ADM-CTR-001] - Admin Contract Management - Contract Search - Search and Detail View", async ({ page }) => {
     const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
@@ -111,7 +111,7 @@ test.describe("Admin - E2E quan ly contract @regression", () => {
     await detailPage.expectLoaded(tempContract.id);
   });
 
-  test("[E2E-ADM-CTR-002] admin co tao contract tu add form", async ({ page }) => {
+  test("[E2E-ADM-CTR-002] - Admin Contract Management - Contract Creation - Create Contract from Add Form", async ({ page }) => {
     const scenario = await createAssignableScenario();
     const formPage = new AdminContractFormPage(page);
 
@@ -126,7 +126,7 @@ test.describe("Admin - E2E quan ly contract @regression", () => {
     await formPage.fillRentPrice(1450000);
     await formPage.fillDates("2026-06-01", "2026-12-31");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|thÃªm há»£p Ä‘á»“ng|them hop dong/i);
+    await formPage.expectSweetAlertContains(/thanh cong|them hop dong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number; rent_price: number; start_date: string; end_date: string }>(
       `
@@ -148,7 +148,7 @@ test.describe("Admin - E2E quan ly contract @regression", () => {
     cleanupContractIds.add(rows[0]!.id);
   });
 
-  test("[E2E-ADM-CTR-003] contract date range khong hop le bi chan tren form them moi", async ({ page }) => {
+  test("[E2E-ADM-CTR-003] - Admin Contract Management - Contract Dates - Invalid Date Range Validation", async ({ page }) => {
     const scenario = await createAssignableScenario();
     const formPage = new AdminContractFormPage(page);
 
@@ -163,7 +163,7 @@ test.describe("Admin - E2E quan ly contract @regression", () => {
     await formPage.fillRentPrice(1500000);
     await formPage.fillDates("2026-09-01", "2026-08-01");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/ngÃ y káº¿t thÃºc|ngay ket thuc|cáº£nh bÃ¡o|canh bao/i);
+    await formPage.expectSweetAlertContains(/ngay ket thuc|canh bao|warning/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND rent_price = ?",
@@ -172,7 +172,7 @@ test.describe("Admin - E2E quan ly contract @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[E2E-ADM-CTR-004] admin co edit an active contract", async ({ page }) => {
+  test("[E2E-ADM-CTR-004] - Admin Contract Management - Contract Edit - Active Contract Update", async ({ page }) => {
     const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
@@ -186,7 +186,7 @@ test.describe("Admin - E2E quan ly contract @regression", () => {
     await formPage.fillRentPrice(2500000);
     await formPage.selectStatus("ACTIVE");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|cáº­p nháº­t|cap nhat/i);
+    await formPage.expectSweetAlertContains(/thanh cong|cap nhat|success/i);
 
     const rows = await MySqlDbClient.query<{ rent_price: number; end_date: string; status: string }>(
       "SELECT rent_price, DATE_FORMAT(end_date, '%Y-%m-%d') AS end_date, status FROM contract WHERE id = ?",
@@ -197,7 +197,7 @@ test.describe("Admin - E2E quan ly contract @regression", () => {
     expect(rows[0]!.status).toBe("ACTIVE");
   });
 
-  test("[E2E-ADM-CTR-005] expired contract edit trang hien lock banner", async ({ page }) => {
+  test("[E2E-ADM-CTR-005] - Admin Contract Management - Contract Edit Lock - Expired Contract Lock Banner Display", async ({ page }) => {
     const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
@@ -212,7 +212,7 @@ test.describe("Admin - E2E quan ly contract @regression", () => {
     await formPage.expectExpiredBanner();
   });
 
-  test("[E2E-ADM-CTR-006] admin co xoa contract tu trang chi tiet", async ({ page }) => {
+  test("[E2E-ADM-CTR-006] - Admin Contract Management - Contract Deletion - Detail Page Deletion", async ({ page }) => {
     const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
@@ -224,7 +224,7 @@ test.describe("Admin - E2E quan ly contract @regression", () => {
     await detailPage.expectLoaded(tempContract.id);
     await detailPage.deleteContract();
     await detailPage.confirmSweetAlert();
-    await detailPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|xÃ³a há»£p Ä‘á»“ng thÃ nh cÃ´ng/i);
+    await detailPage.expectSweetAlertContains(/thanh cong|xoa hop dong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM contract WHERE id = ?", [tempContract.id]);

@@ -6,12 +6,12 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
-test.describe("Customer - kiem thu API property request @regression", () => {
+test.describe("Customer - API Property Request @regression", () => {
   test.afterAll(async () => {
     await MySqlDbClient.close();
   });
 
-  test("API-CUS-PRQ-001 tu choi anonymous submit with API auth status", async ({ playwright }) => {
+  test("[API-CUS-PRQ-001] - API Customer Property Request - Submission - Anonymous Access Rejection", async ({ playwright }) => {
     const context = await createAnonymousContext(playwright);
     try {
       const response = await context.post("/api/v1/customer/property-requests", {
@@ -30,7 +30,7 @@ test.describe("Customer - kiem thu API property request @regression", () => {
     }
   });
 
-  test("API-CUS-PRQ-002 kiem tra required buildingId", async ({ playwright }) => {
+  test("[API-CUS-PRQ-002] - API Customer Property Request - Building Reference - Required Field Validation", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const response = await scenario.customer.post("/api/v1/customer/property-requests", {
@@ -49,7 +49,7 @@ test.describe("Customer - kiem thu API property request @regression", () => {
     }
   });
 
-  test("API-CUS-PRQ-003 submits va lists RENT property request", async ({ playwright }) => {
+  test("[API-CUS-PRQ-003] - API Customer Property Request - Rent Request - Submission and Listing Flow", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const listResponse = await scenario.customer.get("/api/v1/customer/property-requests", {
@@ -73,7 +73,7 @@ test.describe("Customer - kiem thu API property request @regression", () => {
     }
   });
 
-  test("API-CUS-PRQ-004 tu choi duplicate pending request with business validation @extended", async ({ playwright }) => {
+  test("[API-CUS-PRQ-004] - API Customer Property Request - Pending Request - Duplicate Submission Rejection @extended", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const duplicateResponse = await scenario.customer.post("/api/v1/customer/property-requests", {
@@ -87,7 +87,7 @@ test.describe("Customer - kiem thu API property request @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/customer/property-requests"
       });
-      expect(errorBody.message).toMatch(/Đã tồn tại|yêu cầu|đang chờ xử lý|pending|ton tai|yeu cau/i);
+      expect(errorBody.message).toMatch(/pending|ton tai|yeu cau|dang cho xu ly/i);
 
       const duplicateRows = await MySqlDbClient.query<{ count: number }>(
         `
@@ -103,7 +103,7 @@ test.describe("Customer - kiem thu API property request @regression", () => {
     }
   });
 
-  test("API-CUS-PRQ-005 cancels own pending request", async ({ playwright }) => {
+  test("[API-CUS-PRQ-005] - API Customer Property Request - Pending Request - Customer Cancellation", async ({ playwright }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT");
     try {
       const cancelResponse = await scenario.customer.delete(`/api/v1/customer/property-requests/${scenario.propertyRequestId}`, {

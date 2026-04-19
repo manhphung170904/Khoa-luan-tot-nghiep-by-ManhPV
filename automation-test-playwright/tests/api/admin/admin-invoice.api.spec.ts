@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin - kiem thu API invoice @regression", () => {
+test.describe.serial("Admin - API Invoice @regression", () => {
   let admin: APIRequestContext;
 
   const now = new Date();
@@ -26,7 +26,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[INV_001] POST /invoices tu choi chua dang nhap tao", async ({ request }) => {
+  test("[INV-001] - API Admin Invoice - Authentication - Create Invoice Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/invoices", {
       failOnStatusCode: false,
       data: TestDataFactory.buildInvoicePayload()
@@ -38,7 +38,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
     });
   });
 
-  test("[INV_002] POST /invoices tu choi kieu month khong hop le", async () => {
+  test("[INV-002] - API Admin Invoice - Invoice Month - Invalid Format Validation", async () => {
     const response = await admin.post("/api/v1/admin/invoices", {
       failOnStatusCode: false,
       data: { ...TestDataFactory.buildInvoicePayload(), month: "Muoi Hai" }
@@ -48,10 +48,10 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/invoices"
     });
-    expect(errorBody.message).toMatch(/month|tháng|thang|integer/i);
+    expect(errorBody.message).toMatch(/month|thang|integer/i);
   });
 
-  test("[INV_015] POST /invoices tu choi current-month invoice creation", async () => {
+  test("[INV-015] - API Admin Invoice - Invoice Month - Current Month Creation Restriction", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
       const currentMonth = now.getMonth() + 1;
@@ -71,7 +71,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/current|tháng hiện tại|thang hien tai|liền trước|lien truoc|invoice month/i);
+      expect(errorBody.message).toMatch(/current|thang hien tai|lien truoc|invoice month/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
@@ -83,7 +83,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
     }
   });
 
-  test("[INV_003] POST /invoices tu choi khong ton tai contractId", async () => {
+  test("[INV-003] - API Admin Invoice - Contract Reference - Nonexistent Contract Validation", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.post("/api/v1/admin/invoices", {
@@ -99,13 +99,13 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/contract|hợp đồng|hop dong|không tìm thấy|khong tim thay/i);
+      expect(errorBody.message).toMatch(/contract|hop dong|khong tim thay/i);
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
   });
 
-  test("[INV_004] POST /invoices tu choi mismatched customerId", async () => {
+  test("[INV-004] - API Admin Invoice - Customer Reference - Contract Customer Mismatch Validation", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.post("/api/v1/admin/invoices", {
@@ -121,13 +121,13 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/customer|khách hàng|khach hang|không khớp|khong khop|hợp đồng|hop dong/i);
+      expect(errorBody.message).toMatch(/customer|khach hang|khong khop|hop dong/i);
     } finally {
       await TempEntityHelper.xoaContractTam(admin, temp);
     }
   });
 
-  test("[INV_005] POST /invoices tu choi dueDate within invoice month", async () => {
+  test("[INV-005] - API Admin Invoice - Due Date - Same Invoice Month Restriction", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
       const sameMonthDueDate = `${prevYear}-${String(prevMonth).padStart(2, "0")}-15`;
@@ -144,7 +144,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/due|han thanh toan|hạn thanh toán|ngay|ngày|sau thang lap hoa don|sau tháng lập hóa đơn/i);
+      expect(errorBody.message).toMatch(/due|han thanh toan|ngay|sau thang lap hoa don/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
@@ -156,7 +156,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
     }
   });
 
-  test("[INV_016] PUT /invoices/{id} tu choi khong ton tai invoice", async () => {
+  test("[INV-016] - API Admin Invoice - Update Invoice - Nonexistent Invoice Rejection", async () => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.put("/api/v1/admin/invoices/999999", {
@@ -178,7 +178,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
     }
   });
 
-  test("[INV_017] DELETE /invoices/{id} tu choi invoice khong ton tai", async () => {
+  test("[INV-017] - API Admin Invoice - Delete Invoice - Nonexistent Invoice Rejection", async () => {
     const response = await admin.delete("/api/v1/admin/invoices/999999", {
       failOnStatusCode: false
     });
@@ -189,7 +189,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
     });
   });
 
-  test("[INV_018] PUT /invoices/status marks overdue invoices based on due date", async () => {
+  test("[INV-018] - API Admin Invoice - Status Update - Overdue Invoice Status Marking", async () => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     let createdInvoiceId = 0;
 
@@ -246,7 +246,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
     }
   });
 
-  test("[INV_006] invoice tao/danh sach/loc/cap nhat/xac nhan/xoa theo vong doi voi temp contract", async () => {
+  test("[INV-006] - API Admin Invoice - Invoice Lifecycle - Create List Filter Update Confirm Payment and Delete Flow", async () => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     let createdInvoiceId = 0;
 
@@ -313,7 +313,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(duplicateError.message).toMatch(/duplicate|ton tai|tồn tại|da co|đã có|trung|hoa don|hóa đơn|thang|tháng|nam|năm/i);
+      expect(duplicateError.message).toMatch(/duplicate|ton tai|da co|trung|hoa don|thang|nam/i);
 
       const listResponse = await admin.get("/api/v1/admin/invoices", {
         failOnStatusCode: false,
@@ -416,7 +416,7 @@ test.describe.serial("Admin - kiem thu API invoice @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/invoices/${createdInvoiceId}`
       });
-      expect(updatePaidError.message).toMatch(/paid|da thanh toan|đã thanh toán|khong the cap nhat|không thể cập nhật|dang cho xu ly|đang chờ xử lý/i);
+      expect(updatePaidError.message).toMatch(/paid|da thanh toan|khong the cap nhat|dang cho xu ly/i);
 
       const unchangedRows = await MySqlDbClient.query<{ total_amount: number; status: string }>(
         "SELECT total_amount, status FROM invoice WHERE id = ?",

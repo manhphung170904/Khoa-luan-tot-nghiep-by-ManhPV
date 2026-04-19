@@ -9,7 +9,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Customer - E2E service @regression", () => {
+test.describe("Customer - Service @regression", () => {
   let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
@@ -32,20 +32,20 @@ test.describe("Customer - E2E service @regression", () => {
     await adminApi.dispose();
   });
 
-  test("[E2E-CUS-SRV-001] customer service trang hien key service cards", async ({ page }) => {
+  test("[E2E-CUS-SRV-001] - Customer Service - Service Cards - Key Service Card Display", async ({ page }) => {
     const servicePage = new CustomerServicePage(page);
     await servicePage.expectLoaded();
-    await servicePage.expectCardVisible("Đỗ Xe Ô Tô");
-    await servicePage.expectCardVisible("Internet Tốc Độ Cao");
-    await servicePage.expectCardVisible("Phòng Gym");
+    await servicePage.expectCardVisible("Do Xe O To");
+    await servicePage.expectCardVisible("Internet Toc Do Cao");
+    await servicePage.expectCardVisible("Phong Gym");
     await expect(page).toHaveURL(/\/customer\/service/);
   });
 
-  test("[E2E-CUS-SRV-002] built-in unavailable service buttons stay disabled", async ({ page }) => {
+  test("[E2E-CUS-SRV-002] - Customer Service - Service Availability - Built-In Unavailable Buttons Disabled", async ({ page }) => {
     const servicePage = new CustomerServicePage(page);
     await servicePage.expectLoaded();
     await servicePage.expectRequestDisabled("An Ninh 24/7");
-    await servicePage.expectRequestDisabled("Phòng Gym");
+    await servicePage.expectRequestDisabled("Phong Gym");
   });
 });
 

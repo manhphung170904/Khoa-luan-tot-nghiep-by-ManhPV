@@ -7,7 +7,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Staff - E2E danh sach building @regression", () => {
+test.describe("Staff - Building List @regression", () => {
   let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
 
@@ -31,7 +31,7 @@ test.describe("Staff - E2E danh sach building @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-STF-BLD-001] staff sees duoc giao buildings", async ({ page }) => {
+  test("[E2E-STF-BLD-001] - Staff Building List - Assigned Buildings - Assigned Building Display", async ({ page }) => {
     const buildingPage = new StaffBuildingListPage(page);
     await buildingPage.expectLoaded();
     await buildingPage.waitForBuildingData();
@@ -44,7 +44,7 @@ test.describe("Staff - E2E danh sach building @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-STF-BLD-002] staff co the loc building theo ten va mo chi tiet modal", async ({ page }) => {
+  test("[E2E-STF-BLD-002] - Staff Building List - Building Search - Name Filter and Details Modal", async ({ page }) => {
     const buildingPage = new StaffBuildingListPage(page);
     await buildingPage.expectLoaded();
     await buildingPage.filterByName(tempContract!.building.name);

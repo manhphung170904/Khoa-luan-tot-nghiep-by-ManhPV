@@ -11,7 +11,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin - E2E dashboard @regression", () => {
+test.describe("Admin - Dashboard @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   let tempBuildingId: number | null = null;
@@ -47,14 +47,14 @@ test.describe("Admin - E2E dashboard @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-DSH-001] admin dashboard hien KPI, analytics va ranking widgets", async ({ page }) => {
+  test("[E2E-ADM-DSH-001] - Admin Dashboard - Overview Widgets - KPI Analytics and Ranking Display", async ({ page }) => {
     const dashboardPage = new AdminDashboardPage(page);
     await dashboardPage.expectLoaded();
     await dashboardPage.expectOverviewVisible();
     await expect(page).toHaveURL(/\/admin\/dashboard/);
   });
 
-  test("[E2E-ADM-DSH-002] admin co navigate den management liet ke tu KPI cards", async ({ page }) => {
+  test("[E2E-ADM-DSH-002] - Admin Dashboard - KPI Cards - Management Navigation", async ({ page }) => {
     const dashboardPage = new AdminDashboardPage(page);
     await dashboardPage.expectLoaded();
 
@@ -74,7 +74,7 @@ test.describe("Admin - E2E dashboard @regression", () => {
     await expect(page).toHaveURL(/\/admin\/contract\/list/);
   });
 
-  test("[E2E-ADM-DSH-003] admin co mo recent building tu dashboard", async ({ page }) => {
+  test("[E2E-ADM-DSH-003] - Admin Dashboard - Recent Buildings - Detail Navigation", async ({ page }) => {
     const dashboardPage = new AdminDashboardPage(page);
     await dashboardPage.expectLoaded();
     await dashboardPage.expectRecentBuildingVisible(tempBuildingName);

@@ -9,7 +9,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Auth - E2E dang nhap @regression", () => {
+test.describe("Auth - Login @regression", () => {
   let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
@@ -27,7 +27,7 @@ test.describe("Auth - E2E dang nhap @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-AUTH-LOGIN-001] trang dang nhap ho tro dieu huong den trang dang ky va quen mat khau", async ({ page }) => {
+  test("[E2E-AUTH-LOGIN-001] - Auth Login - Login Navigation - Registration and Forgot Password Navigation", async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.open();
     await loginPage.assertLoaded();
@@ -40,18 +40,18 @@ test.describe("Auth - E2E dang nhap @regression", () => {
     await page.waitForURL(/\/forgot-password/);
   });
 
-  test("[E2E-AUTH-LOGIN-002] credentials khong hop le hien popup dang nhap that bai", async ({ page }) => {
+  test("[E2E-AUTH-LOGIN-002] - Auth Login - Login Credentials - Invalid Credentials Error Popup", async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.open();
     await loginPage.assertLoaded();
     await loginPage.login("unknown-user", "wrong-password");
     await page.waitForURL(/\/login\?errorMessage=/);
     await loginPage.expectPopupContains(
-      /đăng nhập thất bại|dang nhap that bai|sai tài khoản hoặc mật khẩu|sai tai khoan hoac mat khau|tài khoản không tồn tại|tai khoan khong ton tai/i
+      /dang nhap that bai|sai tai khoan hoac mat khau|tai khoan khong ton tai|login failed/i
     );
   });
 
-  test("[E2E-AUTH-LOGIN-003] dang nhap local customer hop le dieu huong den trang chu customer", async ({ page }) => {
+  test("[E2E-AUTH-LOGIN-003] - Auth Login - Login Submission - Valid Local Customer Redirect", async ({ page }) => {
     tempUser = await createTempCustomerProfileUser(adminApi);
 
     const loginPage = new LoginPage(page);

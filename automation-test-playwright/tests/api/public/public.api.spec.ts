@@ -2,9 +2,9 @@ import { expect, test } from "@fixtures/api.fixture";
 import { expectArrayBody, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
-test.describe("Public - kiem thu API building public @api-read @regression", () => {
+test.describe("Public - API Building @api-read @regression", () => {
   test.describe("GET /api/v1/public/buildings", () => {
-    test("[API_TC_026] [Luong chinh] tim kiem building public va doi chieu ket qua voi DB @smoke", async ({
+    test("[API-TC-026] - API Public Building - Search - Database Matched Search Results @smoke", async ({
       anonymousApi
     }) => {
       const wardRows = await MySqlDbClient.query<{ ward: string }>(
@@ -44,7 +44,7 @@ test.describe("Public - kiem thu API building public @api-read @regression", () 
       }
     });
 
-    test("[API_TC_027] [Bien] tim kiem voi propertyType khong hop le tra ve ket qua rong hop le @extended", async ({
+    test("[API-TC-027] - API Public Building - Property Type Filter - Invalid Value Returns Empty Result @extended", async ({
       anonymousApi
     }) => {
       const response = await anonymousApi.get("/api/v1/public/buildings", {
@@ -56,7 +56,7 @@ test.describe("Public - kiem thu API building public @api-read @regression", () 
       expect(data.length).toBeGreaterThanOrEqual(0);
     });
 
-    test("[API_TC_028] [Luong chinh] endpoint phan trang tra ve danh sach building public theo trang", async ({ anonymousApi }) => {
+    test("[API-TC-028] - API Public Building - Pagination - Paged Building List Retrieval", async ({ anonymousApi }) => {
       const response = await anonymousApi.get("/api/v1/public/buildings/page", {
         params: {
           page: 1,
@@ -81,7 +81,7 @@ test.describe("Public - kiem thu API building public @api-read @regression", () 
       }
     });
 
-    test("[API_TC_029] [Luong chinh] endpoint bo loc tra ve metadata public", async ({ anonymousApi }) => {
+    test("[API-TC-029] - API Public Building - Metadata Filter - Public Metadata Retrieval", async ({ anonymousApi }) => {
       const response = await anonymousApi.get("/api/v1/public/buildings/filters");
       const data = await expectObjectBody<{
         districts?: unknown[];

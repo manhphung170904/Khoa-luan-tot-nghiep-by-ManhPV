@@ -7,7 +7,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
-test.describe("Admin - kiem thu API building additional information @extended", () => {
+test.describe("Admin - API Building Additional Information @extended", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -19,7 +19,7 @@ test.describe("Admin - kiem thu API building additional information @extended", 
     await MySqlDbClient.close();
   });
 
-  test("[BAI_001] vong doi CRUD day du cho legal authority, nearby amenity, supplier, planning map with temp building", async ({
+  test("[BAI-001] - API Admin Building Additional Information - CRUD Lifecycle - Legal Authority Amenity Supplier and Planning Map Flow", async ({
     request
   }) => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_RENT");
@@ -339,7 +339,7 @@ test.describe("Admin - kiem thu API building additional information @extended", 
     }
   });
 
-  test("[BAI_002] planning map image upload kiem tra auth, mime, kich thuoc va chap nhan JPG that", async ({ request }) => {
+  test("[BAI-002] - API Admin Building Additional Information - Planning Map Image - Authentication Type Size and JPG Upload Validation", async ({ request }) => {
     const anonymousUpload = await request.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
       multipart: {
@@ -363,7 +363,7 @@ test.describe("Admin - kiem thu API building additional information @extended", 
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/planning-maps/image"
     });
-    expect(invalidMimeError.message).toMatch(/image|mime|type|định dạng|dinh dang|jpg|png|webp/i);
+    expect(invalidMimeError.message).toMatch(/image|mime|type|dinh dang|jpg|png|webp/i);
 
     const invalidExtension = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -412,7 +412,7 @@ test.describe("Admin - kiem thu API building additional information @extended", 
     expect(validUploadBody.data?.filename).toMatch(/^planning_.*\.jpg$/);
   });
 
-  test("[BAI_003] additional information endpoints tra ve 400 for thieu resources", async () => {
+  test("[BAI-003] - API Admin Building Additional Information - Resource Reference - Missing Resource 400 Handling", async () => {
     const missingLegalAuthority = await admin.put(
       "/api/v1/admin/building-additional-information/legal-authorities/999999",
       {
@@ -425,7 +425,7 @@ test.describe("Admin - kiem thu API building additional information @extended", 
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/legal-authorities/999999"
     });
-    expect(missingLegalAuthorityError.message).toMatch(/legal|authority|cơ quan pháp lý|co quan phap ly|không tìm thấy|khong tim thay|not found/i);
+    expect(missingLegalAuthorityError.message).toMatch(/legal|authority|co quan phap ly|khong tim thay|not found/i);
 
     const missingAmenity = await admin.delete(
       "/api/v1/admin/building-additional-information/nearby-amenities/999999",
@@ -436,7 +436,7 @@ test.describe("Admin - kiem thu API building additional information @extended", 
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/nearby-amenities/999999"
     });
-    expect(missingAmenityError.message).toMatch(/amenity|tiện ích|tien ich|lân cận|lan can|không tìm thấy|khong tim thay|not found/i);
+    expect(missingAmenityError.message).toMatch(/amenity|tien ich|lan can|khong tim thay|not found/i);
 
     const missingSupplier = await admin.delete("/api/v1/admin/building-additional-information/suppliers/999999", {
       failOnStatusCode: false
@@ -446,7 +446,7 @@ test.describe("Admin - kiem thu API building additional information @extended", 
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/suppliers/999999"
     });
-    expect(missingSupplierError.message).toMatch(/supplier|nhà cung cấp|nha cung cap|không tìm thấy|khong tim thay|not found/i);
+    expect(missingSupplierError.message).toMatch(/supplier|nha cung cap|khong tim thay|not found/i);
 
     const missingPlanningMap = await admin.delete(
       "/api/v1/admin/building-additional-information/planning-maps/999999",
@@ -457,7 +457,7 @@ test.describe("Admin - kiem thu API building additional information @extended", 
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/planning-maps/999999"
     });
-    expect(missingPlanningMapError.message).toMatch(/planning|map|ban do|bản đồ|quy hoạch|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
+    expect(missingPlanningMapError.message).toMatch(/planning|map|ban do|quy hoach|khong ton tai|khong tim thay|not found/i);
   });
 });
 

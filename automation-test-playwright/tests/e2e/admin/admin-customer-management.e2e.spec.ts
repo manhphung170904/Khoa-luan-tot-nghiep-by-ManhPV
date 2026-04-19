@@ -14,7 +14,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin - E2E quan ly customer @regression", () => {
+test.describe("Admin - Customer Management @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupStaffIds = new Set<number>();
@@ -50,7 +50,7 @@ test.describe("Admin - E2E quan ly customer @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-CUS-001] admin co tao customer tu add form", async ({ page }) => {
+  test("[E2E-ADM-CUS-001] - Admin Customer Management - Customer Creation - Create Customer from Add Form", async ({ page }) => {
     const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
     cleanupStaffIds.add(manager.id);
 
@@ -72,7 +72,7 @@ test.describe("Admin - E2E quan ly customer @regression", () => {
     });
     await formPage.selectStaffIds([manager.id]);
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/thÃªm khÃ¡ch hÃ ng|thÃ nh cÃ´ng/i);
+    await formPage.expectSweetAlertContains(/them khach hang|thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number }>(
       "SELECT id FROM customer WHERE username = ? LIMIT 1",
@@ -88,7 +88,7 @@ test.describe("Admin - E2E quan ly customer @regression", () => {
     expect(Number(assignments[0]?.count ?? 0)).toBeGreaterThan(0);
   });
 
-  test("[E2E-ADM-CUS-002] admin co tim customer va mo trang chi tiet", async ({ page }) => {
+  test("[E2E-ADM-CUS-002] - Admin Customer Management - Customer Search - Search and Detail View", async ({ page }) => {
     const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
     cleanupStaffIds.add(manager.id);
     const customer = await TempEntityHelper.taoCustomerTam(bootstrapAdminApi, manager.id);
@@ -105,7 +105,7 @@ test.describe("Admin - E2E quan ly customer @regression", () => {
     await detailPage.expectLoaded(customer.id);
   });
 
-  test("[E2E-ADM-CUS-003] customer add validation hien an error when no staff is selected", async ({ page }) => {
+  test("[E2E-ADM-CUS-003] - Admin Customer Management - Staff Assignment - No Staff Selected Validation", async ({ page }) => {
     const formPage = new AdminCustomerFormPage(page);
     const payload = TestDataFactory.buildCustomerPayload({
       username: `nostaff${String(Date.now()).slice(-6)}`
@@ -121,7 +121,7 @@ test.describe("Admin - E2E quan ly customer @regression", () => {
       email: String(payload.email)
     });
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/lá»—i|error|nhÃ¢n viÃªn/i);
+    await formPage.expectSweetAlertContains(/loi|error|nhan vien/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM customer WHERE username = ? OR email = ?",
@@ -130,7 +130,7 @@ test.describe("Admin - E2E quan ly customer @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[E2E-ADM-CUS-004] admin co xoa customer tu tim trang", async ({ page }) => {
+  test("[E2E-ADM-CUS-004] - Admin Customer Management - Customer Deletion - Search Result Deletion", async ({ page }) => {
     const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
     cleanupStaffIds.add(manager.id);
     const customer = await TempEntityHelper.taoCustomerTam(bootstrapAdminApi, manager.id);
@@ -140,7 +140,7 @@ test.describe("Admin - E2E quan ly customer @regression", () => {
     await listPage.waitForTableData();
     await listPage.deleteCustomer(customer.fullName);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xÃ³a khÃ¡ch hÃ ng|thÃ nh cÃ´ng/i);
+    await listPage.expectSweetAlertContains(/xoa khach hang|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM customer WHERE id = ?", [customer.id]);

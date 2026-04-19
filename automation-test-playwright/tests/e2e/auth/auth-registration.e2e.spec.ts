@@ -61,12 +61,12 @@ async function completeRegistrationFlow(
   await page.waitForURL(/\/customer\/home/);
 }
 
-test.describe("Auth - E2E dang ky @regression", () => {
+test.describe("Auth - Registration @regression", () => {
   test.afterEach(async () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-AUTH-REG-001] user co complete local registration through OTP luong", async ({ page, request }) => {
+  test("[E2E-AUTH-REG-001] - Auth Registration - Registration Flow - Local Registration via OTP", async ({ page, request }) => {
     const user = buildRegistrationUser("e2e_register");
 
     try {
@@ -94,7 +94,7 @@ test.describe("Auth - E2E dang ky @regression", () => {
     }
   });
 
-  test("[E2E-AUTH-REG-002] xac minh dang ky hien popup loi voi OTP khong hop le", async ({ page }) => {
+  test("[E2E-AUTH-REG-002] - Auth Registration - OTP Verification - Invalid OTP Error Popup", async ({ page }) => {
     const registerPage = new RegisterPage(page);
     const verifyPage = new RegisterVerifyPage(page);
     const user = buildRegistrationUser("e2e_register_invalid");
@@ -108,7 +108,7 @@ test.describe("Auth - E2E dang ky @regression", () => {
       await verifyPage.verifyOtp("000000");
       await page.waitForURL(/\/register\/verify\?/);
       await verifyPage.expectPopupContains(
-        /xác thực thất bại|xac thuc that bai|otp không hợp lệ|otp khong hop le|mã otp không hợp lệ|ma otp khong hop le/i
+        /xac thuc that bai|otp khong hop le|ma otp khong hop le|verification failed/i
       );
       await expect(page).not.toHaveURL(/\/register\/complete\?/);
 
@@ -129,7 +129,7 @@ test.describe("Auth - E2E dang ky @regression", () => {
     }
   });
 
-  test("[E2E-AUTH-REG-003] tai khoan da dang ky hoan tat co the dang nhap tu trang dang nhap", async ({ page, request }) => {
+  test("[E2E-AUTH-REG-003] - Auth Registration - Post-Registration Login - Registered Account Login from Login Page", async ({ page, request }) => {
     const user = buildRegistrationUser("e2e_register_login");
     const loginPage = new LoginPage(page);
 
@@ -147,7 +147,7 @@ test.describe("Auth - E2E dang ky @regression", () => {
       await loginPage.login(user.username, "WrongPassword!123");
       await page.waitForURL(/\/login\?errorMessage=/);
       await loginPage.expectPopupContains(
-        /đăng nhập thất bại|dang nhap that bai|sai tài khoản hoặc mật khẩu|sai tai khoan hoac mat khau/i
+        /dang nhap that bai|sai tai khoan hoac mat khau|login failed/i
       );
     } finally {
       await cleanupRegistrationUser(user);

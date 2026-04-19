@@ -8,7 +8,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - kiem thu API quan ly building @regression", () => {
+test.describe("Admin - API Building @regression", () => {
   let admin: APIRequestContext;
   let createdBuildingId = 0;
   let createdBuildingName = "";
@@ -43,8 +43,8 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test.describe("CRUD building", () => {
-    test("[BLD_001] POST /buildings tu choi tao moi khi chua dang nhap", async ({ request }) => {
+  test.describe("CRUD Building", () => {
+    test("[BLD-001] - API Admin Building - Authentication - Create Building Without Login Rejection", async ({ request }) => {
       const response = await request.post("/api/v1/admin/buildings", {
         failOnStatusCode: false,
         data: validPayload
@@ -56,7 +56,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       });
     });
 
-    test("[BLD_002] POST /buildings tu choi khi thieu truong bat buoc", async () => {
+    test("[BLD-002] - API Admin Building - Create Building - Required Field Validation", async () => {
       const invalidPayload = { ...validPayload };
       delete invalidPayload.name;
       delete invalidPayload.districtId;
@@ -71,10 +71,10 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/name|tên bất động sản|ten bat dong san|district|quận|quan|required|bắt buộc|bat buoc/i);
+      expect(errorBody.message).toMatch(/name|ten bat dong san|district|quan|required|bat buoc/i);
     });
 
-    test("[BLD_012] POST /buildings tu choi khi thieu latitude va longitude", async () => {
+    test("[BLD-012] - API Admin Building - Coordinates - Missing Latitude and Longitude Validation", async () => {
       const invalidPayload = { ...validPayload };
       delete invalidPayload.latitude;
       delete invalidPayload.longitude;
@@ -89,10 +89,10 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/latitude|longitude|tọa độ|toa do|required|bắt buộc|bat buoc/i);
+      expect(errorBody.message).toMatch(/latitude|longitude|toa do|required|bat buoc/i);
     });
 
-    test("[BLD_013] POST /buildings tu choi khi ward va street de trong", async () => {
+    test("[BLD-013] - API Admin Building - Address Fields - Empty Ward and Street Validation", async () => {
       const response = await admin.post("/api/v1/admin/buildings", {
         failOnStatusCode: false,
         data: { ...validPayload, ward: "", street: "" }
@@ -103,10 +103,10 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/ward|street|phường|phuong|đường|duong|bắt buộc|bat buoc|không được để trống|khong duoc de trong/i);
+      expect(errorBody.message).toMatch(/ward|street|phuong|duong|bat buoc|khong duoc de trong/i);
     });
 
-    test("[BLD_014] POST /buildings loi khi propertyType khong duoc ho tro", async () => {
+    test("[BLD-014] - API Admin Building - Property Type - Unsupported Value Handling", async () => {
       const response = await admin.post("/api/v1/admin/buildings", {
         failOnStatusCode: false,
         data: { ...validPayload, propertyType: "VILLA_LUXURY" }
@@ -115,7 +115,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       expectStatusExact(response, 500, "Unsupported propertyType currently triggers backend 500");
     });
 
-    test("[BLD_003] POST /buildings tu choi numberOfFloor am", async () => {
+    test("[BLD-003] - API Admin Building - Number of Floor - Negative Value Validation", async () => {
       const response = await admin.post("/api/v1/admin/buildings", {
         failOnStatusCode: false,
         data: { ...validPayload, numberOfFloor: -99 }
@@ -126,10 +126,10 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/floor|tang|so tang|số tầng|>=\s*0|khong am|không âm|number/i);
+      expect(errorBody.message).toMatch(/floor|tang|so tang|>=\s*0|khong am|number/i);
     });
 
-    test("[BLD_018] GET /buildings/metadata tra ve dung cau truc bo loc", async () => {
+    test("[BLD-018] - API Admin Building - Metadata - Filter Options Schema", async () => {
       const response = await admin.get("/api/v1/admin/buildings/metadata", {
         failOnStatusCode: false
       });
@@ -148,7 +148,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       expect(Array.isArray(data.managers)).toBeTruthy();
     });
 
-    test("[BLD_006] GET /buildings loc theo propertyType", async () => {
+    test("[BLD-006] - API Admin Building - Listing - Property Type Filtering", async () => {
       const response = await admin.get("/api/v1/admin/buildings", {
         failOnStatusCode: false,
         params: { propertyType: "OFFICE", page: 1, size: 100 }
@@ -162,7 +162,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       expect(data.content.every((item) => typeof item.id === "number" && typeof item.name === "string")).toBeTruthy();
     });
 
-    test("[BLD_016] GET /buildings loi voi page=0 va size=0", async () => {
+    test("[BLD-016] - API Admin Building - Pagination - Invalid Page and Size Handling", async () => {
       const response = await admin.get("/api/v1/admin/buildings", {
         failOnStatusCode: false,
         params: { page: 0, size: 0 }
@@ -171,7 +171,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       expectStatusExact(response, 500, "Invalid pagination currently triggers backend 500");
     });
 
-    test("[BLD_017] GET /buildings tra ve danh sach rong voi ten khong ton tai", async () => {
+    test("[BLD-017] - API Admin Building - Search by Name - Empty Result Set", async () => {
       const response = await admin.get("/api/v1/admin/buildings", {
         failOnStatusCode: false,
         params: { name: "XYZNOTEXIST999", page: 1, size: 5 }
@@ -181,7 +181,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       expect(data.content.length).toBe(0);
     });
 
-    test("[BLD_007] PUT /buildings/{id} tu choi cap nhat cho building khong ton tai", async () => {
+    test("[BLD-007] - API Admin Building - Update Building - Nonexistent Building Rejection", async () => {
       const response = await admin.put("/api/v1/admin/buildings/999999999", {
         failOnStatusCode: false,
         data: { ...validPayload, id: null }
@@ -192,10 +192,10 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/999999999"
       });
-      expect(errorBody.message).toMatch(/building|toa nha|bat dong san|bất động sản|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
+      expect(errorBody.message).toMatch(/building|toa nha|bat dong san|khong ton tai|khong tim thay|not found/i);
     });
 
-    test("[BLD_008] PUT /buildings/{id} chan cap nhat building da ban voi du lieu sale contract tam", async () => {
+    test("[BLD-008] - API Admin Building - Update Building - Sold Building Update Restriction", async () => {
       const tempSaleContract = await TempEntityHelper.taoSaleContractTam(admin);
 
       try {
@@ -223,7 +223,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
           code: "BAD_REQUEST",
           path: `/api/v1/admin/buildings/${tempSaleContract.building.id}`
         });
-        expect(errorBody.message).toMatch(/sold|đã bán|da ban|sale contract|hợp đồng mua bán|hop dong mua ban/i);
+        expect(errorBody.message).toMatch(/sold|da ban|sale contract|hop dong mua ban/i);
 
         const rows = await MySqlDbClient.query<{ name: string }>("SELECT name FROM building WHERE id = ?", [tempSaleContract.building.id]);
         expect(rows[0]?.name).toBe(tempSaleContract.building.name);
@@ -232,7 +232,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       }
     });
 
-    test("[BLD_010] DELETE /buildings/{id} phai chan xoa khi dang co contract du lieu tam", async () => {
+    test("[BLD-010] - API Admin Building - Delete Building - Active Contract Deletion Restriction", async () => {
       const tempContract = await TempEntityHelper.taoContractTam(admin);
 
       try {
@@ -245,7 +245,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
           code: "BAD_REQUEST",
           path: `/api/v1/admin/buildings/${tempContract.building.id}`
         });
-        expect(errorBody.message).toMatch(/hợp đồng|hop dong|liên quan|lien quan|contract/i);
+        expect(errorBody.message).toMatch(/hop dong|lien quan|contract/i);
 
         const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM building WHERE id = ?", [tempContract.building.id]);
         expect(Number(rows[0]?.count ?? 0)).toBe(1);
@@ -254,7 +254,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       }
     });
 
-    test("[BLD_019] DELETE /buildings/{id} phai chan xoa khi dang co sale contract du lieu tam", async () => {
+    test("[BLD-019] - API Admin Building - Delete Building - Active Sale Contract Deletion Restriction", async () => {
       const tempSaleContract = await TempEntityHelper.taoSaleContractTam(admin);
 
       try {
@@ -277,7 +277,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       }
     });
 
-    test("[BLD_015] DELETE /buildings/{id} tra ve loi khong tim thay voi id khong ton tai", async () => {
+    test("[BLD-015] - API Admin Building - Delete Building - Nonexistent Building Error Handling", async () => {
       const response = await admin.delete("/api/v1/admin/buildings/999999", {
         failOnStatusCode: false
       });
@@ -287,11 +287,11 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/999999"
       });
-      expect(errorBody.message).toMatch(/building|toa nha|bat dong san|bất động sản|khong ton tai|không tồn tại|khong tim thay|không tìm thấy|not found/i);
+      expect(errorBody.message).toMatch(/building|toa nha|bat dong san|khong ton tai|khong tim thay|not found/i);
     });
 
-    test.describe.serial("Vong doi building duoc tao", () => {
-      test("[BLD_004] POST /buildings tao building va luu vao DB", async () => {
+    test.describe.serial("Created Building Lifecycle", () => {
+      test("[BLD-004] - API Admin Building - Create Building - Successful Creation and Database Persistence", async () => {
         const payload = {
           ...validPayload,
           name: TestDataFactory.taoTenToaNha("Auto Test Building")
@@ -334,7 +334,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         createdBuildingName = String(payload.name);
       });
 
-      test("[BLD_005] GET /buildings liet ke building vua tao", async () => {
+      test("[BLD-005] - API Admin Building - Listing - Newly Created Building Retrieval", async () => {
         const response = await admin.get("/api/v1/admin/buildings", {
           failOnStatusCode: false,
           params: { page: 1, size: 100, name: createdBuildingName }
@@ -349,7 +349,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         expect(found?.name).toBe(createdBuildingName);
       });
 
-      test("[BLD_009] PUT /buildings/{id} cap nhat building vua tao va DB", async () => {
+      test("[BLD-009] - API Admin Building - Update Building - Successful Update and Database Persistence", async () => {
         const updatedName = `${createdBuildingName} - UPDATED`;
         const response = await admin.put(`/api/v1/admin/buildings/${createdBuildingId}`, {
           failOnStatusCode: false,
@@ -376,7 +376,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         createdBuildingName = updatedName;
       });
 
-      test("[BLD_011] DELETE /buildings/{id} xoa building vua tao", async () => {
+      test("[BLD-011] - API Admin Building - Delete Building - Successful Deletion and Database Removal", async () => {
         const response = await admin.delete(`/api/v1/admin/buildings/${createdBuildingId}`, {
           failOnStatusCode: false
         });
@@ -399,8 +399,8 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
     });
   });
 
-  test.describe("Upload image", () => {
-    test("[BLD_U01] POST /buildings/image tu choi upload khi chua dang nhap", async ({ request }) => {
+  test.describe("Image Upload", () => {
+    test("[BLD-U01] - API Admin Building Image - Authentication - Upload Without Login Rejection", async ({ request }) => {
       const response = await request.post("/api/v1/admin/buildings/image", {
         failOnStatusCode: false,
         multipart: {
@@ -415,7 +415,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       });
     });
 
-    test("[BLD_U06] POST /buildings/image tu choi file rong", async () => {
+    test("[BLD-U06] - API Admin Building Image - File Content - Empty File Validation", async () => {
       const response = await admin.post("/api/v1/admin/buildings/image", {
         failOnStatusCode: false,
         multipart: {
@@ -428,10 +428,10 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
-      expect(errorBody.message).toMatch(/file|tep|tệp|anh|ảnh|empty|rong|rỗng|chon|chọn/i);
+      expect(errorBody.message).toMatch(/file|tep|anh|empty|rong|chon/i);
     });
 
-    test("[BLD_U02] POST /buildings/image tu choi media type khong duoc ho tro", async () => {
+    test("[BLD-U02] - API Admin Building Image - Media Type - Unsupported Format Validation", async () => {
       const response = await admin.post("/api/v1/admin/buildings/image", {
         failOnStatusCode: false,
         multipart: {
@@ -444,10 +444,10 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
-      expect(errorBody.message).toMatch(/image|mime|type|dinh dang|tệp|tep|jpg|png|webp|hỗ trợ|ho tro/i);
+      expect(errorBody.message).toMatch(/image|mime|type|dinh dang|tep|jpg|png|webp|ho tro/i);
     });
 
-    test("[BLD_U07] POST /buildings/image tu choi duoi file khong hop le du media type la image", async () => {
+    test("[BLD-U07] - API Admin Building Image - File Extension - Mismatched Image Extension Validation", async () => {
       const response = await admin.post("/api/v1/admin/buildings/image", {
         failOnStatusCode: false,
         multipart: {
@@ -463,7 +463,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       expect(errorBody.message).toMatch(/extension|file|jpg|jpeg|dinh dang/i);
     });
 
-    test("[BLD_U03] POST /buildings/image hien tai van chap nhan JPG hong neu media type va duoi hop le", async () => {
+    test("[BLD-U03] - API Admin Building Image - File Integrity - Corrupted JPG Acceptance Behavior", async () => {
       const response = await admin.post("/api/v1/admin/buildings/image", {
         failOnStatusCode: false,
         multipart: {
@@ -479,7 +479,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       expect(data.data?.filename).toMatch(/\.jpg$/);
     });
 
-    test("[BLD_U04] POST /buildings/image tu choi file lon hon 5MB", async () => {
+    test("[BLD-U04] - API Admin Building Image - File Size - Maximum Size Validation", async () => {
       const response = await admin.post("/api/v1/admin/buildings/image", {
         failOnStatusCode: false,
         multipart: {
@@ -494,7 +494,7 @@ test.describe("Admin - kiem thu API quan ly building @regression", () => {
       });
     });
 
-    test("[BLD_U05] POST /buildings/image upload JPG hop le va tra ve ten file duoc tao", async () => {
+    test("[BLD-U05] - API Admin Building Image - Upload - Successful JPG Upload and Generated Filename", async () => {
       const sourceFile = ApiFileFixtures.buildingJpg();
       const response = await admin.post("/api/v1/admin/buildings/image", {
         failOnStatusCode: false,

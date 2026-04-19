@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
+test.describe.serial("Admin - API Sale Contract @regression", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -19,7 +19,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[SC_001] POST /sale-contracts tu choi tao moi khi chua dang nhap", async ({ request }) => {
+  test("[SC-001] - API Admin Sale Contract - Authentication - Create Sale Contract Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
       data: TestDataFactory.buildSaleContractPayload()
@@ -31,14 +31,14 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     });
   });
 
-  test("[SC_002] POST /sale-contracts tu choi salePrice bang 0", async () => {
+  test("[SC-002] - API Admin Sale Contract - Sale Price - Zero Value Validation", async () => {
     const payload = TestDataFactory.buildSaleContractPayload({ salePrice: 0 });
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
       data: payload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/sale|giá|gia|price|bán|ban/i);
+    expect(errorBody.message).toMatch(/sale|gia|price|ban/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND sale_price = ?",
@@ -47,14 +47,14 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC_012] POST /sale-contracts tu choi salePrice am", async () => {
+  test("[SC-012] - API Admin Sale Contract - Sale Price - Negative Value Validation", async () => {
     const payload = TestDataFactory.buildSaleContractPayload({ salePrice: -1 });
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
       data: payload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/sale|giá|gia|price|bán|ban/i);
+    expect(errorBody.message).toMatch(/sale|gia|price|ban/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND sale_price = ?",
@@ -63,7 +63,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC_010] POST /sale-contracts tu choi khi thieu buildingId", async () => {
+  test("[SC-010] - API Admin Sale Contract - Building Reference - Missing Building Validation", async () => {
     const invalidPayload = TestDataFactory.buildSaleContractPayload() as Record<string, unknown>;
     delete invalidPayload.buildingId;
     const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -71,10 +71,10 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
       data: invalidPayload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/building|bất động sản|bat dong san|tòa nhà|toa nha|vui lòng chọn|vui long chon/i);
+    expect(errorBody.message).toMatch(/building|bat dong san|toa nha|vui long chon/i);
   });
 
-  test("[SC_011] POST /sale-contracts tu choi khi thieu customerId", async () => {
+  test("[SC-011] - API Admin Sale Contract - Customer Reference - Missing Customer Validation", async () => {
     const invalidPayload = TestDataFactory.buildSaleContractPayload() as Record<string, unknown>;
     delete invalidPayload.customerId;
     const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -82,10 +82,10 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
       data: invalidPayload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/customer|khách hàng|khach hang|vui lòng chọn|vui long chon/i);
+    expect(errorBody.message).toMatch(/customer|khach hang|vui long chon/i);
   });
 
-  test("[SC_003] POST /sale-contracts tu choi buildingId khong ton tai", async () => {
+  test("[SC-003] - API Admin Sale Contract - Building Reference - Nonexistent Building Validation", async () => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
@@ -100,7 +100,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
         })
       });
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/building|toa nha|bất động sản|bat dong san|khong tim thay|không tìm thấy|not found/i);
+      expect(errorBody.message).toMatch(/building|toa nha|bat dong san|khong tim thay|not found/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
@@ -114,7 +114,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     }
   });
 
-  test("[SC_004] POST /sale-contracts tu choi staffId khong hop le", async () => {
+  test("[SC-004] - API Admin Sale Contract - Staff Reference - Invalid Staff Validation", async () => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
@@ -131,7 +131,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
         })
       });
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/staff|nhan vien|nhân viên|khong tim thay|không tìm thấy|not found/i);
+      expect(errorBody.message).toMatch(/staff|nhan vien|khong tim thay|not found/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
@@ -147,7 +147,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     }
   });
 
-  test("[SC_013] POST /sale-contracts tu choi staff khong duoc phan cong building", async () => {
+  test("[SC-013] - API Admin Sale Contract - Staff Assignment - Building Assignment Restriction", async () => {
     const assignedManager = await TempEntityHelper.taoStaffTam(admin);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
@@ -180,7 +180,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     }
   });
 
-  test("[SC_014] POST /sale-contracts tu choi staff khong duoc phan cong customer", async () => {
+  test("[SC-014] - API Admin Sale Contract - Staff Assignment - Customer Assignment Restriction", async () => {
     const assignedManager = await TempEntityHelper.taoStaffTam(admin);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
@@ -213,7 +213,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     }
   });
 
-  test("[SC_015] POST /sale-contracts tu choi building cho thue", async () => {
+  test("[SC-015] - API Admin Sale Contract - Building Type - Rental Building Rejection", async () => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_RENT");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
@@ -230,7 +230,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
         })
       });
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/sale|ban|mua ban|mua bán|transaction|giao dich|giao dịch|khong phai loai mua ban|không phải loại mua bán/i);
+      expect(errorBody.message).toMatch(/sale|ban|mua ban|transaction|giao dich|khong phai loai mua ban/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
@@ -246,7 +246,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     }
   });
 
-  test("[SC_016] POST /sale-contracts tu choi tao trung giao dich ban tren building da ban", async () => {
+  test("[SC-016] - API Admin Sale Contract - Duplicate Transaction - Sold Building Sale Restriction", async () => {
     const temp = await TempEntityHelper.taoSaleContractTam(admin);
     try {
       const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -262,7 +262,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/sale-contracts"
       });
-      expect(errorBody.message).toMatch(/sold|đã( được)? bán|da ban|sale contract|hợp đồng mua bán|hop dong mua ban/i);
+      expect(errorBody.message).toMatch(/sold|da ban|sale contract|hop dong mua ban/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ?",
@@ -274,7 +274,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     }
   });
 
-  test("[SC_005] vong doi tao liet ke loc cap nhat xoa sale contract voi du lieu tam", async () => {
+  test("[SC-005] - API Admin Sale Contract - Sale Contract Lifecycle - Create List Filter Update and Delete Flow", async () => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
@@ -407,7 +407,7 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
     }
   });
 
-  test("[SC_017] PUT /sale-contracts/{id} tu choi id khong ton tai", async () => {
+  test("[SC-017] - API Admin Sale Contract - Update Sale Contract - Nonexistent ID Rejection", async () => {
     const response = await admin.put("/api/v1/admin/sale-contracts/999999999", {
       failOnStatusCode: false,
       data: TestDataFactory.buildSaleContractPayload({
@@ -423,12 +423,10 @@ test.describe.serial("Admin - kiem thu API sale contract @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/sale-contracts/999999999"
     });
-    expect(errorBody.message).toMatch(
-      /sale contract|hợp đồng mua bán|hop dong mua ban|không tìm thấy|khong tim thay|khong ton tai|not found/i
-    );
+    expect(errorBody.message).toMatch(/sale contract|hop dong mua ban|khong tim thay|khong ton tai|not found/i);
   });
 
-  test("[SC_018] DELETE /sale-contracts/{id} phai tu choi id khong ton tai", async () => {
+  test("[SC-018] - API Admin Sale Contract - Delete Sale Contract - Nonexistent ID Rejection", async () => {
     const response = await admin.delete("/api/v1/admin/sale-contracts/999999999", {
       failOnStatusCode: false
     });

@@ -16,9 +16,9 @@ const scenarios: RoleScenario[] = [
   { role: "customer", expectedRoleCode: "CUSTOMER" }
 ];
 
-test.describe("Auth - kiem thu REST session API @regression", () => {
+test.describe("Auth - API REST Session @regression", () => {
   for (const scenario of scenarios) {
-    test(`API-AUTH-REST-${scenario.expectedRoleCode} luong dang nhap/me/dang xuat hoat dong voi cookie session @smoke`, async ({
+    test(`[API-AUTH-REST-${scenario.expectedRoleCode}] - API Auth Session - Session Flow - Login Me and Logout with Session Cookie @smoke`, async ({
       anonymousApi
     }) => {
       const { response, username } = await ApiSessionHelper.loginAsRole(anonymousApi, scenario.role);
@@ -60,7 +60,7 @@ test.describe("Auth - kiem thu REST session API @regression", () => {
     });
   }
 
-  test("API-AUTH-REST-VAL-001 tu choi DTO dang nhap rong", async ({ anonymousApi }) => {
+  test("[API-AUTH-REST-VAL-001] - API Auth Session - Login Payload - Empty DTO Validation", async ({ anonymousApi }) => {
     const response = await anonymousApi.post("/api/v1/auth/login", {
       failOnStatusCode: false,
       data: {
@@ -77,7 +77,7 @@ test.describe("Auth - kiem thu REST session API @regression", () => {
     });
   });
 
-  test("API-AUTH-REST-VAL-002 tu choi credential sai tren REST dang nhap", async ({ anonymousApi }) => {
+  test("[API-AUTH-REST-VAL-002] - API Auth Session - Login - Invalid Credential Rejection", async ({ anonymousApi }) => {
     const response = await anonymousApi.post("/api/v1/auth/login", {
       failOnStatusCode: false,
       data: {
@@ -92,11 +92,11 @@ test.describe("Auth - kiem thu REST session API @regression", () => {
       path: "/api/v1/auth/login"
     });
     expect(errorBody.message).toMatch(
-      /credential|username|password|tên đăng nhập|mật khẩu|sai tài khoản hoặc mật khẩu|dang nhap|mat khau|khong dung/i
+      /credential|username|password|ten dang nhap|mat khau|sai tai khoan hoac mat khau|dang nhap|khong dung/i
     );
   });
 
-  test("API-AUTH-REST-SEC-001 tu choi truy cap me anonymous @smoke", async ({ anonymousApi }) => {
+  test("[API-AUTH-REST-SEC-001] - API Auth Session - Me Endpoint - Anonymous Access Rejection @smoke", async ({ anonymousApi }) => {
     const response = await anonymousApi.get("/api/v1/auth/me", {
       failOnStatusCode: false,
       maxRedirects: 0
@@ -109,7 +109,7 @@ test.describe("Auth - kiem thu REST session API @regression", () => {
     });
   });
 
-  test("API-AUTH-REST-OTP-001 quen mat khau tra ve thanh cong va luu OTP dang cho cho email ton tai", async ({
+  test("[API-AUTH-REST-OTP-001] - API Auth Session - Forgot Password - Existing Email OTP Persistence", async ({
     anonymousApi
   }) => {
     const customers = await MySqlDbClient.query<{ email: string }>(
@@ -150,7 +150,7 @@ test.describe("Auth - kiem thu REST session API @regression", () => {
     expect(afterRows[0]!.total).toBeGreaterThan(0);
   });
 
-  test("API-AUTH-REST-OTP-002 quen mat khau van giu contract thanh cong voi email khong ton tai", async ({
+  test("[API-AUTH-REST-OTP-002] - API Auth Session - Forgot Password - Nonexistent Email Success Contract Preservation", async ({
     anonymousApi
   }) => {
     const email = `pw-missing-${Date.now()}@example.com`;

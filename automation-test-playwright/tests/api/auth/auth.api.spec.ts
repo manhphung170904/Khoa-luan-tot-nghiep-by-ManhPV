@@ -6,7 +6,7 @@ import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { expectStatusExact } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
-test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", () => {
+test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
   const validUser = {
     username: `testuser_auth_${Date.now()}`,
     password: "Password@123",
@@ -89,8 +89,8 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
     expect(response.headers().location).toContain("/login-success");
   }
 
-  test.describe("1. Dang nhap va xac thuc", () => {
-    test("[API_TC_001] [Luong chinh] dang nhap voi thong tin hop le tra ve cookie JWT va dieu huong @smoke", async ({
+  test.describe("Auth - API Login and Authentication", () => {
+    test("[API-TC-001] - API Authentication - Login - Valid Credentials Return JWT Cookie and Redirect @smoke", async ({
       request
     }) => {
       const response = await request.post("/login", {
@@ -109,7 +109,7 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
       expect(cookieString).toContain("estate_refresh_token=");
     });
 
-    test("[API_TC_002] [Am] bo trong username hoac password se dieu huong bao loi dang nhap", async ({
+    test("[API-TC-002] - API Authentication - Login - Empty Username or Password Rejection", async ({
       request
     }) => {
       const response = await request.post("/login", {
@@ -122,7 +122,7 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
       expect(response.headers().location).toContain("errorMessage");
     });
 
-    test("[API_TC_003] [Am] tu choi thong tin dang nhap sai", async ({ request }) => {
+    test("[API-TC-003] - API Authentication - Login - Invalid Credentials Rejection", async ({ request }) => {
       const response = await request.post("/login", {
         form: { username: env.adminUsername, password: "bad-password-123" },
         failOnStatusCode: false,
@@ -134,8 +134,8 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
     });
   });
 
-  test.describe.serial("2. Dang ky va kiem tra du lieu DB", () => {
-    test("[API_TC_004] [Luong chinh] gui OTP dang ky va luu dong xac thuc o trang thai pending", async ({
+  test.describe.serial("Auth - API Registration and Database Verification", () => {
+    test("[API-TC-004] - API Authentication - Registration OTP - OTP Generation and Pending Verification Persistence", async ({
       request
     }) => {
       const response = await request.post("/auth/register/send-code", {
@@ -153,7 +153,7 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
       expect(latest?.status).toBe("PENDING");
     });
 
-    test("[API_TC_005] [Luong chinh] xac thuc OTP dang ky bang test hook chinh thuc @extended", async ({
+    test("[API-TC-005] - API Authentication - Registration OTP - Official Test Hook Verification @extended", async ({
       request
     }) => {
       const otp = await ApiOtpAccessHelper.latestOtp(request, validUser.email, "REGISTER");
@@ -175,7 +175,7 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
       expect(registrationTicket).not.toBe("");
     });
 
-    test("[API_TC_006] [Luong chinh] hoan tat dang ky va xac nhan da tao customer trong DB", async ({
+    test("[API-TC-006] - API Authentication - Registration - Successful Registration and Customer Persistence", async ({
       request
     }) => {
       expect(registrationTicket).not.toBe("");
@@ -205,7 +205,7 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
       expect(createdRows.length).toBe(1);
     });
 
-    test("[API_TC_007] [Am] hoan tat dang ky that bai khi mat khau khong khop", async ({
+    test("[API-TC-007] - API Authentication - Registration - Password Confirmation Mismatch Rejection", async ({
       request
     }) => {
       const isolatedUser = {
@@ -243,8 +243,8 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
     });
   });
 
-  test.describe("3. Quen mat khau va dat lai mat khau", () => {
-    test("[API_TC_008] [Luong chinh] gui yeu cau quen mat khau va kiem tra dong OTP trong DB", async ({
+  test.describe("Auth - API Forgot Password and Reset", () => {
+    test("[API-TC-008] - API Authentication - Forgot Password - OTP Generation and Database Persistence", async ({
       request
     }) => {
       expect(validLocalEmail).toBeTruthy();
@@ -270,7 +270,7 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
       expect(rows[0]!.status).toBe("PENDING");
     });
 
-    test("[API_TC_009] [Am] tu choi dat lai mat khau voi OTP sai @extended", async ({ request }) => {
+    test("[API-TC-009] - API Authentication - Password Reset - Invalid OTP Rejection @extended", async ({ request }) => {
       expect(validLocalEmail).toBeTruthy();
       await request.post("/api/v1/auth/forgot-password", {
         params: { email: validLocalEmail },
@@ -294,7 +294,7 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
       expect(response.headers().location).toContain("errorMessage");
     });
 
-    test("[API_TC_011] [Luong chinh] dat lai mat khau voi OTP hop le se dieu huong ve dang nhap va cap nhat thong tin dang nhap", async ({
+    test("[API-TC-011] - API Authentication - Password Reset - Successful Reset and Login Data Update", async ({
       request
     }) => {
       await ensureValidUserRegistered(request);
@@ -344,8 +344,8 @@ test.describe("Auth - kiem thu luong xac thuc web @api-write @otp @regression", 
     });
   });
 
-  test.describe("4. Dang xuat", () => {
-    test("[API_TC_010] [Bao mat] dang xuat xoa cookie xac thuc va dieu huong ve trang dang nhap @smoke", async ({
+  test.describe("Auth - API Logout", () => {
+    test("[API-TC-010] - API Authentication - Logout - Authentication Cookie Clearance and Login Redirect @smoke", async ({
       request
     }) => {
       const loginResponse = await request.post("/login", {

@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
-test.describe("Staff - kiem thu API invoice CRUD @regression", () => {
+test.describe("Staff - API Invoice @regression", () => {
   let adminContext: APIRequestContext;
   let staffContext: APIRequestContext;
   let tempContract: Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
@@ -37,7 +37,7 @@ test.describe("Staff - kiem thu API invoice CRUD @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("API-STF-INV-001 tu choi truy cap tao moi anonymous voi trang thai auth API", async ({ playwright }) => {
+  test("[API-STF-INV-001] - API Staff Invoice - Authentication - Anonymous Create Access Rejection", async ({ playwright }) => {
     const anonymous = await createAnonymousContext(playwright);
     try {
       const response = await anonymous.post("/api/v1/staff/invoices", {
@@ -55,7 +55,7 @@ test.describe("Staff - kiem thu API invoice CRUD @regression", () => {
     }
   });
 
-  test("API-STF-INV-002 tu choi customer role khi tim invoice cua staff", async ({ playwright }) => {
+  test("[API-STF-INV-002] - API Staff Invoice - Authorization - Customer Role Rejection", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer");
     try {
       const response = await customer.get("/api/v1/staff/invoices?page=1&size=10", {
@@ -72,8 +72,8 @@ test.describe("Staff - kiem thu API invoice CRUD @regression", () => {
     }
   });
 
-  test.describe.serial("Staff - vong doi invoice", () => {
-    test("API-STF-INV-003 staff tao invoice cho contract duoc giao", async () => {
+  test.describe.serial("Staff - API Invoice Lifecycle", () => {
+    test("[API-STF-INV-003] - API Staff Invoice - Create Invoice - Assigned Contract Invoice Creation", async () => {
       const response = await staffContext.post("/api/v1/staff/invoices", {
         failOnStatusCode: false,
         maxRedirects: 0,
@@ -101,7 +101,7 @@ test.describe("Staff - kiem thu API invoice CRUD @regression", () => {
       expect(Number(detailRows[0]?.count ?? 0)).toBeGreaterThan(0);
     });
 
-    test("API-STF-INV-004 staff tim invoice cua minh @smoke", async () => {
+    test("[API-STF-INV-004] - API Staff Invoice - Listing - Assigned Invoice Retrieval @smoke", async () => {
       const response = await staffContext.get("/api/v1/staff/invoices?page=1&size=20", {
         failOnStatusCode: false,
         maxRedirects: 0
@@ -118,7 +118,7 @@ test.describe("Staff - kiem thu API invoice CRUD @regression", () => {
       expect(createdItem?.status).toBeTruthy();
     });
 
-    test("API-STF-INV-005 staff sua invoice cua minh", async () => {
+    test("[API-STF-INV-005] - API Staff Invoice - Update Invoice - Owned Invoice Update", async () => {
       const response = await staffContext.put(`/api/v1/staff/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0,
@@ -148,7 +148,7 @@ test.describe("Staff - kiem thu API invoice CRUD @regression", () => {
       expect(Number(detailRows[0]?.count ?? 0)).toBeGreaterThan(0);
     });
 
-    test("API-STF-INV-006 staff xoa invoice cua minh", async () => {
+    test("[API-STF-INV-006] - API Staff Invoice - Delete Invoice - Owned Invoice Deletion", async () => {
       const response = await staffContext.delete(`/api/v1/staff/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0

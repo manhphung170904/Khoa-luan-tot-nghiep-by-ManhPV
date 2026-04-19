@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin - kiem thu API customer @regression", () => {
+test.describe.serial("Admin - API Customer @regression", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -19,7 +19,7 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[CUS_001] POST /customers tu choi chua dang nhap tao", async ({ request }) => {
+  test("[CUS-001] - API Admin Customer - Authentication - Create Customer Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload()
@@ -31,7 +31,7 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
     });
   });
 
-  test("[CUS_002] POST /customers tu choi empty staffIds", async () => {
+  test("[CUS-002] - API Admin Customer - Staff Assignment - Empty Staff Assignment Validation", async () => {
     const username = `cus_empty_staff_${Date.now()}`;
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
@@ -42,13 +42,13 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/staff|nhân viên|nhan vien/i);
+    expect(errorBody.message).toMatch(/staff|nhan vien/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [username]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[CUS_009] POST /customers tu choi username shorter than 4", async () => {
+  test("[CUS-009] - API Admin Customer - Username - Minimum Length Validation", async () => {
     const shortUsername = "abc";
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
@@ -60,14 +60,14 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/username|đăng nhập|dang nhap|ít nhất|it nhat|min/i);
+    expect(errorBody.message).toMatch(/username|dang nhap|it nhat|min/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [shortUsername]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
     await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS_003] POST /customers tu choi password shorter than 6", async () => {
+  test("[CUS-003] - API Admin Customer - Password - Minimum Length Validation", async () => {
     const username = `cus_pwd_${Date.now()}`;
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
@@ -86,7 +86,7 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
     await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS_010] POST /customers tu choi oversized email", async () => {
+  test("[CUS-010] - API Admin Customer - Email - Maximum Length Validation", async () => {
     const oversizedEmail = `${"a".repeat(95)}@b.com`;
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
@@ -98,14 +98,14 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/email|địa chỉ email|dia chi email|không hợp lệ|khong hop le|tối đa|toi da/i);
+    expect(errorBody.message).toMatch(/email|dia chi email|khong hop le|toi da/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE email = ?", [oversizedEmail]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
     await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS_011] POST /customers tu choi dinh dang phone khong hop le", async () => {
+  test("[CUS-011] - API Admin Customer - Phone Number - Invalid Format Validation", async () => {
     const invalidPhone = "9999999999";
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
@@ -117,14 +117,14 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/phone|điện thoại|dien thoai|không hợp lệ|khong hop le/i);
+    expect(errorBody.message).toMatch(/phone|dien thoai|khong hop le/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE phone = ?", [invalidPhone]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
     await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS_004] POST /customers tao customer va ho tro danh sach/tim/xoa luong", async () => {
+  test("[CUS-004] - API Admin Customer - Customer Lifecycle - Create List Search and Delete Flow", async () => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const customerPayload = TestDataFactory.buildCustomerPayload({ staffIds: [tempStaff.id] });
     let createdCustomerId = 0;
@@ -160,7 +160,7 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/customers"
       });
-      expect(duplicateError.message).toMatch(/username|email|phone|ten dang nhap|tên đăng nhập|ton tai|tồn tại|trung/i);
+      expect(duplicateError.message).toMatch(/username|email|phone|ten dang nhap|ton tai|trung/i);
       const duplicateRows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM customer WHERE username = ? OR email = ? OR phone = ?",
         [String(customerPayload.username), String(customerPayload.email), String(customerPayload.phone)]
@@ -190,7 +190,7 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
           code: "BAD_REQUEST",
           path: `/api/v1/admin/customers/${customerWithContract.customer.id}`
         });
-        expect(deleteWithContractError.message).toMatch(/contract|hợp đồng|hop dong|không thể xóa khách hàng đang có hợp đồng liên quan|khong the xoa khach hang dang co hop dong lien quan/i);
+        expect(deleteWithContractError.message).toMatch(/contract|hop dong|khong the xoa khach hang dang co hop dong lien quan/i);
 
         const stillExistsRows = await MySqlDbClient.query<{ count: number }>(
           "SELECT COUNT(*) AS count FROM customer WHERE id = ?",
@@ -209,7 +209,7 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/customers/999999"
       });
-      expect(missingDeleteError.message).toMatch(/customer|khách hàng|khach hang|không tồn tại|khong ton tai|không tìm thấy|khong tim thay|not found/i);
+      expect(missingDeleteError.message).toMatch(/customer|khach hang|khong ton tai|khong tim thay|not found/i);
 
       const deleteResponse = await admin.delete(`/api/v1/admin/customers/${createdCustomerId}`, {
         failOnStatusCode: false
@@ -231,7 +231,7 @@ test.describe.serial("Admin - kiem thu API customer @regression", () => {
     }
   });
 
-  test("[CUS_012] DELETE /customers/{id} phai chan xoa khi sale contract ton tai trong du lieu tam", async () => {
+  test("[CUS-012] - API Admin Customer - Delete Customer - Active Sale Contract Deletion Restriction", async () => {
     const customerWithSaleContract = await TempEntityHelper.taoSaleContractTam(admin);
 
     try {

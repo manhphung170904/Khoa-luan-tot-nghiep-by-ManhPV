@@ -22,7 +22,7 @@ import {
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
-test.describe("Admin - E2E quan ly invoice @regression", () => {
+test.describe("Admin - Invoice Management @regression", () => {
   let adminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   let contract: TempContract | null = null;
@@ -58,7 +58,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-INV-001] danh sach invoice cua admin hien du lieu va co the loc theo customer", async ({ page }) => {
+  test("[E2E-ADM-INV-001] - Admin Invoice Management - Invoice List - Customer Filtering and Data Display", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -80,7 +80,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
     await expect(page.locator("#invoiceTableBody tr").filter({ hasText: contract.building.name }).first()).toContainText(contract.customer.fullName);
   });
 
-  test("[E2E-ADM-INV-002] admin co tao new invoice tu add form", async ({ page }) => {
+  test("[E2E-ADM-INV-002] - Admin Invoice Management - Invoice Creation - Create Invoice from Add Form", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -102,7 +102,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
       waterUsage: 8
     });
     await formPage.submitInvoice();
-    await formPage.expectSweetAlertContains(/thêm hóa đơn thành công|thành công/i);
+    await formPage.expectSweetAlertContains(/them hoa don thanh cong|thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number; status: string }>(
       `
@@ -127,7 +127,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
     });
   });
 
-  test("[E2E-ADM-INV-003] admin co edit pending invoice through edit form", async ({ page }) => {
+  test("[E2E-ADM-INV-003] - Admin Invoice Management - Invoice Edit - Pending Invoice Update", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -146,7 +146,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
       waterUsage: 10
     });
     await formPage.submitInvoice();
-    await formPage.expectSweetAlertContains(/cập nhật hóa đơn thành công|thành công/i);
+    await formPage.expectSweetAlertContains(/cap nhat hoa don thanh cong|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ due_date: string }>(
@@ -157,7 +157,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
     }).toBe(updatedDueDate);
   });
 
-  test("[E2E-ADM-INV-004] da thanh toan invoice edit trang hien non-pending warning", async ({ page }) => {
+  test("[E2E-ADM-INV-004] - Admin Invoice Management - Invoice Edit Lock - Non-Pending Warning Display", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -173,7 +173,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
     await formPage.expectWarningVisible();
   });
 
-  test("[E2E-ADM-INV-005] admin co xac nhan thanh toan invoice tu trang chi tiet", async ({ page }) => {
+  test("[E2E-ADM-INV-005] - Admin Invoice Management - Payment Confirmation - Invoice Payment Confirmation", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -186,7 +186,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
     await detailPage.expectLoaded(invoice.id);
     await detailPage.confirmInvoicePaid();
     await detailPage.confirmSweetAlert();
-    await detailPage.expectSweetAlertContains(/xác nhận thanh toán|thành công/i);
+    await detailPage.expectSweetAlertContains(/xac nhan thanh toan|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);
@@ -194,7 +194,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
     }).toBe("PAID");
   });
 
-  test("[E2E-ADM-INV-006] admin co xoa an invoice tu danh sach", async ({ page }) => {
+  test("[E2E-ADM-INV-006] - Admin Invoice Management - Invoice Deletion - Delete Invoice from List", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -212,7 +212,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
     await listPage.waitForTableData();
     await page.locator("#invoiceTableBody tr").filter({ hasText: contract.building.name }).first().locator(".btn-delete").click();
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xóa hóa đơn thành công|thành công/i);
+    await listPage.expectSweetAlertContains(/xoa hoa don thanh cong|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);
@@ -222,7 +222,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
     createdInvoices = createdInvoices.filter((item) => item.id !== invoice.id);
   });
 
-  test("[E2E-ADM-INV-007] admin co cap nhat overdue statuses tu danh sach trang", async ({ page }) => {
+  test("[E2E-ADM-INV-007] - Admin Invoice Management - Status Update - Overdue Status Refresh from List", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -236,7 +236,7 @@ test.describe("Admin - E2E quan ly invoice @regression", () => {
     await page.goto("/admin/invoice/list");
     await listPage.updateStatuses();
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/cập nhật thành công|thành công/i);
+    await listPage.expectSweetAlertContains(/cap nhat thanh cong|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);

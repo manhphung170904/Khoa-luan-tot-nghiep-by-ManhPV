@@ -13,7 +13,7 @@ import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
-test.describe("thanh toan - E2E customer thanh toan invoice @regression", () => {
+test.describe("Customer - Invoice Payment @regression", () => {
   let adminApi: APIRequestContext;
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
@@ -45,7 +45,7 @@ test.describe("thanh toan - E2E customer thanh toan invoice @regression", () => 
     await MySqlDbClient.close();
   });
 
-  test("[E2E-CUS-PAY-001] danh sach invoice cua customer hien thong ke chua thanh toan va chi tiet modal", async ({ page }) => {
+  test("[E2E-CUS-PAY-001] - Customer Invoice Payment - Invoice List - Unpaid Summary and Payment Details Modal Display", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -72,7 +72,7 @@ test.describe("thanh toan - E2E customer thanh toan invoice @regression", () => 
     const modalText = await invoicePage.visibleModalText();
     expect(modalText).toMatch(/invoice|chi ti.t|hoa .on/i);
     expect(modalText).toContain(contract.building.name);
-    expect(modalText).toMatch(/TỔNG CỘNG|tong cong|total/i);
+    expect(modalText).toMatch(/tong cong|total/i);
     expect(modalText).toContain(String(invoice.id));
 
     const invoiceRows = await MySqlDbClient.query<{ status: string; total_amount: number }>(
@@ -83,7 +83,7 @@ test.describe("thanh toan - E2E customer thanh toan invoice @regression", () => 
     expect(Number(invoiceRows[0]?.total_amount ?? 0)).toBeGreaterThan(0);
   });
 
-  test("[E2E-CUS-PAY-002] customer co move tu payment modal den QR payment trang", async ({ page }) => {
+  test("[E2E-CUS-PAY-002] - Customer Invoice Payment - Payment Modal - QR Payment Page Redirection", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -109,7 +109,7 @@ test.describe("thanh toan - E2E customer thanh toan invoice @regression", () => 
     expect(invoiceRows[0]?.status).toBe("PENDING");
   });
 
-  test("[E2E-CUS-PAY-003] customer confirms QR payment va invoice becomes da thanh toan", async ({ page }) => {
+  test("[E2E-CUS-PAY-003] - Customer QR Payment - Payment Confirmation - Invoice Status Update to Paid", async ({ page }) => {
     if (!contract) {
       return;
     }
@@ -128,7 +128,7 @@ test.describe("thanh toan - E2E customer thanh toan invoice @regression", () => 
 
     await qrPage.confirmPayment();
     await expect(page).toHaveURL(/\/customer\/invoice\/list\?paySuccess/);
-    await expect(page.locator(".swal2-popup")).toContainText(/Thanh toán thành công|thanh toan thanh cong|paySuccess/i);
+    await expect(page.locator(".swal2-popup")).toContainText(/thanh toan thanh cong|payment success|paysuccess/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{
         status: string;
@@ -154,7 +154,7 @@ test.describe("thanh toan - E2E customer thanh toan invoice @regression", () => 
     await invoicePage.expectEmptyState();
   });
 
-  test("[E2E-CUS-PAY-004] customer without unpaid invoices sees empty trang thai", async ({ page }) => {
+  test("[E2E-CUS-PAY-004] - Customer Invoice Payment - Empty State - No Unpaid Invoices Display", async ({ page }) => {
     const invoicePage = new CustomerInvoicePage(page);
 
     await page.goto("/customer/invoice/list");

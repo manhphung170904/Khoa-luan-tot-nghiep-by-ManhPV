@@ -18,7 +18,7 @@ type TempCustomer = Awaited<ReturnType<typeof TempEntityHelper.taoCustomerTam>>;
 type TempBuilding = Awaited<ReturnType<typeof TempEntityHelper.taoBuildingTam>>;
 type TempSaleContract = Awaited<ReturnType<typeof TempEntityHelper.taoSaleContractTam>>;
 
-test.describe("Admin - E2E quan ly sale contract @regression", () => {
+test.describe("Admin - Sale Contract Management @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupSaleContractIds = new Set<number>();
@@ -93,7 +93,7 @@ test.describe("Admin - E2E quan ly sale contract @regression", () => {
     return { staff, customer, building };
   }
 
-  test("[E2E-ADM-SCT-001] admin co tim sale contract va mo chi tiet", async ({ page }) => {
+  test("[E2E-ADM-SCT-001] - Admin Sale Contract Management - Sale Contract Search - Search and Detail View", async ({ page }) => {
     const tempSaleContract: TempSaleContract = await TempEntityHelper.taoSaleContractTam(bootstrapAdminApi);
     cleanupSaleContractIds.add(tempSaleContract.id);
     cleanupStaffIds.add(tempSaleContract.staff.id);
@@ -111,7 +111,7 @@ test.describe("Admin - E2E quan ly sale contract @regression", () => {
     await detailPage.expectLoaded(tempSaleContract.id);
   });
 
-  test("[E2E-ADM-SCT-002] admin co tao sale contract tu add form", async ({ page }) => {
+  test("[E2E-ADM-SCT-002] - Admin Sale Contract Management - Sale Contract Creation - Create Sale Contract from Add Form", async ({ page }) => {
     const scenario = await createAssignableScenario();
     const formPage = new AdminSaleContractFormPage(page);
 
@@ -124,7 +124,7 @@ test.describe("Admin - E2E quan ly sale contract @regression", () => {
     await formPage.fillSalePrice(3600000000);
     await formPage.fillNote("Playwright sale contract note");
     await formPage.submitSaleContract();
-    await formPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|thÃªm há»£p Ä‘á»“ng|them hop dong/i);
+    await formPage.expectSweetAlertContains(/thanh cong|them hop dong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number; sale_price: number }>(
       `
@@ -141,7 +141,7 @@ test.describe("Admin - E2E quan ly sale contract @regression", () => {
     cleanupSaleContractIds.add(rows[0]!.id);
   });
 
-  test("[E2E-ADM-SCT-003] admin co cap nhat transfer date on edit form", async ({ page }) => {
+  test("[E2E-ADM-SCT-003] - Admin Sale Contract Management - Transfer Date - Edit Form Update", async ({ page }) => {
     const tempSaleContract: TempSaleContract = await TempEntityHelper.taoSaleContractTam(bootstrapAdminApi);
     cleanupSaleContractIds.add(tempSaleContract.id);
     cleanupStaffIds.add(tempSaleContract.staff.id);
@@ -153,7 +153,7 @@ test.describe("Admin - E2E quan ly sale contract @regression", () => {
     await formPage.expectEditLoaded(tempSaleContract.id);
     await formPage.fillTransferDate("2026-06-16");
     await formPage.submitSaleContract();
-    await formPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|cáº­p nháº­t|cap nhat/i);
+    await formPage.expectSweetAlertContains(/thanh cong|cap nhat|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ transfer_date: string }>(
@@ -164,7 +164,7 @@ test.describe("Admin - E2E quan ly sale contract @regression", () => {
     }).toBe("2026-06-16");
   });
 
-  test("[E2E-ADM-SCT-004] khong sua transfer date som hon signed date", async ({ page }) => {
+  test("[E2E-ADM-SCT-004] - Admin Sale Contract Management - Transfer Date - Earlier Than Signed Date Validation", async ({ page }) => {
     const tempSaleContract: TempSaleContract = await TempEntityHelper.taoSaleContractTam(bootstrapAdminApi);
     cleanupSaleContractIds.add(tempSaleContract.id);
     cleanupStaffIds.add(tempSaleContract.staff.id);
@@ -181,7 +181,7 @@ test.describe("Admin - E2E quan ly sale contract @regression", () => {
     await formPage.expectEditLoaded(tempSaleContract.id);
     await formPage.fillTransferDate("2025-01-01");
     await formPage.submitSaleContract();
-    await formPage.expectSweetAlertContains(/ngÃ y bÃ n giao|ngay ban giao|khÃ´ng há»£p lá»‡|khong hop le|transfer date/i);
+    await formPage.expectSweetAlertContains(/ngay ban giao|khong hop le|transfer date/i);
 
     const afterRows = await MySqlDbClient.query<{ transfer_date: string | null }>(
       "SELECT DATE_FORMAT(transfer_date, '%Y-%m-%d') AS transfer_date FROM sale_contract WHERE id = ?",
@@ -190,7 +190,7 @@ test.describe("Admin - E2E quan ly sale contract @regression", () => {
     expect(afterRows[0]?.transfer_date ?? null).toBe(beforeRows[0]?.transfer_date ?? null);
   });
 
-  test("[E2E-ADM-SCT-005] admin co xoa sale contract tu trang chi tiet", async ({ page }) => {
+  test("[E2E-ADM-SCT-005] - Admin Sale Contract Management - Sale Contract Deletion - Detail Page Deletion", async ({ page }) => {
     const tempSaleContract: TempSaleContract = await TempEntityHelper.taoSaleContractTam(bootstrapAdminApi);
     cleanupSaleContractIds.add(tempSaleContract.id);
     cleanupStaffIds.add(tempSaleContract.staff.id);
@@ -202,7 +202,7 @@ test.describe("Admin - E2E quan ly sale contract @regression", () => {
     await detailPage.expectLoaded(tempSaleContract.id);
     await detailPage.deleteSaleContract();
     await detailPage.confirmSweetAlert();
-    await detailPage.expectSweetAlertContains(/thÃ nh cÃ´ng|thanh cong|xÃ³a há»£p Ä‘á»“ng mua bÃ¡n thÃ nh cÃ´ng/i);
+    await detailPage.expectSweetAlertContains(/thanh cong|xoa hop dong mua ban|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM sale_contract WHERE id = ?", [tempSaleContract.id]);

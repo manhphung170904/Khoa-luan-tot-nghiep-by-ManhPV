@@ -6,7 +6,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { env } from "@config/env";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
-test.describe("thanh toan - kiem thu API QR VietQR @api-write @regression", () => {
+test.describe("Payment - API QR Payment @api-write @regression", () => {
   let adminContext: APIRequestContext;
   let customerUsername = env.customerUsername;
   let customerInvoiceId: number;
@@ -39,7 +39,7 @@ test.describe("thanh toan - kiem thu API QR VietQR @api-write @regression", () =
     await MySqlDbClient.close();
   });
 
-  test("API-PAY-001 tu choi truy cap QR anonymous", async ({ playwright }) => {
+  test("[API-PAY-001] - API Payment - QR Payment - Anonymous Access Rejection", async ({ playwright }) => {
     const anonymous = await playwright.request.newContext({ baseURL: env.baseUrl });
     try {
       const response = await anonymous.get(`/payment-demo/qr/${customerInvoiceId}`, {
@@ -53,7 +53,7 @@ test.describe("thanh toan - kiem thu API QR VietQR @api-write @regression", () =
     }
   });
 
-  test("API-PAY-002 tu choi admin truy cap QR cua customer", async ({ playwright }) => {
+  test("[API-PAY-002] - API Payment - QR Payment - Admin Access to Customer Invoice Rejection", async ({ playwright }) => {
     const admin = await createRoleContext(playwright, "admin");
     try {
       const response = await admin.get(`/payment-demo/qr/${customerInvoiceId}`, {
@@ -67,7 +67,7 @@ test.describe("thanh toan - kiem thu API QR VietQR @api-write @regression", () =
     }
   });
 
-  test("API-PAY-003 tra ve 404 voi invoice id khong ton tai", async ({ playwright }) => {
+  test("[API-PAY-003] - API Payment - Invoice Reference - Nonexistent Invoice 404 Response", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer", customerUsername);
     try {
       const response = await customer.get(`/payment-demo/qr/${nonexistentInvoiceId}`, {
@@ -81,7 +81,7 @@ test.describe("thanh toan - kiem thu API QR VietQR @api-write @regression", () =
     }
   });
 
-  test("API-PAY-004 hien QR HTML for customer-owned invoice @smoke", async ({ playwright }) => {
+  test("[API-PAY-004] - API Payment - QR Payment - Customer-Owned Invoice HTML Rendering @smoke", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer", customerUsername);
     try {
       const response = await customer.get(`/payment-demo/qr/${customerInvoiceId}`, {
@@ -92,7 +92,7 @@ test.describe("thanh toan - kiem thu API QR VietQR @api-write @regression", () =
       expect(response.headers()["content-type"] ?? "").toContain("text/html");
 
       const bodyHtml = await response.text();
-      expect(bodyHtml).toMatch(/Thanh to(?:á|&aacute;)n b(?:ằ|&#7857;)ng QR/);
+      expect(bodyHtml).toMatch(/thanh toan bang qr|qr payment/i);
       expect(bodyHtml).toContain("img.vietqr.io");
       expect(bodyHtml).toContain(`MOONNEST INV ${customerInvoiceId}`);
       expect(bodyHtml).toContain(`/payment-demo/qr/confirm/${customerInvoiceId}`);
@@ -101,7 +101,7 @@ test.describe("thanh toan - kiem thu API QR VietQR @api-write @regression", () =
     }
   });
 
-  test("API-PAY-005 xac nhan thanh toan QR va dieu huong den danh sach invoice", async ({ playwright }) => {
+  test("[API-PAY-005] - API Payment - QR Payment Confirmation - Invoice List Redirection", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer", customerUsername);
     try {
       const pageResponse = await customer.get(`/payment-demo/qr/${customerInvoiceId}`, {

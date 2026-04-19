@@ -21,7 +21,7 @@ type ExistingIdentity = {
   phone: string;
 };
 
-test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression", () => {
+test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
   let bootstrapAdminContext: APIRequestContext;
   let tempAdminContext: APIRequestContext;
   let tempAdmin: TempAdmin;
@@ -115,7 +115,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     await MySqlDbClient.close();
   });
 
-  test("[PRF_005] PUT /email tu choi truy cap khi chua dang nhap", async ({ request }) => {
+  test("[PRF-005] - API Admin Profile - Email - Update Without Login Rejection", async ({ request }) => {
     const response = await request.put("/api/v1/admin/profile/email", {
       failOnStatusCode: false,
       data: {
@@ -131,7 +131,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     });
   });
 
-  test("[PRF_006] PUT /username tu choi truy cap khi chua dang nhap", async ({ request }) => {
+  test("[PRF-006] - API Admin Profile - Username - Update Without Login Rejection", async ({ request }) => {
     const response = await request.put("/api/v1/admin/profile/username", {
       failOnStatusCode: false,
       data: {
@@ -147,7 +147,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     });
   });
 
-  test("[PRF_007] PUT /password tu choi truy cap khi chua dang nhap", async ({ request }) => {
+  test("[PRF-007] - API Admin Profile - Password - Update Without Login Rejection", async ({ request }) => {
     const response = await request.put("/api/v1/admin/profile/password", {
       failOnStatusCode: false,
       data: {
@@ -165,7 +165,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     });
   });
 
-  test("[PRF_009] PUT /phone-number tu choi truy cap khi chua dang nhap", async ({ request }) => {
+  test("[PRF-009] - API Admin Profile - Phone Number - Update Without Login Rejection", async ({ request }) => {
     const response = await request.put("/api/v1/admin/profile/phone-number", {
       failOnStatusCode: false,
       data: {
@@ -181,7 +181,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     });
   });
 
-  test("[PRF_001] POST /otp/{purpose} sends OTP for profile username va duoc giu pending row", async () => {
+  test("[PRF-001] - API Admin Profile - Username OTP - OTP Generation and Pending Record Persistence", async () => {
     await sendOtp("PROFILE_USERNAME");
 
     const latest = await ApiOtpHelper.latest(tempAdmin.email, "PROFILE_USERNAME");
@@ -189,7 +189,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     expect(latest?.status).toBe("PENDING");
   });
 
-  test("[PRF_008] POST /otp/{purpose} currently chap nhan arbitrary non-blank purpose", async () => {
+  test("[PRF-008] - API Admin Profile - OTP Purpose - Arbitrary Nonblank Purpose Acceptance", async () => {
     const purpose = `PROFILE_CUSTOM_${Date.now()}`;
     await sendOtp(purpose);
 
@@ -198,7 +198,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     expect(latest?.status).toBe("PENDING");
   });
 
-  test("[PRF_002] PUT /username tu choi OTP khong hop le", async () => {
+  test("[PRF-002] - API Admin Profile - Username - Invalid OTP Rejection", async () => {
     const originalRows = await MySqlDbClient.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
@@ -216,7 +216,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
-    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|không hợp lệ|khong hop le/i);
+    expect(errorBody.message).toMatch(/otp|ma|xac thuc|khong hop le/i);
 
     const latestRows = await MySqlDbClient.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
@@ -225,7 +225,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     expect(latestRows[0]?.username).toBe(originalRows[0]?.username);
   });
 
-  test("[PRF_011] PUT /username cap nhat username khi OTP hop le", async () => {
+  test("[PRF-011] - API Admin Profile - Username - Successful Update with Valid OTP", async () => {
     await sendOtp("PROFILE_USERNAME");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_USERNAME");
 
@@ -256,7 +256,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     tempAdmin.username = nextUsername;
   });
 
-  test("[PRF_015] PUT /username tu choi duplicate username even voi hop le OTP", async () => {
+  test("[PRF-015] - API Admin Profile - Username - Duplicate Username Rejection with Valid OTP", async () => {
     await sendOtp("PROFILE_USERNAME");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_USERNAME");
 
@@ -273,7 +273,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
-    expect(errorBody.message).toMatch(/username|tên đăng nhập|ten dang nhap|dang nhap|đã được sử dụng|da duoc su dung|ton tai|trung/i);
+    expect(errorBody.message).toMatch(/username|ten dang nhap|dang nhap|da duoc su dung|ton tai|trung/i);
 
     const latestRows = await MySqlDbClient.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
@@ -282,7 +282,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     expect(latestRows[0]?.username).toBe(tempAdmin.username);
   });
 
-  test("[PRF_003] PUT /phone-number tu choi OTP khong hop le", async () => {
+  test("[PRF-003] - API Admin Profile - Phone Number - Invalid OTP Rejection", async () => {
     const originalRows = await MySqlDbClient.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
@@ -300,7 +300,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han|không tìm thấy|khong tim thay/i);
+    expect(errorBody.message).toMatch(/otp|ma|xac thuc|het han|khong tim thay/i);
 
     const latestRows = await MySqlDbClient.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
@@ -309,7 +309,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     expect(latestRows[0]?.phone).toBe(originalRows[0]?.phone);
   });
 
-  test("[PRF_012] PUT /phone-number cap nhat phone khi OTP hop le", async () => {
+  test("[PRF-012] - API Admin Profile - Phone Number - Successful Update with Valid OTP", async () => {
     await sendOtp("PROFILE_PHONE");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_PHONE");
 
@@ -340,7 +340,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     tempAdmin.phone = nextPhone;
   });
 
-  test("[PRF_016] PUT /phone-number tu choi duplicate phone even voi hop le OTP", async () => {
+  test("[PRF-016] - API Admin Profile - Phone Number - Duplicate Phone Rejection with Valid OTP", async () => {
     await sendOtp("PROFILE_PHONE");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_PHONE");
 
@@ -357,7 +357,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/phone|điện thoại|dien thoai|đã được sử dụng|da duoc su dung|tồn tại|ton tai|trùng|trung/i);
+    expect(errorBody.message).toMatch(/phone|dien thoai|da duoc su dung|ton tai|trung/i);
 
     const latestRows = await MySqlDbClient.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
@@ -366,7 +366,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     expect(latestRows[0]?.phone).toBe(tempAdmin.phone);
   });
 
-  test("[PRF_004] PUT /email tu choi incorrect current password", async () => {
+  test("[PRF-004] - API Admin Profile - Email - Incorrect Current Password Rejection", async () => {
     const originalRows = await MySqlDbClient.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
@@ -384,7 +384,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|mat khau|mật khẩu|hien tai|hiện tại|incorrect|khong dung|không đúng|sai/i);
+    expect(errorBody.message).toMatch(/password|mat khau|hien tai|incorrect|khong dung|sai/i);
 
     const latestRows = await MySqlDbClient.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
@@ -393,7 +393,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     expect(latestRows[0]?.email).toBe(originalRows[0]?.email);
   });
 
-  test("[PRF_014] PUT /email cap nhat email khi current password hop le", async () => {
+  test("[PRF-014] - API Admin Profile - Email - Successful Update with Valid Current Password", async () => {
     const nextEmail = `pw-admin-profile-updated-${Date.now()}@example.com`;
     const response = await tempAdminContext.put("/api/v1/admin/profile/email", {
       failOnStatusCode: false,
@@ -418,7 +418,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     tempAdmin.email = nextEmail;
   });
 
-  test("[PRF_017] PUT /email tu choi duplicate email with correct current password", async () => {
+  test("[PRF-017] - API Admin Profile - Email - Duplicate Email Rejection with Valid Current Password", async () => {
     const response = await tempAdminContext.put("/api/v1/admin/profile/email", {
       failOnStatusCode: false,
       data: {
@@ -441,7 +441,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     expect(latestRows[0]?.email).toBe(tempAdmin.email);
   });
 
-  test("[PRF_010] PUT /password tu choi OTP khong hop le", async () => {
+  test("[PRF-010] - API Admin Profile - Password - Invalid OTP Rejection", async () => {
     const originalRows = await MySqlDbClient.query<{ password: string }>(
       "SELECT password FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
@@ -461,7 +461,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/password"
     });
-    expect(errorBody.message).toMatch(/otp|ma|mã|xac thuc|xác thực|het han|hết hạn|khong tim thay|không tìm thấy/i);
+    expect(errorBody.message).toMatch(/otp|ma|xac thuc|het han|khong tim thay/i);
 
     const latestRows = await MySqlDbClient.query<{ password: string }>(
       "SELECT password FROM staff WHERE id = ? LIMIT 1",
@@ -470,7 +470,7 @@ test.describe.serial("Admin - kiem thu API profile @api-write @otp @regression",
     expect(latestRows[0]?.password).toBe(originalRows[0]?.password);
   });
 
-  test("[PRF_013] PUT /password cap nhat password khi OTP hop le va danh dau OTP da dung", async ({ playwright }) => {
+  test("[PRF-013] - API Admin Profile - Password - Successful Update with Valid OTP and OTP Consumption", async ({ playwright }) => {
     await sendOtp("PROFILE_PASSWORD");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_PASSWORD");
     const nextPassword = "NewPassword123!";

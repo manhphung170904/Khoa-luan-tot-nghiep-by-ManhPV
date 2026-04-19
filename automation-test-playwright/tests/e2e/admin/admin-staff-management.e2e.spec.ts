@@ -14,7 +14,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin - E2E quan ly staff @regression", () => {
+test.describe("Admin - Staff Management @regression", () => {
   let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupStaffIds = new Set<number>();
@@ -64,7 +64,7 @@ test.describe("Admin - E2E quan ly staff @regression", () => {
     await MySqlDbClient.close();
   });
 
-  test("[E2E-ADM-STF-001] admin co tao staff account tu add form", async ({ page }) => {
+  test("[E2E-ADM-STF-001] - Admin Staff Management - Staff Creation - Create Staff Account from Add Form", async ({ page }) => {
     const listPage = new AdminStaffListPage(page);
     const formPage = new AdminStaffFormPage(page);
     const payload = TestDataFactory.buildAdminStaffPayload({
@@ -83,7 +83,7 @@ test.describe("Admin - E2E quan ly staff @regression", () => {
     });
     await formPage.selectRole("STAFF");
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/thÃªm nhÃ¢n viÃªn|thÃ nh cÃ´ng/i);
+    await formPage.expectSweetAlertContains(/them nhan vien|thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number; role: string }>(
       "SELECT id, role FROM staff WHERE username = ? LIMIT 1",
@@ -94,7 +94,7 @@ test.describe("Admin - E2E quan ly staff @regression", () => {
     cleanupStaffIds.add(rows[0]!.id);
   });
 
-  test("[E2E-ADM-STF-002] admin co tim staff va mo trang chi tiet", async ({ page }) => {
+  test("[E2E-ADM-STF-002] - Admin Staff Management - Staff Search - Search and Detail View", async ({ page }) => {
     const staff = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
     cleanupStaffIds.add(staff.id);
 
@@ -109,7 +109,7 @@ test.describe("Admin - E2E quan ly staff @regression", () => {
     await detailPage.expectLoaded(staff.id);
   });
 
-  test("[E2E-ADM-STF-003] admin co cap nhat assignment customer va building tu staff chi tiet", async ({ page }) => {
+  test("[E2E-ADM-STF-003] - Admin Staff Management - Staff Assignment - Customer and Building Assignment Update", async ({ page }) => {
     const targetStaff = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
     cleanupStaffIds.add(targetStaff.id);
     const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
@@ -126,7 +126,7 @@ test.describe("Admin - E2E quan ly staff @regression", () => {
     await detailPage.openBuildingAssignments();
     await detailPage.setBuildingAssignment(building.id, true);
     await detailPage.saveBuildingAssignments();
-    await detailPage.expectSweetAlertContains(/cáº­p nháº­t phÃ¢n cÃ´ng tÃ²a nhÃ |thÃ nh cÃ´ng/i);
+    await detailPage.expectSweetAlertContains(/cap nhat phan cong toa nha|thanh cong|success/i);
 
     await expect.poll(async () => {
       const response = await bootstrapAdminApi.get(`/api/v1/admin/staff/${targetStaff.id}/assignments/buildings`, {
@@ -140,7 +140,7 @@ test.describe("Admin - E2E quan ly staff @regression", () => {
     await detailPage.openCustomerAssignments();
     await detailPage.setCustomerAssignment(customer.id, true);
     await detailPage.saveCustomerAssignments();
-    await detailPage.expectSweetAlertContains(/cáº­p nháº­t phÃ¢n cÃ´ng khÃ¡ch hÃ ng|thÃ nh cÃ´ng/i);
+    await detailPage.expectSweetAlertContains(/cap nhat phan cong khach hang|thanh cong|success/i);
 
     await expect.poll(async () => {
       const response = await bootstrapAdminApi.get(`/api/v1/admin/staff/${targetStaff.id}/assignments/customers`, {
@@ -151,7 +151,7 @@ test.describe("Admin - E2E quan ly staff @regression", () => {
     }).toBe(true);
   });
 
-  test("[E2E-ADM-STF-004] admin co xoa staff thanh vien tu tim trang", async ({ page }) => {
+  test("[E2E-ADM-STF-004] - Admin Staff Management - Staff Deletion - Search Result Deletion", async ({ page }) => {
     const staff = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
 
     const listPage = new AdminStaffListPage(page);
@@ -159,7 +159,7 @@ test.describe("Admin - E2E quan ly staff @regression", () => {
     await listPage.waitForSearchTableData();
     await listPage.deleteStaff(staff.fullName);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xÃ³a nhÃ¢n viÃªn|thÃ nh cÃ´ng/i);
+    await listPage.expectSweetAlertContains(/xoa nhan vien|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM staff WHERE id = ?", [staff.id]);
