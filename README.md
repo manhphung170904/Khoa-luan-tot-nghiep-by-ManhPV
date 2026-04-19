@@ -1,137 +1,96 @@
 # Framework Playwright cho MoonNest
 
-## 1. Muc tieu
-Day la framework kiem thu tu dong bang Playwright + TypeScript duoc tach rieng cho he thong MoonNest. Framework duoc thiet ke de dung cho du an that te va trinh bay trong luan van tot nghiep, nen uu tien:
-- cau truc ro rang
-- tai su dung cao
-- de bao tri
-- de mo rong theo module va theo loai test
+## 1. Mục tiêu
+Đây là framework kiểm thử tự động bằng Playwright + TypeScript được thiết kế riêng cho hệ thống MoonNest. Framework được xây dựng nhằm phục vụ dự án thực tế và trình bày trong luận văn tốt nghiệp, với các tiêu chí ưu tiên:
+- **Cấu trúc lớp rõ ràng**: Tách biệt code test, page object, fixture và helper.
+- **Tối ưu hóa hiệu năng**: Sử dụng session reuse và chạy song song.
+- **Dễ bảo trì và mở rộng**: Thiết kế theo module, dễ dàng thêm test case mới.
+- **Báo cáo chi tiết**: Tích hợp HTML Report, JUnit và lưu vết (trace, video, screenshot) khi lỗi.
 
-## 2. Cau truc thu muc hien tai
+## 2. Cấu trúc thư mục hiện tại
 
 ```text
 automation-test-playwright/
-|-- .github/
-|   `-- workflows/
-|       `-- playwright.yml
-|-- artifacts/
-|-- config/
-|   |-- env.ts
-|   |-- global-setup.ts
-|   |-- global-teardown.ts
-|   `-- test-tags.ts
-|-- docs/
-|   |-- huong-dan-framework.md
-|   |-- playwright-reporting.md
-|   |-- pom-classes.md
-|   |-- regression-suite.md
-|   `-- test-script-mapping.md
-|-- pages/
-|   |-- admin/
-|   |-- auth/
-|   |-- core/
-|   |-- customer/
-|   |-- public/
-|   `-- staff/
-|-- reports/
-|-- test-data/
-|   |-- buildings.json
-|   |-- crud.json
-|   `-- users.json
-|-- tests/
-|   |-- api/
-|   |-- e2e/
-|   |-- functional/
-|   |   `-- setup/
-|   `-- ui/
-|-- utils/
-|   |-- fixtures/
-|   `-- helpers/
-|-- .env.example
-|-- package.json
-|-- playwright.config.ts
-`-- tsconfig.json
+|-- .github/                # GitHub Actions CI workflows
+|-- .runtime/               # Toàn bộ kết quả chạy test
+|   |-- html-report/        # Báo cáo dạng giao diện web
+|   |-- junit/              # Báo cáo dạng XML cho CI/CD
+|   `-- test-results/       # Screenshot, video, trace theo từng run
+|-- config/                 # Cấu hình môi trường (env, paths, setup/teardown)
+|-- docs/                   # Tài liệu chi tiết về kiến trúc và hướng dẫn
+|-- fixtures/               # Playwright fixtures (adminApi, staffApi, customerApi, basePage...)
+|-- pages/                  # Page Object Model (POM) phân theo module (admin, customer, staff...)
+|   `-- core/               # Base classes và common UI components
+|-- test-data/              # Dữ liệu mẫu (JSON) và code tạo dữ liệu ảo
+|-- tests/                  # Mã nguồn kiểm thử
+|   |-- api/                # Test API (Backend services)
+|   `-- e2e/                # Test End-to-End (Chạy trình duyệt thật)
+|-- utils/                  # Thư viện tiện ích
+|   |-- api/                # Helper xử lý request, session, endpoint
+|   |-- db/                 # DB Client (MySQL) để verify dữ liệu trực tiếp
+|   `-- helpers/            # Tiện ích chung (assertion, date, string)
+|-- .env                    # Biến môi trường (Local-only, không commit)
+|-- package.json            # Scripts và dependencies
+|-- playwright.config.ts    # Cấu hình chính của Playwright
+`-- tsconfig.json           # Cấu hình TypeScript
 ```
 
-## 3. Y nghia tung nhom thu muc
-- `pages/`: chua Page Object Model theo module nghiep vu.
-- `pages/core/`: chua BasePage, shell page, routed page, CRUD base page.
-- `tests/ui/`: test giao dien va dieu huong.
-- `tests/api/`: test endpoint va response.
-- `tests/functional/`: test logic nghiep vu theo chuc nang.
-- `tests/e2e/`: test hanh trinh nguoi dung dau cuoi.
-- `tests/regression/`: test hoi quy cho cac luong quan trong.
-- `tests/setup/`: tao session dang nhap va cac buoc khoi tao dung chung.
-- `utils/helpers/`: helper dung chung cho login, assert, data, session.
-- `utils/fixtures/`: fixture de tai su dung page/session.
-- `test-data/`: du lieu co dinh phuc vu test.
-- `config/`: cau hinh moi truong, retry, setup/teardown.
-- `artifacts/`, `reports/`: luu ket qua chay, screenshot, trace, video, report.
+## 3. Ý nghĩa các lớp thành phần
+- **`tests/api/`**: Kiểm thử các endpoint RESTful, đảm bảo logic nghiệp vụ và phân quyền ở mức Backend.
+- **`tests/e2e/`**: Kiểm thử luồng trải nghiệm người dùng từ đầu đến cuối trên trình duyệt (UI testing).
+- **`fixtures/`**: Cung cấp các context đã được "tiêm" sẵn (như phiên đăng nhập của Admin/Staff) để các file test sử dụng ngay mà không cần lặp lại logic login.
+- **`pages/`**: Hiện thực POM, giúp code test dễ đọc hơn bằng cách tập trung vào hành động (action) thay vì selector CSS/XPath.
+- **`utils/db/`**: Cho phép truy vấn trực tiếp vào cơ sở dữ liệu để kiểm tra trạng thái dữ liệu đã được lưu đúng chưa sau các thao tác API/UI.
+- **`.runtime/`**: Điểm tập trung duy nhất cho mọi output của test. Thư mục này được làm mới hoặc dọn dẹp định kỳ bởi `global-setup`.
 
-## 4. Nhung thanh phan da du cho mot framework day du
-- Phan tach test theo 5 nhom: UI, API, Functional, E2E, Regression.
-- POM theo module nghiep vu.
-- Helper chung cho login, assertion, page flow.
-- Co session luu tru bang `storageState`.
-- Co `global setup / teardown`.
-- Co config moi truong `local / dev / test / staging`.
-- Co retry theo nhom test.
-- Co report HTML, JUnit, screenshot, video, trace.
-- Co workflow CI bang GitHub Actions.
-- Co tai lieu van hanh bang tieng Viet.
+## 4. Các lệnh sử dụng chính
 
-## 5. Lenh su dung chinh
+Cài đặt ban đầu:
 ```bash
 npm install
 npx playwright install chromium
-npm run typecheck
-npm run test:setup
-npm run test
 ```
 
-## 5.1. Che do an toan du lieu
-- Mac dinh framework dang o che do an toan, khong chay cac test co the xoa hoac sua du lieu that.
-- Cac test API co nguy co pha du lieu nhu `delete`, `doi username`, `doi email`, `doi password`, `gan lai assignment` se bi `skip` neu khong bat co rieng.
-- Chi bat che do nay khi dang o moi truong test rieng, khong dung cho tai khoan that.
-
-Bat che do pha du lieu co chu y:
+Chạy toàn bộ test suite:
 ```bash
+npm test
+```
+
+Chạy theo nhóm test:
+```bash
+npm run test:api         # Chỉ chạy API test
+npm run test:e2e         # Chỉ chạy E2E test
+npm run test:smoke       # Chạy bộ test Smoke (các luồng trọng yếu nhất)
+npm run test:regression  # Chạy bộ test hồi quy đầy đủ
+```
+
+Xem báo cáo kết quả:
+```bash
+npm run report:open      # Mở HTML Report của lần chạy gần nhất
+```
+
+## 5. Chế độ an toàn dữ liệu (Destructive Tests)
+Mặc định, các test có khả năng làm thay đổi dữ liệu nghiêm trọng (xóa, đổi mật khẩu, đổi username...) sẽ bị giới hạn để bảo vệ môi trường test chung.
+Chỉ bật khi cần thiết (thường dùng trong CI hoặc local test environment riêng):
+
+```bash
+# Windows (PowerShell)
 $env:ALLOW_DESTRUCTIVE_TESTS="true"
 npm run test:api:destructive
 ```
 
-Cac lenh thuong dung:
-```bash
-npm run test:ui
-npm run test:api
-npm run test:functional
-npm run test:e2e
-npm run test:regression
-npm run test:smoke
-npm run test:ci
-npm run report:open
-```
+## 6. Quản lý Session và Auth
+Framework sử dụng `ApiSessionHelper` để quản lý các phiên đăng nhập. Thay vì phải đăng nhập thủ công cho mỗi test case, bạn có thể gọi trực tiếp các fixture:
+- `adminApi` / `adminPage`
+- `staffApi` / `staffPage`
+- `customerApi` / `customerPage`
 
-## 6. Luong session va auth state
-Framework tao 3 file session trong `playwright/.auth/`:
-- `admin.json`
-- `staff.json`
-- `customer.json`
+Các session này được khởi tạo thông minh và tái sử dụng thông qua Playwright context để tối ưu thời gian chạy.
 
-Nhung file nay duoc tao boi `tests/setup/auth.setup.ts` va duoc dung de tang toc do chay lai suite, giam viec dang nhap lap di lap lai.
+## 7. Quy ước quan trọng
+- **Locator**: Ưu tiên sử dụng `data-testid` hoặc các thuộc tính hướng tiếp cận (Accessible roles).
+- **Data Cleanup**: Mọi dữ liệu tạm tạo ra trong lúc test (như temp building, temp user) phải được dọn dẹp sạch sẽ sau khi test xong thông qua `cleanupRegistry` hoặc DB query.
+- **Assertion**: Kết hợp kiểm tra phản hồi API và kiểm tra trạng thái trực tiếp trong Database (`utils/db`) để đảm bảo tính toàn vẹn của dữ liệu.
 
-## 7. Quy uoc quan trong
-- Moi test case phai giu `Test ID` va `Test Name`.
-- Moi page object chi nen dai dien cho mot man hinh hoac mot khu vuc chuc nang ro rang.
-- Uu tien locator theo thu tu: `data-testid -> id -> name -> fallback`.
-- Khong viet logic nghiep vu vao POM.
-- Khong hard-code du lieu moi trong test neu co the dua vao `test-data/` hoac `TestDataFactory`.
-
-## 8. Gia tri cho luan van
-Framework nay the hien duoc:
-- cach thiet ke framework tu dong hoa co cau truc
-- cach tach biet test layer va page layer
-- chien luoc regression va E2E
-- bao cao ket qua chay test va kha nang mo rong sau nay
-
-Tai lieu chi tiet xem them trong `docs/huong-dan-framework.md`.
+---
+*Chi tiết hơn về cách sử dụng từng component, vui lòng đọc các tài liệu trong thư mục `docs/`.*
