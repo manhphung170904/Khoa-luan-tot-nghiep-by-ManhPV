@@ -102,7 +102,7 @@ test.describe("Admin - Invoice Management @regression", () => {
       waterUsage: 8
     });
     await formPage.submitInvoice();
-    await formPage.expectSweetAlertContains(/them hoa don thanh cong|thanh cong|success/i);
+    await formPage.expectSweetAlertContains(/thêm hóa đơn thành công|them hoa don thanh cong|thành công|thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number; status: string }>(
       `
@@ -146,7 +146,7 @@ test.describe("Admin - Invoice Management @regression", () => {
       waterUsage: 10
     });
     await formPage.submitInvoice();
-    await formPage.expectSweetAlertContains(/cap nhat hoa don thanh cong|thanh cong|success/i);
+    await formPage.expectSweetAlertContains(/cập nhật hóa đơn thành công|cap nhat hoa don thanh cong|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ due_date: string }>(
@@ -186,7 +186,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     await detailPage.expectLoaded(invoice.id);
     await detailPage.confirmInvoicePaid();
     await detailPage.confirmSweetAlert();
-    await detailPage.expectSweetAlertContains(/xac nhan thanh toan|thanh cong|success/i);
+    await detailPage.expectSweetAlertContains(/xác nhận thanh toán|xac nhan thanh toan|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);
@@ -212,7 +212,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     await listPage.waitForTableData();
     await page.locator("#invoiceTableBody tr").filter({ hasText: contract.building.name }).first().locator(".btn-delete").click();
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xoa hoa don thanh cong|thanh cong|success/i);
+    await listPage.expectSweetAlertContains(/xóa hóa đơn thành công|xoa hoa don thanh cong|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);
@@ -236,7 +236,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     await page.goto("/admin/invoice/list");
     await listPage.updateStatuses();
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/cap nhat thanh cong|thanh cong|success/i);
+    await listPage.expectSweetAlertContains(/cập nhật thành công|cap nhat thanh cong|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);

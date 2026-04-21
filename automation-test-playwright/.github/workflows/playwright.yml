@@ -1,5 +1,4 @@
 name: Playwright CI
-
 on:
   push:
     branches:
@@ -7,11 +6,9 @@ on:
       - master
   pull_request:
   workflow_dispatch:
-
 jobs:
   regression:
     runs-on: ubuntu-latest
-
     steps:
       - name: Lay ma nguon
         uses: actions/checkout@v4

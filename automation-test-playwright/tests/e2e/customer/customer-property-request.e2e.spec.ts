@@ -39,7 +39,7 @@ test.describe("Customer - Property Request @regression", () => {
     await requestPage.expectLoaded();
     await requestPage.expectRequestVisible(scenario!.propertyRequestId);
     await requestPage.expectRequestContains(scenario!.propertyRequestId, scenario!.buildingName);
-    await requestPage.expectRequestContains(scenario!.propertyRequestId, /cho xu ly|pending/i);
+    await requestPage.expectRequestContains(scenario!.propertyRequestId, /chờ xử lý|cho xu ly|pending/i);
     await requestPage.expectCancelButtonVisible(scenario!.propertyRequestId);
   });
 
@@ -48,12 +48,12 @@ test.describe("Customer - Property Request @regression", () => {
     await requestPage.expectLoaded();
     await requestPage.cancelRequest(scenario!.propertyRequestId);
     await requestPage.confirmSweetAlert();
-    await expect(requestPage.toastPopup()).toContainText(/thanh cong|da huy yeu cau|success/i);
+    await expect(requestPage.toastPopup()).toContainText(/thành công|thanh cong|đã hủy yêu cầu|da huy yeu cau|success/i);
 
     await page.reload();
     await requestPage.expectLoaded();
     await requestPage.expectRequestVisible(scenario!.propertyRequestId);
-    await requestPage.expectRequestContains(scenario!.propertyRequestId, /da huy|cancelled/i);
+    await requestPage.expectRequestContains(scenario!.propertyRequestId, /đã hủy|da huy|cancelled/i);
     await requestPage.expectCancelButtonHidden(scenario!.propertyRequestId);
 
     const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM property_request WHERE id = ?", [
@@ -99,7 +99,7 @@ test.describe("Customer - Property Request @regression", () => {
     const requestPage = new CustomerPropertyRequestListPage(page);
     await requestPage.expectLoaded();
     await requestPage.expectRequestVisible(scenario!.propertyRequestId);
-    await requestPage.expectRequestContains(scenario!.propertyRequestId, /da duyet|approved/i);
+    await requestPage.expectRequestContains(scenario!.propertyRequestId, /đã duyệt|da duyet|approved/i);
     await requestPage.expectCancelButtonHidden(scenario!.propertyRequestId);
 
     const rows = await MySqlDbClient.query<{ status: string; contract_id: number | null }>(

@@ -26,9 +26,7 @@ const parseCandidates = (value: string | undefined, fallback: string[]): string[
 };
 
 type EnvironmentName = "local" | "dev" | "test" | "staging";
-
 const supportedEnvironments = ["local", "dev", "test", "staging"] as const satisfies readonly EnvironmentName[];
-
 const toEnvironmentName = (value: string | undefined): EnvironmentName => {
   if (!value) {
     return "local";

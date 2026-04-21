@@ -35,9 +35,9 @@ test.describe("Customer - Service @regression", () => {
   test("[E2E-CUS-SRV-001] - Customer Service - Service Cards - Key Service Card Display", async ({ page }) => {
     const servicePage = new CustomerServicePage(page);
     await servicePage.expectLoaded();
-    await servicePage.expectCardVisible("Do Xe O To");
-    await servicePage.expectCardVisible("Internet Toc Do Cao");
-    await servicePage.expectCardVisible("Phong Gym");
+    await servicePage.expectCardVisible("Đỗ Xe Ô Tô");
+    await servicePage.expectCardVisible("Internet Tốc Độ Cao");
+    await servicePage.expectCardVisible("Phòng Gym");
     await expect(page).toHaveURL(/\/customer\/service/);
   });
 
@@ -45,7 +45,7 @@ test.describe("Customer - Service @regression", () => {
     const servicePage = new CustomerServicePage(page);
     await servicePage.expectLoaded();
     await servicePage.expectRequestDisabled("An Ninh 24/7");
-    await servicePage.expectRequestDisabled("Phong Gym");
+    await servicePage.expectRequestDisabled("Phòng Gym");
   });
 });
 

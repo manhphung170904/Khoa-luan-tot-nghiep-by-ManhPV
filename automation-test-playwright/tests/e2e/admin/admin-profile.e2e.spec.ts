@@ -54,7 +54,7 @@ test.describe("Admin - Profile @regression", () => {
     const profilePage = new AdminProfilePage(page);
     await page.goto("/admin/profile?successMessage=Cap%20nhat%20thanh%20cong");
 
-    await profilePage.expectSweetAlertContains(/Cap nhat thanh cong|thanh cong/i);
+    await profilePage.expectSweetAlertContains(/cập nhật thành công|cap nhat thanh cong|thành công|thanh cong/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
@@ -68,12 +68,12 @@ test.describe("Admin - Profile @regression", () => {
 
     await profilePage.openUsernameModal();
     await profilePage.sendOtpFromModal("username");
-    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
+    await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_USERNAME");
     await profilePage.submitUsernameChange(nextUsername, otp);
-    await profilePage.expectSweetAlertContains(/thanh cong|ten dang nhap/i);
+    await profilePage.expectSweetAlertContains(/thành công|thanh cong|tên đăng nhập/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempUser!.id]);
       return rows[0]?.username ?? "";
@@ -90,12 +90,12 @@ test.describe("Admin - Profile @regression", () => {
 
     await profilePage.openPhoneModal();
     await profilePage.sendOtpFromModal("phone");
-    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
+    await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PHONE");
     await profilePage.submitPhoneChange(newPhone, otp);
-    await profilePage.expectSweetAlertContains(/thanh cong|so dien thoai/i);
+    await profilePage.expectSweetAlertContains(/thành công|thanh cong|số điện thoại/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempUser!.id]);
       return rows[0]?.phone ?? "";
@@ -106,7 +106,7 @@ test.describe("Admin - Profile @regression", () => {
     const profilePage = new AdminProfilePage(page);
 
     await profilePage.submitPasswordChange("ValidPass1!", "DifferentPass1!", "000000");
-    await profilePage.expectSweetAlertContains(/khong khop|kh.ng kh.p/i);
+    await profilePage.expectSweetAlertContains(/không khớp|khong khop/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
@@ -122,12 +122,12 @@ test.describe("Admin - Profile @regression", () => {
 
     await profilePage.openPasswordModal();
     await profilePage.sendOtpFromModal("password");
-    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
+    await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PASSWORD");
     await profilePage.submitPasswordChange(newPassword, newPassword, otp);
-    await profilePage.expectSweetAlertContains(/thanh cong|mat khau/i);
+    await profilePage.expectSweetAlertContains(/thành công|thanh cong|mật khẩu/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempUser!.id]);
       return rows[0]?.password ?? "";

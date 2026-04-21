@@ -65,7 +65,7 @@ test.describe("Staff - Invoice List @regression", () => {
     await expect(invoicePage.rowByInvoiceId(invoice.id)).toContainText(contract.customer.fullName);
     await invoicePage.openViewModal(invoice.id);
     await expect(invoicePage.visibleModal()).toContainText(contract.building.name);
-    await expect(invoicePage.visibleModal()).toContainText(/chi tiet hoa don|invoice detail/i);
+    await expect(invoicePage.visibleModal()).toContainText(/chi tiết hóa đơn|chi tiet hoa don|invoice detail/i);
   });
 
   test("[E2E-STF-INV-002] - Staff Invoice List - Invoice Creation - Create Invoice from Add Modal", async ({ page }) => {
@@ -89,7 +89,7 @@ test.describe("Staff - Invoice List @regression", () => {
     });
     await invoicePage.chooseAddStatus("PENDING");
     await invoicePage.submitAddInvoice();
-    await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
+    await invoicePage.expectSweetAlertContains(/thành công|thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number }>(
       `
@@ -134,7 +134,7 @@ test.describe("Staff - Invoice List @regression", () => {
       waterUsage: 7
     });
     await invoicePage.submitAddInvoice();
-    await invoicePage.expectSweetAlertContains(/loi|da ton tai|error/i);
+    await invoicePage.expectSweetAlertContains(/lỗi|loi|đã tồn tại|da ton tai|error/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       `
@@ -168,7 +168,7 @@ test.describe("Staff - Invoice List @regression", () => {
       status: "PAID"
     });
     await invoicePage.saveVisibleEditForm();
-    await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
+    await invoicePage.expectSweetAlertContains(/thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string; due_date: string }>(
@@ -192,7 +192,7 @@ test.describe("Staff - Invoice List @regression", () => {
     await invoicePage.waitForTableData();
     await invoicePage.deleteInvoice(invoice.id);
     await invoicePage.confirmSweetAlert();
-    await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
+    await invoicePage.expectSweetAlertContains(/thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);

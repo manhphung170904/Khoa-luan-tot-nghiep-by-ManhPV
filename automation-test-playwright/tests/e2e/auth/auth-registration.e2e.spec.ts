@@ -108,7 +108,7 @@ test.describe("Auth - Registration @regression", () => {
       await verifyPage.verifyOtp("000000");
       await page.waitForURL(/\/register\/verify\?/);
       await verifyPage.expectPopupContains(
-        /xac thuc that bai|otp khong hop le|ma otp khong hop le|verification failed/i
+        /xác thực thất bại|xac thuc that bai|otp khong hop le|ma otp khong hop le|verification failed/i
       );
       await expect(page).not.toHaveURL(/\/register\/complete\?/);
 
@@ -147,7 +147,7 @@ test.describe("Auth - Registration @regression", () => {
       await loginPage.login(user.username, "WrongPassword!123");
       await page.waitForURL(/\/login\?errorMessage=/);
       await loginPage.expectPopupContains(
-        /dang nhap that bai|sai tai khoan hoac mat khau|login failed/i
+        /đăng nhập thất bại|dang nhap that bai|sai tài khoản hoặc mật khẩu|sai tai khoan hoac mat khau|login failed/i
       );
     } finally {
       await cleanupRegistrationUser(user);

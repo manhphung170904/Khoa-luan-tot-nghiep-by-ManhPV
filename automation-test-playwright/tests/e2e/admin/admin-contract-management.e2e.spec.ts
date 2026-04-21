@@ -126,7 +126,7 @@ test.describe("Admin - Contract Management @regression", () => {
     await formPage.fillRentPrice(1450000);
     await formPage.fillDates("2026-06-01", "2026-12-31");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/thanh cong|them hop dong|success/i);
+    await formPage.expectSweetAlertContains(/thành công|thanh cong|thêm hợp đồng|them hop dong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number; rent_price: number; start_date: string; end_date: string }>(
       `
@@ -163,7 +163,7 @@ test.describe("Admin - Contract Management @regression", () => {
     await formPage.fillRentPrice(1500000);
     await formPage.fillDates("2026-09-01", "2026-08-01");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/ngay ket thuc|canh bao|warning/i);
+    await formPage.expectSweetAlertContains(/ngày kết thúc|ngay ket thuc|cảnh báo|canh bao|warning/i);
 
     const rows = await MySqlDbClient.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND rent_price = ?",
@@ -186,7 +186,7 @@ test.describe("Admin - Contract Management @regression", () => {
     await formPage.fillRentPrice(2500000);
     await formPage.selectStatus("ACTIVE");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/thanh cong|cap nhat|success/i);
+    await formPage.expectSweetAlertContains(/thành công|thanh cong|cập nhật|cap nhat|success/i);
 
     const rows = await MySqlDbClient.query<{ rent_price: number; end_date: string; status: string }>(
       "SELECT rent_price, DATE_FORMAT(end_date, '%Y-%m-%d') AS end_date, status FROM contract WHERE id = ?",
@@ -224,7 +224,7 @@ test.describe("Admin - Contract Management @regression", () => {
     await detailPage.expectLoaded(tempContract.id);
     await detailPage.deleteContract();
     await detailPage.confirmSweetAlert();
-    await detailPage.expectSweetAlertContains(/thanh cong|xoa hop dong|success/i);
+    await detailPage.expectSweetAlertContains(/thành công|thanh cong|xóa hợp đồng|xoa hop dong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM contract WHERE id = ?", [tempContract.id]);

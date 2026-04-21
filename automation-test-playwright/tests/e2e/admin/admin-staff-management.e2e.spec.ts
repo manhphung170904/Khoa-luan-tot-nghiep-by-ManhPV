@@ -83,7 +83,7 @@ test.describe("Admin - Staff Management @regression", () => {
     });
     await formPage.selectRole("STAFF");
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/them nhan vien|thanh cong|success/i);
+    await formPage.expectSweetAlertContains(/thêm nhân viên|them nhan vien|thành công|thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number; role: string }>(
       "SELECT id, role FROM staff WHERE username = ? LIMIT 1",
@@ -126,7 +126,7 @@ test.describe("Admin - Staff Management @regression", () => {
     await detailPage.openBuildingAssignments();
     await detailPage.setBuildingAssignment(building.id, true);
     await detailPage.saveBuildingAssignments();
-    await detailPage.expectSweetAlertContains(/cap nhat phan cong toa nha|thanh cong|success/i);
+    await detailPage.expectSweetAlertContains(/cập nhật phân công tòa nhà|cap nhat phan cong toa nha|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const response = await bootstrapAdminApi.get(`/api/v1/admin/staff/${targetStaff.id}/assignments/buildings`, {
@@ -140,7 +140,7 @@ test.describe("Admin - Staff Management @regression", () => {
     await detailPage.openCustomerAssignments();
     await detailPage.setCustomerAssignment(customer.id, true);
     await detailPage.saveCustomerAssignments();
-    await detailPage.expectSweetAlertContains(/cap nhat phan cong khach hang|thanh cong|success/i);
+    await detailPage.expectSweetAlertContains(/cập nhật phân công khách hàng|cap nhat phan cong khach hang|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const response = await bootstrapAdminApi.get(`/api/v1/admin/staff/${targetStaff.id}/assignments/customers`, {
@@ -159,7 +159,7 @@ test.describe("Admin - Staff Management @regression", () => {
     await listPage.waitForSearchTableData();
     await listPage.deleteStaff(staff.fullName);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xoa nhan vien|thanh cong|success/i);
+    await listPage.expectSweetAlertContains(/xóa nhân viên|xoa nhan vien|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM staff WHERE id = ?", [staff.id]);
