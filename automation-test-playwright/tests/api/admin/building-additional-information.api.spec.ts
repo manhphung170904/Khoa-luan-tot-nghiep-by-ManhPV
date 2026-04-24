@@ -6,6 +6,7 @@ import { expectApiErrorBody, expectApiMessage, expectArrayBody, expectObjectBody
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
+import { cleanupUploadedFileByName } from "@helpers/UploadedFileCleanupHelper";
 
 test.describe("Admin - API Building Additional Information @extended", () => {
   let admin: APIRequestContext;
@@ -339,6 +340,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
   });
 
   test("[BAI-002] - API Admin Building Additional Information - Planning Map Image - Authentication Type Size and JPG Upload Validation", async ({ request }) => {
+    let uploadedFilename = "";
     const anonymousUpload = await request.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
       multipart: {
@@ -397,18 +399,23 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       path: "/api/v1/admin/building-additional-information/planning-maps/image"
     });
 
-    const validUpload = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
-      failOnStatusCode: false,
-      multipart: {
-        file: ApiFileFixtures.planningMapJpg()
-      }
-    });
-    const validUploadBody = await expectApiMessage<{ message?: string; data?: { filename?: string } }>(validUpload, {
-      status: 200,
-      message: apiExpectedMessages.admin.buildingAdditionalInformation.upload,
-      dataMode: "object"
-    });
-    expect(validUploadBody.data?.filename).toMatch(/^planning_.*\.jpg$/);
+    try {
+      const validUpload = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
+        failOnStatusCode: false,
+        multipart: {
+          file: ApiFileFixtures.planningMapJpg()
+        }
+      });
+      const validUploadBody = await expectApiMessage<{ message?: string; data?: { filename?: string } }>(validUpload, {
+        status: 200,
+        message: apiExpectedMessages.admin.buildingAdditionalInformation.upload,
+        dataMode: "object"
+      });
+      uploadedFilename = validUploadBody.data?.filename ?? "";
+      expect(uploadedFilename).toMatch(/^planning_.*\.jpg$/);
+    } finally {
+      await cleanupUploadedFileByName("planning", uploadedFilename);
+    }
   });
 
   test("[BAI-003] - API Admin Building Additional Information - Resource Reference - Missing Resource 400 Handling", async () => {

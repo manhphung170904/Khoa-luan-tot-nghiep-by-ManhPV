@@ -20,13 +20,12 @@ test.describe("Customer - Property Request @regression", () => {
     if (scenario) {
       if (createdContractId) {
         await CleanupHelper.run([
-          { label: "Dispose customer API context", action: () => scenario!.customer.dispose() },
           { label: `Delete property request ${scenario.propertyRequestId}`, action: () => MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario!.propertyRequestId]) },
-          { label: `Delete contract ${createdContractId}`, action: () => MySqlDbClient.execute("DELETE FROM contract WHERE id = ?", [createdContractId]) },
-          { label: `Delete customer ${scenario.customerId}`, action: () => MySqlDbClient.execute("DELETE FROM customer WHERE id = ?", [scenario!.customerId]) },
-          { label: `Delete building ${scenario.buildingId}`, action: () => MySqlDbClient.execute("DELETE FROM building WHERE id = ?", [scenario!.buildingId]) },
-          { label: `Delete staff ${scenario.staffId}`, action: () => MySqlDbClient.execute("DELETE FROM staff WHERE id = ?", [scenario!.staffId]) },
-          { label: "Dispose admin API context", action: () => scenario!.admin.dispose() }
+          {
+            label: `Delete contract ${createdContractId}`,
+            action: () => scenario!.admin.delete(`/api/v1/admin/contracts/${createdContractId}`, { failOnStatusCode: false })
+          },
+          { label: `Cleanup property request scenario ${scenario.propertyRequestId}`, action: () => scenario!.cleanup() }
         ]);
         createdContractId = 0;
       } else {

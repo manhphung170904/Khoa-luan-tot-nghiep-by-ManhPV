@@ -2,6 +2,7 @@ import { expect, test } from "@fixtures/base.fixture";
 import type { APIRequestContext, Page } from "@playwright/test";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { cleanupDatabaseScope } from "@db/TestDataCleanup";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { LoginPage } from "@pages/auth/LoginPage";
 import { RegisterCompletePage } from "@pages/auth/RegisterCompletePage";
@@ -26,8 +27,14 @@ function buildRegistrationUser(prefix: string): RegistrationUser {
 }
 
 async function cleanupRegistrationUser(user: RegistrationUser): Promise<void> {
-  await MySqlDbClient.execute("DELETE FROM customer WHERE email = ?", [user.email]);
-  await MySqlDbClient.execute("DELETE FROM email_verification WHERE email = ?", [user.email]);
+  const rows = await MySqlDbClient.query<{ id: number }>(
+    "SELECT id FROM customer WHERE email = ? OR username = ?",
+    [user.email, user.username]
+  );
+  await cleanupDatabaseScope({
+    customerIds: rows.map((row) => row.id),
+    emails: [user.email]
+  });
 }
 
 async function assertNoRegisteredCustomer(user: RegistrationUser): Promise<void> {

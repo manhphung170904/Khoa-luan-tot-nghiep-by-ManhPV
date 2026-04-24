@@ -4,6 +4,9 @@ export type CleanupScope = {
   buildingIds?: number[];
   customerIds?: number[];
   staffIds?: number[];
+  contractIds?: number[];
+  saleContractIds?: number[];
+  propertyRequestIds?: number[];
   emails?: string[];
 };
 
@@ -55,8 +58,11 @@ function buildOrIdFilter(filters: IdFilter[]): { sql: string; params: number[] }
   };
 }
 
-async function fetchContractIds(scope: Required<Pick<CleanupScope, "buildingIds" | "customerIds" | "staffIds">>): Promise<number[]> {
+async function fetchContractIds(
+  scope: Required<Pick<CleanupScope, "buildingIds" | "customerIds" | "staffIds" | "contractIds">>
+): Promise<number[]> {
   const filter = buildOrIdFilter([
+    { column: "id", ids: scope.contractIds },
     { column: "building_id", ids: scope.buildingIds },
     { column: "customer_id", ids: scope.customerIds },
     { column: "staff_id", ids: scope.staffIds }
@@ -72,6 +78,43 @@ async function fetchContractIds(scope: Required<Pick<CleanupScope, "buildingIds"
   );
 
   return uniqueNumbers(rows.map((row) => row.id));
+}
+
+async function fetchSaleContractIds(
+  scope: Required<Pick<CleanupScope, "buildingIds" | "customerIds" | "staffIds" | "saleContractIds">>
+): Promise<number[]> {
+  const filter = buildOrIdFilter([
+    { column: "id", ids: scope.saleContractIds },
+    { column: "building_id", ids: scope.buildingIds },
+    { column: "customer_id", ids: scope.customerIds },
+    { column: "staff_id", ids: scope.staffIds }
+  ]);
+
+  if (filter.params.length === 0) {
+    return [];
+  }
+
+  const rows = await MySqlDbClient.query<{ id: number }>(
+    `SELECT id FROM sale_contract WHERE ${filter.sql}`,
+    filter.params
+  );
+
+  return uniqueNumbers(rows.map((row) => row.id));
+}
+
+async function fetchEmailsForIds(table: "customer" | "staff", ids: number[]): Promise<string[]> {
+  const uniqueIds = uniqueNumbers(ids);
+  if (!uniqueIds.length) {
+    return [];
+  }
+
+  const idClause = buildInClause(uniqueIds);
+  const rows = await MySqlDbClient.query<{ email: string | null }>(
+    `SELECT email FROM ${table} WHERE id IN ${idClause.sql}`,
+    idClause.params
+  );
+
+  return uniqueStrings(rows.map((row) => row.email ?? ""));
 }
 
 async function deleteInvoices(contractIds: number[], customerIds: number[]): Promise<void> {
@@ -126,30 +169,91 @@ async function deleteEmailVerifications(emails: string[]): Promise<void> {
   );
 }
 
+async function deleteRefreshTokens(userType: "CUSTOMER" | "STAFF", userIds: number[]): Promise<void> {
+  const ids = uniqueNumbers(userIds);
+  if (!ids.length) {
+    return;
+  }
+
+  const idClause = buildInClause(ids);
+  await MySqlDbClient.execute(
+    `DELETE FROM refresh_token WHERE user_type = ? AND user_id IN ${idClause.sql}`,
+    [userType, ...idClause.params]
+  );
+}
+
+async function deletePasswordResetTokens(userType: "CUSTOMER" | "STAFF", userIds: number[]): Promise<void> {
+  const ids = uniqueNumbers(userIds);
+  if (!ids.length) {
+    return;
+  }
+
+  const idClause = buildInClause(ids);
+  await MySqlDbClient.execute(
+    `DELETE FROM password_reset_token WHERE user_type = ? AND user_id IN ${idClause.sql}`,
+    [userType, ...idClause.params]
+  );
+}
+
+async function deleteOauthIdentities(userType: "CUSTOMER" | "STAFF", userIds: number[]): Promise<void> {
+  const ids = uniqueNumbers(userIds);
+  if (!ids.length) {
+    return;
+  }
+
+  const idClause = buildInClause(ids);
+  await MySqlDbClient.execute(
+    `DELETE FROM oauth_identity WHERE user_type = ? AND user_id IN ${idClause.sql}`,
+    [userType, ...idClause.params]
+  );
+}
+
 export async function cleanupDatabaseScope(scope: CleanupScope, options: CleanupOptions = {}): Promise<void> {
   const buildingIds = uniqueNumbers(scope.buildingIds);
   const customerIds = uniqueNumbers(scope.customerIds);
   const staffIds = uniqueNumbers(scope.staffIds);
-  const emails = uniqueStrings(scope.emails);
+  const explicitContractIds = uniqueNumbers(scope.contractIds);
+  const explicitSaleContractIds = uniqueNumbers(scope.saleContractIds);
+  const propertyRequestIds = uniqueNumbers(scope.propertyRequestIds);
   const shouldLog = options.log ?? false;
   const logPrefix = options.logPrefix ?? "[Cleanup]";
 
-  if (!buildingIds.length && !customerIds.length && !staffIds.length && !emails.length) {
+  if (
+    !buildingIds.length &&
+    !customerIds.length &&
+    !staffIds.length &&
+    !explicitContractIds.length &&
+    !explicitSaleContractIds.length &&
+    !propertyRequestIds.length &&
+    !uniqueStrings(scope.emails).length
+  ) {
     if (shouldLog) {
       console.log(`${logPrefix} No matching test data scope to clean.`);
     }
     return;
   }
 
-  const contractIds = await fetchContractIds({ buildingIds, customerIds, staffIds });
+  const customerEmails = await fetchEmailsForIds("customer", customerIds);
+  const staffEmails = await fetchEmailsForIds("staff", staffIds);
+  const emails = uniqueStrings([...(scope.emails ?? []), ...customerEmails, ...staffEmails]);
+  const contractIds = await fetchContractIds({ buildingIds, customerIds, staffIds, contractIds: explicitContractIds });
+  const saleContractIds = await fetchSaleContractIds({
+    buildingIds,
+    customerIds,
+    staffIds,
+    saleContractIds: explicitSaleContractIds
+  });
 
   await deleteInvoices(contractIds, customerIds);
   await deleteUtilityMeters(contractIds);
 
   const propertyRequestFilter = buildOrIdFilter([
+    { column: "id", ids: propertyRequestIds },
     { column: "customer_id", ids: customerIds },
     { column: "building_id", ids: buildingIds },
-    { column: "processed_by", ids: staffIds }
+    { column: "processed_by", ids: staffIds },
+    { column: "contract_id", ids: contractIds },
+    { column: "sale_contract_id", ids: saleContractIds }
   ]);
   if (propertyRequestFilter.params.length > 0) {
     await MySqlDbClient.execute(
@@ -159,6 +263,7 @@ export async function cleanupDatabaseScope(scope: CleanupScope, options: Cleanup
   }
 
   const contractFilter = buildOrIdFilter([
+    { column: "id", ids: contractIds },
     { column: "customer_id", ids: customerIds },
     { column: "building_id", ids: buildingIds },
     { column: "staff_id", ids: staffIds }
@@ -189,6 +294,13 @@ export async function cleanupDatabaseScope(scope: CleanupScope, options: Cleanup
       assignmentCustomerFilter.params
     );
   }
+
+  await deleteRefreshTokens("CUSTOMER", customerIds);
+  await deleteRefreshTokens("STAFF", staffIds);
+  await deletePasswordResetTokens("CUSTOMER", customerIds);
+  await deletePasswordResetTokens("STAFF", staffIds);
+  await deleteOauthIdentities("CUSTOMER", customerIds);
+  await deleteOauthIdentities("STAFF", staffIds);
 
   if (buildingIds.length > 0) {
     const buildingClause = buildInClause(buildingIds);

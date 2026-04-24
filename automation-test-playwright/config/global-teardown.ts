@@ -10,6 +10,7 @@ const uploadCleanupTargets = [
   {
     label: "building image (test)",
     dir: path.resolve(moonNestRoot, "target", "test-upload", "building_img"),
+    sweepAllMatchingFiles: true,
     dbColumn: "image",
     sql: `
       SELECT image AS filename
@@ -23,6 +24,7 @@ const uploadCleanupTargets = [
   {
     label: "planning map image (test)",
     dir: path.resolve(moonNestRoot, "target", "test-upload", "planning_map_img"),
+    sweepAllMatchingFiles: true,
     dbColumn: "image_url",
     sql: `
       SELECT image_url AS filename
@@ -36,6 +38,7 @@ const uploadCleanupTargets = [
   {
     label: "building image (local)",
     dir: path.resolve(moonNestRoot, "uploads", "building_img"),
+    sweepAllMatchingFiles: false,
     dbColumn: "image",
     sql: `
       SELECT image AS filename
@@ -49,6 +52,7 @@ const uploadCleanupTargets = [
   {
     label: "planning map image (local)",
     dir: path.resolve(moonNestRoot, "uploads", "planning_map_img"),
+    sweepAllMatchingFiles: false,
     dbColumn: "image_url",
     sql: `
       SELECT image_url AS filename
@@ -76,7 +80,7 @@ function extractFilename(rawValue: string): string | null {
 }
 
 async function collectUploadedTestFiles(): Promise<Array<{ filePath: string; label: string }>> {
-  const pendingDeletes: Array<{ filePath: string; label: string }> = [];
+  const pendingDeletes = new Map<string, { filePath: string; label: string }>();
 
   for (const target of uploadCleanupTargets) {
     const rows = await MySqlDbClient.query<Record<typeof target.dbColumn, string>>(target.sql);
@@ -97,14 +101,41 @@ async function collectUploadedTestFiles(): Promise<Array<{ filePath: string; lab
         continue;
       }
 
-      pendingDeletes.push({
+      pendingDeletes.set(resolvedPath, {
+        filePath: resolvedPath,
+        label: `${target.label} ${filename}`
+      });
+    }
+
+    if (!target.sweepAllMatchingFiles) {
+      continue;
+    }
+
+    let filenames: string[] = [];
+    try {
+      filenames = await fs.readdir(target.dir);
+    } catch {
+      continue;
+    }
+
+    for (const filename of filenames) {
+      if (!target.allowedPattern.test(filename)) {
+        continue;
+      }
+
+      const resolvedPath = path.resolve(target.dir, filename);
+      if (path.dirname(resolvedPath) !== target.dir) {
+        continue;
+      }
+
+      pendingDeletes.set(resolvedPath, {
         filePath: resolvedPath,
         label: `${target.label} ${filename}`
       });
     }
   }
 
-  return pendingDeletes;
+  return [...pendingDeletes.values()];
 }
 
 async function cleanupUploadedTestFiles(): Promise<void> {

@@ -8,6 +8,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
+import { cleanupUploadedFileByName } from "@helpers/UploadedFileCleanupHelper";
 
 test.describe("Admin - API Building @regression", () => {
   let admin: APIRequestContext;
@@ -548,19 +549,25 @@ test.describe("Admin - API Building @regression", () => {
     });
 
     test("[BLD-U03] - API Admin Building Image - File Integrity - Corrupted JPG Acceptance Behavior", async () => {
-      const response = await admin.post("/api/v1/admin/buildings/image", {
-        failOnStatusCode: false,
-        multipart: {
-          file: ApiFileFixtures.corruptJpg()
-        }
-      });
+      let uploadedFilename = "";
+      try {
+        const response = await admin.post("/api/v1/admin/buildings/image", {
+          failOnStatusCode: false,
+          multipart: {
+            file: ApiFileFixtures.corruptJpg()
+          }
+        });
 
-      const data = await expectApiMessage<{ message?: string; data?: { filename?: string } }>(response, {
-        status: 200,
-        message: apiExpectedMessages.admin.buildings.upload,
-        dataMode: "object"
-      });
-      expect(data.data?.filename).toMatch(/\.jpg$/);
+        const data = await expectApiMessage<{ message?: string; data?: { filename?: string } }>(response, {
+          status: 200,
+          message: apiExpectedMessages.admin.buildings.upload,
+          dataMode: "object"
+        });
+        uploadedFilename = data.data?.filename ?? "";
+        expect(uploadedFilename).toMatch(/\.jpg$/);
+      } finally {
+        await cleanupUploadedFileByName("building", uploadedFilename);
+      }
     });
 
     test("[BLD-U04] - API Admin Building Image - File Size - Maximum Size Validation", async () => {
@@ -580,21 +587,27 @@ test.describe("Admin - API Building @regression", () => {
 
     test("[BLD-U05] - API Admin Building Image - Upload - Successful JPG Upload and Generated Filename", async () => {
       const sourceFile = ApiFileFixtures.buildingJpg();
-      const response = await admin.post("/api/v1/admin/buildings/image", {
-        failOnStatusCode: false,
-        multipart: {
-          file: sourceFile
-        }
-      });
+      let uploadedFilename = "";
+      try {
+        const response = await admin.post("/api/v1/admin/buildings/image", {
+          failOnStatusCode: false,
+          multipart: {
+            file: sourceFile
+          }
+        });
 
-      const data = await expectApiMessage<{ message?: string; data?: { filename?: string } }>(response, {
-        status: 200,
-        message: apiExpectedMessages.admin.buildings.upload,
-        dataMode: "object"
-      });
-      expect(data.data?.filename).toBeDefined();
-      expect(data.data?.filename).not.toBe(sourceFile.name);
-      expect(data.data?.filename).toMatch(/\.jpg$/);
+        const data = await expectApiMessage<{ message?: string; data?: { filename?: string } }>(response, {
+          status: 200,
+          message: apiExpectedMessages.admin.buildings.upload,
+          dataMode: "object"
+        });
+        uploadedFilename = data.data?.filename ?? "";
+        expect(uploadedFilename).toBeDefined();
+        expect(uploadedFilename).not.toBe(sourceFile.name);
+        expect(uploadedFilename).toMatch(/\.jpg$/);
+      } finally {
+        await cleanupUploadedFileByName("building", uploadedFilename);
+      }
     });
   });
 });

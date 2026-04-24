@@ -7,6 +7,7 @@ import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
 type TempStaff = {
@@ -74,7 +75,7 @@ test.describe("Staff - API Profile @api-write @otp @regression", () => {
 
   test.afterEach(async () => {
     await staffContext.dispose();
-    await bootstrapAdmin.delete(`/api/v1/admin/staff/${tempStaff.id}`, { failOnStatusCode: false });
+    await TempEntityHelper.xoaStaffTam(bootstrapAdmin, tempStaff.id);
   });
 
   test.afterAll(async () => {

@@ -7,6 +7,7 @@ import { env } from "@config/env";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
 type TempAdmin = {
@@ -111,9 +112,7 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
     await tempAdminContext.dispose();
 
     if (tempAdmin?.id) {
-      await bootstrapAdminContext.delete(`/api/v1/admin/staff/${tempAdmin.id}`, {
-        failOnStatusCode: false
-      });
+      await TempEntityHelper.xoaStaffTam(bootstrapAdminContext, tempAdmin.id);
     }
   });
 

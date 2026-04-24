@@ -78,7 +78,7 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
 
   test.afterEach(async () => {
     await customerContext.dispose();
-    await bootstrapAdmin.delete(`/api/v1/admin/customers/${tempCustomer.id}`, { failOnStatusCode: false });
+    await TempEntityHelper.xoaCustomerTam(bootstrapAdmin, tempCustomer.id);
     await TempEntityHelper.xoaStaffTam(bootstrapAdmin, managerStaffId);
     managerStaffId = 0;
   });

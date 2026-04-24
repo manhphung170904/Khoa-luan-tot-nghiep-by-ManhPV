@@ -71,6 +71,16 @@ export class TempEntityHelper {
     }
   }
 
+  private static async layEmailTheoId(table: "staff" | "customer", id: number): Promise<string | undefined> {
+    const rows = await MySqlDbClient.query<{ email: string | null }>(
+      `SELECT email FROM ${table} WHERE id = ? LIMIT 1`,
+      [id]
+    );
+
+    const email = rows[0]?.email?.trim();
+    return email ? email : undefined;
+  }
+
   private static async deleteWithFallback(
     request: APIRequestContext,
     url: string,
@@ -122,6 +132,7 @@ export class TempEntityHelper {
 
   static async xoaStaffTam(request: APIRequestContext, id?: number): Promise<void> {
     if (!id) return;
+    const email = await this.layEmailTheoId("staff", id).catch(() => undefined);
     await this.safe(async () => {
       await this.deleteWithFallback(
         request,
@@ -130,6 +141,8 @@ export class TempEntityHelper {
         { staffIds: [id] },
         `Staff ${id}`
       );
+
+      await cleanupDatabaseScope({ staffIds: [id], emails: email ? [email] : [] });
     }, `Staff ${id}`);
   }
 
@@ -156,6 +169,7 @@ export class TempEntityHelper {
 
   static async xoaCustomerTam(request: APIRequestContext, id?: number): Promise<void> {
     if (!id) return;
+    const email = await this.layEmailTheoId("customer", id).catch(() => undefined);
     await this.safe(async () => {
       await this.deleteWithFallback(
         request,
@@ -164,6 +178,8 @@ export class TempEntityHelper {
         { customerIds: [id] },
         `Customer ${id}`
       );
+
+      await cleanupDatabaseScope({ customerIds: [id], emails: email ? [email] : [] });
     }, `Customer ${id}`);
   }
 
@@ -243,7 +259,18 @@ export class TempEntityHelper {
     if (!temp) return;
 
     await this.safe(async () => {
-      await request.delete(`/api/v1/admin/contracts/${temp.id}`);
+      await this.deleteWithFallback(
+        request,
+        `/api/v1/admin/contracts/${temp.id}`,
+        [200, 204, 404],
+        {
+          contractIds: [temp.id],
+          customerIds: [temp.customer.id],
+          buildingIds: [temp.building.id],
+          staffIds: [temp.staff.id]
+        },
+        `Contract ${temp.id}`
+      );
     }, `Contract ${temp.id}`);
 
     await this.safe(() => this.capNhatPhanCongCustomer(request, temp.staff.id, []), "Reset Staff Customer Assignment");
@@ -279,7 +306,17 @@ export class TempEntityHelper {
     if (!temp) return;
 
     await this.safe(async () => {
-      await request.delete(`/api/v1/admin/invoices/${temp.id}`);
+      const response = await request.delete(`/api/v1/admin/invoices/${temp.id}`, {
+        failOnStatusCode: false
+      });
+      if (![200, 204, 404].includes(response.status())) {
+        await cleanupDatabaseScope({
+          contractIds: [temp.contract.id],
+          customerIds: [temp.contract.customer.id],
+          buildingIds: [temp.contract.building.id],
+          staffIds: [temp.contract.staff.id]
+        });
+      }
     }, `Invoice ${temp.id}`);
 
     await this.xoaContractTam(request, temp.contract);
@@ -322,7 +359,18 @@ export class TempEntityHelper {
     if (!temp) return;
 
     await this.safe(async () => {
-      await request.delete(`/api/v1/admin/sale-contracts/${temp.id}`);
+      await this.deleteWithFallback(
+        request,
+        `/api/v1/admin/sale-contracts/${temp.id}`,
+        [200, 204, 404],
+        {
+          saleContractIds: [temp.id],
+          customerIds: [temp.customer.id],
+          buildingIds: [temp.building.id],
+          staffIds: [temp.staff.id]
+        },
+        `SaleContract ${temp.id}`
+      );
     }, `SaleContract ${temp.id}`);
 
     await this.safe(() => this.capNhatPhanCongCustomer(request, temp.staff.id, []), "Reset Staff Customer Assignment");

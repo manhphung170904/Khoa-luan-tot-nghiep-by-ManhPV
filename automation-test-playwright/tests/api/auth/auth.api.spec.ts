@@ -5,6 +5,7 @@ import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { expectStatusExact } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { cleanupDatabaseScope } from "@db/TestDataCleanup";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
 type AuthUser = {
@@ -27,8 +28,14 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
   }
 
   async function cleanupAuthUser(user: AuthUser): Promise<void> {
-    await MySqlDbClient.execute("DELETE FROM customer WHERE email = ? OR username = ?", [user.email, user.username]);
-    await MySqlDbClient.execute("DELETE FROM email_verification WHERE email = ?", [user.email]);
+    const rows = await MySqlDbClient.query<{ id: number }>(
+      "SELECT id FROM customer WHERE email = ? OR username = ?",
+      [user.email, user.username]
+    );
+    await cleanupDatabaseScope({
+      customerIds: rows.map((row) => row.id),
+      emails: [user.email]
+    });
   }
 
   async function issueRegistrationTicket(request: APIRequestContext, email: string): Promise<string> {
