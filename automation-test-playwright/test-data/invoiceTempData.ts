@@ -14,7 +14,7 @@ export type TempInvoiceRecord = {
   status: "PENDING" | "PAID" | "OVERDUE";
 };
 
-export const DEFAULT_CONTRACT_VALUES = {
+const DEFAULT_CONTRACT_VALUES = {
   rentArea: 50,
   rentPricePerSquareMeter: 1_000_000,
   serviceFee: 100_000,
@@ -39,7 +39,8 @@ export function previousInvoicePeriod(baseDate = new Date()): { month: number; y
 
   const month = invoiceDate.getMonth() + 1;
   const year = invoiceDate.getFullYear();
-  const dueDate = new Date(year, month, 15).toISOString().slice(0, 10);
+  const dueDateValue = new Date(year, month, 15);
+  const dueDate = `${dueDateValue.getFullYear()}-${String(dueDateValue.getMonth() + 1).padStart(2, "0")}-15`;
 
   return { month, year, dueDate };
 }

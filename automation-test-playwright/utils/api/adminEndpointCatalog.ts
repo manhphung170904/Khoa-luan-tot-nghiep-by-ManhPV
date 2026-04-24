@@ -1,5 +1,5 @@
-﻿import type { RequestDescriptor } from "@api/adminApiUtils";
-import { invalidTextFile, tinyPngFile } from "@api/adminApiUtils";
+import type { RequestDescriptor } from "@api/adminApiUtils";
+import { invalidTextFile } from "@api/adminApiUtils";
 
 export const adminEndpointCatalog: RequestDescriptor[] = [
   { id: "ADM-BLD-001", method: "GET", path: "/api/v1/admin/buildings", params: { page: 1, size: 5 } },
@@ -10,8 +10,8 @@ export const adminEndpointCatalog: RequestDescriptor[] = [
     method: "POST",
     path: "/api/v1/admin/buildings",
     data: {
-      districtId: 1,
-      numberOfFloor: 10,
+      districtId: -1,
+      numberOfFloor: 0,
       numberOfBasement: 1,
       floorArea: 200,
       rentPrice: 1000000,
@@ -22,7 +22,7 @@ export const adminEndpointCatalog: RequestDescriptor[] = [
       waterFee: 15000,
       electricityFee: 3500,
       salePrice: null,
-      name: "Security Check Building",
+      name: "",
       ward: "Ward",
       street: "Street",
       propertyType: "OFFICE",
@@ -40,29 +40,29 @@ export const adminEndpointCatalog: RequestDescriptor[] = [
   },
   { id: "ADM-BLD-004", method: "PUT", path: "/api/v1/admin/buildings/999999999", data: { id: 999999999, name: "Updated" } },
   { id: "ADM-BLD-005", method: "DELETE", path: "/api/v1/admin/buildings/999999999" },
-  { id: "ADM-BLD-006", method: "POST", path: "/api/v1/admin/buildings/image", multipart: { file: tinyPngFile("security-building.png") } },
+  { id: "ADM-BLD-006", method: "POST", path: "/api/v1/admin/buildings/image", multipart: { file: invalidTextFile("security-building.txt") } },
 
   { id: "ADM-BAI-001", method: "GET", path: "/api/v1/admin/building-additional-information/legal-authorities/1" },
-  { id: "ADM-BAI-002", method: "POST", path: "/api/v1/admin/building-additional-information/legal-authorities", data: { buildingId: 1 } },
-  { id: "ADM-BAI-003", method: "PUT", path: "/api/v1/admin/building-additional-information/legal-authorities/999999999", data: { buildingId: 1 } },
+  { id: "ADM-BAI-002", method: "POST", path: "/api/v1/admin/building-additional-information/legal-authorities", data: { buildingId: -1 } },
+  { id: "ADM-BAI-003", method: "PUT", path: "/api/v1/admin/building-additional-information/legal-authorities/999999999", data: { buildingId: -1 } },
   { id: "ADM-BAI-004", method: "DELETE", path: "/api/v1/admin/building-additional-information/legal-authorities/999999999" },
   { id: "ADM-BAI-005", method: "GET", path: "/api/v1/admin/building-additional-information/nearby-amenities/1" },
-  { id: "ADM-BAI-006", method: "POST", path: "/api/v1/admin/building-additional-information/nearby-amenities", data: { buildingId: 1 } },
-  { id: "ADM-BAI-007", method: "PUT", path: "/api/v1/admin/building-additional-information/nearby-amenities/999999999", data: { buildingId: 1 } },
+  { id: "ADM-BAI-006", method: "POST", path: "/api/v1/admin/building-additional-information/nearby-amenities", data: { buildingId: -1 } },
+  { id: "ADM-BAI-007", method: "PUT", path: "/api/v1/admin/building-additional-information/nearby-amenities/999999999", data: { buildingId: -1 } },
   { id: "ADM-BAI-008", method: "DELETE", path: "/api/v1/admin/building-additional-information/nearby-amenities/999999999" },
   { id: "ADM-BAI-009", method: "GET", path: "/api/v1/admin/building-additional-information/suppliers/1" },
-  { id: "ADM-BAI-010", method: "POST", path: "/api/v1/admin/building-additional-information/suppliers", data: { buildingId: 1 } },
-  { id: "ADM-BAI-011", method: "PUT", path: "/api/v1/admin/building-additional-information/suppliers/999999999", data: { buildingId: 1 } },
+  { id: "ADM-BAI-010", method: "POST", path: "/api/v1/admin/building-additional-information/suppliers", data: { buildingId: -1 } },
+  { id: "ADM-BAI-011", method: "PUT", path: "/api/v1/admin/building-additional-information/suppliers/999999999", data: { buildingId: -1 } },
   { id: "ADM-BAI-012", method: "DELETE", path: "/api/v1/admin/building-additional-information/suppliers/999999999" },
   { id: "ADM-BAI-013", method: "GET", path: "/api/v1/admin/building-additional-information/planning-maps/1" },
-  { id: "ADM-BAI-014", method: "POST", path: "/api/v1/admin/building-additional-information/planning-maps", data: { buildingId: 1 } },
-  { id: "ADM-BAI-015", method: "PUT", path: "/api/v1/admin/building-additional-information/planning-maps/999999999", data: { buildingId: 1 } },
+  { id: "ADM-BAI-014", method: "POST", path: "/api/v1/admin/building-additional-information/planning-maps", data: { buildingId: -1 } },
+  { id: "ADM-BAI-015", method: "PUT", path: "/api/v1/admin/building-additional-information/planning-maps/999999999", data: { buildingId: -1 } },
   { id: "ADM-BAI-016", method: "DELETE", path: "/api/v1/admin/building-additional-information/planning-maps/999999999" },
-  { id: "ADM-BAI-017", method: "POST", path: "/api/v1/admin/building-additional-information/planning-maps/image", multipart: { file: tinyPngFile("security-planning.png") } },
+  { id: "ADM-BAI-017", method: "POST", path: "/api/v1/admin/building-additional-information/planning-maps/image", multipart: { file: invalidTextFile("security-planning.txt") } },
 
   { id: "ADM-CUS-001", method: "GET", path: "/api/v1/admin/customers", params: { page: 1, size: 5 } },
   { id: "ADM-CUS-002", method: "GET", path: "/api/v1/admin/customers", params: { page: 1, size: 5, fullName: "a" } },
-  { id: "ADM-CUS-003", method: "POST", path: "/api/v1/admin/customers", data: { username: "abc", password: "123", staffIds: [] } },
+  { id: "ADM-CUS-003", method: "POST", path: "/api/v1/admin/customers", data: { username: "", password: "", staffIds: [] } },
   { id: "ADM-CUS-004", method: "DELETE", path: "/api/v1/admin/customers/999999999" },
 
   { id: "ADM-CON-001", method: "GET", path: "/api/v1/admin/contracts", params: { page: 1, size: 5 } },
@@ -95,15 +95,15 @@ export const adminEndpointCatalog: RequestDescriptor[] = [
 
   { id: "ADM-STF-001", method: "GET", path: "/api/v1/admin/staff", params: { page: 1, size: 5, role: "STAFF" } },
   { id: "ADM-STF-002", method: "GET", path: "/api/v1/admin/staff", params: { page: 1, size: 5, fullName: "a" } },
-  { id: "ADM-STF-003", method: "POST", path: "/api/v1/admin/staff", data: { username: "abc", password: "123", phone: "1" } },
+  { id: "ADM-STF-003", method: "POST", path: "/api/v1/admin/staff", data: { username: "", password: "", phone: "1" } },
   { id: "ADM-STF-004", method: "DELETE", path: "/api/v1/admin/staff/999999999" },
   { id: "ADM-STF-005", method: "GET", path: "/api/v1/admin/staff/customers" },
   { id: "ADM-STF-006", method: "GET", path: "/api/v1/admin/staff/1/assignments/customers" },
-  { id: "ADM-STF-007", method: "PUT", path: "/api/v1/admin/staff/1/assignments/customers", data: [1] },
+  { id: "ADM-STF-007", method: "PUT", path: "/api/v1/admin/staff/1/assignments/customers", data: [999999999] },
   { id: "ADM-STF-008", method: "GET", path: "/api/v1/admin/staff/buildings" },
   { id: "ADM-STF-009", method: "GET", path: "/api/v1/admin/staff/1/assignments/buildings" },
-  { id: "ADM-STF-010", method: "PUT", path: "/api/v1/admin/staff/1/assignments/buildings", data: [1] },
-  { id: "ADM-STF-011", method: "POST", path: "/api/v1/admin/staff/1/quick-assign", params: { buildingId: 1, customerId: 1 } },
+  { id: "ADM-STF-010", method: "PUT", path: "/api/v1/admin/staff/1/assignments/buildings", data: [999999999] },
+  { id: "ADM-STF-011", method: "POST", path: "/api/v1/admin/staff/1/quick-assign", params: { buildingId: 999999999, customerId: 999999999 } },
 
   { id: "ADM-PRQ-001", method: "GET", path: "/api/v1/admin/property-requests", params: { page: 1, size: 5 } },
   { id: "ADM-PRQ-002", method: "GET", path: "/api/v1/admin/property-requests/1" },
@@ -113,12 +113,3 @@ export const adminEndpointCatalog: RequestDescriptor[] = [
   { id: "ADM-PRQ-006", method: "GET", path: "/api/v1/admin/property-requests/1/sale-contract-data" },
   { id: "ADM-PRQ-007", method: "GET", path: "/api/v1/admin/property-requests/pending-count" }
 ];
-
-export const invalidUploadDescriptor: RequestDescriptor = {
-  id: "ADM-UPL-INVALID",
-  method: "POST",
-  path: "/api/v1/admin/buildings/image",
-  multipart: { file: invalidTextFile() }
-};
-
-

@@ -20,7 +20,7 @@
 ### Buoc 4: Viet test
 - Giu ten test theo mau: `TEST-ID Test Name`.
 - Moi test phai co assertion ro rang.
-- Neu test co login lap lai, uu tien fixture trong `fixtures/` va helper trong `PageScenarioHelper`.
+- Neu test co login lap lai, uu tien fixture trong `fixtures/` va helper dang duoc dung thuc te nhu `AuthSessionHelper`.
 
 ## 2. Quy uoc dat ten
 ### File test
@@ -34,10 +34,10 @@
 - `CustomerInvoicePage.ts`
 
 ### Helper
-- Dat ten theo tac vu: `AuthSessionHelper`, `AssertionHelper`, `TestDataFactory`.
+- Dat ten theo tac vu: `AuthSessionHelper`, `CleanupHelper`, `TestDataFactory`.
 
 ## 2.1. Dat file vao dung nhom
-- `fixtures/`: fixture cap framework, co the dung lai cho nhieu suite.
+- `fixtures/`: fixture cap framework, co the dung lai cho nhieu suite. Chi expose nhung context/page dang co consumer thuc te.
 - `utils/helpers/`: helper tong quat, khong phu thuoc truc tiep vao fixture lifecycle.
 - `test-data/`: file fixture va helper/scenario bootstrap du lieu dung chung.
 
@@ -84,10 +84,10 @@ $env:ALLOW_DESTRUCTIVE_TESTS="true"
 - Khong duoc bat tren moi truong dang dung tai khoan that cua nguoi dung.
 
 ## 7. Session va dang nhap nhanh
-- Test nen uu tien import `@fixtures/api.fixture` cho API suite va `@fixtures/base.fixture` cho E2E suite.
+- Test nen uu tien import `@fixtures/api.fixture` cho API suite va `@fixtures/base.fixture` cho E2E suite; neu chua co fixture dung lai ro rang thi khoi tao POM truc tiep trong spec.
 - Runtime output va report duoc gom trong `.runtime/`.
 - HTML/JUnit report top-level se duoc lam moi moi lan chay; `.runtime/test-results/` chi giu lai mot so run gan day.
-- Test nen tai su dung `PageScenarioHelper`, `AuthSessionHelper`, va fixture hien co khi phu hop.
+- Test nen tai su dung `AuthSessionHelper`, `TempEntityHelper`, va fixture hien co khi phu hop.
 
 ## 8. Quy trinh de nghi truoc khi merge
 1. `npm run typecheck`

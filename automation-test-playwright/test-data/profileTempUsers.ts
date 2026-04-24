@@ -1,15 +1,8 @@
 import type { APIRequestContext, Page } from "@playwright/test";
-import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { env } from "@config/env";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { LoginPage } from "@pages/auth/LoginPage";
-
-type PlaywrightLike = {
-  request: {
-    newContext: (options?: Record<string, unknown>) => Promise<APIRequestContext>;
-  };
-};
 
 export type TempCustomerProfileUser = {
   id: number;
@@ -114,8 +107,4 @@ export async function loginAsTempUser(page: Page, username: string, password = d
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.login(username, password);
-}
-
-export async function newAdminApiContext(playwright: PlaywrightLike): Promise<APIRequestContext> {
-  return ApiSessionHelper.newContext(playwright, "admin");
 }

@@ -58,7 +58,7 @@ automation-test-playwright/
 - `tests/api/`: test endpoint va response.
 - `tests/e2e/`: test hanh trinh nguoi dung dau cuoi.
 - `fixtures/`: Playwright fixture dung chung cho API va E2E.
-- `utils/helpers/`: helper dung chung cho login, assert, data, session.
+- `utils/helpers/`: helper dung chung cho session, cleanup, bootstrap data, va utility phu tro.
 - `utils/api/`: helper API, endpoint catalog, contract utility.
 - `utils/db/`: ket noi va truy van DB phuc vu xac minh du lieu.
 - `test-data/`: file fixture va helper/scenario du lieu dung chung cho test.
@@ -68,7 +68,7 @@ automation-test-playwright/
 ## 4. Nhung thanh phan da du cho mot framework day du
 - Phan tach test theo 2 nhom chinh: API va E2E.
 - POM theo module nghiep vu.
-- Helper chung cho login, assertion, page flow.
+- Helper chung cho session, cleanup, va bootstrap du lieu test.
 - Fixture chung cho API va E2E de tai su dung context/session.
 - Co `global setup / teardown`.
 - Co config moi truong `local / dev / test / staging`.
@@ -107,7 +107,7 @@ npm run report:open
 ```
 
 ## 6. Luong session va fixture
-Framework hien uu tien fixture de cap `adminApi`, `staffApi`, `customerApi`, `anonymousApi` cho API suite va `adminApi` cho E2E suite. Cach nay giup test dung chung logic dang nhap, cleanup, va mo rong framework ma khong phai lap lai `newContext()` trong tung file.
+Framework hien uu tien fixture de cap `adminApi`, `staffApi`, `customerApi`, `anonymousApi` cho API suite va page fixture thuc su dang duoc dung nhu `publicPage` cho E2E suite. Cach nay giup test dung chung logic dang nhap, cleanup, va mo rong framework ma khong phai lap lai `newContext()` trong tung file.
 
 ## 7. Quy uoc quan trong
 - Moi test case phai giu `Test ID` va `Test Name`.

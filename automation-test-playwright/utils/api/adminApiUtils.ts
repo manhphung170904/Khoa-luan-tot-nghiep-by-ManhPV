@@ -1,15 +1,9 @@
-import fs from "node:fs";
-import path from "node:path";
 import { expect, type APIRequestContext, type APIResponse } from "@playwright/test";
 import { env } from "@config/env";
 import { ApiSessionHelper, type ApiUserRole } from "@api/apiSessionHelper";
-import { ApiOtpHelper } from "@api/apiOtpHelper";
-import { TempEntityHelper } from "@helpers/TempEntityHelper";
-import { TestDataFactory } from "@helpers/TestDataFactory";
-import { MySqlDbClient } from "@db/MySqlDbClient";
 import type { ExpectedApiContract, EndpointKind, ApiCoverageStatus } from "@api/apiContractUtils";
 
-export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 type RequestContextFactory = {
   request: {
     newContext: (options?: Record<string, unknown>) => Promise<APIRequestContext>;
@@ -32,14 +26,6 @@ export type RequestDescriptor = {
   >;
 };
 
-export const moonNestRoot = path.resolve(process.cwd(), "..", "moonNest-main");
-export const buildingImageDir = path.join(moonNestRoot, "src", "main", "resources", "static", "images", "building_img");
-export const planningMapImageDir = path.join(moonNestRoot, "src", "main", "resources", "static", "images", "planning_map_img");
-
-export const uniqueSuffix = (prefix: string): string => TestDataFactory.taoMaDuyNhat(prefix);
-export const randomPhone = (): string => TestDataFactory.taoSoDienThoai();
-export const randomEmail = (prefix: string): string => TestDataFactory.taoEmail(prefix);
-
 export const tinyPngFile = (name = "tiny.png") => ({
   name,
   mimeType: "image/png",
@@ -47,12 +33,6 @@ export const tinyPngFile = (name = "tiny.png") => ({
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WnM6f8AAAAASUVORK5CYII=",
     "base64"
   )
-});
-
-export const oversizedPngFile = (name = "oversized.png") => ({
-  name,
-  mimeType: "image/png",
-  buffer: Buffer.alloc(5 * 1024 * 1024 + 16, 1)
 });
 
 export const invalidTextFile = (name = "invalid.txt") => ({
@@ -103,7 +83,8 @@ export async function createAnonymousContext(
 export async function sendRequest(context: APIRequestContext, request: RequestDescriptor): Promise<APIResponse> {
   const options = {
     failOnStatusCode: false,
-    maxRedirects: 0,       // ← Bắt 302 redirect thay vì follow sang /login (200 HTML)
+    // Keep redirects visible so security tests can assert unauthenticated flows precisely.
+    maxRedirects: 0,
     params: request.params,
     data: request.data,
     multipart: request.multipart
@@ -120,116 +101,3 @@ export async function sendRequest(context: APIRequestContext, request: RequestDe
       return context.delete(request.path, options);
   }
 }
-
-export async function readJson<T>(response: APIResponse): Promise<T> {
-  return (await response.json()) as T;
-}
-
-export async function readJsonIfPresent<T>(response: APIResponse): Promise<T | null> {
-  const text = await response.text();
-  return text ? (JSON.parse(text) as T) : null;
-}
-
-export async function expectMessage(response: APIResponse, status: number): Promise<string> {
-  expect(response.status()).toBe(status);
-  const body = await readJson<{ message?: string }>(response);
-  expect(typeof body.message).toBe("string");
-  return body.message ?? "";
-}
-
-export function expectAuthFailure(response: APIResponse): void {
-  expect([302, 401, 403]).toContain(response.status());
-}
-
-export function expectApiAuthContract(response: APIResponse): void {
-  expect([401, 403]).toContain(response.status());
-}
-
-export function expectBusinessFailure(response: APIResponse): void {
-  expect([400, 409]).toContain(response.status());
-}
-
-export function expectPageShape<T extends object>(payload: { content?: T[]; totalElements?: number }): asserts payload is {
-  content: T[];
-  totalElements: number;
-} {
-  expect(Array.isArray(payload.content)).toBeTruthy();
-  expect(typeof payload.totalElements).toBe("number");
-}
-
-export async function forceOtp(email: string, purpose: string, otp: string): Promise<void> {
-  await ApiOtpHelper.setLatestPendingOtp(email, purpose, otp);
-}
-
-export async function latestPendingOtpEmail(email: string, purpose: string): Promise<{ id: number; status: string } | null> {
-  const latest = await ApiOtpHelper.latest(email, purpose);
-  return latest ? { id: latest.id, status: latest.status } : null;
-}
-
-export async function resolveStaffIdByUsername(username: string): Promise<number> {
-  const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM staff WHERE username = ? LIMIT 1", [username]);
-  expect(rows.length).toBeGreaterThan(0);
-  return rows[0]!.id;
-}
-
-export async function resolveBuildingIdByName(name: string): Promise<number> {
-  const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM building WHERE name = ? ORDER BY id DESC LIMIT 1", [name]);
-  expect(rows.length).toBeGreaterThan(0);
-  return rows[0]!.id;
-}
-
-export async function ensureFileExists(filePath: string): Promise<void> {
-  expect(fs.existsSync(filePath), `Expected file to exist: ${filePath}`).toBeTruthy();
-}
-
-export async function createTempAdmin(playwright: RequestContextFactory): Promise<{
-  context: APIRequestContext;
-  staffId: number;
-  username: string;
-  email: string;
-  cleanup: () => Promise<void>;
-}> {
-  const bootstrapAdmin = await createRoleContext(playwright, "admin");
-  const unique = uniqueSuffix("admin");
-  const username = TestDataFactory.taoUsername("adm");
-  const email = randomEmail(unique);
-  const phone = randomPhone();
-
-  const createResponse = await bootstrapAdmin.post("/api/v1/admin/staff", {
-    failOnStatusCode: false,
-    data: {
-      username,
-      password: env.defaultPassword,
-      fullName: `Playwright ${unique}`,
-      phone,
-      email,
-      role: "ADMIN"
-    }
-  });
-  expect(createResponse.ok()).toBeTruthy();
-
-  const staffId = await resolveStaffIdByUsername(username);
-  await bootstrapAdmin.dispose();
-
-  const context = await createRoleContext(playwright, "admin", username);
-
-  return {
-    context,
-    staffId,
-    username,
-    email,
-    cleanup: async () => {
-      await context.dispose();
-      const admin = await createRoleContext(playwright, "admin");
-      try {
-        await admin.delete(`/api/v1/admin/staff/${staffId}`, { failOnStatusCode: false });
-      } finally {
-        await admin.dispose();
-      }
-    }
-  };
-}
-
-export { TempEntityHelper };
-
-

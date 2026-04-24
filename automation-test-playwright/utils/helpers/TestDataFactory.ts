@@ -1,3 +1,5 @@
+import { env } from "@config/env";
+
 export class TestDataFactory {
   private static uniqueCounter = 0;
 
@@ -53,7 +55,7 @@ export class TestDataFactory {
     const suffix = this.taoHauToDuyNhat(role.toLowerCase());
     return {
       username: this.taoUsername(role.toLowerCase()),
-      password: "12345678",
+      password: env.defaultPassword,
       fullName: `PW ${role} ${suffix}`,
       phone: this.taoSoDienThoai(),
       email: this.taoEmail(`pw-${role.toLowerCase()}`),
@@ -66,7 +68,7 @@ export class TestDataFactory {
     const suffix = this.taoHauToDuyNhat("customer");
     return {
       username: this.taoUsername("pwcust"),
-      password: "12345678",
+      password: env.defaultPassword,
       fullName: `PW Customer ${suffix}`,
       phone: this.taoSoDienThoai(),
       email: this.taoEmail("pw-customer"),
@@ -130,6 +132,8 @@ export class TestDataFactory {
     invoiceDate.setMonth(invoiceDate.getMonth() - 1);
     const month = invoiceDate.getMonth() + 1;
     const year = invoiceDate.getFullYear();
+    const dueDateValue = new Date(year, month, 10);
+    const dueDate = `${dueDateValue.getFullYear()}-${String(dueDateValue.getMonth() + 1).padStart(2, "0")}-10`;
 
     return {
       contractId: 1,
@@ -137,7 +141,7 @@ export class TestDataFactory {
       month,
       year,
       status: "PENDING",
-      dueDate: new Date(year, month, 10).toISOString().slice(0, 10),
+      dueDate,
       totalAmount: 1500000,
       details: [{ description: "Phi dich vu test", amount: 1500000 }],
       electricityUsage: 10,

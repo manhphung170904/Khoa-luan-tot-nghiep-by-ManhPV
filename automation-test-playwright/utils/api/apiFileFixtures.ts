@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export type MultipartFixture = {
+type MultipartFixture = {
   name: string;
   mimeType: string;
   buffer: Buffer;

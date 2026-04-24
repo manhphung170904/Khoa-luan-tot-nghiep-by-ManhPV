@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
-export type EmailVerificationRow = {
+type EmailVerificationRow = {
   id: number;
   email: string;
   purpose: string;

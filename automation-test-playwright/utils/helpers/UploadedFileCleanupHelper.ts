@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-export type UploadedFileKind = "building" | "planning";
+type UploadedFileKind = "building" | "planning";
 
 const moonNestRoot = path.resolve(process.cwd(), "..", "moonNest-main");
 

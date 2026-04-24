@@ -4,7 +4,7 @@ import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { env } from "@config/env";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 
-export type CleanupTask = () => Promise<void> | void;
+type CleanupTask = () => Promise<void> | void;
 
 export class ApiCleanupRegistry {
   private readonly tasks: CleanupTask[] = [];

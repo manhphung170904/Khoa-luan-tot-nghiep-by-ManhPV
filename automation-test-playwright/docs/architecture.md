@@ -21,7 +21,7 @@ Framework duoc to chuc theo huong:
 
 ### `fixtures/`
 - Day la lop Playwright fixture dung chung cap framework.
-- Chua reusable test context nhu `adminApi`, `staffApi`, `customerApi`, `anonymousApi`, va page-level fixture.
+- Chua reusable test context nhu `adminApi`, `staffApi`, `customerApi`, `anonymousApi`, va cac page fixture dang duoc dung thuc te nhu `publicPage`.
 - Spec nen import tu `@fixtures/*` thay vi tuong tac truc tiep voi `playwright.request.newContext()` o tung file.
 
 ### `pages/`
@@ -32,7 +32,7 @@ Framework duoc to chuc theo huong:
 ### `utils/helpers/`
 - Day la helper dung chung cap framework.
 - Phu hop cho utility co the duoc goi tu nhieu suite khac nhau.
-- Vi du: `TempEntityHelper`, `TestDataFactory`, `AssertionHelper`, `AuthHelper`.
+- Vi du: `TempEntityHelper`, `TestDataFactory`, `CleanupHelper`, `AuthSessionHelper`.
 
 ### `test-data/`
 - Day la noi chua file fixture va helper/scenario du lieu dung chung.
