@@ -1,5 +1,4 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { env } from "@config/env";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { AdminInvoiceDetailPage } from "@pages/admin/AdminInvoiceDetailPage";
@@ -16,23 +15,17 @@ import {
   cleanupTempStaffProfileUser,
   createTempStaffProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
 test.describe("Admin - Invoice Management @regression", () => {
-  let adminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     contract = await createTempContractScenario(adminApi);
     createdInvoices = [];
@@ -41,7 +34,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     await page.goto("/admin/invoice/list");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await cleanupContractScenario(
       adminApi,
       contract,
@@ -53,11 +46,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     adminUser = null;
   });
 
-  test.afterAll(async () => {
-    await adminApi.dispose();
-  });
-
-  test("[E2E-ADM-INV-001] - Admin Invoice Management - Invoice List - Customer Filtering and Data Display", async ({ page }) => {
+  test("[E2E-ADM-INV-001] - Admin Invoice Management - Invoice List - Customer Filtering and Data Display", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -126,7 +115,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     });
   });
 
-  test("[E2E-ADM-INV-003] - Admin Invoice Management - Invoice Edit - Pending Invoice Update", async ({ page }) => {
+  test("[E2E-ADM-INV-003] - Admin Invoice Management - Invoice Edit - Pending Invoice Update", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -156,7 +145,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     }).toBe(updatedDueDate);
   });
 
-  test("[E2E-ADM-INV-004] - Admin Invoice Management - Invoice Edit Lock - Non-Pending Warning Display", async ({ page }) => {
+  test("[E2E-ADM-INV-004] - Admin Invoice Management - Invoice Edit Lock - Non-Pending Warning Display", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -172,7 +161,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     await formPage.expectWarningVisible();
   });
 
-  test("[E2E-ADM-INV-005] - Admin Invoice Management - Payment Confirmation - Invoice Payment Confirmation", async ({ page }) => {
+  test("[E2E-ADM-INV-005] - Admin Invoice Management - Payment Confirmation - Invoice Payment Confirmation", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -193,7 +182,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     }).toBe("PAID");
   });
 
-  test("[E2E-ADM-INV-006] - Admin Invoice Management - Invoice Deletion - Delete Invoice from List", async ({ page }) => {
+  test("[E2E-ADM-INV-006] - Admin Invoice Management - Invoice Deletion - Delete Invoice from List", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -221,7 +210,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     createdInvoices = createdInvoices.filter((item) => item.id !== invoice.id);
   });
 
-  test("[E2E-ADM-INV-007] - Admin Invoice Management - Status Update - Overdue Status Refresh from List", async ({ page }) => {
+  test("[E2E-ADM-INV-007] - Admin Invoice Management - Status Update - Overdue Status Refresh from List", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -243,7 +232,3 @@ test.describe("Admin - Invoice Management @regression", () => {
     }).toBe("OVERDUE");
   });
 });
-
-
-
-

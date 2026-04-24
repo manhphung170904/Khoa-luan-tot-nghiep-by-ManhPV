@@ -7,42 +7,61 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
+type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
+type PlaywrightLike = Parameters<typeof createRoleContext>[0];
+type StaffInvoiceScenario = {
+  adminContext: APIRequestContext;
+  staffContext: APIRequestContext;
+  tempContract: TempContract;
+  validPayload: Record<string, unknown>;
+};
+
+const createStaffInvoiceScenario = async (playwright: PlaywrightLike): Promise<StaffInvoiceScenario> => {
+  const adminContext = await createRoleContext(playwright, "admin");
+  const tempContract = await TempEntityHelper.taoContractTam(adminContext);
+  const staffContext = await createRoleContext(playwright, "staff", tempContract.staff.username);
+  const validPayload = TestDataFactory.buildInvoicePayload({
+    contractId: tempContract.id,
+    customerId: tempContract.customer.id,
+    details: [{ description: "Staff created invoice", amount: 1500000 }]
+  });
+
+  return {
+    adminContext,
+    staffContext,
+    tempContract,
+    validPayload
+  };
+};
+
+const cleanupInvoiceById = async (invoiceId?: number): Promise<void> => {
+  if (!invoiceId) {
+    return;
+  }
+
+  await MySqlDbClient.execute("DELETE FROM invoice_detail WHERE invoice_id = ?", [invoiceId]).catch(() => {});
+  await MySqlDbClient.execute("DELETE FROM invoice WHERE id = ?", [invoiceId]).catch(() => {});
+};
+
+const cleanupStaffInvoiceScenario = async (scenario?: Partial<StaffInvoiceScenario>, invoiceId?: number): Promise<void> => {
+  await cleanupInvoiceById(invoiceId);
+  await scenario?.staffContext?.dispose().catch(() => {});
+  if (scenario?.tempContract && scenario?.adminContext) {
+    await TempEntityHelper.xoaContractTam(scenario.adminContext, scenario.tempContract).catch(() => {});
+  }
+  await scenario?.adminContext?.dispose().catch(() => {});
+};
+
 test.describe("Staff - API Invoice @regression", () => {
-  let adminContext: APIRequestContext;
-  let staffContext: APIRequestContext;
-  let tempContract: Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
-  let createdInvoiceId = 0;
-  let validPayload: Record<string, unknown>;
-
-  test.beforeAll(async ({ playwright }) => {
-    adminContext = await createRoleContext(playwright, "admin");
-    tempContract = await TempEntityHelper.taoContractTam(adminContext);
-    staffContext = await createRoleContext(playwright, "staff", tempContract.staff.username);
-    validPayload = TestDataFactory.buildInvoicePayload({
-      contractId: tempContract.id,
-      customerId: tempContract.customer.id,
-      details: [{ description: "Staff created invoice", amount: 1500000 }]
-    });
-  });
-
-  test.afterAll(async () => {
-    if (createdInvoiceId) {
-      await MySqlDbClient.execute("DELETE FROM invoice_detail WHERE invoice_id = ?", [createdInvoiceId]);
-      await MySqlDbClient.execute("DELETE FROM invoice WHERE id = ?", [createdInvoiceId]);
-    }
-
-    await staffContext.dispose();
-    await TempEntityHelper.xoaContractTam(adminContext, tempContract);
-    await adminContext.dispose();
-  });
-
   test("[API-STF-INV-001] - API Staff Invoice - Authentication - Anonymous Create Access Rejection", async ({ playwright }) => {
+    const scenario = await createStaffInvoiceScenario(playwright);
     const anonymous = await createAnonymousContext(playwright);
+
     try {
       const response = await anonymous.post("/api/v1/staff/invoices", {
         failOnStatusCode: false,
         maxRedirects: 0,
-        data: validPayload
+        data: scenario.validPayload
       });
       await expectApiErrorBody(response, {
         status: 401,
@@ -51,11 +70,13 @@ test.describe("Staff - API Invoice @regression", () => {
       });
     } finally {
       await anonymous.dispose();
+      await cleanupStaffInvoiceScenario(scenario);
     }
   });
 
   test("[API-STF-INV-002] - API Staff Invoice - Authorization - Customer Role Rejection", async ({ playwright }) => {
     const customer = await createRoleContext(playwright, "customer");
+
     try {
       const response = await customer.get("/api/v1/staff/invoices?page=1&size=10", {
         failOnStatusCode: false,
@@ -71,12 +92,15 @@ test.describe("Staff - API Invoice @regression", () => {
     }
   });
 
-  test.describe.serial("Staff - API Invoice Lifecycle", () => {
-    test("[API-STF-INV-003] - API Staff Invoice - Create Invoice - Assigned Contract Invoice Creation", async () => {
-      const response = await staffContext.post("/api/v1/staff/invoices", {
+  test("[API-STF-INV-003] - API Staff Invoice - Create Invoice - Assigned Contract Invoice Creation", async ({ playwright }) => {
+    const scenario = await createStaffInvoiceScenario(playwright);
+    let createdInvoiceId = 0;
+
+    try {
+      const response = await scenario.staffContext.post("/api/v1/staff/invoices", {
         failOnStatusCode: false,
         maxRedirects: 0,
-        data: validPayload
+        data: scenario.validPayload
       });
       await expectApiMessage(response, {
         status: 200,
@@ -86,7 +110,7 @@ test.describe("Staff - API Invoice @regression", () => {
 
       const rows = await MySqlDbClient.query<{ id: number; total_amount: number; status: string }>(
         "SELECT id, total_amount, status FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
-        [validPayload.contractId, validPayload.month, validPayload.year]
+        [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
       );
       expect(rows.length).toBe(1);
       createdInvoiceId = rows[0]!.id;
@@ -98,10 +122,35 @@ test.describe("Staff - API Invoice @regression", () => {
         [createdInvoiceId]
       );
       expect(Number(detailRows[0]?.count ?? 0)).toBeGreaterThan(0);
-    });
+    } finally {
+      await cleanupStaffInvoiceScenario(scenario, createdInvoiceId);
+    }
+  });
 
-    test("[API-STF-INV-004] - API Staff Invoice - Listing - Assigned Invoice Retrieval @smoke", async () => {
-      const response = await staffContext.get("/api/v1/staff/invoices?page=1&size=20", {
+  test("[API-STF-INV-004] - API Staff Invoice - Listing - Assigned Invoice Retrieval @smoke", async ({ playwright }) => {
+    const scenario = await createStaffInvoiceScenario(playwright);
+    let createdInvoiceId = 0;
+
+    try {
+      const createResponse = await scenario.staffContext.post("/api/v1/staff/invoices", {
+        failOnStatusCode: false,
+        maxRedirects: 0,
+        data: scenario.validPayload
+      });
+      await expectApiMessage(createResponse, {
+        status: 200,
+        message: apiExpectedMessages.staff.invoices.create,
+        dataMode: "null"
+      });
+
+      const createdRows = await MySqlDbClient.query<{ id: number }>(
+        "SELECT id FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
+        [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
+      );
+      expect(createdRows.length).toBe(1);
+      createdInvoiceId = createdRows[0]!.id;
+
+      const response = await scenario.staffContext.get("/api/v1/staff/invoices?page=1&size=20", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -115,14 +164,39 @@ test.describe("Staff - API Invoice @regression", () => {
       expect(createdItem).toBeDefined();
       expect(Number(createdItem?.totalAmount)).toBeGreaterThan(0);
       expect(createdItem?.status).toBeTruthy();
-    });
+    } finally {
+      await cleanupStaffInvoiceScenario(scenario, createdInvoiceId);
+    }
+  });
 
-    test("[API-STF-INV-005] - API Staff Invoice - Update Invoice - Owned Invoice Update", async () => {
-      const response = await staffContext.put(`/api/v1/staff/invoices/${createdInvoiceId}`, {
+  test("[API-STF-INV-005] - API Staff Invoice - Update Invoice - Owned Invoice Update", async ({ playwright }) => {
+    const scenario = await createStaffInvoiceScenario(playwright);
+    let createdInvoiceId = 0;
+
+    try {
+      const createResponse = await scenario.staffContext.post("/api/v1/staff/invoices", {
+        failOnStatusCode: false,
+        maxRedirects: 0,
+        data: scenario.validPayload
+      });
+      await expectApiMessage(createResponse, {
+        status: 200,
+        message: apiExpectedMessages.staff.invoices.create,
+        dataMode: "null"
+      });
+
+      const createdRows = await MySqlDbClient.query<{ id: number }>(
+        "SELECT id FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
+        [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
+      );
+      expect(createdRows.length).toBe(1);
+      createdInvoiceId = createdRows[0]!.id;
+
+      const response = await scenario.staffContext.put(`/api/v1/staff/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0,
         data: {
-          ...validPayload,
+          ...scenario.validPayload,
           id: createdInvoiceId,
           totalAmount: 9999
         }
@@ -145,10 +219,35 @@ test.describe("Staff - API Invoice @regression", () => {
         [createdInvoiceId]
       );
       expect(Number(detailRows[0]?.count ?? 0)).toBeGreaterThan(0);
-    });
+    } finally {
+      await cleanupStaffInvoiceScenario(scenario, createdInvoiceId);
+    }
+  });
 
-    test("[API-STF-INV-006] - API Staff Invoice - Delete Invoice - Owned Invoice Deletion", async () => {
-      const response = await staffContext.delete(`/api/v1/staff/invoices/${createdInvoiceId}`, {
+  test("[API-STF-INV-006] - API Staff Invoice - Delete Invoice - Owned Invoice Deletion", async ({ playwright }) => {
+    const scenario = await createStaffInvoiceScenario(playwright);
+    let createdInvoiceId = 0;
+
+    try {
+      const createResponse = await scenario.staffContext.post("/api/v1/staff/invoices", {
+        failOnStatusCode: false,
+        maxRedirects: 0,
+        data: scenario.validPayload
+      });
+      await expectApiMessage(createResponse, {
+        status: 200,
+        message: apiExpectedMessages.staff.invoices.create,
+        dataMode: "null"
+      });
+
+      const createdRows = await MySqlDbClient.query<{ id: number }>(
+        "SELECT id FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
+        [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
+      );
+      expect(createdRows.length).toBe(1);
+      createdInvoiceId = createdRows[0]!.id;
+
+      const response = await scenario.staffContext.delete(`/api/v1/staff/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -158,7 +257,7 @@ test.describe("Staff - API Invoice @regression", () => {
         dataMode: "null"
       });
 
-      const searchResponse = await staffContext.get("/api/v1/staff/invoices?page=1&size=20", {
+      const searchResponse = await scenario.staffContext.get("/api/v1/staff/invoices?page=1&size=20", {
         failOnStatusCode: false,
         maxRedirects: 0
       });
@@ -176,10 +275,8 @@ test.describe("Staff - API Invoice @regression", () => {
       expect(Number(invoiceRows[0]?.count ?? 0)).toBe(0);
       expect(Number(detailRows[0]?.count ?? 0)).toBe(0);
       createdInvoiceId = 0;
-    });
+    } finally {
+      await cleanupStaffInvoiceScenario(scenario, createdInvoiceId);
+    }
   });
 });
-
-
-
-

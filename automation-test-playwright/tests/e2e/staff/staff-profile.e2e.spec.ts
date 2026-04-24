@@ -1,38 +1,28 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { StaffProfilePage } from "@pages/staff/StaffProfilePage";
 import { AuthSessionHelper } from "@helpers/AuthSessionHelper";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 import {
   cleanupTempStaffProfileUser,
   createTempStaffProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
 test.describe("Staff - Profile @regression", () => {
-  let adminApi: APIRequestContext;
   let tempUser: TempStaffProfileUser | null = null;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     tempUser = await createTempStaffProfileUser(adminApi, "STAFF");
     await loginAsTempUser(page, tempUser.username, tempUser.password);
     await page.goto("/staff/profile");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await cleanupTempStaffProfileUser(adminApi, tempUser);
     tempUser = null;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-STF-PRO-001] - Staff Profile - Profile Overview - Current Account Information Display", async ({ page }) => {
@@ -57,13 +47,13 @@ test.describe("Staff - Profile @regression", () => {
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-STF-PRO-003] - Staff Profile - Username Update - Successful Update with Valid OTP", async ({ page }) => {
+  test("[E2E-STF-PRO-003] - Staff Profile - Username Update - Successful Update with Valid OTP", async ({ page, adminApi }) => {
     if (!tempUser) {
       return;
     }
 
     const profilePage = new StaffProfilePage(page);
-    const nextUsername = `stf${Date.now().toString().slice(-7)}`;
+    const nextUsername = TestDataFactory.taoUsername("stf");
 
     await profilePage.openUsernameModal();
     await profilePage.sendOtpFromModal("username");
@@ -72,20 +62,20 @@ test.describe("Staff - Profile @regression", () => {
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_USERNAME");
     await profilePage.submitUsernameChange(nextUsername, otp);
-    await profilePage.expectSweetAlertContains(/thành công|thanh cong|tên đăng nhập/i);
+    await profilePage.expectSweetAlertContains(/thành công|thanh cong|tên đăng nhập|ten dang nhap/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempUser!.id]);
       return rows[0]?.username ?? "";
     }).toBe(nextUsername);
   });
 
-  test("[E2E-STF-PRO-004] - Staff Profile - Phone Number Update - Successful Update with Valid OTP", async ({ page }) => {
+  test("[E2E-STF-PRO-004] - Staff Profile - Phone Number Update - Successful Update with Valid OTP", async ({ page, adminApi }) => {
     if (!tempUser) {
       return;
     }
 
     const profilePage = new StaffProfilePage(page);
-    const newPhone = `0${String(Date.now()).slice(-9)}`;
+    const newPhone = TestDataFactory.taoSoDienThoai();
 
     await profilePage.openPhoneModal();
     await profilePage.sendOtpFromModal("phone");
@@ -94,7 +84,7 @@ test.describe("Staff - Profile @regression", () => {
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PHONE");
     await profilePage.submitPhoneChange(newPhone, otp);
-    await profilePage.expectSweetAlertContains(/thành công|thanh cong|số điện thoại/i);
+    await profilePage.expectSweetAlertContains(/thành công|thanh cong|số điện thoại|so dien thoai/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempUser!.id]);
       return rows[0]?.phone ?? "";
@@ -105,11 +95,11 @@ test.describe("Staff - Profile @regression", () => {
     const profilePage = new StaffProfilePage(page);
 
     await profilePage.submitPasswordChange("ValidPass1!", "DifferentPass1!", "000000");
-    await profilePage.expectSweetAlertContains(/không khớp|khong khop|kh.ng kh.p/i);
+    await profilePage.expectSweetAlertContains(/không khớp|khong khop/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-STF-PRO-006] - Staff Profile - Password Update - Successful Update with Valid OTP and Re-Login", async ({ page }) => {
+  test("[E2E-STF-PRO-006] - Staff Profile - Password Update - Successful Update with Valid OTP and Re-Login", async ({ page, adminApi }) => {
     if (!tempUser) {
       return;
     }
@@ -126,7 +116,7 @@ test.describe("Staff - Profile @regression", () => {
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PASSWORD");
     await profilePage.submitPasswordChange(newPassword, newPassword, otp);
-    await profilePage.expectSweetAlertContains(/thành công|thanh cong|mật khẩu/i);
+    await profilePage.expectSweetAlertContains(/thành công|thanh cong|mật khẩu|mat khau/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempUser!.id]);
       return rows[0]?.password ?? "";
@@ -141,6 +131,3 @@ test.describe("Staff - Profile @regression", () => {
     await expect(page).toHaveURL(/\/staff\/|\/login-success/);
   });
 });
-
-
-

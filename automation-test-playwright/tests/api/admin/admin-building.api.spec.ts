@@ -10,8 +10,6 @@ import { TestDataFactory } from "@helpers/TestDataFactory";
 
 test.describe("Admin - API Building @regression", () => {
   let admin: APIRequestContext;
-  let createdBuildingId = 0;
-  let createdBuildingName = "";
 
   const validPayload = TestDataFactory.buildBuildingPayload({
     districtId: 1,
@@ -33,12 +31,6 @@ test.describe("Admin - API Building @regression", () => {
   });
 
   test.afterAll(async () => {
-    if (createdBuildingId) {
-      await admin.delete(`/api/v1/admin/buildings/${createdBuildingId}`, {
-        failOnStatusCode: false
-      });
-    }
-
     await admin.dispose();
   });
 
@@ -289,7 +281,7 @@ test.describe("Admin - API Building @regression", () => {
       expect(errorBody.message).toMatch(/building|tòa nhà|bất động sản|không tồn tại|không tìm thấy|not found/i);
     });
 
-    test.describe.serial("Created Building Lifecycle", () => {
+    test.describe("Created Building Lifecycle", () => {
       test("[BLD-004] - API Admin Building - Create Building - Successful Creation and Database Persistence", async () => {
         const payload = {
           ...validPayload,
@@ -328,55 +320,138 @@ test.describe("Admin - API Building @regression", () => {
         expect(dbResult[0]!.ward).toBe(payload.ward);
         expect(dbResult[0]!.property_type).toBe(payload.propertyType);
         expect(dbResult[0]!.transaction_type).toBe(payload.transactionType);
-
-        createdBuildingId = dbResult[0]!.id;
-        createdBuildingName = String(payload.name);
+        await admin.delete(`/api/v1/admin/buildings/${dbResult[0]!.id}`, {
+          failOnStatusCode: false
+        });
       });
 
       test("[BLD-005] - API Admin Building - Listing - Newly Created Building Retrieval", async () => {
-        const response = await admin.get("/api/v1/admin/buildings", {
-          failOnStatusCode: false,
-          params: { page: 1, size: 100, name: createdBuildingName }
-        });
+        const payload = {
+          ...validPayload,
+          name: TestDataFactory.taoTenToaNha("Auto Test Building List")
+        } as Record<string, unknown>;
+        let buildingId = 0;
 
-        const data = await expectPageBody<{
-          content: Array<{ id: number; name: string }>;
-          totalElements?: number;
-        }>(response, { status: 200 });
-        const found = data.content.find((building) => building.id === createdBuildingId);
-        expect(found).toBeDefined();
-        expect(found?.name).toBe(createdBuildingName);
+        try {
+          const createResponse = await admin.post("/api/v1/admin/buildings", {
+            failOnStatusCode: false,
+            data: payload
+          });
+          await expectApiMessage(createResponse, {
+            status: 200,
+            message: apiExpectedMessages.admin.buildings.create,
+            dataMode: "null"
+          });
+
+          const dbResult = await MySqlDbClient.query<{ id: number }>(
+            "SELECT id FROM building WHERE name = ? ORDER BY id DESC LIMIT 1",
+            [String(payload.name)]
+          );
+          expect(dbResult.length).toBe(1);
+          buildingId = dbResult[0]!.id;
+
+          const response = await admin.get("/api/v1/admin/buildings", {
+            failOnStatusCode: false,
+            params: { page: 1, size: 100, name: String(payload.name) }
+          });
+
+          const data = await expectPageBody<{
+            content: Array<{ id: number; name: string }>;
+            totalElements?: number;
+          }>(response, { status: 200 });
+          const found = data.content.find((building) => building.id === buildingId);
+          expect(found).toBeDefined();
+          expect(found?.name).toBe(String(payload.name));
+        } finally {
+          if (buildingId) {
+            await admin.delete(`/api/v1/admin/buildings/${buildingId}`, {
+              failOnStatusCode: false
+            });
+          }
+        }
       });
 
       test("[BLD-009] - API Admin Building - Update Building - Successful Update and Database Persistence", async () => {
-        const updatedName = `${createdBuildingName} - UPDATED`;
-        const response = await admin.put(`/api/v1/admin/buildings/${createdBuildingId}`, {
-          failOnStatusCode: false,
-          data: {
-            ...validPayload,
-            id: createdBuildingId,
-            name: updatedName,
-            floorArea: 999
+        const payload = {
+          ...validPayload,
+          name: TestDataFactory.taoTenToaNha("Auto Test Building Update")
+        } as Record<string, unknown>;
+        let buildingId = 0;
+
+        try {
+          const createResponse = await admin.post("/api/v1/admin/buildings", {
+            failOnStatusCode: false,
+            data: payload
+          });
+          await expectApiMessage(createResponse, {
+            status: 200,
+            message: apiExpectedMessages.admin.buildings.create,
+            dataMode: "null"
+          });
+
+          const createdRows = await MySqlDbClient.query<{ id: number }>(
+            "SELECT id FROM building WHERE name = ? ORDER BY id DESC LIMIT 1",
+            [String(payload.name)]
+          );
+          expect(createdRows.length).toBe(1);
+          buildingId = createdRows[0]!.id;
+
+          const updatedName = `${String(payload.name)} - UPDATED`;
+          const response = await admin.put(`/api/v1/admin/buildings/${buildingId}`, {
+            failOnStatusCode: false,
+            data: {
+              ...validPayload,
+              id: buildingId,
+              name: updatedName,
+              floorArea: 999
+            }
+          });
+
+          await expectApiMessage(response, {
+            status: 200,
+            message: apiExpectedMessages.admin.buildings.update,
+            dataMode: "null"
+          });
+
+          const dbResult = await MySqlDbClient.query<{ name: string; floor_area: number }>(
+            "SELECT name, floor_area FROM building WHERE id = ?",
+            [buildingId]
+          );
+          expect(dbResult[0]!.name).toContain("UPDATED");
+          expect(Number(dbResult[0]!.floor_area)).toBe(999);
+        } finally {
+          if (buildingId) {
+            await admin.delete(`/api/v1/admin/buildings/${buildingId}`, {
+              failOnStatusCode: false
+            });
           }
-        });
-
-        await expectApiMessage(response, {
-          status: 200,
-          message: apiExpectedMessages.admin.buildings.update,
-          dataMode: "null"
-        });
-
-        const dbResult = await MySqlDbClient.query<{ name: string; floor_area: number }>(
-          "SELECT name, floor_area FROM building WHERE id = ?",
-          [createdBuildingId]
-        );
-        expect(dbResult[0]!.name).toContain("UPDATED");
-        expect(Number(dbResult[0]!.floor_area)).toBe(999);
-        createdBuildingName = updatedName;
+        }
       });
 
       test("[BLD-011] - API Admin Building - Delete Building - Successful Deletion and Database Removal", async () => {
-        const response = await admin.delete(`/api/v1/admin/buildings/${createdBuildingId}`, {
+        const payload = {
+          ...validPayload,
+          name: TestDataFactory.taoTenToaNha("Auto Test Building Delete")
+        } as Record<string, unknown>;
+
+        const createResponse = await admin.post("/api/v1/admin/buildings", {
+          failOnStatusCode: false,
+          data: payload
+        });
+        await expectApiMessage(createResponse, {
+          status: 200,
+          message: apiExpectedMessages.admin.buildings.create,
+          dataMode: "null"
+        });
+
+        const createdRows = await MySqlDbClient.query<{ id: number }>(
+          "SELECT id FROM building WHERE name = ? ORDER BY id DESC LIMIT 1",
+          [String(payload.name)]
+        );
+        expect(createdRows.length).toBe(1);
+        const buildingId = createdRows[0]!.id;
+
+        const response = await admin.delete(`/api/v1/admin/buildings/${buildingId}`, {
           failOnStatusCode: false
         });
 
@@ -388,12 +463,9 @@ test.describe("Admin - API Building @regression", () => {
 
         const dbResult = await MySqlDbClient.query<{ id: number }>(
           "SELECT id FROM building WHERE id = ?",
-          [createdBuildingId]
+          [buildingId]
         );
         expect(dbResult.length).toBe(0);
-
-        createdBuildingId = 0;
-        createdBuildingName = "";
       });
     });
   });

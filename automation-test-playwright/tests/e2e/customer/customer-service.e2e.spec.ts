@@ -1,35 +1,24 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { CustomerServicePage } from "@pages/customer/CustomerServicePage";
 import {
   cleanupTempCustomerProfileUser,
   createTempCustomerProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
 test.describe("Customer - Service @regression", () => {
-  let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     tempUser = await createTempCustomerProfileUser(adminApi);
     await loginAsTempUser(page, tempUser.username, tempUser.password);
     await page.goto("/customer/service");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await cleanupTempCustomerProfileUser(adminApi, tempUser);
     tempUser = null;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-CUS-SRV-001] - Customer Service - Service Cards - Key Service Card Display", async ({ page }) => {
@@ -48,5 +37,3 @@ test.describe("Customer - Service @regression", () => {
     await servicePage.expectRequestDisabled("Phòng Gym");
   });
 });
-
-

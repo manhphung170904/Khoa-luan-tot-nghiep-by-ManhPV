@@ -1,35 +1,24 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { AdminReportPage } from "@pages/admin/AdminReportPage";
 import {
   cleanupTempStaffProfileUser,
   createTempStaffProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
 test.describe("Admin - Report @regression", () => {
-  let adminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
     await page.goto("/admin/report");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await cleanupTempStaffProfileUser(adminApi, adminUser);
     adminUser = null;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-ADM-RPT-001] - Admin Report - Report Overview - KPI and Analytics Display", async ({ page }) => {
@@ -73,5 +62,3 @@ test.describe("Admin - Report @regression", () => {
     expect(printTriggered).toBeTruthy();
   });
 });
-
-

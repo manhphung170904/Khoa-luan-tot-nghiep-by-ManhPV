@@ -1,5 +1,4 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { StaffInvoiceListPage } from "@pages/staff/StaffInvoiceListPage";
 import {
@@ -9,20 +8,15 @@ import {
   previousInvoicePeriod,
   type TempInvoiceRecord
 } from "@data/invoiceTempData";
-import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
+import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
 test.describe("Staff - Invoice List @regression", () => {
-  let adminApi: APIRequestContext;
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     contract = await createTempContractScenario(adminApi);
     createdInvoices = [];
 
@@ -30,7 +24,7 @@ test.describe("Staff - Invoice List @regression", () => {
     await page.goto("/staff/invoices");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await cleanupContractScenario(
       adminApi,
       contract,
@@ -40,11 +34,7 @@ test.describe("Staff - Invoice List @regression", () => {
     contract = null;
   });
 
-  test.afterAll(async () => {
-    await adminApi.dispose();
-  });
-
-  test("[E2E-STF-INV-001] - Staff Invoice List - Invoice List - Assigned Invoice Rows and Detail Modal", async ({ page }) => {
+  test("[E2E-STF-INV-001] - Staff Invoice List - Invoice List - Assigned Invoice Rows and Detail Modal", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -112,7 +102,7 @@ test.describe("Staff - Invoice List @regression", () => {
     });
   });
 
-  test("[E2E-STF-INV-003] - Staff Invoice List - Duplicate Invoice - Business Error Display", async ({ page }) => {
+  test("[E2E-STF-INV-003] - Staff Invoice List - Duplicate Invoice - Business Error Display", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -146,7 +136,7 @@ test.describe("Staff - Invoice List @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[E2E-STF-INV-004] - Staff Invoice List - Invoice Edit - Usage Due Date and Status Update", async ({ page }) => {
+  test("[E2E-STF-INV-004] - Staff Invoice List - Invoice Edit - Usage Due Date and Status Update", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -178,7 +168,7 @@ test.describe("Staff - Invoice List @regression", () => {
     }).toBe(`PAID|${updatedDueDate}`);
   });
 
-  test("[E2E-STF-INV-005] - Staff Invoice List - Invoice Deletion - Owned Invoice Deletion from List", async ({ page }) => {
+  test("[E2E-STF-INV-005] - Staff Invoice List - Invoice Deletion - Owned Invoice Deletion from List", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -201,7 +191,3 @@ test.describe("Staff - Invoice List @regression", () => {
     createdInvoices = createdInvoices.filter((item) => item.id !== invoice.id);
   });
 });
-
-
-
-

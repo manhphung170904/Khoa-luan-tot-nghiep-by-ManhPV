@@ -17,12 +17,12 @@ type TempCustomer = {
   phone: string;
 };
 
-test.describe.serial("Customer - API Profile @api-write @otp @regression", () => {
+test.describe("Customer - API Profile @api-write @otp @regression", () => {
   let bootstrapAdmin: APIRequestContext;
   let customerContext: APIRequestContext;
   let managerStaffId = 0;
   let tempCustomer: TempCustomer;
-  let currentPassword = env.defaultPassword;
+  let currentPassword: string;
 
   const createTempCustomer = async (): Promise<TempCustomer> => {
     const payload = TestDataFactory.buildCustomerPayload({ staffIds: [managerStaffId] });
@@ -63,19 +63,27 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
 
   test.beforeAll(async ({ playwright }) => {
     bootstrapAdmin = await ApiSessionHelper.newContext(playwright, "admin");
+  });
+
+  test.beforeEach(async ({ playwright }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(bootstrapAdmin);
     managerStaffId = tempStaff.id;
     tempCustomer = await createTempCustomer();
     customerContext = await ApiSessionHelper.newContext(playwright);
+    currentPassword = env.defaultPassword;
 
     const loginResponse = await ApiSessionHelper.login(customerContext, tempCustomer.username, currentPassword);
     expect(loginResponse.status()).toBe(200);
   });
 
-  test.afterAll(async () => {
+  test.afterEach(async () => {
     await customerContext.dispose();
     await bootstrapAdmin.delete(`/api/v1/admin/customers/${tempCustomer.id}`, { failOnStatusCode: false });
     await TempEntityHelper.xoaStaffTam(bootstrapAdmin, managerStaffId);
+    managerStaffId = 0;
+  });
+
+  test.afterAll(async () => {
     await bootstrapAdmin.dispose();
   });
 
@@ -145,7 +153,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
     const response = await customerContext.put("/api/v1/customer/profile/username", {
       failOnStatusCode: false,
       data: {
-        newUsername: `cus${Date.now().toString().slice(-7)}`,
+        newUsername: TestDataFactory.taoUsername("cus"),
         otp
       }
     });
@@ -154,14 +162,14 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/username"
     });
-    expect(errorBody.message).toMatch(/username|đăng nhập|tài khoản|mật khẩu/i);
+    expect(errorBody.message).toMatch(/username|đăng nhập|dang nhap|tài khoản|tai khoan|mật khẩu|mat khau/i);
 
     const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.username).toBe(originalUsername);
   });
 
   test("[CUS-PRO-002] - API Customer Profile - Email - Successful Update with Valid Current Password", async () => {
-    const newEmail = `customer-update-${Date.now()}@example.com`;
+    const newEmail = TestDataFactory.taoEmail("customer-update");
     const response = await customerContext.put("/api/v1/customer/profile/email", {
       failOnStatusCode: false,
       data: {
@@ -185,7 +193,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
     const response = await customerContext.put("/api/v1/customer/profile/email", {
       failOnStatusCode: false,
       data: {
-        newEmail: `customer-invalid-${Date.now()}@example.com`,
+        newEmail: TestDataFactory.taoEmail("customer-invalid"),
         password: "wrong-password-123"
       }
     });
@@ -194,7 +202,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|mật khẩu|hiện tại|không đúng/i);
+    expect(errorBody.message).toMatch(/password|mật khẩu|mat khau|hiện tại|hien tai|không đúng|khong dung/i);
 
     const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.email).toBe(originalEmail);
@@ -237,7 +245,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|mã|xác thực|hết hạn/i);
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han/i);
 
     const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.phone).toBe(originalPhone);
@@ -283,8 +291,6 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       await oldLoginContext.dispose();
       await newLoginContext.dispose();
     }
-
-    currentPassword = newPassword;
   });
 
   test("[CUS-PRO-006] - API Customer Profile - Password Confirmation - Mismatch Rejection", async () => {
@@ -307,7 +313,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/password"
     });
-    expect(errorBody.message).toMatch(/confirm|khớp|xác nhận|mật khẩu xác nhận/i);
+    expect(errorBody.message).toMatch(/confirm|khớp|khop|xác nhận|xac nhan|mật khẩu xác nhận|mat khau xac nhan/i);
 
     const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(newHashRows[0]!.password).toBe(oldHash);
@@ -330,13 +336,9 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/password"
     });
-    expect(errorBody.message).toMatch(/otp|mã|xác thực|không hợp lệ/i);
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|không hợp lệ|khong hop le/i);
 
     const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(newHashRows[0]!.password).toBe(oldHash);
   });
 });
-
-
-
-

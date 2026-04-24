@@ -4,6 +4,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { env } from "@config/env";
 import { ApiSessionHelper, type ApiUserRole } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 
 type RoleScenario = {
   role: ApiUserRole;
@@ -153,7 +154,7 @@ test.describe("Auth - API REST Session @regression", () => {
   test("[API-AUTH-REST-OTP-002] - API Auth Session - Forgot Password - Nonexistent Email Success Contract Preservation", async ({
     anonymousApi
   }) => {
-    const email = `pw-missing-${Date.now()}@example.com`;
+    const email = TestDataFactory.taoEmail("pw-missing");
 
     const beforeRows = await MySqlDbClient.query<{ total: number }>(
       "SELECT COUNT(*) AS total FROM email_verification WHERE email = ? AND purpose = ?",

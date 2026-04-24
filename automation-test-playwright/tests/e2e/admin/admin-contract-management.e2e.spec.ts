@@ -9,7 +9,6 @@ import {
   cleanupTempStaffProfileUser,
   createTempStaffProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
@@ -19,81 +18,72 @@ type TempBuilding = Awaited<ReturnType<typeof TempEntityHelper.taoBuildingTam>>;
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
 test.describe("Admin - Contract Management @regression", () => {
-  let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupContractIds = new Set<number>();
   const cleanupCustomerIds = new Set<number>();
   const cleanupBuildingIds = new Set<number>();
   const cleanupStaffIds = new Set<number>();
 
-  test.beforeAll(async ({ playwright }) => {
-    bootstrapAdminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
-    adminUser = await createTempStaffProfileUser(bootstrapAdminApi, "ADMIN");
+  test.beforeEach(async ({ page, adminApi }) => {
+    adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
     await page.goto("/admin/contract/list");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     for (const contractId of cleanupContractIds) {
-      await bootstrapAdminApi.delete(`/api/v1/admin/contracts/${contractId}`, { failOnStatusCode: false });
+      await adminApi.delete(`/api/v1/admin/contracts/${contractId}`, { failOnStatusCode: false });
     }
     cleanupContractIds.clear();
 
     for (const staffId of cleanupStaffIds) {
-      await bootstrapAdminApi.put(`/api/v1/admin/staff/${staffId}/assignments/customers`, {
+      await adminApi.put(`/api/v1/admin/staff/${staffId}/assignments/customers`, {
         failOnStatusCode: false,
         data: []
       });
-      await bootstrapAdminApi.put(`/api/v1/admin/staff/${staffId}/assignments/buildings`, {
+      await adminApi.put(`/api/v1/admin/staff/${staffId}/assignments/buildings`, {
         failOnStatusCode: false,
         data: []
       });
     }
 
     for (const customerId of cleanupCustomerIds) {
-      await TempEntityHelper.xoaCustomerTam(bootstrapAdminApi, customerId);
+      await TempEntityHelper.xoaCustomerTam(adminApi, customerId);
     }
     cleanupCustomerIds.clear();
 
     for (const buildingId of cleanupBuildingIds) {
-      await TempEntityHelper.xoaBuildingTam(bootstrapAdminApi, buildingId);
+      await TempEntityHelper.xoaBuildingTam(adminApi, buildingId);
     }
     cleanupBuildingIds.clear();
 
     for (const staffId of cleanupStaffIds) {
-      await TempEntityHelper.xoaStaffTam(bootstrapAdminApi, staffId);
+      await TempEntityHelper.xoaStaffTam(adminApi, staffId);
     }
     cleanupStaffIds.clear();
 
-    await cleanupTempStaffProfileUser(bootstrapAdminApi, adminUser);
+    await cleanupTempStaffProfileUser(adminApi, adminUser);
     adminUser = null;
   });
 
-  test.afterAll(async () => {
-    await bootstrapAdminApi.dispose();
-  });
-
-  async function createAssignableScenario(): Promise<{
+  async function createAssignableScenario(adminApi: APIRequestContext): Promise<{
     staff: TempStaff;
     customer: TempCustomer;
     building: TempBuilding;
   }> {
-    const staff = await TempEntityHelper.taoStaffTam(bootstrapAdminApi);
+    const staff = await TempEntityHelper.taoStaffTam(adminApi);
     cleanupStaffIds.add(staff.id);
-    const building = await TempEntityHelper.taoBuildingTam(bootstrapAdminApi, "FOR_RENT");
+    const building = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
     cleanupBuildingIds.add(building.id);
-    await TempEntityHelper.capNhatPhanCongBuilding(bootstrapAdminApi, staff.id, [building.id]);
-    const customer = await TempEntityHelper.taoCustomerTam(bootstrapAdminApi, staff.id);
+    await TempEntityHelper.capNhatPhanCongBuilding(adminApi, staff.id, [building.id]);
+    const customer = await TempEntityHelper.taoCustomerTam(adminApi, staff.id);
     cleanupCustomerIds.add(customer.id);
-    await TempEntityHelper.capNhatPhanCongCustomer(bootstrapAdminApi, staff.id, [customer.id]);
+    await TempEntityHelper.capNhatPhanCongCustomer(adminApi, staff.id, [customer.id]);
     return { staff, customer, building };
   }
 
-  test("[E2E-ADM-CTR-001] - Admin Contract Management - Contract Search - Search and Detail View", async ({ page }) => {
-    const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
+  test("[E2E-ADM-CTR-001] - Admin Contract Management - Contract Search - Search and Detail View", async ({ page, adminApi }) => {
+    const tempContract: TempContract = await TempEntityHelper.taoContractTam(adminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
     cleanupBuildingIds.add(tempContract.building.id);
@@ -110,8 +100,8 @@ test.describe("Admin - Contract Management @regression", () => {
     await detailPage.expectLoaded(tempContract.id);
   });
 
-  test("[E2E-ADM-CTR-002] - Admin Contract Management - Contract Creation - Create Contract from Add Form", async ({ page }) => {
-    const scenario = await createAssignableScenario();
+  test("[E2E-ADM-CTR-002] - Admin Contract Management - Contract Creation - Create Contract from Add Form", async ({ page, adminApi }) => {
+    const scenario = await createAssignableScenario(adminApi);
     const formPage = new AdminContractFormPage(page);
 
     await page.goto("/admin/contract/add");
@@ -125,7 +115,7 @@ test.describe("Admin - Contract Management @regression", () => {
     await formPage.fillRentPrice(1450000);
     await formPage.fillDates("2026-06-01", "2026-12-31");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/thành công|thanh cong|thêm hợp đồng|them hop dong|success/i);
+    await formPage.expectSweetAlertContains(/thành công|thanh cong|them hop dong|thêm hợp đồng|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number; rent_price: number; start_date: string; end_date: string }>(
       `
@@ -147,8 +137,8 @@ test.describe("Admin - Contract Management @regression", () => {
     cleanupContractIds.add(rows[0]!.id);
   });
 
-  test("[E2E-ADM-CTR-003] - Admin Contract Management - Contract Dates - Invalid Date Range Validation", async ({ page }) => {
-    const scenario = await createAssignableScenario();
+  test("[E2E-ADM-CTR-003] - Admin Contract Management - Contract Dates - Invalid Date Range Validation", async ({ page, adminApi }) => {
+    const scenario = await createAssignableScenario(adminApi);
     const formPage = new AdminContractFormPage(page);
 
     await page.goto("/admin/contract/add");
@@ -171,8 +161,8 @@ test.describe("Admin - Contract Management @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[E2E-ADM-CTR-004] - Admin Contract Management - Contract Edit - Active Contract Update", async ({ page }) => {
-    const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
+  test("[E2E-ADM-CTR-004] - Admin Contract Management - Contract Edit - Active Contract Update", async ({ page, adminApi }) => {
+    const tempContract: TempContract = await TempEntityHelper.taoContractTam(adminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
     cleanupBuildingIds.add(tempContract.building.id);
@@ -196,8 +186,8 @@ test.describe("Admin - Contract Management @regression", () => {
     expect(rows[0]!.status).toBe("ACTIVE");
   });
 
-  test("[E2E-ADM-CTR-005] - Admin Contract Management - Contract Edit Lock - Expired Contract Lock Banner Display", async ({ page }) => {
-    const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
+  test("[E2E-ADM-CTR-005] - Admin Contract Management - Contract Edit Lock - Expired Contract Lock Banner Display", async ({ page, adminApi }) => {
+    const tempContract: TempContract = await TempEntityHelper.taoContractTam(adminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
     cleanupBuildingIds.add(tempContract.building.id);
@@ -211,8 +201,8 @@ test.describe("Admin - Contract Management @regression", () => {
     await formPage.expectExpiredBanner();
   });
 
-  test("[E2E-ADM-CTR-006] - Admin Contract Management - Contract Deletion - Detail Page Deletion", async ({ page }) => {
-    const tempContract: TempContract = await TempEntityHelper.taoContractTam(bootstrapAdminApi);
+  test("[E2E-ADM-CTR-006] - Admin Contract Management - Contract Deletion - Detail Page Deletion", async ({ page, adminApi }) => {
+    const tempContract: TempContract = await TempEntityHelper.taoContractTam(adminApi);
     cleanupContractIds.add(tempContract.id);
     cleanupStaffIds.add(tempContract.staff.id);
     cleanupBuildingIds.add(tempContract.building.id);
@@ -223,7 +213,7 @@ test.describe("Admin - Contract Management @regression", () => {
     await detailPage.expectLoaded(tempContract.id);
     await detailPage.deleteContract();
     await detailPage.confirmSweetAlert();
-    await detailPage.expectSweetAlertContains(/thành công|thanh cong|xóa hợp đồng|xoa hop dong|success/i);
+    await detailPage.expectSweetAlertContains(/thành công|thanh cong|xoa hop dong|xóa hợp đồng|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM contract WHERE id = ?", [tempContract.id]);
@@ -233,6 +223,3 @@ test.describe("Admin - Contract Management @regression", () => {
     cleanupContractIds.delete(tempContract.id);
   });
 });
-
-
-

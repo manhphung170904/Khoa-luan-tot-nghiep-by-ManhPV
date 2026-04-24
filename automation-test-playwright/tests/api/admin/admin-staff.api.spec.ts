@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin - API Staff @regression", () => {
+test.describe("Admin - API Staff @regression", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -48,7 +48,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
   });
 
   test("[STF-017] - API Admin Staff - Password - Minimum Length Validation", async () => {
-    const username = `stf_pwd_${Date.now()}`;
+    const username = TestDataFactory.taoUsername("stfpwd");
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
       data: TestDataFactory.buildAdminStaffPayload({ username, password: "12345" })
@@ -96,7 +96,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
   });
 
   test("[STF-015] - API Admin Staff - Username - Minimum Length Boundary Acceptance", async () => {
-    const username = `ab${String(Date.now()).slice(-2)}`;
+    const username = TestDataFactory.taoUsername("ab").slice(0, 4);
     const payload = TestDataFactory.buildAdminStaffPayload({
       username,
       email: TestDataFactory.taoEmail("pw-staff-bnd4"),
@@ -113,9 +113,8 @@ test.describe.serial("Admin - API Staff @regression", () => {
       dataMode: "null"
     });
 
-    const staffId = await TempEntityHelper.layMotStaffIdDangTonTai(admin);
     const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM staff WHERE username = ? LIMIT 1", [username]);
-    expect(rows[0]?.id ?? staffId).toBeTruthy();
+    expect(rows[0]?.id).toBeTruthy();
     await admin.delete(`/api/v1/admin/staff/${rows[0]!.id}`, { failOnStatusCode: false });
   });
 
@@ -311,7 +310,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
       });
 
       const quickAssignedBuildingsResponse = await admin.get(`/api/v1/admin/staff/${createdStaffId}/assignments/buildings`, {
-        failOnStatusCode: false,
+        failOnStatusCode: false
       });
       const quickAssignedBuildings = await expectArrayBody<number>(quickAssignedBuildingsResponse, 200);
       expect(quickAssignedBuildings).toContain(tempBuilding.id);
@@ -433,7 +432,3 @@ test.describe.serial("Admin - API Staff @regression", () => {
     }
   });
 });
-
-
-
-

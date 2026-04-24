@@ -2,6 +2,7 @@ import { expect, test } from "@fixtures/base.fixture";
 import type { APIRequestContext, Page } from "@playwright/test";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 import { LoginPage } from "@pages/auth/LoginPage";
 import { RegisterCompletePage } from "@pages/auth/RegisterCompletePage";
 import { RegisterPage } from "@pages/auth/RegisterPage";
@@ -15,7 +16,7 @@ type RegistrationUser = {
 };
 
 function buildRegistrationUser(prefix: string): RegistrationUser {
-  const unique = `${prefix}_${Date.now()}`;
+  const unique = TestDataFactory.taoUsername(prefix);
   return {
     email: `${unique}@example.com`,
     fullName: "E2E Register User",

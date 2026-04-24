@@ -1,38 +1,28 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { CustomerProfilePage } from "@pages/customer/CustomerProfilePage";
 import { AuthSessionHelper } from "@helpers/AuthSessionHelper";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 import {
   cleanupTempCustomerProfileUser,
   createTempCustomerProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
 test.describe("Customer - Profile @regression", () => {
-  let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     tempUser = await createTempCustomerProfileUser(adminApi);
     await loginAsTempUser(page, tempUser.username, tempUser.password);
     await page.goto("/customer/profile");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await cleanupTempCustomerProfileUser(adminApi, tempUser);
     tempUser = null;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-CUS-PRO-001] - Customer Profile - Profile Overview - Current Account Information Display", async ({ page }) => {
@@ -57,7 +47,7 @@ test.describe("Customer - Profile @regression", () => {
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-CUS-PRO-003] - Customer Profile - Username Update - Successful Update with Valid OTP", async ({ page }) => {
+  test("[E2E-CUS-PRO-003] - Customer Profile - Username Update - Successful Update with Valid OTP", async ({ page, adminApi }) => {
     if (!tempUser) {
       return;
     }
@@ -71,8 +61,8 @@ test.describe("Customer - Profile @regression", () => {
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_USERNAME");
-    await profilePage.submitUsernameChange(`cust${Date.now().toString().slice(-7)}`, otp);
-    await profilePage.expectSweetAlertContains(/lỗi|loi|thất bại|that bai|error|da co mat khau/i);
+    await profilePage.submitUsernameChange(TestDataFactory.taoUsername("cust"), otp);
+    await profilePage.expectSweetAlertContains(/lỗi|loi|thất bại|that bai|error|đã có mật khẩu|da co mat khau/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const dbRows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [tempUser.id]);
@@ -80,13 +70,13 @@ test.describe("Customer - Profile @regression", () => {
     expect((await profilePage.readProfileValues()).username).toBe(originalValues.username);
   });
 
-  test("[E2E-CUS-PRO-004] - Customer Profile - Phone Number Update - Successful Update with Valid OTP", async ({ page }) => {
+  test("[E2E-CUS-PRO-004] - Customer Profile - Phone Number Update - Successful Update with Valid OTP", async ({ page, adminApi }) => {
     if (!tempUser) {
       return;
     }
 
     const profilePage = new CustomerProfilePage(page);
-    const newPhone = `0${String(Date.now()).slice(-9)}`;
+    const newPhone = TestDataFactory.taoSoDienThoai();
 
     await profilePage.openPhoneModal();
     await profilePage.sendOtpFromModal("phone");
@@ -95,7 +85,7 @@ test.describe("Customer - Profile @regression", () => {
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PHONE");
     await profilePage.submitPhoneChange(newPhone, otp);
-    await profilePage.expectSweetAlertContains(/thành công|thanh cong|cập nhật số/i);
+    await profilePage.expectSweetAlertContains(/thành công|thanh cong|cập nhật số|cap nhat so/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempUser!.id]);
       return rows[0]?.phone ?? "";
@@ -106,11 +96,11 @@ test.describe("Customer - Profile @regression", () => {
     const profilePage = new CustomerProfilePage(page);
 
     await profilePage.submitPasswordChange("ValidPass1!", "DifferentPass1!", "000000");
-    await profilePage.expectSweetAlertContains(/không khớp|khong khop|kh.ng kh.p/i);
+    await profilePage.expectSweetAlertContains(/không khớp|khong khop/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-CUS-PRO-006] - Customer Profile - Password Update - Successful Update with Valid OTP and Re-Login", async ({ page }) => {
+  test("[E2E-CUS-PRO-006] - Customer Profile - Password Update - Successful Update with Valid OTP and Re-Login", async ({ page, adminApi }) => {
     if (!tempUser) {
       return;
     }
@@ -122,12 +112,12 @@ test.describe("Customer - Profile @regression", () => {
 
     await profilePage.openPasswordModal();
     await profilePage.sendOtpFromModal("password");
-    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
+    await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PASSWORD");
     await profilePage.submitPasswordChange(newPassword, newPassword, otp);
-    await profilePage.expectSweetAlertContains(/thành công|thanh cong|mật khẩu/i);
+    await profilePage.expectSweetAlertContains(/thành công|thanh cong|mật khẩu|mat khau/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempUser!.id]);
       return rows[0]?.password ?? "";
@@ -142,6 +132,3 @@ test.describe("Customer - Profile @regression", () => {
     await expect(page).toHaveURL(/\/customer\/|\/login-success/);
   });
 });
-
-
-

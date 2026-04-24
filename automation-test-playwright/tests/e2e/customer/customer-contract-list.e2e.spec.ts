@@ -1,33 +1,23 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { CustomerContractListPage } from "@pages/customer/CustomerContractListPage";
-import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
+import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
 test.describe("Customer - Contract List @regression", () => {
-  let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     tempContract = await TempEntityHelper.taoContractTam(adminApi);
     await loginAsTempUser(page, tempContract.customer.username);
     await page.goto("/customer/contract/list");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await TempEntityHelper.xoaContractTam(adminApi, tempContract ?? undefined);
     tempContract = null;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-CUS-CTR-001] - Customer Contract List - Current Contracts - Current Contract Display", async ({ page }) => {
@@ -72,6 +62,3 @@ test.describe("Customer - Contract List @regression", () => {
     await contractPage.expectEmptyState();
   });
 });
-
-
-

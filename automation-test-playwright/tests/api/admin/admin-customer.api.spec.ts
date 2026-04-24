@@ -7,7 +7,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin - API Customer @regression", () => {
+test.describe("Admin - API Customer @regression", () => {
   let admin: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
@@ -31,7 +31,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
   });
 
   test("[CUS-002] - API Admin Customer - Staff Assignment - Empty Staff Assignment Validation", async () => {
-    const username = `cus_empty_staff_${Date.now()}`;
+    const username = TestDataFactory.taoUsername("cusemptystaff");
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload({ username, staffIds: [] })
@@ -67,7 +67,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
   });
 
   test("[CUS-003] - API Admin Customer - Password - Minimum Length Validation", async () => {
-    const username = `cus_pwd_${Date.now()}`;
+    const username = TestDataFactory.taoUsername("cuspwd");
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
@@ -248,7 +248,3 @@ test.describe.serial("Admin - API Customer @regression", () => {
     }
   });
 });
-
-
-
-

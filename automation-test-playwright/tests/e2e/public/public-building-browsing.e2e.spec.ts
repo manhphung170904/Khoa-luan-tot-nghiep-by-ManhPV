@@ -1,5 +1,6 @@
 import { expect, test } from "@fixtures/base.fixture";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 
 type PublicBuildingRow = {
   id: number;
@@ -189,7 +190,7 @@ test.describe("Public - Building Browsing @regression", () => {
   });
 
   test("[E2E-PUB-BLD-007] - Public Building Browsing - Search Results - Empty State for Unmatched Search", async ({ publicPage }) => {
-    await publicPage.searchByBuildingName(`ZZZ-E2E-NO-MATCH-${Date.now()}`);
+    await publicPage.searchByBuildingName(TestDataFactory.taoMaDuyNhat("zzz-e2e-no-match"));
 
     await publicPage.expectEmptyState();
     expect(await publicPage.cardCount()).toBe(0);
@@ -292,8 +293,3 @@ test.describe("Public - Building Browsing @regression", () => {
     await expect(publicPage.buildingList).toBeVisible();
   });
 });
-
-
-
-
-

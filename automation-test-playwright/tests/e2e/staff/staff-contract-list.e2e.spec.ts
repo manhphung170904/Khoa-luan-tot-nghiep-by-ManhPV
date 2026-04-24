@@ -1,33 +1,23 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { StaffContractListPage } from "@pages/staff/StaffContractListPage";
-import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
+import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
 test.describe("Staff - Contract List @regression", () => {
-  let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     tempContract = await TempEntityHelper.taoContractTam(adminApi);
     await loginAsTempUser(page, tempContract.staff.username);
     await page.goto("/staff/contracts");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await TempEntityHelper.xoaContractTam(adminApi, tempContract ?? undefined);
     tempContract = null;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-STF-CTR-001] - Staff Contract List - Assigned Contracts - Assigned Contract Display", async ({ page }) => {
@@ -62,6 +52,3 @@ test.describe("Staff - Contract List @regression", () => {
     await contractPage.expectDetailModalContains(tempContract!.customer.fullName);
   });
 });
-
-
-

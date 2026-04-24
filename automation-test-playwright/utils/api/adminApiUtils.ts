@@ -5,6 +5,7 @@ import { env } from "@config/env";
 import { ApiSessionHelper, type ApiUserRole } from "@api/apiSessionHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import type { ExpectedApiContract, EndpointKind, ApiCoverageStatus } from "@api/apiContractUtils";
 
@@ -35,9 +36,9 @@ export const moonNestRoot = path.resolve(process.cwd(), "..", "moonNest-main");
 export const buildingImageDir = path.join(moonNestRoot, "src", "main", "resources", "static", "images", "building_img");
 export const planningMapImageDir = path.join(moonNestRoot, "src", "main", "resources", "static", "images", "planning_map_img");
 
-export const uniqueSuffix = (prefix: string): string => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-export const randomPhone = (): string => `0${String(Date.now()).slice(-9)}`;
-export const randomEmail = (prefix: string): string => `${prefix}.${Date.now()}@example.com`;
+export const uniqueSuffix = (prefix: string): string => TestDataFactory.taoMaDuyNhat(prefix);
+export const randomPhone = (): string => TestDataFactory.taoSoDienThoai();
+export const randomEmail = (prefix: string): string => TestDataFactory.taoEmail(prefix);
 
 export const tinyPngFile = (name = "tiny.png") => ({
   name,
@@ -190,7 +191,7 @@ export async function createTempAdmin(playwright: RequestContextFactory): Promis
 }> {
   const bootstrapAdmin = await createRoleContext(playwright, "admin");
   const unique = uniqueSuffix("admin");
-  const username = `adm${Date.now().toString().slice(-7)}`;
+  const username = TestDataFactory.taoUsername("adm");
   const email = randomEmail(unique);
   const phone = randomPhone();
 

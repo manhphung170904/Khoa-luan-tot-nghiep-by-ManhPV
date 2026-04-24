@@ -1,25 +1,19 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { CustomerTransactionHistoryPage } from "@pages/customer/CustomerTransactionHistoryPage";
 import { cleanupContractScenario, createManagedInvoiceForContract, createTempContractScenario } from "@data/invoiceTempData";
-import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
+import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
 test.describe("Customer - Transaction History @regression", () => {
-  let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
   let invoiceId: number | null = null;
   let invoiceMonth = 0;
   let invoiceYear = 0;
   let invoiceTotalAmount = 0;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     tempContract = await createTempContractScenario(adminApi);
     const invoice = await createManagedInvoiceForContract(adminApi, tempContract, { status: "PENDING" });
 
@@ -46,17 +40,13 @@ test.describe("Customer - Transaction History @regression", () => {
     await page.goto("/customer/transaction/history");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await cleanupContractScenario(adminApi, tempContract, invoiceId ? [invoiceId] : []);
     tempContract = null;
     invoiceId = null;
     invoiceMonth = 0;
     invoiceYear = 0;
     invoiceTotalAmount = 0;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-CUS-TXN-001] - Customer Transaction History - Transaction Summary - Paid Transaction Summary and Invoice Detail Display", async ({ page }) => {
@@ -118,6 +108,3 @@ test.describe("Customer - Transaction History @regression", () => {
     await expect(transactionPage.rowByBuildingName(tempContract!.building.name)).toBeVisible();
   });
 });
-
-
-

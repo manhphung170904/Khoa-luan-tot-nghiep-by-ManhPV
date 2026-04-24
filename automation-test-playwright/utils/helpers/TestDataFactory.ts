@@ -1,6 +1,29 @@
 export class TestDataFactory {
+  private static uniqueCounter = 0;
+
+  private static taoChuoiSoDuyNhat(length = 10): string {
+    const timestamp = Date.now().toString();
+    const counter = (this.uniqueCounter++ % 1000000).toString().padStart(6, "0");
+    return `${timestamp}${counter}`.slice(-length);
+  }
+
+  static taoMaDuyNhat(prefix = "pw"): string {
+    const timestamp = Date.now().toString(36);
+    const counter = (this.uniqueCounter++ % 1679616).toString(36).padStart(4, "0");
+    const random = Math.random().toString(36).slice(2, 8).padEnd(6, "0");
+    return `${prefix}-${timestamp}-${counter}-${random}`;
+  }
+
   static taoHauToDuyNhat(prefix = "pw"): string {
-    return `${prefix}-${Date.now()}`;
+    return this.taoMaDuyNhat(prefix);
+  }
+
+  static taoChuoiDinhDanh(prefix = "pw"): string {
+    return this.taoMaDuyNhat(prefix).replace(/[^a-z0-9]/gi, "");
+  }
+
+  static taoUsername(prefix = "pw"): string {
+    return this.taoChuoiDinhDanh(prefix).slice(0, 30);
   }
 
   static taoTenToaNha(prefix = "PW Building"): string {
@@ -12,12 +35,15 @@ export class TestDataFactory {
   }
 
   static taoEmail(prefix = "pw-user"): string {
-    return `${prefix}-${Date.now()}@example.com`;
+    return `${this.taoMaDuyNhat(prefix)}@example.com`;
   }
 
   static taoSoDienThoai(): string {
-    const suffix = String(Date.now()).slice(-9);
-    return `0${suffix.padStart(9, "0")}`;
+    return `0${this.taoChuoiSoDuyNhat(9)}`;
+  }
+
+  static taoMaSo(prefix = "PW", digits = 10): string {
+    return `${prefix}${this.taoChuoiSoDuyNhat(digits)}`;
   }
 
   static buildAdminStaffPayload(
@@ -26,7 +52,7 @@ export class TestDataFactory {
   ): Record<string, unknown> {
     const suffix = this.taoHauToDuyNhat(role.toLowerCase());
     return {
-      username: `${role.toLowerCase()}${String(Date.now()).slice(-8)}`,
+      username: this.taoUsername(role.toLowerCase()),
       password: "12345678",
       fullName: `PW ${role} ${suffix}`,
       phone: this.taoSoDienThoai(),
@@ -39,7 +65,7 @@ export class TestDataFactory {
   static buildCustomerPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     const suffix = this.taoHauToDuyNhat("customer");
     return {
-      username: `pwcust${String(Date.now()).slice(-8)}`,
+      username: this.taoUsername("pwcust"),
       password: "12345678",
       fullName: `PW Customer ${suffix}`,
       phone: this.taoSoDienThoai(),
@@ -74,7 +100,7 @@ export class TestDataFactory {
       transactionType,
       direction: "DONG",
       level: "A",
-      taxCode: `PW-${Date.now()}`,
+      taxCode: this.taoMaSo("PW", 10),
       linkOfBuilding: "https://example.com",
       image: null,
       rentAreaValues: "50,100",

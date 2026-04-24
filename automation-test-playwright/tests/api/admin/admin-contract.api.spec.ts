@@ -5,7 +5,7 @@ import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe.serial("Admin - API Contract @api-write @regression", () => {
+test.describe("Admin - API Contract @api-write @regression", () => {
   test("[CTR-001] - API Admin Contract - Authentication - Create Contract Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,

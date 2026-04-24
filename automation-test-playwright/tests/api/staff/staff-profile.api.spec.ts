@@ -16,11 +16,11 @@ type TempStaff = {
   phone: string;
 };
 
-test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
+test.describe("Staff - API Profile @api-write @otp @regression", () => {
   let bootstrapAdmin: APIRequestContext;
   let staffContext: APIRequestContext;
   let tempStaff: TempStaff;
-  let currentPassword = env.defaultPassword;
+  let currentPassword: string;
 
   const createTempStaff = async (): Promise<TempStaff> => {
     const payload = TestDataFactory.buildAdminStaffPayload();
@@ -61,16 +61,23 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
 
   test.beforeAll(async ({ playwright }) => {
     bootstrapAdmin = await ApiSessionHelper.newContext(playwright, "admin");
+  });
+
+  test.beforeEach(async ({ playwright }) => {
     tempStaff = await createTempStaff();
     staffContext = await ApiSessionHelper.newContext(playwright);
+    currentPassword = env.defaultPassword;
 
     const loginResponse = await ApiSessionHelper.login(staffContext, tempStaff.username, currentPassword);
     expect(loginResponse.status()).toBe(200);
   });
 
-  test.afterAll(async () => {
+  test.afterEach(async () => {
     await staffContext.dispose();
     await bootstrapAdmin.delete(`/api/v1/admin/staff/${tempStaff.id}`, { failOnStatusCode: false });
+  });
+
+  test.afterAll(async () => {
     await bootstrapAdmin.dispose();
   });
 
@@ -135,7 +142,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
     const response = await staffContext.put("/api/v1/staff/profile/username", {
       failOnStatusCode: false,
       data: {
-        newUsername: `staff-updated-${Date.now()}`,
+        newUsername: TestDataFactory.taoUsername("staff-updated"),
         otp: "111111"
       }
     });
@@ -144,7 +151,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/username"
     });
-    expect(errorBody.message).toMatch(/otp|mã|xác thực/i);
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc/i);
 
     const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.username).toBe(originalUsername);
@@ -154,7 +161,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
     await sendOtp("PROFILE_USERNAME");
     const otp = await ApiOtpAccessHelper.latestOtp(staffContext, tempStaff.email, "PROFILE_USERNAME");
 
-    const nextUsername = `stf${Date.now().toString().slice(-7)}`;
+    const nextUsername = TestDataFactory.taoUsername("stf");
     const response = await staffContext.put("/api/v1/staff/profile/username", {
       failOnStatusCode: false,
       data: {
@@ -178,7 +185,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
     const response = await staffContext.put("/api/v1/staff/profile/email", {
       failOnStatusCode: false,
       data: {
-        newEmail: `staff-invalid-${Date.now()}@example.com`,
+        newEmail: TestDataFactory.taoEmail("staff-invalid"),
         password: "wrong-password"
       }
     });
@@ -187,14 +194,14 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|mật khẩu|hiện tại|không đúng/i);
+    expect(errorBody.message).toMatch(/password|mật khẩu|mat khau|hiện tại|hien tai|không đúng|khong dung/i);
 
     const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.email).toBe(originalEmail);
   });
 
   test("[STF-PRO-006] - API Staff Profile - Email - Successful Update with Valid Current Password", async () => {
-    const newEmail = `staff-update-${Date.now()}@example.com`;
+    const newEmail = TestDataFactory.taoEmail("staff-update");
     const response = await staffContext.put("/api/v1/staff/profile/email", {
       failOnStatusCode: false,
       data: {
@@ -250,7 +257,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|mã|xác thực|hết hạn/i);
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han/i);
 
     const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.phone).toBe(originalPhone);
@@ -276,7 +283,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/password"
     });
-    expect(errorBody.message).toMatch(/short|ngắn|ít nhất|min|ký tự/i);
+    expect(errorBody.message).toMatch(/short|ngắn|ngan|ít nhất|it nhat|min|ký tự|ky tu/i);
 
     const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
     expect(newHashRows[0]!.password).toBe(oldHash);
@@ -322,11 +329,5 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
       await oldLoginContext.dispose();
       await newLoginContext.dispose();
     }
-
-    currentPassword = newPassword;
   });
 });
-
-
-
-

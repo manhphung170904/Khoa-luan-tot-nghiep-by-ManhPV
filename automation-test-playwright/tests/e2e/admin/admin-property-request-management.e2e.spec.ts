@@ -1,5 +1,4 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { AdminContractFormPage } from "@pages/admin/AdminContractFormPage";
@@ -10,29 +9,23 @@ import {
   cleanupTempStaffProfileUser,
   createTempStaffProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
 
 test.describe("Admin - Property Request Management @regression", () => {
-  let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   let scenario: PropertyRequestScenario | null = null;
   let createdContractId = 0;
   let createdSaleContractId = 0;
 
-  test.beforeAll(async ({ playwright }) => {
-    bootstrapAdminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
-    adminUser = await createTempStaffProfileUser(bootstrapAdminApi, "ADMIN");
+  test.beforeEach(async ({ page, adminApi }) => {
+    adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
     await page.goto("/admin/property-request/list");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     if (scenario?.admin) {
       if (createdContractId) {
         await scenario.admin.delete(`/api/v1/admin/contracts/${createdContractId}`, { failOnStatusCode: false });
@@ -49,12 +42,8 @@ test.describe("Admin - Property Request Management @regression", () => {
       scenario = null;
     }
 
-    await cleanupTempStaffProfileUser(bootstrapAdminApi, adminUser);
+    await cleanupTempStaffProfileUser(adminApi, adminUser);
     adminUser = null;
-  });
-
-  test.afterAll(async () => {
-    await bootstrapAdminApi.dispose();
   });
 
   test("[E2E-ADM-PRQ-001] - Admin Property Request Management - Request Filter - Pending Request Filter and Detail View", async ({ page, playwright }) => {
@@ -212,6 +201,3 @@ test.describe("Admin - Property Request Management @regression", () => {
     expect(rows[0]?.sale_contract_id).toBe(createdSaleContractId);
   });
 });
-
-
-

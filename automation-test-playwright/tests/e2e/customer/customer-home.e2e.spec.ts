@@ -1,35 +1,24 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { CustomerHomePage } from "@pages/customer/CustomerHomePage";
 import {
   cleanupTempCustomerProfileUser,
   createTempCustomerProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
 test.describe("Customer - Home @regression", () => {
-  let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     tempUser = await createTempCustomerProfileUser(adminApi);
     await loginAsTempUser(page, tempUser.username, tempUser.password);
     await page.goto("/customer/home");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await cleanupTempCustomerProfileUser(adminApi, tempUser);
     tempUser = null;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-CUS-HOME-001] - Customer Home - Dashboard Overview - Dashboard Sections Display", async ({ page }) => {
@@ -50,5 +39,3 @@ test.describe("Customer - Home @regression", () => {
     await page.waitForURL(/\/customer\/building\/list|\/customer\/buildings/);
   });
 });
-
-

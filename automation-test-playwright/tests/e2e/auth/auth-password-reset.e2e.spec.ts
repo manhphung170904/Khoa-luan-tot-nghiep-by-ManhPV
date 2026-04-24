@@ -1,5 +1,4 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { ForgotPasswordPage } from "@pages/auth/ForgotPasswordPage";
@@ -8,29 +7,19 @@ import { ResetPasswordPage } from "@pages/auth/ResetPasswordPage";
 import {
   cleanupTempCustomerProfileUser,
   createTempCustomerProfileUser,
-  newAdminApiContext,
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
 test.describe("Auth - Password Reset @regression", () => {
-  let adminApi: APIRequestContext;
   let tempUser: TempCustomerProfileUser | null = null;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async () => {
+  test.beforeEach(async ({ adminApi }) => {
     tempUser = await createTempCustomerProfileUser(adminApi);
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await cleanupTempCustomerProfileUser(adminApi, tempUser);
     tempUser = null;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-AUTH-RST-001] - Auth Password Reset - Forgot Password - Valid Email Reset Form Navigation", async ({ page }) => {
@@ -101,9 +90,6 @@ test.describe("Auth - Password Reset @regression", () => {
 
     await resetPage.expectLoaded(tempUser!.email);
     await resetPage.resetPassword("123456", "Password@456", "Mismatch@456");
-    await resetPage.expectPopupContains(/Mat khau khong khop|khong khop/i);
+    await resetPage.expectPopupContains(/mat khau khong khop|mật khẩu không khớp|khong khop/i);
   });
 });
-
-
-

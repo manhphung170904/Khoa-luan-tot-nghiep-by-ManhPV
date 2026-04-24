@@ -48,11 +48,6 @@ type TempPropertyRequest = {
 };
 
 export class TempEntityHelper {
-  private static taoSoDienThoai(): string {
-    const duoi = String(Date.now()).slice(-9);
-    return `0${duoi.padStart(9, "0")}`;
-  }
-
   private static async docJson<T>(response: APIResponse): Promise<T> {
     expect(response.ok(), `API tra ve status ${response.status()} thay vi 2xx`).toBeTruthy();
     return response.json() as Promise<T>;

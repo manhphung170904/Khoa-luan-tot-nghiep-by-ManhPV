@@ -1,33 +1,23 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { StaffSaleContractListPage } from "@pages/staff/StaffSaleContractListPage";
-import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
+import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempSaleContract = Awaited<ReturnType<typeof TempEntityHelper.taoSaleContractTam>>;
 
 test.describe("Staff - Sale Contract List @regression", () => {
-  let adminApi: APIRequestContext;
   let tempSaleContract: TempSaleContract | null = null;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     tempSaleContract = await TempEntityHelper.taoSaleContractTam(adminApi);
     await loginAsTempUser(page, tempSaleContract.staff.username);
     await page.goto("/staff/sale-contracts");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await TempEntityHelper.xoaSaleContractTam(adminApi, tempSaleContract ?? undefined);
     tempSaleContract = null;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-STF-SALE-001] - Staff Sale Contract List - Assigned Sale Contracts - Assigned Sale Contract Display", async ({ page }) => {
@@ -61,6 +51,3 @@ test.describe("Staff - Sale Contract List @regression", () => {
     await saleContractPage.closeDetailModal();
   });
 });
-
-
-

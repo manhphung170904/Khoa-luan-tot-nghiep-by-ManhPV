@@ -1,5 +1,4 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
@@ -10,64 +9,54 @@ import {
   cleanupTempStaffProfileUser,
   createTempStaffProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
 test.describe("Admin - Staff Management @regression", () => {
-  let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupStaffIds = new Set<number>();
   const cleanupBuildingIds = new Set<number>();
   const cleanupCustomerIds = new Set<number>();
 
-  test.beforeAll(async ({ playwright }) => {
-    bootstrapAdminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
-    adminUser = await createTempStaffProfileUser(bootstrapAdminApi, "ADMIN");
+  test.beforeEach(async ({ page, adminApi }) => {
+    adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
     await page.goto("/admin/staff/list");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     for (const customerId of cleanupCustomerIds) {
-      await TempEntityHelper.xoaCustomerTam(bootstrapAdminApi, customerId);
+      await TempEntityHelper.xoaCustomerTam(adminApi, customerId);
     }
     cleanupCustomerIds.clear();
 
     for (const buildingId of cleanupBuildingIds) {
-      await TempEntityHelper.xoaBuildingTam(bootstrapAdminApi, buildingId);
+      await TempEntityHelper.xoaBuildingTam(adminApi, buildingId);
     }
     cleanupBuildingIds.clear();
 
     for (const staffId of cleanupStaffIds) {
-      await bootstrapAdminApi.put(`/api/v1/admin/staff/${staffId}/assignments/buildings`, {
+      await adminApi.put(`/api/v1/admin/staff/${staffId}/assignments/buildings`, {
         failOnStatusCode: false,
         data: []
       });
-      await bootstrapAdminApi.put(`/api/v1/admin/staff/${staffId}/assignments/customers`, {
+      await adminApi.put(`/api/v1/admin/staff/${staffId}/assignments/customers`, {
         failOnStatusCode: false,
         data: []
       });
-      await TempEntityHelper.xoaStaffTam(bootstrapAdminApi, staffId);
+      await TempEntityHelper.xoaStaffTam(adminApi, staffId);
     }
     cleanupStaffIds.clear();
 
-    await cleanupTempStaffProfileUser(bootstrapAdminApi, adminUser);
+    await cleanupTempStaffProfileUser(adminApi, adminUser);
     adminUser = null;
-  });
-
-  test.afterAll(async () => {
-    await bootstrapAdminApi.dispose();
   });
 
   test("[E2E-ADM-STF-001] - Admin Staff Management - Staff Creation - Create Staff Account from Add Form", async ({ page }) => {
     const listPage = new AdminStaffListPage(page);
     const formPage = new AdminStaffFormPage(page);
     const payload = TestDataFactory.buildAdminStaffPayload({
-      username: `e2estf${String(Date.now()).slice(-7)}`
+      username: TestDataFactory.taoUsername("e2estf")
     });
 
     await page.goto("/admin/staff/list");
@@ -82,7 +71,7 @@ test.describe("Admin - Staff Management @regression", () => {
     });
     await formPage.selectRole("STAFF");
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/thêm nhân viên|them nhan vien|thành công|thanh cong|success/i);
+    await formPage.expectSweetAlertContains(/them nhan vien|thêm nhân viên|thành công|thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number; role: string }>(
       "SELECT id, role FROM staff WHERE username = ? LIMIT 1",
@@ -93,8 +82,8 @@ test.describe("Admin - Staff Management @regression", () => {
     cleanupStaffIds.add(rows[0]!.id);
   });
 
-  test("[E2E-ADM-STF-002] - Admin Staff Management - Staff Search - Search and Detail View", async ({ page }) => {
-    const staff = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
+  test("[E2E-ADM-STF-002] - Admin Staff Management - Staff Search - Search and Detail View", async ({ page, adminApi }) => {
+    const staff = await TempEntityHelper.taoStaffTam(adminApi, "STAFF");
     cleanupStaffIds.add(staff.id);
 
     const listPage = new AdminStaffListPage(page);
@@ -108,14 +97,14 @@ test.describe("Admin - Staff Management @regression", () => {
     await detailPage.expectLoaded(staff.id);
   });
 
-  test("[E2E-ADM-STF-003] - Admin Staff Management - Staff Assignment - Customer and Building Assignment Update", async ({ page }) => {
-    const targetStaff = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
+  test("[E2E-ADM-STF-003] - Admin Staff Management - Staff Assignment - Customer and Building Assignment Update", async ({ page, adminApi }) => {
+    const targetStaff = await TempEntityHelper.taoStaffTam(adminApi, "STAFF");
     cleanupStaffIds.add(targetStaff.id);
-    const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
+    const manager = await TempEntityHelper.taoStaffTam(adminApi, "STAFF");
     cleanupStaffIds.add(manager.id);
-    const building = await TempEntityHelper.taoBuildingTam(bootstrapAdminApi, "FOR_RENT");
+    const building = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
     cleanupBuildingIds.add(building.id);
-    const customer = await TempEntityHelper.taoCustomerTam(bootstrapAdminApi, manager.id);
+    const customer = await TempEntityHelper.taoCustomerTam(adminApi, manager.id);
     cleanupCustomerIds.add(customer.id);
 
     const detailPage = new AdminStaffDetailPage(page);
@@ -125,10 +114,10 @@ test.describe("Admin - Staff Management @regression", () => {
     await detailPage.openBuildingAssignments();
     await detailPage.setBuildingAssignment(building.id, true);
     await detailPage.saveBuildingAssignments();
-    await detailPage.expectSweetAlertContains(/cập nhật phân công tòa nhà|cap nhat phan cong toa nha|thành công|thanh cong|success/i);
+    await detailPage.expectSweetAlertContains(/cap nhat phan cong toa nha|cập nhật phân công tòa nhà|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
-      const response = await bootstrapAdminApi.get(`/api/v1/admin/staff/${targetStaff.id}/assignments/buildings`, {
+      const response = await adminApi.get(`/api/v1/admin/staff/${targetStaff.id}/assignments/buildings`, {
         failOnStatusCode: false
       });
       const data = (await response.json()) as number[];
@@ -139,10 +128,10 @@ test.describe("Admin - Staff Management @regression", () => {
     await detailPage.openCustomerAssignments();
     await detailPage.setCustomerAssignment(customer.id, true);
     await detailPage.saveCustomerAssignments();
-    await detailPage.expectSweetAlertContains(/cập nhật phân công khách hàng|cap nhat phan cong khach hang|thành công|thanh cong|success/i);
+    await detailPage.expectSweetAlertContains(/cap nhat phan cong khach hang|cập nhật phân công khách hàng|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
-      const response = await bootstrapAdminApi.get(`/api/v1/admin/staff/${targetStaff.id}/assignments/customers`, {
+      const response = await adminApi.get(`/api/v1/admin/staff/${targetStaff.id}/assignments/customers`, {
         failOnStatusCode: false
       });
       const data = (await response.json()) as number[];
@@ -150,15 +139,15 @@ test.describe("Admin - Staff Management @regression", () => {
     }).toBe(true);
   });
 
-  test("[E2E-ADM-STF-004] - Admin Staff Management - Staff Deletion - Search Result Deletion", async ({ page }) => {
-    const staff = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
+  test("[E2E-ADM-STF-004] - Admin Staff Management - Staff Deletion - Search Result Deletion", async ({ page, adminApi }) => {
+    const staff = await TempEntityHelper.taoStaffTam(adminApi, "STAFF");
 
     const listPage = new AdminStaffListPage(page);
     await page.goto(`/admin/staff/search?role=STAFF&fullName=${encodeURIComponent(staff.fullName)}`);
     await listPage.waitForSearchTableData();
     await listPage.deleteStaff(staff.fullName);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xóa nhân viên|xoa nhan vien|thành công|thanh cong|success/i);
+    await listPage.expectSweetAlertContains(/xoa nhan vien|xóa nhân viên|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM staff WHERE id = ?", [staff.id]);
@@ -166,6 +155,3 @@ test.describe("Admin - Staff Management @regression", () => {
     }).toBe(0);
   });
 });
-
-
-

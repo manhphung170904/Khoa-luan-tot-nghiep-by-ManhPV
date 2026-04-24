@@ -2,12 +2,12 @@ import { expect, test } from "@fixtures/base.fixture";
 import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 import { AdminBuildingAdditionalInfoPage } from "@pages/admin/AdminBuildingAdditionalInfoPage";
 import {
   cleanupTempStaffProfileUser,
   createTempStaffProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
@@ -31,7 +31,6 @@ async function deleteAdditionalRecord(adminApi: APIRequestContext, type: Additio
 }
 
 test.describe("Admin - Building Additional Information @regression", () => {
-  let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   let buildingId: number | null = null;
   let buildingName = "";
@@ -42,13 +41,9 @@ test.describe("Admin - Building Additional Information @regression", () => {
     supplier: []
   };
 
-  test.beforeAll(async ({ playwright }) => {
-    bootstrapAdminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
-    adminUser = await createTempStaffProfileUser(bootstrapAdminApi, "ADMIN");
-    const tempBuilding = await TempEntityHelper.taoBuildingTam(bootstrapAdminApi, "FOR_RENT");
+  test.beforeEach(async ({ page, adminApi }) => {
+    adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
+    const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
     buildingId = tempBuilding.id;
     buildingName = tempBuilding.name;
 
@@ -56,26 +51,22 @@ test.describe("Admin - Building Additional Information @regression", () => {
     await page.goto(`/admin/building-additional-information/${tempBuilding.id}`);
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     for (const type of ["legal", "amenity", "planning", "supplier"] as const) {
       while (cleanupIds[type].length > 0) {
         const id = cleanupIds[type].pop();
-        await deleteAdditionalRecord(bootstrapAdminApi, type, id);
+        await deleteAdditionalRecord(adminApi, type, id);
       }
     }
 
     if (buildingId) {
-      await TempEntityHelper.xoaBuildingTam(bootstrapAdminApi, buildingId);
+      await TempEntityHelper.xoaBuildingTam(adminApi, buildingId);
     }
     buildingId = null;
     buildingName = "";
 
-    await cleanupTempStaffProfileUser(bootstrapAdminApi, adminUser);
+    await cleanupTempStaffProfileUser(adminApi, adminUser);
     adminUser = null;
-  });
-
-  test.afterAll(async () => {
-    await bootstrapAdminApi.dispose();
   });
 
   test("[E2E-ADM-BAI-001] - Admin Building Additional Information - Page Navigation - Additional Information Sections Load", async ({ page }) => {
@@ -90,7 +81,7 @@ test.describe("Admin - Building Additional Information @regression", () => {
 
   test("[E2E-ADM-BAI-002] - Admin Building Additional Information - Legal Authority - Create and Update Flow", async ({ page }) => {
     const additionalInfoPage = new AdminBuildingAdditionalInfoPage(page);
-    const authorityName = `E2E Legal ${Date.now()}`;
+    const authorityName = `E2E Legal ${TestDataFactory.taoMaDuyNhat("legal")}`;
     const updatedName = `${authorityName} Updated`;
 
     await additionalInfoPage.expectLoaded(buildingName);
@@ -129,8 +120,8 @@ test.describe("Admin - Building Additional Information @regression", () => {
 
   test("[E2E-ADM-BAI-003] - Admin Building Additional Information - Supplier and Amenity - Supplier Email Validation and Entity Creation", async ({ page }) => {
     const additionalInfoPage = new AdminBuildingAdditionalInfoPage(page);
-    const amenityName = `E2E Park ${Date.now()}`;
-    const supplierName = `E2E Supplier ${Date.now()}`;
+    const amenityName = `E2E Park ${TestDataFactory.taoMaDuyNhat("park")}`;
+    const supplierName = `E2E Supplier ${TestDataFactory.taoMaDuyNhat("supplier")}`;
 
     await additionalInfoPage.expectLoaded(buildingName);
     await additionalInfoPage.addSupplier({
@@ -194,7 +185,7 @@ test.describe("Admin - Building Additional Information @regression", () => {
 
   test("[E2E-ADM-BAI-004] - Admin Building Additional Information - Planning Map - Create and Delete Flow", async ({ page }) => {
     const additionalInfoPage = new AdminBuildingAdditionalInfoPage(page);
-    const mapType = `E2E Planning ${Date.now()}`;
+    const mapType = `E2E Planning ${TestDataFactory.taoMaDuyNhat("planning")}`;
 
     await additionalInfoPage.expectLoaded(buildingName);
     await additionalInfoPage.addPlanningMap({
@@ -237,6 +228,3 @@ test.describe("Admin - Building Additional Information @regression", () => {
     await additionalInfoPage.expectCounterValue("planning", 0);
   });
 });
-
-
-

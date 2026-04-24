@@ -7,6 +7,7 @@ import { env } from "@config/env";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 
 type TempAdmin = {
   id: number;
@@ -21,24 +22,24 @@ type ExistingIdentity = {
   phone: string;
 };
 
-test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
+test.describe("Admin - API Profile @api-write @otp @regression", () => {
   let bootstrapAdminContext: APIRequestContext;
   let tempAdminContext: APIRequestContext;
   let tempAdmin: TempAdmin;
   let existingIdentity: ExistingIdentity;
-  let currentPassword = env.defaultPassword;
+  let currentPassword: string;
 
   const createTempAdmin = async (): Promise<TempAdmin> => {
-    const username = `adm${Date.now().toString().slice(-7)}`;
-    const email = `pw-admin-profile-${Date.now()}@example.com`;
-    const phone = `0${String(Date.now()).slice(-9)}`;
+    const username = TestDataFactory.taoUsername("adm");
+    const email = TestDataFactory.taoEmail("pw-admin-profile");
+    const phone = TestDataFactory.taoSoDienThoai();
 
     const createResponse = await bootstrapAdminContext.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
       data: {
         username,
         password: env.defaultPassword,
-        fullName: `PW Admin Profile ${Date.now()}`,
+        fullName: `PW Admin Profile ${TestDataFactory.taoMaDuyNhat("name")}`,
         phone,
         email,
         role: "ADMIN"
@@ -80,6 +81,9 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
 
   test.beforeAll(async ({ playwright }) => {
     bootstrapAdminContext = await ApiSessionHelper.newContext(playwright, "admin");
+  });
+
+  test.beforeEach(async ({ playwright }) => {
     tempAdmin = await createTempAdmin();
     const existingIdentityRows = await MySqlDbClient.query<ExistingIdentity>(
       `
@@ -97,12 +101,13 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
     expect(existingIdentityRows.length).toBe(1);
     existingIdentity = existingIdentityRows[0]!;
     tempAdminContext = await ApiSessionHelper.newContext(playwright);
+    currentPassword = env.defaultPassword;
 
     const loginResponse = await ApiSessionHelper.login(tempAdminContext, tempAdmin.username, currentPassword);
     expect(loginResponse.status()).toBe(200);
   });
 
-  test.afterAll(async () => {
+  test.afterEach(async () => {
     await tempAdminContext.dispose();
 
     if (tempAdmin?.id) {
@@ -110,7 +115,9 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
         failOnStatusCode: false
       });
     }
+  });
 
+  test.afterAll(async () => {
     await bootstrapAdminContext.dispose();
   });
 
@@ -189,7 +196,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
   });
 
   test("[PRF-008] - API Admin Profile - OTP Purpose - Arbitrary Nonblank Purpose Acceptance", async () => {
-    const purpose = `PROFILE_CUSTOM_${Date.now()}`;
+    const purpose = `PROFILE_CUSTOM_${TestDataFactory.taoMaDuyNhat("custom")}`;
     await sendOtp(purpose);
 
     const latest = await ApiOtpHelper.latest(tempAdmin.email, purpose);
@@ -205,7 +212,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
     const response = await tempAdminContext.put("/api/v1/admin/profile/username", {
       failOnStatusCode: false,
       data: {
-        newUsername: `admin-updated-${Date.now()}`,
+        newUsername: TestDataFactory.taoUsername("admin-updated"),
         otp: "111111"
       }
     });
@@ -215,7 +222,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
-    expect(errorBody.message).toMatch(/otp|mã|xác thực|không hợp lệ/i);
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|không hợp lệ|khong hop le/i);
 
     const latestRows = await MySqlDbClient.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
@@ -228,7 +235,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
     await sendOtp("PROFILE_USERNAME");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_USERNAME");
 
-    const nextUsername = `adm${Date.now().toString().slice(-7)}`;
+    const nextUsername = TestDataFactory.taoUsername("adm");
     const response = await tempAdminContext.put("/api/v1/admin/profile/username", {
       failOnStatusCode: false,
       data: {
@@ -272,7 +279,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
-    expect(errorBody.message).toMatch(/username|tên đăng nhập|đăng nhập|đã được sử dụng|tồn tại|trùng/i);
+    expect(errorBody.message).toMatch(/username|tên đăng nhập|ten dang nhap|đăng nhập|dang nhap|đã được sử dụng|da duoc su dung|tồn tại|ton tai|trùng|trung/i);
 
     const latestRows = await MySqlDbClient.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
@@ -299,7 +306,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|mã|xác thực|hết hạn|không tìm thấy/i);
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han|không tìm thấy|khong tim thay/i);
 
     const latestRows = await MySqlDbClient.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
@@ -312,7 +319,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
     await sendOtp("PROFILE_PHONE");
     const otp = await ApiOtpAccessHelper.latestOtp(tempAdminContext, tempAdmin.email, "PROFILE_PHONE");
 
-    const nextPhone = `0${String(Date.now()).slice(-9)}`;
+    const nextPhone = TestDataFactory.taoSoDienThoai();
     const response = await tempAdminContext.put("/api/v1/admin/profile/phone-number", {
       failOnStatusCode: false,
       data: {
@@ -356,7 +363,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/phone|điện thoại|đã được sử dụng|tồn tại|trùng/i);
+    expect(errorBody.message).toMatch(/phone|điện thoại|dien thoai|đã được sử dụng|da duoc su dung|tồn tại|ton tai|trùng|trung/i);
 
     const latestRows = await MySqlDbClient.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
@@ -373,7 +380,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
     const response = await tempAdminContext.put("/api/v1/admin/profile/email", {
       failOnStatusCode: false,
       data: {
-        newEmail: `admin.updated.${Date.now()}@example.com`,
+        newEmail: TestDataFactory.taoEmail("admin.updated"),
         password: "incorrect-password"
       }
     });
@@ -383,7 +390,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|mật khẩu|hiện tại|incorrect|không đúng|sai/i);
+    expect(errorBody.message).toMatch(/password|mật khẩu|mat khau|hiện tại|hien tai|incorrect|không đúng|khong dung|sai/i);
 
     const latestRows = await MySqlDbClient.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
@@ -393,7 +400,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
   });
 
   test("[PRF-014] - API Admin Profile - Email - Successful Update with Valid Current Password", async () => {
-    const nextEmail = `pw-admin-profile-updated-${Date.now()}@example.com`;
+    const nextEmail = TestDataFactory.taoEmail("pw-admin-profile-updated");
     const response = await tempAdminContext.put("/api/v1/admin/profile/email", {
       failOnStatusCode: false,
       data: {
@@ -431,7 +438,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
-    expect(errorBody.message).toMatch(/email|tồn tại|trùng/i);
+    expect(errorBody.message).toMatch(/email|tồn tại|ton tai|trùng|trung/i);
 
     const latestRows = await MySqlDbClient.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
@@ -460,7 +467,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/password"
     });
-    expect(errorBody.message).toMatch(/otp|mã|xác thực|hết hạn|không tìm thấy/i);
+    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han|không tìm thấy|khong tim thay/i);
 
     const latestRows = await MySqlDbClient.query<{ password: string }>(
       "SELECT password FROM staff WHERE id = ? LIMIT 1",
@@ -505,11 +512,5 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
       await oldLoginContext.dispose();
       await newLoginContext.dispose();
     }
-
-    currentPassword = nextPassword;
   });
 });
-
-
-
-

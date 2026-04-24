@@ -1,5 +1,4 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
@@ -10,53 +9,43 @@ import {
   cleanupTempStaffProfileUser,
   createTempStaffProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
 test.describe("Admin - Customer Management @regression", () => {
-  let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupStaffIds = new Set<number>();
   const cleanupCustomerIds = new Set<number>();
 
-  test.beforeAll(async ({ playwright }) => {
-    bootstrapAdminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
-    adminUser = await createTempStaffProfileUser(bootstrapAdminApi, "ADMIN");
+  test.beforeEach(async ({ page, adminApi }) => {
+    adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
     await page.goto("/admin/customer/list");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     for (const customerId of cleanupCustomerIds) {
-      await TempEntityHelper.xoaCustomerTam(bootstrapAdminApi, customerId);
+      await TempEntityHelper.xoaCustomerTam(adminApi, customerId);
     }
     cleanupCustomerIds.clear();
 
     for (const staffId of cleanupStaffIds) {
-      await TempEntityHelper.xoaStaffTam(bootstrapAdminApi, staffId);
+      await TempEntityHelper.xoaStaffTam(adminApi, staffId);
     }
     cleanupStaffIds.clear();
 
-    await cleanupTempStaffProfileUser(bootstrapAdminApi, adminUser);
+    await cleanupTempStaffProfileUser(adminApi, adminUser);
     adminUser = null;
   });
 
-  test.afterAll(async () => {
-    await bootstrapAdminApi.dispose();
-  });
-
-  test("[E2E-ADM-CUS-001] - Admin Customer Management - Customer Creation - Create Customer from Add Form", async ({ page }) => {
-    const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
+  test("[E2E-ADM-CUS-001] - Admin Customer Management - Customer Creation - Create Customer from Add Form", async ({ page, adminApi }) => {
+    const manager = await TempEntityHelper.taoStaffTam(adminApi, "STAFF");
     cleanupStaffIds.add(manager.id);
 
     const listPage = new AdminCustomerListPage(page);
     const formPage = new AdminCustomerFormPage(page);
     const payload = TestDataFactory.buildCustomerPayload({
-      username: `e2ecust${String(Date.now()).slice(-7)}`
+      username: TestDataFactory.taoUsername("e2ecust")
     });
 
     await page.goto("/admin/customer/list");
@@ -71,7 +60,7 @@ test.describe("Admin - Customer Management @regression", () => {
     });
     await formPage.selectStaffIds([manager.id]);
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/thêm khách hàng|them khach hang|thành công|thanh cong|success/i);
+    await formPage.expectSweetAlertContains(/them khach hang|thêm khách hàng|thành công|thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number }>(
       "SELECT id FROM customer WHERE username = ? LIMIT 1",
@@ -87,10 +76,10 @@ test.describe("Admin - Customer Management @regression", () => {
     expect(Number(assignments[0]?.count ?? 0)).toBeGreaterThan(0);
   });
 
-  test("[E2E-ADM-CUS-002] - Admin Customer Management - Customer Search - Search and Detail View", async ({ page }) => {
-    const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
+  test("[E2E-ADM-CUS-002] - Admin Customer Management - Customer Search - Search and Detail View", async ({ page, adminApi }) => {
+    const manager = await TempEntityHelper.taoStaffTam(adminApi, "STAFF");
     cleanupStaffIds.add(manager.id);
-    const customer = await TempEntityHelper.taoCustomerTam(bootstrapAdminApi, manager.id);
+    const customer = await TempEntityHelper.taoCustomerTam(adminApi, manager.id);
     cleanupCustomerIds.add(customer.id);
 
     const listPage = new AdminCustomerListPage(page);
@@ -107,7 +96,7 @@ test.describe("Admin - Customer Management @regression", () => {
   test("[E2E-ADM-CUS-003] - Admin Customer Management - Staff Assignment - No Staff Selected Validation", async ({ page }) => {
     const formPage = new AdminCustomerFormPage(page);
     const payload = TestDataFactory.buildCustomerPayload({
-      username: `nostaff${String(Date.now()).slice(-6)}`
+      username: TestDataFactory.taoUsername("nostaff")
     });
 
     await page.goto("/admin/customer/add");
@@ -129,17 +118,17 @@ test.describe("Admin - Customer Management @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[E2E-ADM-CUS-004] - Admin Customer Management - Customer Deletion - Search Result Deletion", async ({ page }) => {
-    const manager = await TempEntityHelper.taoStaffTam(bootstrapAdminApi, "STAFF");
+  test("[E2E-ADM-CUS-004] - Admin Customer Management - Customer Deletion - Search Result Deletion", async ({ page, adminApi }) => {
+    const manager = await TempEntityHelper.taoStaffTam(adminApi, "STAFF");
     cleanupStaffIds.add(manager.id);
-    const customer = await TempEntityHelper.taoCustomerTam(bootstrapAdminApi, manager.id);
+    const customer = await TempEntityHelper.taoCustomerTam(adminApi, manager.id);
 
     const listPage = new AdminCustomerListPage(page);
     await page.goto(`/admin/customer/search?fullName=${encodeURIComponent(customer.fullName)}`);
     await listPage.waitForTableData();
     await listPage.deleteCustomer(customer.fullName);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xóa khách hàng|xoa khach hang|thành công|thanh cong|success/i);
+    await listPage.expectSweetAlertContains(/xoa khach hang|xóa khách hàng|thành công|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM customer WHERE id = ?", [customer.id]);
@@ -147,6 +136,3 @@ test.describe("Admin - Customer Management @regression", () => {
     }).toBe(0);
   });
 });
-
-
-

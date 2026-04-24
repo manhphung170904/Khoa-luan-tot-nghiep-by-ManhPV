@@ -1,5 +1,4 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { AdminDashboardPage } from "@pages/admin/AdminDashboardPage";
@@ -7,23 +6,17 @@ import {
   cleanupTempStaffProfileUser,
   createTempStaffProfileUser,
   loginAsTempUser,
-  newAdminApiContext,
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
 test.describe("Admin - Dashboard @regression", () => {
-  let bootstrapAdminApi: APIRequestContext;
   let adminUser: TempStaffProfileUser | null = null;
   let tempBuildingId: number | null = null;
   let tempBuildingName = "";
 
-  test.beforeAll(async ({ playwright }) => {
-    bootstrapAdminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
-    adminUser = await createTempStaffProfileUser(bootstrapAdminApi, "ADMIN");
-    const tempBuilding = await TempEntityHelper.taoBuildingTam(bootstrapAdminApi, "FOR_RENT");
+  test.beforeEach(async ({ page, adminApi }) => {
+    adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
+    const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
     tempBuildingId = tempBuilding.id;
     tempBuildingName = tempBuilding.name;
 
@@ -31,19 +24,15 @@ test.describe("Admin - Dashboard @regression", () => {
     await page.goto("/admin/dashboard");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     if (tempBuildingId) {
-      await TempEntityHelper.xoaBuildingTam(bootstrapAdminApi, tempBuildingId);
+      await TempEntityHelper.xoaBuildingTam(adminApi, tempBuildingId);
     }
     tempBuildingId = null;
     tempBuildingName = "";
 
-    await cleanupTempStaffProfileUser(bootstrapAdminApi, adminUser);
+    await cleanupTempStaffProfileUser(adminApi, adminUser);
     adminUser = null;
-  });
-
-  test.afterAll(async () => {
-    await bootstrapAdminApi.dispose();
   });
 
   test("[E2E-ADM-DSH-001] - Admin Dashboard - Overview Widgets - KPI Analytics and Ranking Display", async ({ page }) => {
@@ -87,6 +76,3 @@ test.describe("Admin - Dashboard @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 });
-
-
-

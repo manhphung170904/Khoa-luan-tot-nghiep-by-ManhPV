@@ -1,33 +1,24 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 import { CustomerBuildingListPage } from "@pages/customer/CustomerBuildingListPage";
-import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
+import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
 test.describe("Customer - Building List @regression", () => {
-  let adminApi: APIRequestContext;
   let tempContract: TempContract | null = null;
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     tempContract = await TempEntityHelper.taoContractTam(adminApi);
     await loginAsTempUser(page, tempContract.customer.username);
     await page.goto("/customer/building/list");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await TempEntityHelper.xoaContractTam(adminApi, tempContract ?? undefined);
     tempContract = null;
-  });
-
-  test.afterAll(async () => {
-    await adminApi.dispose();
   });
 
   test("[E2E-CUS-BLD-001] - Customer Building List - Assigned Buildings - Assigned Building Display", async ({ page }) => {
@@ -70,12 +61,9 @@ test.describe("Customer - Building List @regression", () => {
   test("[E2E-CUS-BLD-003] - Customer Building List - Building Search - Empty State for Unmatched Search", async ({ page }) => {
     const buildingPage = new CustomerBuildingListPage(page);
     await buildingPage.expectLoaded();
-    await buildingPage.filterByName(`no-match-${Date.now()}`);
+    await buildingPage.filterByName(TestDataFactory.taoMaDuyNhat("no-match"));
     await buildingPage.submitFilters();
     await buildingPage.waitForBuildingData();
     await buildingPage.expectEmptyState();
   });
 });
-
-
-

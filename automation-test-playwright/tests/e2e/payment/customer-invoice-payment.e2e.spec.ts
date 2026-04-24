@@ -1,5 +1,4 @@
 import { expect, test } from "@fixtures/base.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { CustomerInvoicePage } from "@pages/customer/CustomerInvoicePage";
 import { CustomerPaymentQrPage } from "@pages/customer/CustomerPaymentQrPage";
@@ -9,20 +8,15 @@ import {
   createTempContractScenario,
   type TempInvoiceRecord
 } from "@data/invoiceTempData";
-import { loginAsTempUser, newAdminApiContext } from "@data/profileTempUsers";
+import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
 test.describe("Customer - Invoice Payment @regression", () => {
-  let adminApi: APIRequestContext;
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
 
-  test.beforeAll(async ({ playwright }) => {
-    adminApi = await newAdminApiContext(playwright);
-  });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, adminApi }) => {
     contract = await createTempContractScenario(adminApi);
     createdInvoices = [];
 
@@ -30,7 +24,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
     await page.goto("/customer/invoice/list");
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ adminApi }) => {
     await cleanupContractScenario(
       adminApi,
       contract,
@@ -40,11 +34,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
     contract = null;
   });
 
-  test.afterAll(async () => {
-    await adminApi.dispose();
-  });
-
-  test("[E2E-CUS-PAY-001] - Customer Invoice Payment - Invoice List - Unpaid Summary and Payment Details Modal Display", async ({ page }) => {
+  test("[E2E-CUS-PAY-001] - Customer Invoice Payment - Invoice List - Unpaid Summary and Payment Details Modal Display", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -69,9 +59,9 @@ test.describe("Customer - Invoice Payment @regression", () => {
 
     await invoicePage.openFirstPaymentModal();
     const modalText = await invoicePage.visibleModalText();
-    expect(modalText).toMatch(/invoice|chi tiết|hóa đơn/i);
+    expect(modalText).toMatch(/invoice|chi tiết|chi tiet|hóa đơn|hoa don/i);
     expect(modalText).toContain(contract.building.name);
-    expect(modalText).toMatch(/tổng cộng|total/i);
+    expect(modalText).toMatch(/tổng cộng|tong cong|total/i);
     expect(modalText).toContain(String(invoice.id));
 
     const invoiceRows = await MySqlDbClient.query<{ status: string; total_amount: number }>(
@@ -82,7 +72,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
     expect(Number(invoiceRows[0]?.total_amount ?? 0)).toBeGreaterThan(0);
   });
 
-  test("[E2E-CUS-PAY-002] - Customer Invoice Payment - Payment Modal - QR Payment Page Redirection", async ({ page }) => {
+  test("[E2E-CUS-PAY-002] - Customer Invoice Payment - Payment Modal - QR Payment Page Redirection", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -108,7 +98,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
     expect(invoiceRows[0]?.status).toBe("PENDING");
   });
 
-  test("[E2E-CUS-PAY-003] - Customer QR Payment - Payment Confirmation - Invoice Status Update to Paid", async ({ page }) => {
+  test("[E2E-CUS-PAY-003] - Customer QR Payment - Payment Confirmation - Invoice Status Update to Paid", async ({ page, adminApi }) => {
     if (!contract) {
       return;
     }
@@ -127,7 +117,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
 
     await qrPage.confirmPayment();
     await expect(page).toHaveURL(/\/customer\/invoice\/list\?paySuccess/);
-    await expect(page.locator(".swal2-popup")).toContainText(/thanh toán thành công|payment success|paysuccess/i);
+    await expect(page.locator(".swal2-popup")).toContainText(/thanh toán thành công|thanh toan thanh cong|payment success|paysuccess/i);
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{
         status: string;
@@ -161,6 +151,3 @@ test.describe("Customer - Invoice Payment @regression", () => {
     await invoicePage.expectEmptyState();
   });
 });
-
-
-
