@@ -57,7 +57,6 @@ test.describe("Customer - Transaction History @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-CUS-TXN-001] - Customer Transaction History - Transaction Summary - Paid Transaction Summary and Invoice Detail Display", async ({ page }) => {
@@ -119,5 +118,6 @@ test.describe("Customer - Transaction History @regression", () => {
     await expect(transactionPage.rowByBuildingName(tempContract!.building.name)).toBeVisible();
   });
 });
+
 
 

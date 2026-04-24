@@ -23,7 +23,6 @@ test.describe.serial("Admin - API Invoice @regression", () => {
 
   test.afterAll(async () => {
     await admin.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[INV-001] - API Admin Invoice - Authentication - Create Invoice Without Login Rejection", async ({ request }) => {
@@ -460,6 +459,7 @@ test.describe.serial("Admin - API Invoice @regression", () => {
     }
   });
 });
+
 
 
 

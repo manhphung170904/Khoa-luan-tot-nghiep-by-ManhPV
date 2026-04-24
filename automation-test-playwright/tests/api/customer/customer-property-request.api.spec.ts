@@ -8,7 +8,6 @@ import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
 test.describe("Customer - API Property Request @regression", () => {
   test.afterAll(async () => {
-    await MySqlDbClient.close();
   });
 
   test("[API-CUS-PRQ-001] - API Customer Property Request - Submission - Anonymous Access Rejection", async ({ playwright }) => {
@@ -128,6 +127,7 @@ test.describe("Customer - API Property Request @regression", () => {
     }
   });
 });
+
 
 
 

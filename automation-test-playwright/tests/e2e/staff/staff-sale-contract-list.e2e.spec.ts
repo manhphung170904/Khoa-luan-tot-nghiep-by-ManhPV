@@ -28,7 +28,6 @@ test.describe("Staff - Sale Contract List @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-STF-SALE-001] - Staff Sale Contract List - Assigned Sale Contracts - Assigned Sale Contract Display", async ({ page }) => {
@@ -62,5 +61,6 @@ test.describe("Staff - Sale Contract List @regression", () => {
     await saleContractPage.closeDetailModal();
   });
 });
+
 
 

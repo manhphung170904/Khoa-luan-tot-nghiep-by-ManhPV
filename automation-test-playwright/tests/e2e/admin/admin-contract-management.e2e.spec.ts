@@ -74,7 +74,6 @@ test.describe("Admin - Contract Management @regression", () => {
 
   test.afterAll(async () => {
     await bootstrapAdminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   async function createAssignableScenario(): Promise<{
@@ -234,5 +233,6 @@ test.describe("Admin - Contract Management @regression", () => {
     cleanupContractIds.delete(tempContract.id);
   });
 });
+
 
 

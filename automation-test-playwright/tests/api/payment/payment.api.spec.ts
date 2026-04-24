@@ -36,7 +36,6 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
     }
 
     await adminContext.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[API-PAY-001] - API Payment - QR Payment - Anonymous Access Rejection", async ({ playwright }) => {
@@ -142,6 +141,7 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
     }
   });
 });
+
 
 
 

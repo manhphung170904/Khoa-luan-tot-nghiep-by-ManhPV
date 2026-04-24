@@ -68,7 +68,7 @@ export class StaffSaleContractListPage extends StaffRoutedPage {
   }
 
   async expectEmptyState(): Promise<void> {
-    await expect(this.tableBody).toContainText(/Không có dữ liệu|KhÃ´ng cÃ³ dá»¯ liá»‡u/i);
+    await expect(this.tableBody).toContainText(/không có dữ liệu|khong co du lieu/i);
   }
 
   async expectPaginationVisible(): Promise<void> {

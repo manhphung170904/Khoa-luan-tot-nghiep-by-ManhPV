@@ -40,7 +40,6 @@ test.describe("Admin - API Building @regression", () => {
     }
 
     await admin.dispose();
-    await MySqlDbClient.close();
   });
 
   test.describe("CRUD Building", () => {
@@ -514,6 +513,7 @@ test.describe("Admin - API Building @regression", () => {
     });
   });
 });
+
 
 
 

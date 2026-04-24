@@ -81,7 +81,6 @@ test.describe("Public - Building Browsing @regression", () => {
   });
 
   test.afterAll(async () => {
-    await MySqlDbClient.close();
   });
 
   test("[E2E-PUB-BLD-001] - Public Building Browsing - Landing Page - Default Filters and Initial Results Display", async ({ page, publicPage }) => {
@@ -92,7 +91,7 @@ test.describe("Public - Building Browsing @regression", () => {
     await expect(publicPage.filterForm).toBeVisible();
     await expect(publicPage.searchButton).toBeVisible();
     await publicPage.expectHasResults();
-    await expect(await publicPage.resultSummaryText()).toMatch(/tìm thấy|found/i);
+    await expect(await publicPage.resultSummaryText()).toMatch(/tìm thấy|tim thay|found/i);
   });
 
   test("[E2E-PUB-BLD-002] - Public Building Browsing - Query Parameter - Building Name Prefill and Auto Search", async ({ publicPage }) => {
@@ -226,10 +225,10 @@ test.describe("Public - Building Browsing @regression", () => {
     await publicPage.openBuildingDetailsByName(rentBuilding.name);
 
     await expect(publicPage.detailModalBody).toContainText(rentBuilding.name);
-    await expect(publicPage.detailModalBody).toContainText(/thông tin chung|general information/i);
-    await expect(publicPage.detailModalBody).toContainText(/đặc điểm bất động sản|property features/i);
-    await expect(publicPage.detailModalBody).toContainText(/giá thuê|rent price/i);
-    await expect(publicPage.detailModalBody).toContainText(/phí dịch vụ|service fee/i);
+    await expect(publicPage.detailModalBody).toContainText(/thông tin chung|thong tin chung|general information/i);
+    await expect(publicPage.detailModalBody).toContainText(/đặc điểm bất động sản|dac diem bat dong san|property features/i);
+    await expect(publicPage.detailModalBody).toContainText(/giá thuê|gia thue|rent price/i);
+    await expect(publicPage.detailModalBody).toContainText(/phí dịch vụ|phi dich vu|service fee/i);
     expect(rentBuilding.rentPrice).toBeTruthy();
   });
 
@@ -244,8 +243,8 @@ test.describe("Public - Building Browsing @regression", () => {
     await publicPage.openBuildingDetailsByName(saleBuilding.name);
 
     await expect(publicPage.detailModalBody).toContainText(saleBuilding.name);
-    await expect(publicPage.detailModalBody).toContainText(/giá bán|sale price/i);
-    await expect(publicPage.detailModalBody).not.toContainText(/dien tich thue kha dung|rentable area/i);
+    await expect(publicPage.detailModalBody).toContainText(/giá bán|gia ban|sale price/i);
+    await expect(publicPage.detailModalBody).not.toContainText(/diện tích thuê khả dụng|rentable area/i);
     expect(saleBuilding.salePrice).toBeTruthy();
   });
 
@@ -293,5 +292,8 @@ test.describe("Public - Building Browsing @regression", () => {
     await expect(publicPage.buildingList).toBeVisible();
   });
 });
+
+
+
 
 

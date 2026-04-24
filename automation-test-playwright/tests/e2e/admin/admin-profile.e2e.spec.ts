@@ -33,7 +33,6 @@ test.describe("Admin - Profile @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-ADM-PRO-001] - Admin Profile - Profile Overview - Current Account Information Display", async ({ page }) => {
@@ -142,5 +141,6 @@ test.describe("Admin - Profile @regression", () => {
     await expect(page).toHaveURL(/\/admin\/|\/login-success/);
   });
 });
+
 
 

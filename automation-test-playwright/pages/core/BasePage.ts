@@ -52,6 +52,15 @@ export class BasePage {
     return this.page.locator(".swal2-popup");
   }
 
+  protected normalizeLooseText(value: string): string {
+    return value
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  }
+
   async expectPath(pathPattern: RegExp | string): Promise<void> {
     if (typeof pathPattern === "string") {
       await expect(this.page).toHaveURL(new RegExp(pathPattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -63,6 +72,24 @@ export class BasePage {
 
   async expectToastMessage(text: string): Promise<void> {
     await expect(this.toastPopup()).toContainText(text);
+  }
+
+  async expectSweetAlertContainsText(text: string | RegExp): Promise<void> {
+    await expect(async () => {
+      const popup = this.toastPopup();
+      await expect(popup).toBeVisible();
+      await expect(popup).not.toContainText(/đang xử lý|dang xu ly|vui lòng đợi|vui long doi|processing|please wait/i);
+
+      const rawText = ((await popup.textContent()) ?? "").trim();
+      const normalizedText = this.normalizeLooseText(rawText);
+      if (typeof text === "string") {
+        expect(rawText.includes(text) || normalizedText.includes(this.normalizeLooseText(text))).toBeTruthy();
+        return;
+      }
+
+      const normalizedPattern = new RegExp(this.normalizeLooseText(text.source), text.flags.replace("g", ""));
+      expect(text.test(rawText) || normalizedPattern.test(normalizedText)).toBeTruthy();
+    }).toPass({ timeout: env.expectTimeout });
   }
 
   async confirmSweetAlert(): Promise<void> {

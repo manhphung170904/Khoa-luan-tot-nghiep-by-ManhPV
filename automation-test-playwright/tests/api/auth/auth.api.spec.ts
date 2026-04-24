@@ -59,7 +59,6 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
   test.afterAll(async () => {
     await MySqlDbClient.execute("DELETE FROM customer WHERE email = ?", [validUser.email]);
     await MySqlDbClient.execute("DELETE FROM email_verification WHERE email = ?", [validUser.email]);
-    await MySqlDbClient.close();
   });
 
   async function ensureValidUserRegistered(request: APIRequestContext): Promise<void> {
@@ -370,6 +369,7 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
     });
   });
 });
+
 
 
 

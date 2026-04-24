@@ -31,7 +31,6 @@ test.describe("Customer - Property Request @regression", () => {
       }
     }
     scenario = null;
-    await MySqlDbClient.close();
   });
 
   test("[E2E-CUS-REQ-001] - Customer Property Request - Property Request List - Pending Request Display", async ({ page }) => {
@@ -110,5 +109,6 @@ test.describe("Customer - Property Request @regression", () => {
     expect(rows[0]?.contract_id).toBe(contractRows[0]!.id);
   });
 });
+
 
 

@@ -28,7 +28,6 @@ test.describe("Staff - Building List @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-STF-BLD-001] - Staff Building List - Assigned Buildings - Assigned Building Display", async ({ page }) => {
@@ -54,5 +53,6 @@ test.describe("Staff - Building List @regression", () => {
     await buildingPage.expectDetailModalContains(tempContract!.building.name);
   });
 });
+
 
 

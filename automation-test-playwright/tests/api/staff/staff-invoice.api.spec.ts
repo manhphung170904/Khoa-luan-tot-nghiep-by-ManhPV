@@ -34,7 +34,6 @@ test.describe("Staff - API Invoice @regression", () => {
     await staffContext.dispose();
     await TempEntityHelper.xoaContractTam(adminContext, tempContract);
     await adminContext.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[API-STF-INV-001] - API Staff Invoice - Authentication - Anonymous Create Access Rejection", async ({ playwright }) => {
@@ -180,6 +179,7 @@ test.describe("Staff - API Invoice @regression", () => {
     });
   });
 });
+
 
 
 

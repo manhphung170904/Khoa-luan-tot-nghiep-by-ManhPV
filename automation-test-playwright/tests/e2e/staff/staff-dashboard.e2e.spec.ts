@@ -28,7 +28,6 @@ test.describe("Staff - Dashboard @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-STF-DSH-001] - Staff Dashboard - Overview Widgets - Summary Stats and Tables Display", async ({ page }) => {
@@ -38,5 +37,6 @@ test.describe("Staff - Dashboard @regression", () => {
     await expect(page).toHaveURL(/\/staff\/dashboard/);
   });
 });
+
 
 

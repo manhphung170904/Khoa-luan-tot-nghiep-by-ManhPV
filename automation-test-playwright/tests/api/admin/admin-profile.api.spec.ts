@@ -112,7 +112,6 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
     }
 
     await bootstrapAdminContext.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[PRF-005] - API Admin Profile - Email - Update Without Login Rejection", async ({ request }) => {
@@ -510,6 +509,7 @@ test.describe.serial("Admin - API Profile @api-write @otp @regression", () => {
     currentPassword = nextPassword;
   });
 });
+
 
 
 

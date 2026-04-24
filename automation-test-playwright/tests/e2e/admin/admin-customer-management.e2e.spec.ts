@@ -47,7 +47,6 @@ test.describe("Admin - Customer Management @regression", () => {
 
   test.afterAll(async () => {
     await bootstrapAdminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-ADM-CUS-001] - Admin Customer Management - Customer Creation - Create Customer from Add Form", async ({ page }) => {
@@ -148,5 +147,6 @@ test.describe("Admin - Customer Management @regression", () => {
     }).toBe(0);
   });
 });
+
 
 

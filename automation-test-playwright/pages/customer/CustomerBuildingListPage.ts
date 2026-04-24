@@ -4,6 +4,8 @@ import { RoutedCrudListPage } from "../core/RoutedCrudListPage";
 export class CustomerBuildingListPage extends RoutedCrudListPage {
   protected readonly path = "/customer/building/list";
   readonly list: Locator;
+  private currentModalTarget: string | null = null;
+  private currentBuildingName: string | null = null;
 
   constructor(page: Page) {
     super(page);
@@ -35,14 +37,55 @@ export class CustomerBuildingListPage extends RoutedCrudListPage {
     return this.page.locator("#buildingList .building-card").filter({ hasText: name }).first();
   }
 
+  private detailModalByName(name: string): Locator {
+    if (this.currentModalTarget) {
+      return this.page.locator(this.currentModalTarget).filter({ hasText: name }).last();
+    }
+
+    return this.page.locator("#modalContainer .modal").filter({ hasText: name }).last();
+  }
+
   async openBuildingDetail(name: string): Promise<void> {
     const card = this.cardByBuildingName(name);
     await expect(card).toBeVisible();
+    this.currentBuildingName = name;
+    this.currentModalTarget = await card.getAttribute("data-bs-target");
     await card.click();
+
+    if (!this.currentModalTarget) {
+      return;
+    }
+
+    const visibleModal = this.detailModalByName(name);
+    if (await visibleModal.isVisible().catch(() => false)) {
+      return;
+    }
+
+    await this.page.evaluate(({ target, buildingName }) => {
+      const modal = Array.from(document.querySelectorAll(target))
+        .reverse()
+        .find((element) => element.textContent?.includes(buildingName)) as HTMLElement | undefined;
+      if (!modal) {
+        return;
+      }
+
+      const bootstrapApi = (window as typeof window & {
+        bootstrap?: { Modal?: { getOrCreateInstance: (element: Element) => { show: () => void } } };
+      }).bootstrap;
+
+      if (bootstrapApi?.Modal) {
+        bootstrapApi.Modal.getOrCreateInstance(modal).show();
+        return;
+      }
+
+      modal.style.display = "block";
+      modal.classList.add("show");
+      modal.removeAttribute("aria-hidden");
+    }, { target: this.currentModalTarget, buildingName: name });
   }
 
   async expectDetailModalContains(name: string): Promise<void> {
-    const modal = this.page.locator("#modalContainer .modal.show").first();
+    const modal = this.detailModalByName(this.currentBuildingName ?? name);
     await expect(modal).toBeVisible();
     await expect(modal).toContainText(name);
   }

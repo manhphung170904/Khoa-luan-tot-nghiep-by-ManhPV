@@ -44,7 +44,6 @@ test.describe("Admin - Dashboard @regression", () => {
 
   test.afterAll(async () => {
     await bootstrapAdminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-ADM-DSH-001] - Admin Dashboard - Overview Widgets - KPI Analytics and Ranking Display", async ({ page }) => {
@@ -88,5 +87,6 @@ test.describe("Admin - Dashboard @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 });
+
 
 

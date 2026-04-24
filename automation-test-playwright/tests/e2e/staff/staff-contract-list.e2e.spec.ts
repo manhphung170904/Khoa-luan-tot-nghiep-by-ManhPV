@@ -28,7 +28,6 @@ test.describe("Staff - Contract List @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-STF-CTR-001] - Staff Contract List - Assigned Contracts - Assigned Contract Display", async ({ page }) => {
@@ -63,5 +62,6 @@ test.describe("Staff - Contract List @regression", () => {
     await contractPage.expectDetailModalContains(tempContract!.customer.fullName);
   });
 });
+
 
 

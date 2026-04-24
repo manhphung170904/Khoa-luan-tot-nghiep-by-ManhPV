@@ -55,7 +55,6 @@ test.describe("Admin - Property Request Management @regression", () => {
 
   test.afterAll(async () => {
     await bootstrapAdminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-ADM-PRQ-001] - Admin Property Request Management - Request Filter - Pending Request Filter and Detail View", async ({ page, playwright }) => {
@@ -213,5 +212,6 @@ test.describe("Admin - Property Request Management @regression", () => {
     expect(rows[0]?.sale_contract_id).toBe(createdSaleContractId);
   });
 });
+
 
 

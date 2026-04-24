@@ -42,7 +42,6 @@ test.describe("Customer - Invoice Payment @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-CUS-PAY-001] - Customer Invoice Payment - Invoice List - Unpaid Summary and Payment Details Modal Display", async ({ page }) => {
@@ -162,5 +161,6 @@ test.describe("Customer - Invoice Payment @regression", () => {
     await invoicePage.expectEmptyState();
   });
 });
+
 
 

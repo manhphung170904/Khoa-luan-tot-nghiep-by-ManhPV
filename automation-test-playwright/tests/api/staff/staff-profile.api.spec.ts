@@ -72,7 +72,6 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
     await staffContext.dispose();
     await bootstrapAdmin.delete(`/api/v1/admin/staff/${tempStaff.id}`, { failOnStatusCode: false });
     await bootstrapAdmin.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[STF-PRO-001] - API Staff Profile - Authentication - Mutation Endpoint Access Without Login Rejection", async ({ request }) => {
@@ -327,6 +326,7 @@ test.describe.serial("Staff - API Profile @api-write @otp @regression", () => {
     currentPassword = newPassword;
   });
 });
+
 
 
 

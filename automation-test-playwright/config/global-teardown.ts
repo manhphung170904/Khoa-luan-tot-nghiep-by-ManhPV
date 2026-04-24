@@ -190,6 +190,7 @@ export default async function globalTeardown(_config: FullConfig): Promise<void>
     console.log("[Global Teardown] Cleanup completed successfully.");
   } catch (error) {
     console.error("[Global Teardown Error] SQL sweep failed:", error);
+    throw error;
   } finally {
     await MySqlDbClient.close().catch(() => {});
   }

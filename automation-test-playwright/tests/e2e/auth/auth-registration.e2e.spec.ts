@@ -63,7 +63,6 @@ async function completeRegistrationFlow(
 
 test.describe("Auth - Registration @regression", () => {
   test.afterEach(async () => {
-    await MySqlDbClient.close();
   });
 
   test("[E2E-AUTH-REG-001] - Auth Registration - Registration Flow - Local Registration via OTP", async ({ page, request }) => {
@@ -154,5 +153,6 @@ test.describe("Auth - Registration @regression", () => {
     }
   });
 });
+
 
 

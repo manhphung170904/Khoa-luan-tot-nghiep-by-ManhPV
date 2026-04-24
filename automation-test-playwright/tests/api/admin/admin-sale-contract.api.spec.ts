@@ -16,7 +16,6 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
 
   test.afterAll(async () => {
     await admin.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[SC-001] - API Admin Sale Contract - Authentication - Create Sale Contract Without Login Rejection", async ({ request }) => {
@@ -438,6 +437,7 @@ test.describe.serial("Admin - API Sale Contract @regression", () => {
     });
   });
 });
+
 
 
 

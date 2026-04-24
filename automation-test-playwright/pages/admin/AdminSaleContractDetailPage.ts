@@ -20,8 +20,6 @@ export class AdminSaleContractDetailPage extends RoutedCrudDetailPage {
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {
-    const popup = this.page.locator(".swal2-popup");
-    await expect(popup).toBeVisible();
-    await expect(popup).not.toContainText(/đang xử lý|vui lòng đợi/i);
+    await this.expectSweetAlertContainsText(text);
   }
 }

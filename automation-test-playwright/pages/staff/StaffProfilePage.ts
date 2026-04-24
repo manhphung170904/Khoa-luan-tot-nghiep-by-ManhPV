@@ -29,7 +29,7 @@ export class StaffProfilePage extends StaffRoutedPage {
   }
 
   async expectLoaded(): Promise<void> {
-    await expect(this.page).toHaveTitle(/Tài Khoản Nhân Viên|TÃ i Khoáº£n NhÃ¢n ViÃªn|T.i kho.n/i);
+    await expect(this.page).toHaveTitle(/tài khoản nhân viên|tai khoan nhan vien|profile/i);
     await expect(this.usernameValue).toBeVisible();
     await expect(this.emailValue).toBeVisible();
     await expect(this.phoneValue).toBeVisible();
@@ -57,21 +57,21 @@ export class StaffProfilePage extends StaffRoutedPage {
   }
 
   async sendOtpFromModal(modal: "username" | "phone" | "password"): Promise<void> {
-    await this.modalContainer(modal).getByRole("button", { name: /gửi mã|g.i m.|otp/i }).click();
+    await this.modalContainer(modal).getByRole("button", { name: /gửi mã|gui ma|otp/i }).click();
   }
 
   async submitUsernameChange(newUsername: string, otp: string): Promise<void> {
     await this.openUsernameModal();
     await this.usernameModal.locator('[name="newUsername"]').fill(newUsername);
     await this.usernameModal.locator("#usernameOtp").fill(otp);
-    await this.usernameModal.getByRole("button", { name: /xác nhận|x.c nh.n/i }).click();
+    await this.usernameModal.getByRole("button", { name: /xác nhận|xac nhan/i }).click();
   }
 
   async submitPhoneChange(newPhoneNumber: string, otp: string): Promise<void> {
     await this.openPhoneModal();
     await this.phoneModal.locator('[name="newPhoneNumber"]').fill(newPhoneNumber);
     await this.phoneModal.locator("#phoneOtp").fill(otp);
-    await this.phoneModal.getByRole("button", { name: /xác nhận|x.c nh.n/i }).click();
+    await this.phoneModal.getByRole("button", { name: /xác nhận|xac nhan/i }).click();
   }
 
   async submitPasswordChange(newPassword: string, confirmPassword: string, otp: string): Promise<void> {
@@ -79,7 +79,7 @@ export class StaffProfilePage extends StaffRoutedPage {
     await this.passwordModal.locator('[name="newPassword"]').fill(newPassword);
     await this.passwordModal.locator('[name="confirmPassword"]').fill(confirmPassword);
     await this.passwordModal.locator("#passwordOtp").fill(otp);
-    await this.passwordModal.getByRole("button", { name: /xác nhận|x.c nh.n/i }).click();
+    await this.passwordModal.getByRole("button", { name: /xác nhận|xac nhan/i }).click();
   }
 
   async waitForSweetAlert(): Promise<void> {
@@ -87,25 +87,7 @@ export class StaffProfilePage extends StaffRoutedPage {
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {
-    await this.waitForSweetAlert();
-    const popup = this.toastPopup();
-    const rawText = ((await popup.textContent()) ?? "").trim();
-    const normalize = (value: string): string =>
-      value
-        .normalize("NFD")
-        .replace(/\p{Diacritic}/gu, "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .toLowerCase();
-
-    const normalizedText = normalize(rawText);
-    if (typeof text === "string") {
-      expect(rawText.includes(text) || normalizedText.includes(normalize(text))).toBeTruthy();
-      return;
-    }
-
-    const normalizedPattern = new RegExp(normalize(text.source), text.flags.replace("g", ""));
-    expect(text.test(rawText) || normalizedPattern.test(normalizedText)).toBeTruthy();
+    await this.expectSweetAlertContainsText(text);
   }
 
   async confirmSweetAlertIfPresent(): Promise<void> {

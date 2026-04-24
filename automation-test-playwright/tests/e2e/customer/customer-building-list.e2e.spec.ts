@@ -28,7 +28,6 @@ test.describe("Customer - Building List @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-CUS-BLD-001] - Customer Building List - Assigned Buildings - Assigned Building Display", async ({ page }) => {
@@ -77,5 +76,6 @@ test.describe("Customer - Building List @regression", () => {
     await buildingPage.expectEmptyState();
   });
 });
+
 
 

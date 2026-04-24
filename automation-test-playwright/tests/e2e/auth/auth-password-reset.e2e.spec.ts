@@ -31,7 +31,6 @@ test.describe("Auth - Password Reset @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-AUTH-RST-001] - Auth Password Reset - Forgot Password - Valid Email Reset Form Navigation", async ({ page }) => {
@@ -105,5 +104,6 @@ test.describe("Auth - Password Reset @regression", () => {
     await resetPage.expectPopupContains(/Mat khau khong khop|khong khop/i);
   });
 });
+
 
 

@@ -61,7 +61,6 @@ test.describe("Admin - Staff Management @regression", () => {
 
   test.afterAll(async () => {
     await bootstrapAdminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-ADM-STF-001] - Admin Staff Management - Staff Creation - Create Staff Account from Add Form", async ({ page }) => {
@@ -167,5 +166,6 @@ test.describe("Admin - Staff Management @regression", () => {
     }).toBe(0);
   });
 });
+
 
 

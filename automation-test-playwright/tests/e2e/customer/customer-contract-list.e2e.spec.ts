@@ -28,7 +28,6 @@ test.describe("Customer - Contract List @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-CUS-CTR-001] - Customer Contract List - Current Contracts - Current Contract Display", async ({ page }) => {
@@ -73,5 +72,6 @@ test.describe("Customer - Contract List @regression", () => {
     await contractPage.expectEmptyState();
   });
 });
+
 
 

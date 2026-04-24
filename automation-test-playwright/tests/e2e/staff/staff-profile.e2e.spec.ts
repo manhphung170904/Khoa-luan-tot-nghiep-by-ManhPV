@@ -33,7 +33,6 @@ test.describe("Staff - Profile @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-STF-PRO-001] - Staff Profile - Profile Overview - Current Account Information Display", async ({ page }) => {
@@ -142,5 +141,6 @@ test.describe("Staff - Profile @regression", () => {
     await expect(page).toHaveURL(/\/staff\/|\/login-success/);
   });
 });
+
 
 

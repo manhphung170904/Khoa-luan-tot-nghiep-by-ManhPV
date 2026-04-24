@@ -76,7 +76,6 @@ test.describe("Admin - Building Additional Information @regression", () => {
 
   test.afterAll(async () => {
     await bootstrapAdminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-ADM-BAI-001] - Admin Building Additional Information - Page Navigation - Additional Information Sections Load", async ({ page }) => {
@@ -238,5 +237,6 @@ test.describe("Admin - Building Additional Information @regression", () => {
     await additionalInfoPage.expectCounterValue("planning", 0);
   });
 });
+
 
 

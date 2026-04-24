@@ -46,7 +46,6 @@ test.describe("Admin - Building Management @regression", () => {
 
   test.afterAll(async () => {
     await bootstrapAdminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-ADM-BLD-001] - Admin Building Management - Building Search - Filter and Detail View", async ({ page }) => {
@@ -103,7 +102,7 @@ test.describe("Admin - Building Management @regression", () => {
     });
     await formPage.setCoordinates(21.0686, 105.8033);
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/thành công|thanh cong|success/i);
+    await formPage.expectSweetAlertContains(/thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number; transaction_type: string; floor_area: number; tax_code: string }>(
       `
@@ -147,7 +146,7 @@ test.describe("Admin - Building Management @regression", () => {
       rentAreaValues: "70,140"
     });
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/thành công|thanh cong|success/i);
+    await formPage.expectSweetAlertContains(/thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ name: string; floor_area: number; rent_price: number }>(
       "SELECT name, floor_area, rent_price FROM building WHERE id = ?",
@@ -178,7 +177,7 @@ test.describe("Admin - Building Management @regression", () => {
     await listPage.waitForTableData();
     await listPage.deleteBuilding(tempBuilding.name);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/thành công|thanh cong|success/i);
+    await listPage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM building WHERE id = ?", [tempBuilding.id]);
@@ -186,5 +185,8 @@ test.describe("Admin - Building Management @regression", () => {
     }).toBe(0);
   });
 });
+
+
+
 
 

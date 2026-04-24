@@ -78,7 +78,7 @@ export class AdminBuildingListPage extends RoutedCrudListPage {
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {
-    await expect(this.page.locator(".swal2-popup")).toContainText(text);
+    await this.expectSweetAlertContainsText(text);
   }
 
   async confirmSweetAlert(): Promise<void> {

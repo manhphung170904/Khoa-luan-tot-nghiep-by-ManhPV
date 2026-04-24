@@ -74,7 +74,7 @@ export class AdminContractFormPage extends RoutedCrudFormPage {
   }
 
   async expectNoCommonStaffOption(): Promise<void> {
-    await expect(this.staffSelect.first()).toContainText(/khong co nhan vien|khÃ´ng cÃ³ nhÃ¢n viÃªn/i);
+    await expect(this.staffSelect.first()).toContainText(/kh�ng c� nh�n vi�n|khong co nhan vien/i);
   }
 
   async openQuickAssignModal(): Promise<void> {
@@ -103,8 +103,8 @@ export class AdminContractFormPage extends RoutedCrudFormPage {
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {
-    const popup = this.page.locator(".swal2-popup");
-    await expect(popup).toBeVisible();
-    await expect(popup).not.toContainText(/đang xử lý|vui lòng đợi/i);
+    await this.expectSweetAlertContainsText(text);
   }
 }
+
+

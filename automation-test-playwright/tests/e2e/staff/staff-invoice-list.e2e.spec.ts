@@ -42,7 +42,6 @@ test.describe("Staff - Invoice List @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-STF-INV-001] - Staff Invoice List - Invoice List - Assigned Invoice Rows and Detail Modal", async ({ page }) => {
@@ -89,7 +88,7 @@ test.describe("Staff - Invoice List @regression", () => {
     });
     await invoicePage.chooseAddStatus("PENDING");
     await invoicePage.submitAddInvoice();
-    await invoicePage.expectSweetAlertContains(/thành công|thanh cong|success/i);
+    await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
 
     const rows = await MySqlDbClient.query<{ id: number }>(
       `
@@ -168,7 +167,7 @@ test.describe("Staff - Invoice List @regression", () => {
       status: "PAID"
     });
     await invoicePage.saveVisibleEditForm();
-    await invoicePage.expectSweetAlertContains(/thành công|thanh cong|success/i);
+    await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ status: string; due_date: string }>(
@@ -192,7 +191,7 @@ test.describe("Staff - Invoice List @regression", () => {
     await invoicePage.waitForTableData();
     await invoicePage.deleteInvoice(invoice.id);
     await invoicePage.confirmSweetAlert();
-    await invoicePage.expectSweetAlertContains(/thành công|thanh cong|success/i);
+    await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);
@@ -202,5 +201,7 @@ test.describe("Staff - Invoice List @regression", () => {
     createdInvoices = createdInvoices.filter((item) => item.id !== invoice.id);
   });
 });
+
+
 
 

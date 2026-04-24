@@ -8,7 +8,6 @@ import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
 test.describe("Admin - API Property Request @regression", () => {
   test.afterAll(async () => {
-    await MySqlDbClient.close();
   });
 
   test("[API-ADM-PRQ-001] - API Admin Property Request - Listing - Anonymous Access Rejection", async ({ playwright }) => {
@@ -289,6 +288,7 @@ test.describe("Admin - API Property Request @regression", () => {
     }
   });
 });
+
 
 
 

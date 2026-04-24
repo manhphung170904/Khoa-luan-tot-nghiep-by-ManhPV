@@ -51,28 +51,6 @@ export class AdminPropertyRequestDetailPage extends RoutedCrudDetailPage {
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {
-    const visiblePopup = this.page.locator(".swal2-popup.swal2-show");
-    await expect(visiblePopup).toBeVisible();
-    const popupText = (
-      await visiblePopup.locator("#swal2-title, .swal2-title, #swal2-html-container, .swal2-html-container").allTextContents()
-    ).join(" ");
-    const normalize = (value: string): string =>
-      value
-        .normalize("NFD")
-        .replace(/\p{Diacritic}/gu, "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .toLowerCase();
-
-    const rawText = popupText.trim();
-    const normalizedText = normalize(popupText);
-
-    if (typeof text === "string") {
-      expect(rawText.includes(text) || normalizedText.includes(normalize(text))).toBeTruthy();
-      return;
-    }
-
-    const normalizedPattern = new RegExp(normalize(text.source), text.flags.replace("g", ""));
-    expect(text.test(rawText) || normalizedPattern.test(normalizedText)).toBeTruthy();
+    await this.expectSweetAlertContainsText(text);
   }
 }

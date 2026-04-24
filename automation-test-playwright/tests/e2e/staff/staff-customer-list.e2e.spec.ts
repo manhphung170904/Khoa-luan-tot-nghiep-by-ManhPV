@@ -28,7 +28,6 @@ test.describe("Staff - Customer List @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-STF-CUS-001] - Staff Customer List - Assigned Customers - Assigned Customer Display", async ({ page }) => {
@@ -54,5 +53,6 @@ test.describe("Staff - Customer List @regression", () => {
     await customerPage.expectDetailModalContains(tempContract!.customer.fullName);
   });
 });
+
 
 

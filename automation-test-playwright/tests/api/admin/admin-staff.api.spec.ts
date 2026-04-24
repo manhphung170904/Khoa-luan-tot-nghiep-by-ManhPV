@@ -16,7 +16,6 @@ test.describe.serial("Admin - API Staff @regression", () => {
 
   test.afterAll(async () => {
     await admin.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[STF-001] - API Admin Staff - Authentication - Create Staff Without Login Rejection", async ({ request }) => {
@@ -434,6 +433,7 @@ test.describe.serial("Admin - API Staff @regression", () => {
     }
   });
 });
+
 
 
 

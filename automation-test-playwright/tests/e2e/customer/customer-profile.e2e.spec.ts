@@ -33,7 +33,6 @@ test.describe("Customer - Profile @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-CUS-PRO-001] - Customer Profile - Profile Overview - Current Account Information Display", async ({ page }) => {
@@ -143,5 +142,6 @@ test.describe("Customer - Profile @regression", () => {
     await expect(page).toHaveURL(/\/customer\/|\/login-success/);
   });
 });
+
 
 

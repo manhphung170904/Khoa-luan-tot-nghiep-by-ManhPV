@@ -77,7 +77,6 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
     await bootstrapAdmin.delete(`/api/v1/admin/customers/${tempCustomer.id}`, { failOnStatusCode: false });
     await TempEntityHelper.xoaStaffTam(bootstrapAdmin, managerStaffId);
     await bootstrapAdmin.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[CUS-PRO-001] - API Customer Profile - Authentication - Mutation Endpoint Access Without Login Rejection", async ({ request }) => {
@@ -337,6 +336,7 @@ test.describe.serial("Customer - API Profile @api-write @otp @regression", () =>
     expect(newHashRows[0]!.password).toBe(oldHash);
   });
 });
+
 
 
 

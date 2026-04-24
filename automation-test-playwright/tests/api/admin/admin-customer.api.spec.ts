@@ -16,7 +16,6 @@ test.describe.serial("Admin - API Customer @regression", () => {
 
   test.afterAll(async () => {
     await admin.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[CUS-001] - API Admin Customer - Authentication - Create Customer Without Login Rejection", async ({ request }) => {
@@ -249,6 +248,7 @@ test.describe.serial("Admin - API Customer @regression", () => {
     }
   });
 });
+
 
 
 

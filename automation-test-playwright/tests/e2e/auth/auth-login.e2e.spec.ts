@@ -24,7 +24,6 @@ test.describe("Auth - Login @regression", () => {
 
   test.afterAll(async () => {
     await adminApi.dispose();
-    await MySqlDbClient.close();
   });
 
   test("[E2E-AUTH-LOGIN-001] - Auth Login - Login Navigation - Registration and Forgot Password Navigation", async ({ page }) => {
@@ -61,5 +60,4 @@ test.describe("Auth - Login @regression", () => {
     await expect(page).toHaveURL(/\/customer\/home/);
   });
 });
-
 
