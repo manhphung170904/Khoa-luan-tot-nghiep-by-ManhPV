@@ -1,5 +1,6 @@
 import { expect, test } from "@fixtures/base.fixture";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { AdminContractFormPage } from "@pages/admin/AdminContractFormPage";
 import { AdminPropertyRequestDetailPage } from "@pages/admin/AdminPropertyRequestDetailPage";
@@ -38,7 +39,9 @@ test.describe("Admin - Property Request Management @regression", () => {
     }
 
     if (scenario) {
-      await scenario.cleanup().catch(() => {});
+      await CleanupHelper.run([
+        { label: `Cleanup property request scenario ${scenario.propertyRequestId}`, action: () => scenario!.cleanup() }
+      ]);
       scenario = null;
     }
 

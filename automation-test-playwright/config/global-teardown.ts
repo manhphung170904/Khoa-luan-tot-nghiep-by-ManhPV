@@ -8,7 +8,7 @@ const moonNestRoot = path.resolve(process.cwd(), "..", "moonNest-main");
 
 const uploadCleanupTargets = [
   {
-    label: "building image",
+    label: "building image (test)",
     dir: path.resolve(moonNestRoot, "target", "test-upload", "building_img"),
     dbColumn: "image",
     sql: `
@@ -21,8 +21,34 @@ const uploadCleanupTargets = [
     allowedPattern: /^[a-f0-9]{32}\.(jpg|jpeg|png|webp)$/i
   },
   {
-    label: "planning map image",
+    label: "planning map image (test)",
     dir: path.resolve(moonNestRoot, "target", "test-upload", "planning_map_img"),
+    dbColumn: "image_url",
+    sql: `
+      SELECT image_url AS filename
+      FROM planning_map
+      WHERE building_id IN (SELECT id FROM building WHERE name LIKE 'PW %')
+        AND image_url IS NOT NULL
+        AND TRIM(image_url) <> ''
+    `,
+    allowedPattern: /^planning_[a-f0-9]{32}\.(jpg|jpeg|png|webp)$/i
+  },
+  {
+    label: "building image (local)",
+    dir: path.resolve(moonNestRoot, "uploads", "building_img"),
+    dbColumn: "image",
+    sql: `
+      SELECT image AS filename
+      FROM building
+      WHERE name LIKE 'PW %'
+        AND image IS NOT NULL
+        AND TRIM(image) <> ''
+    `,
+    allowedPattern: /^[a-f0-9]{32}\.(jpg|jpeg|png|webp)$/i
+  },
+  {
+    label: "planning map image (local)",
+    dir: path.resolve(moonNestRoot, "uploads", "planning_map_img"),
     dbColumn: "image_url",
     sql: `
       SELECT image_url AS filename
@@ -192,6 +218,6 @@ export default async function globalTeardown(_config: FullConfig): Promise<void>
     console.error("[Global Teardown Error] SQL sweep failed:", error);
     throw error;
   } finally {
-    await MySqlDbClient.close().catch(() => {});
+    await MySqlDbClient.close().catch(() => { });
   }
 }

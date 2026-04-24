@@ -83,7 +83,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
   test("[CTR-003] - API Admin Contract - Building Reference - Nonexistent Building Validation", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
     cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
-    try {
+    // cleaned try
       const response = await adminApi.post("/api/v1/admin/contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildContractPayload({
@@ -104,13 +104,13 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         [temp.customer.id, 999999, temp.staff.id]
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    } finally {}
+    // cleaned finally
   });
 
   test("[CTR-004] - API Admin Contract - Customer Reference - Nonexistent Customer Validation", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
     cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
-    try {
+    // cleaned try
       const response = await adminApi.post("/api/v1/admin/contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildContractPayload({
@@ -131,7 +131,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         [999999, temp.building.id, temp.staff.id]
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    } finally {}
+    // cleaned finally
   });
 
   test("[CTR-012] - API Admin Contract - Staff Assignment - Building Assignment Restriction", async ({ adminApi, cleanupRegistry }) => {
@@ -140,7 +140,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
     cleanupRegistry.add(() => TempEntityHelper.xoaStaffTam(adminApi, outsiderStaff.id));
     cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, managedContract));
 
-    try {
+    // cleaned try
       const response = await adminApi.post("/api/v1/admin/contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildContractPayload({
@@ -161,7 +161,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         [managedContract.customer.id, managedContract.building.id, outsiderStaff.id]
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    } finally {}
+    // cleaned finally
   });
 
   test("[CTR-013] - API Admin Contract - Staff Assignment - Customer Assignment Restriction", async ({ adminApi, cleanupRegistry }) => {
@@ -176,7 +176,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
     cleanupRegistry.add(() => TempEntityHelper.xoaCustomerTam(adminApi, tempCustomer.id));
     cleanupRegistry.add(() => TempEntityHelper.capNhatPhanCongBuilding(adminApi, contractStaff.id, []));
 
-    try {
+    // cleaned try
       const response = await adminApi.post("/api/v1/admin/contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildContractPayload({
@@ -197,7 +197,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         [tempCustomer.id, tempBuilding.id, contractStaff.id]
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    } finally {}
+    // cleaned finally
   });
 
   test("[CTR-014] - API Admin Contract - Update Contract - Nonexistent Contract Rejection", async ({ adminApi, cleanupRegistry }) => {

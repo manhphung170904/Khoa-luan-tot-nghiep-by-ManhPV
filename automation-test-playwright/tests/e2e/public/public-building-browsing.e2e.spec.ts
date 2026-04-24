@@ -75,13 +75,14 @@ const getVisibleBuildingCount = async (): Promise<number> => {
   return Number(rows[0]?.total ?? 0);
 };
 
+const skipIfMissingPublicSeed = (condition: boolean, requirement: string): void => {
+  test.skip(condition, `[Public seed precondition] ${requirement}`);
+};
+
 test.describe("Public - Building Browsing @regression", () => {
   test.beforeEach(async ({ publicPage }) => {
     await publicPage.open();
     await publicPage.expectResultsLoaded();
-  });
-
-  test.afterAll(async () => {
   });
 
   test("[E2E-PUB-BLD-001] - Public Building Browsing - Landing Page - Default Filters and Initial Results Display", async ({ page, publicPage }) => {
@@ -97,7 +98,7 @@ test.describe("Public - Building Browsing @regression", () => {
 
   test("[E2E-PUB-BLD-002] - Public Building Browsing - Query Parameter - Building Name Prefill and Auto Search", async ({ publicPage }) => {
     const targetBuilding = await getSingleVisibleBuilding();
-    test.skip(!targetBuilding, "No public building data is available for this test.");
+    skipIfMissingPublicSeed(!targetBuilding, "At least one visible public building is required.");
     if (!targetBuilding) {
       return;
     }
@@ -119,7 +120,7 @@ test.describe("Public - Building Browsing @regression", () => {
 
   test("[E2E-PUB-BLD-004] - Public Building Browsing - Building Name Filter - Exact Name Search Result", async ({ publicPage }) => {
     const targetBuilding = await getSingleVisibleBuilding();
-    test.skip(!targetBuilding, "No public building data is available for this test.");
+    skipIfMissingPublicSeed(!targetBuilding, "At least one visible public building is required.");
     if (!targetBuilding) {
       return;
     }
@@ -144,7 +145,7 @@ test.describe("Public - Building Browsing @regression", () => {
 
   test("[E2E-PUB-BLD-005] - Public Building Browsing - District Filter - District Narrowing Results", async ({ publicPage }) => {
     const targetBuilding = await getSingleVisibleBuilding("b.district_id IS NOT NULL");
-    test.skip(!targetBuilding?.districtId, "No public building with district data is available for this test.");
+    skipIfMissingPublicSeed(!targetBuilding?.districtId, "At least one visible public building with district data is required.");
     if (!targetBuilding?.districtId) {
       return;
     }
@@ -172,7 +173,7 @@ test.describe("Public - Building Browsing @regression", () => {
 
   test("[E2E-PUB-BLD-006] - Public Building Browsing - Filter Reset - Restore Default State", async ({ publicPage }) => {
     const targetBuilding = await getSingleVisibleBuilding("b.district_id IS NOT NULL");
-    test.skip(!targetBuilding?.districtId, "No public building with district data is available for this test.");
+    skipIfMissingPublicSeed(!targetBuilding?.districtId, "At least one visible public building with district data is required.");
     if (!targetBuilding?.districtId) {
       return;
     }
@@ -198,7 +199,7 @@ test.describe("Public - Building Browsing @regression", () => {
 
   test("[E2E-PUB-BLD-008] - Public Building Browsing - Pagination - Multi-Page Navigation and Active Page Update", async ({ publicPage }) => {
     const total = await getVisibleBuildingCount();
-    test.skip(total <= 9, "The current public building count does not exceed a single page.");
+    skipIfMissingPublicSeed(total <= 9, "More than 9 visible public buildings are required for pagination.");
 
     const firstPageNames = await publicPage.cardNames();
     expect(firstPageNames.length).toBeGreaterThan(0);
@@ -217,7 +218,7 @@ test.describe("Public - Building Browsing @regression", () => {
 
   test("[E2E-PUB-BLD-009] - Public Building Browsing - Rental Building Details - Modal Display with Key Information and Price", async ({ publicPage }) => {
     const rentBuilding = await getSingleVisibleBuilding("b.transaction_type = 'FOR_RENT'");
-    test.skip(!rentBuilding, "No public FOR_RENT building is available for this test.");
+    skipIfMissingPublicSeed(!rentBuilding, "At least one visible FOR_RENT building is required.");
     if (!rentBuilding) {
       return;
     }
@@ -235,7 +236,7 @@ test.describe("Public - Building Browsing @regression", () => {
 
   test("[E2E-PUB-BLD-010] - Public Building Browsing - Sale Building Details - Sale Price Display Without Rental Fields", async ({ publicPage }) => {
     const saleBuilding = await getSingleVisibleBuilding("b.transaction_type = 'FOR_SALE'");
-    test.skip(!saleBuilding, "No public FOR_SALE building is available for this test.");
+    skipIfMissingPublicSeed(!saleBuilding, "At least one visible FOR_SALE building is required.");
     if (!saleBuilding) {
       return;
     }
@@ -251,7 +252,7 @@ test.describe("Public - Building Browsing @regression", () => {
 
   test("[E2E-PUB-BLD-011] - Public Building Browsing - Building Card Media - Safe Rendering Without Image", async ({ publicPage }) => {
     const buildingWithoutImage = await getSingleVisibleBuilding("(b.image IS NULL OR TRIM(b.image) = '')");
-    test.skip(!buildingWithoutImage, "No public building without an image is available for this test.");
+    skipIfMissingPublicSeed(!buildingWithoutImage, "At least one visible public building without an image is required.");
     if (!buildingWithoutImage) {
       return;
     }

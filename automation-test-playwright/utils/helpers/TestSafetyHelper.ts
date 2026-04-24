@@ -7,7 +7,7 @@ export class TestSafetyHelper {
   static skipIfDestructiveTestsDisabled(test: { skip: (condition: boolean, description: string) => void }): void {
     test.skip(
       !this.allowDestructiveTests(),
-      "Đã tắt test phá dữ liệu để bảo vệ tài khoản và dữ liệu thật. Chỉ bật khi chạy trên môi trường test riêng."
+      "Destructive tests are disabled to protect real accounts and data. Enable them only on an isolated test environment."
     );
   }
 }

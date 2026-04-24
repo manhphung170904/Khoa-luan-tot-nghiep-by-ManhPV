@@ -14,13 +14,24 @@ export class ApiCleanupRegistry {
   }
 
   async flush(): Promise<void> {
+    const errors: unknown[] = [];
+
     while (this.tasks.length > 0) {
       const task = this.tasks.pop();
       if (!task) {
         continue;
       }
 
-      await task();
+      try {
+        await task();
+      } catch (error) {
+        errors.push(error);
+        console.warn("[API Cleanup Warning] Cleanup task failed:", error);
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new AggregateError(errors, `${errors.length} API cleanup task(s) failed.`);
     }
   }
 }

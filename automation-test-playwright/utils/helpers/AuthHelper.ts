@@ -19,4 +19,16 @@ export class AuthHelper {
   static async loginAsCustomer(page: Page): Promise<void> {
     await AuthSessionHelper.loginAsCustomerUi(page);
   }
+
+  static async loginAsAdminStrict(page: Page): Promise<void> {
+    await AuthSessionHelper.loginAsAdminUiStrict(page);
+  }
+
+  static async loginAsStaffStrict(page: Page): Promise<void> {
+    await AuthSessionHelper.loginAsStaffUiStrict(page);
+  }
+
+  static async loginAsCustomerStrict(page: Page): Promise<void> {
+    await AuthSessionHelper.loginAsCustomerUiStrict(page);
+  }
 }

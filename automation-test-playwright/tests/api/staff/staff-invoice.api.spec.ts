@@ -4,6 +4,7 @@ import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
 import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
@@ -39,17 +40,25 @@ const cleanupInvoiceById = async (invoiceId?: number): Promise<void> => {
     return;
   }
 
-  await MySqlDbClient.execute("DELETE FROM invoice_detail WHERE invoice_id = ?", [invoiceId]).catch(() => {});
-  await MySqlDbClient.execute("DELETE FROM invoice WHERE id = ?", [invoiceId]).catch(() => {});
+  await CleanupHelper.run([
+    { label: `Delete invoice detail rows for invoice ${invoiceId}`, action: () => MySqlDbClient.execute("DELETE FROM invoice_detail WHERE invoice_id = ?", [invoiceId]) },
+    { label: `Delete invoice ${invoiceId}`, action: () => MySqlDbClient.execute("DELETE FROM invoice WHERE id = ?", [invoiceId]) }
+  ]);
 };
 
 const cleanupStaffInvoiceScenario = async (scenario?: Partial<StaffInvoiceScenario>, invoiceId?: number): Promise<void> => {
-  await cleanupInvoiceById(invoiceId);
-  await scenario?.staffContext?.dispose().catch(() => {});
-  if (scenario?.tempContract && scenario?.adminContext) {
-    await TempEntityHelper.xoaContractTam(scenario.adminContext, scenario.tempContract).catch(() => {});
-  }
-  await scenario?.adminContext?.dispose().catch(() => {});
+  const tasks = [
+    { label: `Cleanup invoice ${invoiceId ?? "(none)"}`, action: () => cleanupInvoiceById(invoiceId) },
+    { label: "Dispose staff API context", action: () => scenario?.staffContext?.dispose() },
+    {
+      label: `Cleanup temp contract ${scenario?.tempContract?.id ?? "(none)"}`,
+      action: () => scenario?.tempContract && scenario?.adminContext
+        ? TempEntityHelper.xoaContractTam(scenario.adminContext, scenario.tempContract)
+        : undefined
+    },
+    { label: "Dispose admin API context", action: () => scenario?.adminContext?.dispose() }
+  ];
+  await CleanupHelper.run(tasks);
 };
 
 test.describe("Staff - API Invoice @regression", () => {

@@ -88,7 +88,7 @@ export class TempEntityHelper {
 
   static async layMotStaffIdDangTonTai(request: APIRequestContext): Promise<number> {
     const response = await request.get("/api/v1/admin/staff", {
-      params: { page: 1, size: 20, role: "STAFF" }
+      params: { page: 1, size: 1000, role: "STAFF" }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(response);
     const staff = this.layNoiDung(duLieu).find((item) => typeof item.id === "number");
@@ -111,7 +111,7 @@ export class TempEntityHelper {
     expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/staff", {
-      params: { page: 1, size: 20, fullName, role }
+      params: { page: 1, size: 1000, fullName, role }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
     const staff = this.layNoiDung(duLieu).find((item) => item.fullName === fullName || item.username === username);
@@ -145,7 +145,7 @@ export class TempEntityHelper {
     expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/customers", {
-      params: { page: 1, size: 20, fullName }
+      params: { page: 1, size: 1000, fullName }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
     const customer = this.layNoiDung(duLieu).find((item) => item.fullName === fullName || item.username === username);
@@ -178,7 +178,7 @@ export class TempEntityHelper {
     expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/buildings", {
-      params: { page: 1, size: 20, name }
+      params: { page: 1, size: 1000, name }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
     const building = this.layNoiDung(duLieu).find((item) => item.name === name);
@@ -228,7 +228,7 @@ export class TempEntityHelper {
     expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/contracts", {
-      params: { page: 1, size: 20, customerId: customer.id }
+      params: { page: 1, size: 1000, customerId: customer.id }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
     const contract = this
@@ -266,7 +266,7 @@ export class TempEntityHelper {
     expect(taoResponse.status()).toBe(200);
 
     const timResponse = await request.get("/api/v1/admin/invoices", {
-      params: { page: 1, size: 20, customerId: contract.customer.id, month, year }
+      params: { page: 1, size: 1000, customerId: contract.customer.id, month, year }
     });
     const duLieu = await this.docJson<DanhSachPhanTrang<BanGhiCoId>>(timResponse);
     const invoice = this.layNoiDung(duLieu).find((item) => item.month === month && item.year === year);

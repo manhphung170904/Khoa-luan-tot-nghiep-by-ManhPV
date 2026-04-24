@@ -1,5 +1,6 @@
 import { expect, test } from "@fixtures/base.fixture";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { CustomerPropertyRequestListPage } from "@pages/customer/CustomerPropertyRequestListPage";
 import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
@@ -18,13 +19,15 @@ test.describe("Customer - Property Request @regression", () => {
   test.afterEach(async () => {
     if (scenario) {
       if (createdContractId) {
-        await scenario.customer.dispose().catch(() => {});
-        await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]).catch(() => {});
-        await MySqlDbClient.execute("DELETE FROM contract WHERE id = ?", [createdContractId]).catch(() => {});
-        await MySqlDbClient.execute("DELETE FROM customer WHERE id = ?", [scenario.customerId]).catch(() => {});
-        await MySqlDbClient.execute("DELETE FROM building WHERE id = ?", [scenario.buildingId]).catch(() => {});
-        await MySqlDbClient.execute("DELETE FROM staff WHERE id = ?", [scenario.staffId]).catch(() => {});
-        await scenario.admin.dispose().catch(() => {});
+        await CleanupHelper.run([
+          { label: "Dispose customer API context", action: () => scenario!.customer.dispose() },
+          { label: `Delete property request ${scenario.propertyRequestId}`, action: () => MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario!.propertyRequestId]) },
+          { label: `Delete contract ${createdContractId}`, action: () => MySqlDbClient.execute("DELETE FROM contract WHERE id = ?", [createdContractId]) },
+          { label: `Delete customer ${scenario.customerId}`, action: () => MySqlDbClient.execute("DELETE FROM customer WHERE id = ?", [scenario!.customerId]) },
+          { label: `Delete building ${scenario.buildingId}`, action: () => MySqlDbClient.execute("DELETE FROM building WHERE id = ?", [scenario!.buildingId]) },
+          { label: `Delete staff ${scenario.staffId}`, action: () => MySqlDbClient.execute("DELETE FROM staff WHERE id = ?", [scenario!.staffId]) },
+          { label: "Dispose admin API context", action: () => scenario!.admin.dispose() }
+        ]);
         createdContractId = 0;
       } else {
         await scenario.cleanup();

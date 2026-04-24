@@ -4,6 +4,7 @@ import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiCo
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
@@ -107,9 +108,11 @@ test.describe("Admin - API Sale Contract @regression", () => {
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {
-      await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []).catch(() => {});
-      await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id).catch(() => {});
-      await TempEntityHelper.xoaStaffTam(admin, tempStaff.id).catch(() => {});
+      await CleanupHelper.run([
+        { label: `Reset customer assignments for staff ${tempStaff.id}`, action: () => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []) },
+        { label: `Delete customer ${tempCustomer.id}`, action: () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id) },
+        { label: `Delete staff ${tempStaff.id}`, action: () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id) }
+      ]);
     }
   });
 
@@ -138,11 +141,13 @@ test.describe("Admin - API Sale Contract @regression", () => {
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
     } finally {
-      await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []).catch(() => {});
-      await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []).catch(() => {});
-      await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id).catch(() => {});
-      await TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id).catch(() => {});
-      await TempEntityHelper.xoaStaffTam(admin, tempStaff.id).catch(() => {});
+      await CleanupHelper.run([
+        { label: `Reset customer assignments for staff ${tempStaff.id}`, action: () => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []) },
+        { label: `Reset building assignments for staff ${tempStaff.id}`, action: () => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []) },
+        { label: `Delete customer ${tempCustomer.id}`, action: () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id) },
+        { label: `Delete building ${tempBuilding.id}`, action: () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id) },
+        { label: `Delete staff ${tempStaff.id}`, action: () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id) }
+      ]);
     }
   });
 

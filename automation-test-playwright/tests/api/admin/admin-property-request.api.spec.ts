@@ -3,6 +3,7 @@ import { expectApiErrorBody, expectApiMessage, expectObjectBody, expectPageBody 
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
@@ -37,7 +38,9 @@ test.describe("Admin - API Property Request @regression", () => {
       const payload = await expectPageBody<{ content?: Array<{ id: number; status?: string }> }>(response, { status: 200 });
       expect(payload.content?.some((item) => item.id === scenario.propertyRequestId && item.status === "PENDING")).toBeTruthy();
     } finally {
-      await scenario.cleanup().catch(() => {});
+      await CleanupHelper.run([
+        { label: `Cleanup property request scenario ${scenario.propertyRequestId}`, action: () => scenario.cleanup() }
+      ]);
     }
   });
 
@@ -74,7 +77,9 @@ test.describe("Admin - API Property Request @regression", () => {
       expect(contractData.customerId).toBe(scenario.customerId);
       expect(typeof contractData.rentArea).toBe("number");
     } finally {
-      await scenario.cleanup().catch(() => {});
+      await CleanupHelper.run([
+        { label: `Cleanup property request scenario ${scenario.propertyRequestId}`, action: () => scenario.cleanup() }
+      ]);
     }
   });
 
@@ -197,11 +202,16 @@ test.describe("Admin - API Property Request @regression", () => {
       expect(typeof pendingBody.pendingCount).toBe("number");
       expect(pendingBody.pendingCount).toBeGreaterThanOrEqual(0);
     } finally {
-      await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]).catch(() => {});
-      if (contractId) {
-        await scenario.admin.delete(`/api/v1/admin/contracts/${contractId}`, { failOnStatusCode: false });
-      }
-      await scenario.cleanup();
+      await CleanupHelper.run([
+        { label: `Delete property request ${scenario.propertyRequestId}`, action: () => MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]) },
+        {
+          label: `Delete contract ${contractId || "(none)"}`,
+          action: () => contractId
+            ? scenario.admin.delete(`/api/v1/admin/contracts/${contractId}`, { failOnStatusCode: false })
+            : undefined
+        },
+        { label: `Cleanup property request scenario ${scenario.propertyRequestId}`, action: () => scenario.cleanup() }
+      ]);
     }
   });
 
@@ -263,11 +273,16 @@ test.describe("Admin - API Property Request @regression", () => {
       expect(rows[0]?.status).toBe("APPROVED");
       expect(rows[0]?.sale_contract_id).toBe(saleContractId);
     } finally {
-      await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]).catch(() => {});
-      if (saleContractId) {
-        await scenario.admin.delete(`/api/v1/admin/sale-contracts/${saleContractId}`, { failOnStatusCode: false });
-      }
-      await scenario.cleanup();
+      await CleanupHelper.run([
+        { label: `Delete property request ${scenario.propertyRequestId}`, action: () => MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]) },
+        {
+          label: `Delete sale contract ${saleContractId || "(none)"}`,
+          action: () => saleContractId
+            ? scenario.admin.delete(`/api/v1/admin/sale-contracts/${saleContractId}`, { failOnStatusCode: false })
+            : undefined
+        },
+        { label: `Cleanup property request scenario ${scenario.propertyRequestId}`, action: () => scenario.cleanup() }
+      ]);
     }
   });
 

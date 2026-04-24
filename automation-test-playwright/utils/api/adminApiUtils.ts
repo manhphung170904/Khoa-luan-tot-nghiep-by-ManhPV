@@ -146,7 +146,7 @@ export function expectApiAuthContract(response: APIResponse): void {
 }
 
 export function expectBusinessFailure(response: APIResponse): void {
-  expect([400, 409, 500]).toContain(response.status());
+  expect([400, 409]).toContain(response.status());
 }
 
 export function expectPageShape<T extends object>(payload: { content?: T[]; totalElements?: number }): asserts payload is {

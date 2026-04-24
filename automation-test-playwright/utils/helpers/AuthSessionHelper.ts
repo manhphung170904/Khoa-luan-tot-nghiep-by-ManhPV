@@ -42,19 +42,38 @@ export class AuthSessionHelper {
     return [...unique];
   }
 
-  private static successUrlPattern(role: UserRole): RegExp {
+  private static roleLandingPattern(role: UserRole): RegExp {
     switch (role) {
       case "admin":
-        return /\/admin\/|\/login-success/;
+        return /\/admin\//;
       case "staff":
-        return /\/staff\/|\/login-success/;
+        return /\/staff\//;
       case "customer":
-        return /\/customer\/|\/login-success/;
+        return /\/customer\//;
     }
   }
 
-  private static matchesRoleLandingUrl(role: UserRole, rawUrl: string): boolean {
-    return this.successUrlPattern(role).test(rawUrl);
+  private static authenticatedUrlPattern(role: UserRole): RegExp {
+    return new RegExp(`${this.roleLandingPattern(role).source}|/login-success/`);
+  }
+
+  private static defaultRoleHomePath(role: UserRole): string {
+    switch (role) {
+      case "admin":
+        return "/admin/dashboard";
+      case "staff":
+        return "/staff/dashboard";
+      case "customer":
+        return "/customer/home";
+    }
+  }
+
+  private static matchesAuthenticatedUrl(role: UserRole, rawUrl: string): boolean {
+    return this.authenticatedUrlPattern(role).test(rawUrl);
+  }
+
+  private static matchesStrictRoleLandingUrl(role: UserRole, rawUrl: string): boolean {
+    return this.roleLandingPattern(role).test(rawUrl);
   }
 
   private static async usernameMatchesRole(role: UserRole, username: string): Promise<boolean> {
@@ -73,7 +92,7 @@ export class AuthSessionHelper {
 
   private static isSuccessfulUiLogin(page: Page, role: UserRole): boolean {
     const url = page.url();
-    return this.matchesRoleLandingUrl(role, url) && !/\/login(?:\?|$)/.test(url);
+    return this.matchesAuthenticatedUrl(role, url) && !/\/login(?:\?|$)/.test(url);
   }
 
   private static async waitForStableRoleLanding(page: Page, role: UserRole): Promise<void> {
@@ -82,16 +101,23 @@ export class AuthSessionHelper {
       return;
     }
 
-    try {
-      await page.waitForURL(
-        (url) => this.matchesRoleLandingUrl(role, url.toString()) && !/\/login-success/.test(url.toString()),
-        { timeout: 5_000 }
-      );
-    } catch {
-      // Co mot so luong dung lai o login-success trong thoi gian ngan.
-    }
+    await page.waitForURL(
+      (url) => this.matchesStrictRoleLandingUrl(role, url.toString()) && !/\/login-success/.test(url.toString()),
+      { timeout: 5_000 }
+    );
 
     await page.waitForLoadState("domcontentloaded");
+  }
+
+  private static async ensureStrictRoleLanding(page: Page, role: UserRole): Promise<void> {
+    await this.waitForStableRoleLanding(page, role);
+
+    if (this.matchesStrictRoleLandingUrl(role, page.url())) {
+      return;
+    }
+
+    await page.goto(this.defaultRoleHomePath(role), { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(this.roleLandingPattern(role));
   }
 
   private static async tryLoginUi(page: Page, role: UserRole, username: string, password: string): Promise<boolean> {
@@ -99,17 +125,13 @@ export class AuthSessionHelper {
     await loginPage.open();
     await loginPage.login(username, password);
 
-    try {
-      await Promise.race([
-        page.waitForURL(
-          (url) => this.matchesRoleLandingUrl(role, url.toString()) && !/\/login(?:\?|$)/.test(url.toString()),
-          { timeout: 5_000 }
-        ),
-        page.waitForURL((url) => /\/login(?:\?|$)/.test(url.toString()), { timeout: 5_000 })
-      ]);
-    } catch {
-      // Neu redirect cham hon du kien, ta van kiem tra URL hien tai o buoc sau.
-    }
+    await Promise.race([
+      page.waitForURL(
+        (url) => this.matchesAuthenticatedUrl(role, url.toString()) && !/\/login(?:\?|$)/.test(url.toString()),
+        { timeout: 5_000 }
+      ),
+      page.waitForURL((url) => /\/login(?:\?|$)/.test(url.toString()), { timeout: 5_000 })
+    ]);
 
     await page.waitForLoadState("domcontentloaded");
     return this.isSuccessfulUiLogin(page, role);
@@ -123,10 +145,10 @@ export class AuthSessionHelper {
         return false;
       }
 
-      return this.matchesRoleLandingUrl(role, location);
+      return this.matchesAuthenticatedUrl(role, location);
     }
 
-    return this.matchesRoleLandingUrl(role, response.url()) && !/\/login(?:\?|$)/.test(response.url());
+    return this.matchesAuthenticatedUrl(role, response.url()) && !/\/login(?:\?|$)/.test(response.url());
   }
 
   static async loginUi(page: Page, username: string, password = env.defaultPassword): Promise<void> {
@@ -190,7 +212,24 @@ export class AuthSessionHelper {
   static async loginAsRoleUi(page: Page, role: UserRole): Promise<void> {
     const resolved = await this.resolveWorkingUsername(page, role);
     this.resolvedUsernames.set(role, resolved);
+  }
+
+  static async loginAsRoleUiStrict(page: Page, role: UserRole): Promise<void> {
+    await this.loginAsRoleUi(page, role);
     await this.waitForStableRoleLanding(page, role);
+    await this.ensureStrictRoleLanding(page, role);
+  }
+
+  static async loginAsAdminUiStrict(page: Page): Promise<void> {
+    await this.loginAsRoleUiStrict(page, "admin");
+  }
+
+  static async loginAsStaffUiStrict(page: Page): Promise<void> {
+    await this.loginAsRoleUiStrict(page, "staff");
+  }
+
+  static async loginAsCustomerUiStrict(page: Page): Promise<void> {
+    await this.loginAsRoleUiStrict(page, "customer");
   }
 
   static async loginApi(request: APIRequestContext, username: string, password = env.defaultPassword) {

@@ -2,10 +2,18 @@ import { expect, type APIResponse, type Locator, type Page } from "@playwright/t
 
 export class AssertionHelper {
   static async expectOneVisible(locators: Locator[]): Promise<void> {
+    await this.expectAtLeastOneVisible(locators);
+  }
+
+  static async expectAtLeastOneVisible(locators: Locator[]): Promise<void> {
     for (const locator of locators) {
-      if (await locator.count()) {
-        await expect(locator.first()).toBeVisible();
-        return;
+      const count = await locator.count();
+      for (let index = 0; index < count; index += 1) {
+        const candidate = locator.nth(index);
+        if (await candidate.isVisible()) {
+          await expect(candidate).toBeVisible();
+          return;
+        }
       }
     }
 

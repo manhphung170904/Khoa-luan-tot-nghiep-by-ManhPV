@@ -75,11 +75,11 @@ export class BasePage {
   }
 
   async expectSweetAlertContainsText(text: string | RegExp): Promise<void> {
-    await expect(async () => {
-      const popup = this.toastPopup();
-      await expect(popup).toBeVisible();
-      await expect(popup).not.toContainText(/đang xử lý|dang xu ly|vui lòng đợi|vui long doi|processing|please wait/i);
+    const popup = this.toastPopup();
+    await expect(popup).toBeVisible();
+    await expect(popup).not.toContainText(/đang xử lý|dang xu ly|vui lòng đợi|vui long doi|processing|please wait/i);
 
+    await expect(async () => {
       const rawText = ((await popup.textContent()) ?? "").trim();
       const normalizedText = this.normalizeLooseText(rawText);
       if (typeof text === "string") {

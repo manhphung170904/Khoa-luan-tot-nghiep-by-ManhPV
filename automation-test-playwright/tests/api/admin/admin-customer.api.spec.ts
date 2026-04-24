@@ -4,6 +4,7 @@ import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiCo
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
@@ -237,14 +238,20 @@ test.describe("Admin - API Customer @regression", () => {
       const deleteWithSaleContract = await admin.delete(`/api/v1/admin/customers/${customerWithSaleContract.customer.id}`, {
         failOnStatusCode: false
       });
-      expect(deleteWithSaleContract.status()).toBe(400);
+      await expectApiErrorBody(deleteWithSaleContract, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: `/api/v1/admin/customers/${customerWithSaleContract.customer.id}`
+      });
     } finally {
-      await MySqlDbClient.execute("DELETE FROM sale_contract WHERE id = ?", [customerWithSaleContract.id]).catch(() => {});
-      await TempEntityHelper.capNhatPhanCongCustomer(admin, customerWithSaleContract.staff.id, []).catch(() => {});
-      await TempEntityHelper.capNhatPhanCongBuilding(admin, customerWithSaleContract.staff.id, []).catch(() => {});
-      await TempEntityHelper.xoaCustomerTam(admin, customerWithSaleContract.customer.id).catch(() => {});
-      await TempEntityHelper.xoaBuildingTam(admin, customerWithSaleContract.building.id).catch(() => {});
-      await TempEntityHelper.xoaStaffTam(admin, customerWithSaleContract.staff.id).catch(() => {});
+      await CleanupHelper.run([
+        { label: `Delete sale contract ${customerWithSaleContract.id}`, action: () => MySqlDbClient.execute("DELETE FROM sale_contract WHERE id = ?", [customerWithSaleContract.id]) },
+        { label: `Reset customer assignments for staff ${customerWithSaleContract.staff.id}`, action: () => TempEntityHelper.capNhatPhanCongCustomer(admin, customerWithSaleContract.staff.id, []) },
+        { label: `Reset building assignments for staff ${customerWithSaleContract.staff.id}`, action: () => TempEntityHelper.capNhatPhanCongBuilding(admin, customerWithSaleContract.staff.id, []) },
+        { label: `Delete customer ${customerWithSaleContract.customer.id}`, action: () => TempEntityHelper.xoaCustomerTam(admin, customerWithSaleContract.customer.id) },
+        { label: `Delete building ${customerWithSaleContract.building.id}`, action: () => TempEntityHelper.xoaBuildingTam(admin, customerWithSaleContract.building.id) },
+        { label: `Delete staff ${customerWithSaleContract.staff.id}`, action: () => TempEntityHelper.xoaStaffTam(admin, customerWithSaleContract.staff.id) }
+      ]);
     }
   });
 });

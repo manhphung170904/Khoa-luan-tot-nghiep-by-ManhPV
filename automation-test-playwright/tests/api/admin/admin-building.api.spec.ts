@@ -5,6 +5,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiFileFixtures } from "@api/apiFileFixtures";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
@@ -103,7 +104,12 @@ test.describe("Admin - API Building @regression", () => {
         data: { ...validPayload, propertyType: "VILLA_LUXURY" }
       });
 
-      expectStatusExact(response, 500, "Unsupported propertyType currently triggers backend 500");
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings"
+      });
+      expect(errorBody.message).toMatch(/property|type|loai|unsupported|khong hop le|khong ho tro|enum/i);
     });
 
     test("[BLD-003] - API Admin Building - Number of Floor - Negative Value Validation", async () => {
@@ -159,7 +165,12 @@ test.describe("Admin - API Building @regression", () => {
         params: { page: 0, size: 0 }
       });
 
-      expectStatusExact(response, 500, "Invalid pagination currently triggers backend 500");
+      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
+        status: 400,
+        code: "BAD_REQUEST",
+        path: "/api/v1/admin/buildings"
+      });
+      expect(errorBody.message).toMatch(/page|size|pagination|phan trang|must|invalid|>=|positive/i);
     });
 
     test("[BLD-017] - API Admin Building - Search by Name - Empty Result Set", async () => {
@@ -259,12 +270,14 @@ test.describe("Admin - API Building @regression", () => {
           path: `/api/v1/admin/buildings/${tempSaleContract.building.id}`
         });
       } finally {
-        await MySqlDbClient.execute("DELETE FROM sale_contract WHERE id = ?", [tempSaleContract.id]).catch(() => {});
-        await TempEntityHelper.capNhatPhanCongCustomer(admin, tempSaleContract.staff.id, []).catch(() => {});
-        await TempEntityHelper.capNhatPhanCongBuilding(admin, tempSaleContract.staff.id, []).catch(() => {});
-        await TempEntityHelper.xoaCustomerTam(admin, tempSaleContract.customer.id).catch(() => {});
-        await TempEntityHelper.xoaBuildingTam(admin, tempSaleContract.building.id).catch(() => {});
-        await TempEntityHelper.xoaStaffTam(admin, tempSaleContract.staff.id).catch(() => {});
+        await CleanupHelper.run([
+          { label: `Delete sale contract ${tempSaleContract.id}`, action: () => MySqlDbClient.execute("DELETE FROM sale_contract WHERE id = ?", [tempSaleContract.id]) },
+          { label: `Reset customer assignments for staff ${tempSaleContract.staff.id}`, action: () => TempEntityHelper.capNhatPhanCongCustomer(admin, tempSaleContract.staff.id, []) },
+          { label: `Reset building assignments for staff ${tempSaleContract.staff.id}`, action: () => TempEntityHelper.capNhatPhanCongBuilding(admin, tempSaleContract.staff.id, []) },
+          { label: `Delete customer ${tempSaleContract.customer.id}`, action: () => TempEntityHelper.xoaCustomerTam(admin, tempSaleContract.customer.id) },
+          { label: `Delete building ${tempSaleContract.building.id}`, action: () => TempEntityHelper.xoaBuildingTam(admin, tempSaleContract.building.id) },
+          { label: `Delete staff ${tempSaleContract.staff.id}`, action: () => TempEntityHelper.xoaStaffTam(admin, tempSaleContract.staff.id) }
+        ]);
       }
     });
 

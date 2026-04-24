@@ -117,6 +117,10 @@ To run locally without OAuth login setup, use:
 $env:SPRING_PROFILES_ACTIVE="mysql,local-nooauth"
 .\mvnw.cmd spring-boot:run
 ```
+--Run Backend + Test
+
+$env:SPRING_PROFILES_ACTIVE="mysql,local-nooauth,test"
+.\mvnw.cmd spring-boot:run
 
 ## Run Tests
 

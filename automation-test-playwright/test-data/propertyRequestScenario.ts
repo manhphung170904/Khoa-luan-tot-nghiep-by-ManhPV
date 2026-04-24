@@ -1,5 +1,6 @@
 import type { APIRequestContext } from "@playwright/test";
 import { createRoleContext } from "@api/adminApiUtils";
+import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
 type RequestContextFactory = {
@@ -51,14 +52,16 @@ export async function createPropertyRequestScenario(
     staffId: tempStaff.id,
     propertyRequestId: propertyRequest.id,
     cleanup: async () => {
-      await customer.dispose();
-      await TempEntityHelper.xoaPropertyRequestTam(propertyRequest.id);
-      await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []);
-      await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []);
-      await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id);
-      await TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id);
-      await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
-      await admin.dispose();
+      await CleanupHelper.run([
+        { label: "Dispose customer API context", action: () => customer.dispose() },
+        { label: `Delete property request ${propertyRequest.id}`, action: () => TempEntityHelper.xoaPropertyRequestTam(propertyRequest.id) },
+        { label: `Reset customer assignments for staff ${tempStaff.id}`, action: () => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []) },
+        { label: `Reset building assignments for staff ${tempStaff.id}`, action: () => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []) },
+        { label: `Delete customer ${tempCustomer.id}`, action: () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id) },
+        { label: `Delete building ${tempBuilding.id}`, action: () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id) },
+        { label: `Delete staff ${tempStaff.id}`, action: () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id) },
+        { label: "Dispose admin API context", action: () => admin.dispose() }
+      ]);
     }
   };
 }
