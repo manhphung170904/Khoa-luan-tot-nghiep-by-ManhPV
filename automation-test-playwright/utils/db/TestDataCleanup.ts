@@ -270,7 +270,16 @@ export async function cleanupDatabaseScope(scope: CleanupScope, options: Cleanup
   ]);
   if (contractFilter.params.length > 0) {
     await MySqlDbClient.execute(`DELETE FROM contract WHERE ${contractFilter.sql}`, contractFilter.params);
-    await MySqlDbClient.execute(`DELETE FROM sale_contract WHERE ${contractFilter.sql}`, contractFilter.params);
+  }
+
+  const saleContractFilter = buildOrIdFilter([
+    { column: "id", ids: saleContractIds },
+    { column: "customer_id", ids: customerIds },
+    { column: "building_id", ids: buildingIds },
+    { column: "staff_id", ids: staffIds }
+  ]);
+  if (saleContractFilter.params.length > 0) {
+    await MySqlDbClient.execute(`DELETE FROM sale_contract WHERE ${saleContractFilter.sql}`, saleContractFilter.params);
   }
 
   const assignmentBuildingFilter = buildOrIdFilter([

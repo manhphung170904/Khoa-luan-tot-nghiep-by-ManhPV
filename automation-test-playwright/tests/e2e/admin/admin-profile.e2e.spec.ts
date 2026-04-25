@@ -11,6 +11,11 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
+function requireTempUser(tempUser: TempStaffProfileUser | null): TempStaffProfileUser {
+  expect(tempUser, "Temp admin profile user must be created in beforeEach").toBeTruthy();
+  return tempUser!;
+}
+
 test.describe("Admin - Profile @regression", () => {
   let tempUser: TempStaffProfileUser | null = null;
 
@@ -26,17 +31,15 @@ test.describe("Admin - Profile @regression", () => {
   });
 
   test("[E2E-ADM-PRO-001] - Admin Profile - Profile Overview - Current Account Information Display", async ({ page }) => {
-    if (!tempUser) {
-      return;
-    }
+    const activeUser = requireTempUser(tempUser);
 
     const profilePage = new AdminProfilePage(page);
     await profilePage.expectLoaded();
 
     const values = await profilePage.readProfileValues();
-    expect(values.username).toBe(tempUser.username);
-    expect(values.email).toBe(tempUser.email);
-    expect(values.phone).toBe(tempUser.phone);
+    expect(values.username).toBe(activeUser.username);
+    expect(values.email).toBe(activeUser.email);
+    expect(values.phone).toBe(activeUser.phone);
   });
 
   test("[E2E-ADM-PRO-002] - Admin Profile - Success Message - Success SweetAlert Display", async ({ page }) => {
@@ -48,9 +51,7 @@ test.describe("Admin - Profile @regression", () => {
   });
 
   test("[E2E-ADM-PRO-003] - Admin Profile - Username Update - Successful Update with Valid OTP", async ({ page, adminApi }) => {
-    if (!tempUser) {
-      return;
-    }
+    const activeUser = requireTempUser(tempUser);
 
     const profilePage = new AdminProfilePage(page);
     const nextUsername = TestDataFactory.taoUsername("adm");
@@ -60,19 +61,17 @@ test.describe("Admin - Profile @regression", () => {
     await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
-    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_USERNAME");
+    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_USERNAME");
     await profilePage.submitUsernameChange(nextUsername, otp);
     await profilePage.expectSweetAlertContains(/thành công|thanh cong|tên đăng nhập|ten dang nhap/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempUser!.id]);
+      const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [activeUser.id]);
       return rows[0]?.username ?? "";
     }).toBe(nextUsername);
   });
 
   test("[E2E-ADM-PRO-004] - Admin Profile - Phone Number Update - Successful Update with Valid OTP", async ({ page, adminApi }) => {
-    if (!tempUser) {
-      return;
-    }
+    const activeUser = requireTempUser(tempUser);
 
     const profilePage = new AdminProfilePage(page);
     const newPhone = TestDataFactory.taoSoDienThoai();
@@ -82,11 +81,11 @@ test.describe("Admin - Profile @regression", () => {
     await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
-    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PHONE");
+    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PHONE");
     await profilePage.submitPhoneChange(newPhone, otp);
     await profilePage.expectSweetAlertContains(/thành công|thanh cong|số điện thoại|so dien thoai/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempUser!.id]);
+      const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [activeUser.id]);
       return rows[0]?.phone ?? "";
     }).toBe(newPhone);
   });
@@ -100,13 +99,11 @@ test.describe("Admin - Profile @regression", () => {
   });
 
   test("[E2E-ADM-PRO-006] - Admin Profile - Password Update - Successful Update with Valid OTP and Re-Login", async ({ page, adminApi }) => {
-    if (!tempUser) {
-      return;
-    }
+    const activeUser = requireTempUser(tempUser);
 
     const profilePage = new AdminProfilePage(page);
     const newPassword = "NewAdminPassword1!";
-    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempUser.id]);
+    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [activeUser.id]);
     const oldHash = oldHashRows[0]!.password;
 
     await profilePage.openPasswordModal();
@@ -114,20 +111,20 @@ test.describe("Admin - Profile @regression", () => {
     await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
-    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PASSWORD");
+    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PASSWORD");
     await profilePage.submitPasswordChange(newPassword, newPassword, otp);
     await profilePage.expectSweetAlertContains(/thành công|thanh cong|mật khẩu|mat khau/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempUser!.id]);
+      const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [activeUser.id]);
       return rows[0]?.password ?? "";
     }).not.toBe(oldHash);
 
     await AuthSessionHelper.logoutUi(page);
-    await loginAsTempUser(page, tempUser.username, tempUser.password);
+    await loginAsTempUser(page, activeUser.username, activeUser.password);
     await page.waitForURL(/\/login\?errorMessage=/);
 
     await AuthSessionHelper.logoutUi(page);
-    await loginAsTempUser(page, tempUser.username, newPassword);
+    await loginAsTempUser(page, activeUser.username, newPassword);
     await expect(page).toHaveURL(/\/admin\/|\/login-success/);
   });
 });

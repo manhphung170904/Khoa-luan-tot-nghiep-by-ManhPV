@@ -11,6 +11,11 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
+function requireTempUser(tempUser: TempCustomerProfileUser | null): TempCustomerProfileUser {
+  expect(tempUser, "Temp customer profile user must be created in beforeEach").toBeTruthy();
+  return tempUser!;
+}
+
 test.describe("Customer - Profile @regression", () => {
   let tempUser: TempCustomerProfileUser | null = null;
 
@@ -26,17 +31,15 @@ test.describe("Customer - Profile @regression", () => {
   });
 
   test("[E2E-CUS-PRO-001] - Customer Profile - Profile Overview - Current Account Information Display", async ({ page }) => {
-    if (!tempUser) {
-      return;
-    }
+    const activeUser = requireTempUser(tempUser);
 
     const profilePage = new CustomerProfilePage(page);
     await profilePage.expectLoaded();
 
     const values = await profilePage.readProfileValues();
-    expect(values.username).toBe(tempUser.username);
-    expect(values.email).toBe(tempUser.email);
-    expect(values.phone).toBe(tempUser.phone);
+    expect(values.username).toBe(activeUser.username);
+    expect(values.email).toBe(activeUser.email);
+    expect(values.phone).toBe(activeUser.phone);
   });
 
   test("[E2E-CUS-PRO-002] - Customer Profile - Success Message - Success SweetAlert Display", async ({ page }) => {
@@ -48,9 +51,7 @@ test.describe("Customer - Profile @regression", () => {
   });
 
   test("[E2E-CUS-PRO-003] - Customer Profile - Username Update - Successful Update with Valid OTP", async ({ page, adminApi }) => {
-    if (!tempUser) {
-      return;
-    }
+    const activeUser = requireTempUser(tempUser);
 
     const profilePage = new CustomerProfilePage(page);
     const originalValues = await profilePage.readProfileValues();
@@ -60,20 +61,18 @@ test.describe("Customer - Profile @regression", () => {
     await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
-    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_USERNAME");
+    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_USERNAME");
     await profilePage.submitUsernameChange(TestDataFactory.taoUsername("cust"), otp);
     await profilePage.expectSweetAlertContains(/lỗi|loi|thất bại|that bai|error|đã có mật khẩu|da co mat khau/i);
     await profilePage.confirmSweetAlertIfPresent();
 
-    const dbRows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [tempUser.id]);
-    expect(dbRows[0]?.username).toBe(tempUser.username);
+    const dbRows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [activeUser.id]);
+    expect(dbRows[0]?.username).toBe(activeUser.username);
     expect((await profilePage.readProfileValues()).username).toBe(originalValues.username);
   });
 
   test("[E2E-CUS-PRO-004] - Customer Profile - Phone Number Update - Successful Update with Valid OTP", async ({ page, adminApi }) => {
-    if (!tempUser) {
-      return;
-    }
+    const activeUser = requireTempUser(tempUser);
 
     const profilePage = new CustomerProfilePage(page);
     const newPhone = TestDataFactory.taoSoDienThoai();
@@ -83,11 +82,11 @@ test.describe("Customer - Profile @regression", () => {
     await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
-    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PHONE");
+    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PHONE");
     await profilePage.submitPhoneChange(newPhone, otp);
     await profilePage.expectSweetAlertContains(/thành công|thanh cong|cập nhật số|cap nhat so/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempUser!.id]);
+      const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [activeUser.id]);
       return rows[0]?.phone ?? "";
     }).toBe(newPhone);
   });
@@ -101,13 +100,11 @@ test.describe("Customer - Profile @regression", () => {
   });
 
   test("[E2E-CUS-PRO-006] - Customer Profile - Password Update - Successful Update with Valid OTP and Re-Login", async ({ page, adminApi }) => {
-    if (!tempUser) {
-      return;
-    }
+    const activeUser = requireTempUser(tempUser);
 
     const profilePage = new CustomerProfilePage(page);
     const newPassword = "NewCustomerPwd1!";
-    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempUser.id]);
+    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [activeUser.id]);
     const oldHash = oldHashRows[0]!.password;
 
     await profilePage.openPasswordModal();
@@ -115,20 +112,20 @@ test.describe("Customer - Profile @regression", () => {
     await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
-    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, tempUser.email, "PROFILE_PASSWORD");
+    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PASSWORD");
     await profilePage.submitPasswordChange(newPassword, newPassword, otp);
     await profilePage.expectSweetAlertContains(/thành công|thanh cong|mật khẩu|mat khau/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempUser!.id]);
+      const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [activeUser.id]);
       return rows[0]?.password ?? "";
     }).not.toBe(oldHash);
 
     await AuthSessionHelper.logoutUi(page);
-    await loginAsTempUser(page, tempUser.username, tempUser.password);
+    await loginAsTempUser(page, activeUser.username, activeUser.password);
     await page.waitForURL(/\/login\?errorMessage=/);
 
     await AuthSessionHelper.logoutUi(page);
-    await loginAsTempUser(page, tempUser.username, newPassword);
+    await loginAsTempUser(page, activeUser.username, newPassword);
     await expect(page).toHaveURL(/\/customer\/|\/login-success/);
   });
 });

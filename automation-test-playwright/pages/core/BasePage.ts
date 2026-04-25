@@ -33,11 +33,11 @@ export class BasePage {
   }
 
   buttonByText(text: string): Locator {
-    return this.page.getByRole("button", { name: new RegExp(text, "i") });
+    return this.page.getByRole("button", { name: new RegExp(this.escapeRegExp(text), "i") });
   }
 
   linkByText(text: string): Locator {
-    return this.page.getByRole("link", { name: new RegExp(text, "i") });
+    return this.page.getByRole("link", { name: new RegExp(this.escapeRegExp(text), "i") });
   }
 
   linkByHref(href: string): Locator {
@@ -50,6 +50,10 @@ export class BasePage {
 
   toastPopup(): Locator {
     return this.page.locator(".swal2-popup");
+  }
+
+  protected escapeRegExp(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   protected normalizeLooseText(value: string): string {

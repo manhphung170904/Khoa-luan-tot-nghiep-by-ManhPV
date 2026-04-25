@@ -3,36 +3,46 @@ import { MySqlDbClient } from "../utils/db/MySqlDbClient";
 import { cleanupDatabaseScope } from "../utils/db/TestDataCleanup";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { runtimePaths } from "./paths";
 
 const moonNestRoot = path.resolve(process.cwd(), "..", "moonNest-main");
+const runToken = runtimePaths.runId
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, "")
+  .slice(-8)
+  .padStart(8, "0");
+const allowLegacyPrefixSweep = process.env.ALLOW_LEGACY_PREFIX_SWEEP === "true";
+const allowUploadPatternSweep = process.env.ALLOW_UPLOAD_PATTERN_SWEEP === "true";
 
 const uploadCleanupTargets = [
   {
     label: "building image (test)",
     dir: path.resolve(moonNestRoot, "target", "test-upload", "building_img"),
-    sweepAllMatchingFiles: true,
+    sweepAllMatchingFiles: allowUploadPatternSweep,
     dbColumn: "image",
     sql: `
       SELECT image AS filename
       FROM building
-      WHERE name LIKE 'PW %'
+      WHERE LOWER(name) LIKE ?
         AND image IS NOT NULL
         AND TRIM(image) <> ''
     `,
+    sqlParams: [`%${runToken}%`],
     allowedPattern: /^[a-f0-9]{32}\.(jpg|jpeg|png|webp)$/i
   },
   {
     label: "planning map image (test)",
     dir: path.resolve(moonNestRoot, "target", "test-upload", "planning_map_img"),
-    sweepAllMatchingFiles: true,
+    sweepAllMatchingFiles: allowUploadPatternSweep,
     dbColumn: "image_url",
     sql: `
       SELECT image_url AS filename
       FROM planning_map
-      WHERE building_id IN (SELECT id FROM building WHERE name LIKE 'PW %')
+      WHERE building_id IN (SELECT id FROM building WHERE LOWER(name) LIKE ?)
         AND image_url IS NOT NULL
         AND TRIM(image_url) <> ''
     `,
+    sqlParams: [`%${runToken}%`],
     allowedPattern: /^planning_[a-f0-9]{32}\.(jpg|jpeg|png|webp)$/i
   },
   {
@@ -43,10 +53,11 @@ const uploadCleanupTargets = [
     sql: `
       SELECT image AS filename
       FROM building
-      WHERE name LIKE 'PW %'
+      WHERE LOWER(name) LIKE ?
         AND image IS NOT NULL
         AND TRIM(image) <> ''
     `,
+    sqlParams: [`%${runToken}%`],
     allowedPattern: /^[a-f0-9]{32}\.(jpg|jpeg|png|webp)$/i
   },
   {
@@ -57,10 +68,11 @@ const uploadCleanupTargets = [
     sql: `
       SELECT image_url AS filename
       FROM planning_map
-      WHERE building_id IN (SELECT id FROM building WHERE name LIKE 'PW %')
+      WHERE building_id IN (SELECT id FROM building WHERE LOWER(name) LIKE ?)
         AND image_url IS NOT NULL
         AND TRIM(image_url) <> ''
     `,
+    sqlParams: [`%${runToken}%`],
     allowedPattern: /^planning_[a-f0-9]{32}\.(jpg|jpeg|png|webp)$/i
   }
 ] as const;
@@ -83,7 +95,7 @@ async function collectUploadedTestFiles(): Promise<Array<{ filePath: string; lab
   const pendingDeletes = new Map<string, { filePath: string; label: string }>();
 
   for (const target of uploadCleanupTargets) {
-    const rows = await MySqlDbClient.query<Record<typeof target.dbColumn, string>>(target.sql);
+    const rows = await MySqlDbClient.query<Record<typeof target.dbColumn, string>>(target.sql, [...target.sqlParams]);
 
     for (const row of rows) {
       const rawValue = row[target.dbColumn];
@@ -167,43 +179,90 @@ type SweepScope = {
 };
 
 async function collectSweepScope(): Promise<SweepScope> {
+  const buildingWhere = allowLegacyPrefixSweep
+    ? `
+      LOWER(name) LIKE ?
+      OR name LIKE 'PW Building %'
+      OR tax_code LIKE 'PW-%'
+    `
+    : "LOWER(name) LIKE ?";
+  const buildingParams = allowLegacyPrefixSweep ? [`%${runToken}%`] : [`%${runToken}%`];
+
   const buildingRows = await MySqlDbClient.query<{ id: number }>(
     `
       SELECT id
       FROM building
-      WHERE name LIKE 'PW Building %'
-         OR tax_code LIKE 'PW-%'
-    `
+      WHERE ${buildingWhere}
+    `,
+    buildingParams
   );
+
+  const customerWhere = allowLegacyPrefixSweep
+    ? `
+      LOWER(full_name) LIKE ?
+      OR LOWER(username) LIKE ?
+      OR LOWER(email) LIKE ?
+      OR full_name LIKE 'PW Customer %'
+      OR username LIKE 'pwcust%'
+      OR username LIKE 'e2e_register%'
+      OR email LIKE 'pw-customer-%@example.com'
+      OR email LIKE 'e2e_register%@example.com'
+    `
+    : `
+      LOWER(full_name) LIKE ?
+      OR LOWER(username) LIKE ?
+      OR LOWER(email) LIKE ?
+    `;
+  const runParams = [`%${runToken}%`, `%${runToken}%`, `%${runToken}%`];
 
   const customerRows = await MySqlDbClient.query<{ id: number; email: string | null }>(
     `
       SELECT id, email
       FROM customer
-      WHERE full_name LIKE 'PW Customer %'
-         OR username LIKE 'pwcust%'
-         OR username LIKE 'e2e_register%'
-         OR email LIKE 'pw-customer-%@example.com'
-         OR email LIKE 'e2e_register%@example.com'
-    `
+      WHERE ${customerWhere}
+    `,
+    runParams
   );
+
+  const staffWhere = allowLegacyPrefixSweep
+    ? `
+      LOWER(full_name) LIKE ?
+      OR LOWER(username) LIKE ?
+      OR LOWER(email) LIKE ?
+      OR full_name LIKE 'PW %'
+      OR email LIKE 'pw-%@example.com'
+    `
+    : `
+      LOWER(full_name) LIKE ?
+      OR LOWER(username) LIKE ?
+      OR LOWER(email) LIKE ?
+    `;
 
   const staffRows = await MySqlDbClient.query<{ id: number; email: string | null }>(
     `
       SELECT id, email
       FROM staff
-      WHERE full_name LIKE 'PW %'
-         OR email LIKE 'pw-%@example.com'
-    `
+      WHERE ${staffWhere}
+    `,
+    runParams
   );
+
+  const verificationWhere = allowLegacyPrefixSweep
+    ? `
+      LOWER(email) LIKE ?
+      OR email LIKE 'pw-%@example.com'
+      OR email LIKE 'e2e_register%@example.com'
+    `
+    : "LOWER(email) LIKE ?";
+  const verificationParams = allowLegacyPrefixSweep ? [`%${runToken}%`] : [`%${runToken}%`];
 
   const verificationRows = await MySqlDbClient.query<{ email: string }>(
     `
       SELECT DISTINCT email
       FROM email_verification
-      WHERE email LIKE 'pw-%@example.com'
-         OR email LIKE 'e2e_register%@example.com'
-    `
+      WHERE ${verificationWhere}
+    `,
+    verificationParams
   );
 
   const emails = [
@@ -222,6 +281,10 @@ async function collectSweepScope(): Promise<SweepScope> {
 
 export default async function globalTeardown(_config: FullConfig): Promise<void> {
   console.log("\n[Global Teardown] Starting test data sweep...");
+  console.log(`[Global Teardown] Run ownership token: ${runToken}`);
+  if (allowLegacyPrefixSweep) {
+    console.warn("[Global Teardown] Legacy prefix sweep is enabled. This may remove old PW-prefixed test data.");
+  }
 
   try {
     await cleanupUploadedTestFiles();

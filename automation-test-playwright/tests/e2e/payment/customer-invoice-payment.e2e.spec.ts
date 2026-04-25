@@ -12,6 +12,11 @@ import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
+function requireContract(contract: TempContract | null): TempContract {
+  expect(contract, "Contract scenario must be created in beforeEach").toBeTruthy();
+  return contract!;
+}
+
 test.describe("Customer - Invoice Payment @regression", () => {
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
@@ -35,11 +40,9 @@ test.describe("Customer - Invoice Payment @regression", () => {
   });
 
   test("[E2E-CUS-PAY-001] - Customer Invoice Payment - Invoice List - Unpaid Summary and Payment Details Modal Display", async ({ page, adminApi }) => {
-    if (!contract) {
-      return;
-    }
+    const activeContract = requireContract(contract);
 
-    const invoice = await createManagedInvoiceForContract(adminApi, contract, {
+    const invoice = await createManagedInvoiceForContract(adminApi, activeContract, {
       electricityUsage: 12,
       waterUsage: 4
     });
@@ -55,12 +58,12 @@ test.describe("Customer - Invoice Payment @regression", () => {
 
     const cardText = await invoicePage.firstInvoiceCardText();
     expect(cardText).toContain(String(invoice.id));
-    expect(cardText).toContain(contract.building.name);
+    expect(cardText).toContain(activeContract.building.name);
 
     await invoicePage.openFirstPaymentModal();
     const modalText = await invoicePage.visibleModalText();
     expect(modalText).toMatch(/invoice|chi tiết|chi tiet|hóa đơn|hoa don/i);
-    expect(modalText).toContain(contract.building.name);
+    expect(modalText).toContain(activeContract.building.name);
     expect(modalText).toMatch(/tổng cộng|tong cong|total/i);
     expect(modalText).toContain(String(invoice.id));
 
@@ -73,11 +76,9 @@ test.describe("Customer - Invoice Payment @regression", () => {
   });
 
   test("[E2E-CUS-PAY-002] - Customer Invoice Payment - Payment Modal - QR Payment Page Redirection", async ({ page, adminApi }) => {
-    if (!contract) {
-      return;
-    }
+    const activeContract = requireContract(contract);
 
-    const invoice = await createManagedInvoiceForContract(adminApi, contract);
+    const invoice = await createManagedInvoiceForContract(adminApi, activeContract);
     createdInvoices.push(invoice);
 
     const invoicePage = new CustomerInvoicePage(page);
@@ -99,11 +100,9 @@ test.describe("Customer - Invoice Payment @regression", () => {
   });
 
   test("[E2E-CUS-PAY-003] - Customer QR Payment - Payment Confirmation - Invoice Status Update to Paid", async ({ page, adminApi }) => {
-    if (!contract) {
-      return;
-    }
+    const activeContract = requireContract(contract);
 
-    const invoice = await createManagedInvoiceForContract(adminApi, contract);
+    const invoice = await createManagedInvoiceForContract(adminApi, activeContract);
     createdInvoices.push(invoice);
 
     const invoicePage = new CustomerInvoicePage(page);

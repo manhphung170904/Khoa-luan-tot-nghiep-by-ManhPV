@@ -1,7 +1,16 @@
 import { env } from "@config/env";
+import { runtimePaths } from "@config/paths";
 
 export class TestDataFactory {
   private static uniqueCounter = 0;
+
+  static runToken(): string {
+    return runtimePaths.runId
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "")
+      .slice(-8)
+      .padStart(8, "0");
+  }
 
   private static taoChuoiSoDuyNhat(length = 10): string {
     const timestamp = Date.now().toString();
@@ -9,11 +18,26 @@ export class TestDataFactory {
     return `${timestamp}${counter}`.slice(-length);
   }
 
+  private static baseDate(): Date {
+    const configured = process.env.TEST_BASE_DATE;
+    const parsed = configured ? new Date(configured) : new Date();
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  }
+
+  private static formatDate(value: Date): string {
+    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+  }
+
+  private static addMonths(value: Date, months: number): Date {
+    const result = new Date(value);
+    result.setMonth(result.getMonth() + months);
+    return result;
+  }
+
   static taoMaDuyNhat(prefix = "pw"): string {
     const timestamp = Date.now().toString(36);
     const counter = (this.uniqueCounter++ % 1679616).toString(36).padStart(4, "0");
-    const random = Math.random().toString(36).slice(2, 8).padEnd(6, "0");
-    return `${prefix}-${timestamp}-${counter}-${random}`;
+    return `${prefix}-${this.runToken()}-${timestamp}-${counter}`;
   }
 
   static taoHauToDuyNhat(prefix = "pw"): string {
@@ -45,7 +69,9 @@ export class TestDataFactory {
   }
 
   static taoMaSo(prefix = "PW", digits = 10): string {
-    return `${prefix}${this.taoChuoiSoDuyNhat(digits)}`;
+    const runDigits = this.runToken().replace(/\D/g, "").slice(-Math.min(4, digits));
+    const remainingDigits = digits - runDigits.length;
+    return `${prefix}${runDigits}${remainingDigits > 0 ? this.taoChuoiSoDuyNhat(remainingDigits) : ""}`;
   }
 
   static buildAdminStaffPayload(
@@ -114,21 +140,25 @@ export class TestDataFactory {
   }
 
   static buildContractPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    const baseDate = this.baseDate();
+    const startDate = new Date(baseDate.getFullYear(), 0, 1);
+    const endDate = new Date(baseDate.getFullYear() + 1, 11, 31);
+
     return {
       customerId: 1,
       buildingId: 1,
       staffId: 1,
       rentPrice: 1000000,
       rentArea: 50,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
+      startDate: this.formatDate(startDate),
+      endDate: this.formatDate(endDate),
       status: "ACTIVE",
       ...overrides
     };
   }
 
   static buildInvoicePayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-    const invoiceDate = new Date();
+    const invoiceDate = this.baseDate();
     invoiceDate.setMonth(invoiceDate.getMonth() - 1);
     const month = invoiceDate.getMonth() + 1;
     const year = invoiceDate.getFullYear();
@@ -166,12 +196,15 @@ export class TestDataFactory {
     overrides: Record<string, unknown> = {},
     requestType: "RENT" | "BUY" = "RENT"
   ): Record<string, unknown> {
+    const desiredStartDate = this.addMonths(this.baseDate(), 2);
+    const desiredEndDate = this.addMonths(desiredStartDate, 12);
+
     return {
       buildingId: 1,
       requestType,
       desiredArea: requestType === "RENT" ? 80 : null,
-      desiredStartDate: requestType === "RENT" ? "2026-06-01" : null,
-      desiredEndDate: requestType === "RENT" ? "2027-05-31" : null,
+      desiredStartDate: requestType === "RENT" ? this.formatDate(desiredStartDate) : null,
+      desiredEndDate: requestType === "RENT" ? this.formatDate(desiredEndDate) : null,
       offeredPrice: requestType === "BUY" ? 3100000000 : 1200000,
       message: `Playwright property request ${this.taoHauToDuyNhat("request")}`,
       ...overrides

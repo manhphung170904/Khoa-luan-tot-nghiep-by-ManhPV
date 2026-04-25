@@ -36,7 +36,7 @@ export type ExpectedPageBody = {
 export function expectStatusExact(response: APIResponse, expected: number, context: string): void {
   expect(
     response.status(),
-    `${context}: expected HTTP ${expected}, got ${response.status()}`
+    `${context}: expected HTTP ${expected}, got ${response.status()} for ${response.url()}`
   ).toBe(expected);
 }
 

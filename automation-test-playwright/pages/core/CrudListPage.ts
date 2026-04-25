@@ -17,7 +17,10 @@ export class CrudListPage extends BasePage {
   }
 
   async search(): Promise<void> {
-    await this.searchButton.first().click({ force: true });
+    const button = this.searchButton.first();
+    await expect(button).toBeVisible();
+    await expect(button).toBeEnabled();
+    await button.click();
   }
 
   async searchIfAvailable(): Promise<boolean> {
@@ -25,7 +28,10 @@ export class CrudListPage extends BasePage {
       return false;
     }
 
-    await this.searchButton.first().click({ force: true });
+    const button = this.searchButton.first();
+    await expect(button).toBeVisible();
+    await expect(button).toBeEnabled();
+    await button.click();
     return true;
   }
 

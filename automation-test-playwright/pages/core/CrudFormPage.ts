@@ -10,8 +10,8 @@ export class CrudFormPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.form = page.locator("form").first();
-    this.submitButton = page.getByRole("button", { name: /xác nhận|lưu|thêm|cập nhật|submit/i }).last();
-    this.cancelButton = page.getByRole("button", { name: /hủy|cancel/i }).last();
+    this.submitButton = page.getByRole("button", { name: /xác nhận|xac nhan|lưu|luu|thêm|them|cập nhật|cap nhat|submit/i }).last();
+    this.cancelButton = page.getByRole("button", { name: /hủy|huy|cancel/i }).last();
   }
 
   async fillTextField(fieldName: string, value: string): Promise<void> {

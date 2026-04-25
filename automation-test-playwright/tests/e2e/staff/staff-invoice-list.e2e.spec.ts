@@ -12,6 +12,17 @@ import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
+function requireContract(contract: TempContract | null): TempContract {
+  expect(contract, "Contract scenario must be created in beforeEach").toBeTruthy();
+  return contract!;
+}
+
+function nextMonthDueDate(month: number, year: number, day = 20): string {
+  const dueMonth = month === 12 ? 1 : month + 1;
+  const dueYear = month === 12 ? year + 1 : year;
+  return `${dueYear}-${String(dueMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 test.describe("Staff - Invoice List @regression", () => {
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
@@ -35,11 +46,9 @@ test.describe("Staff - Invoice List @regression", () => {
   });
 
   test("[E2E-STF-INV-001] - Staff Invoice List - Invoice List - Assigned Invoice Rows and Detail Modal", async ({ page, adminApi }) => {
-    if (!contract) {
-      return;
-    }
+    const activeContract = requireContract(contract);
 
-    const invoice = await createManagedInvoiceForContract(adminApi, contract);
+    const invoice = await createManagedInvoiceForContract(adminApi, activeContract);
     createdInvoices.push(invoice);
 
     const invoicePage = new StaffInvoiceListPage(page);
@@ -51,24 +60,22 @@ test.describe("Staff - Invoice List @regression", () => {
     await invoicePage.search();
     await invoicePage.waitForTableData();
 
-    await expect(invoicePage.rowByInvoiceId(invoice.id)).toContainText(contract.customer.fullName);
+    await expect(invoicePage.rowByInvoiceId(invoice.id)).toContainText(activeContract.customer.fullName);
     await invoicePage.openViewModal(invoice.id);
-    await expect(invoicePage.visibleModal()).toContainText(contract.building.name);
+    await expect(invoicePage.visibleModal()).toContainText(activeContract.building.name);
     await expect(invoicePage.visibleModal()).toContainText(/chi tiết hóa đơn|chi tiet hoa don|invoice detail/i);
   });
 
   test("[E2E-STF-INV-002] - Staff Invoice List - Invoice Creation - Create Invoice from Add Modal", async ({ page }) => {
-    if (!contract) {
-      return;
-    }
+    const activeContract = requireContract(contract);
 
     const invoicePage = new StaffInvoiceListPage(page);
     const period = previousInvoicePeriod();
 
     await page.goto("/staff/invoices");
     await invoicePage.openAddInvoiceModal();
-    await invoicePage.selectAddCustomer(contract.customer.id);
-    await invoicePage.selectAddContract(contract.id);
+    await invoicePage.selectAddCustomer(activeContract.customer.id);
+    await invoicePage.selectAddContract(activeContract.id);
     await invoicePage.fillAddInvoiceForm({
       month: period.month,
       year: period.year,
@@ -88,14 +95,14 @@ test.describe("Staff - Invoice List @regression", () => {
         ORDER BY id DESC
         LIMIT 1
       `,
-      [contract.id, contract.customer.id, period.month, period.year]
+      [activeContract.id, activeContract.customer.id, period.month, period.year]
     );
 
     expect(rows.length).toBe(1);
     createdInvoices.push({
       id: rows[0]!.id,
-      contractId: contract.id,
-      customerId: contract.customer.id,
+      contractId: activeContract.id,
+      customerId: activeContract.customer.id,
       month: period.month,
       year: period.year,
       status: "PENDING"
@@ -103,18 +110,16 @@ test.describe("Staff - Invoice List @regression", () => {
   });
 
   test("[E2E-STF-INV-003] - Staff Invoice List - Duplicate Invoice - Business Error Display", async ({ page, adminApi }) => {
-    if (!contract) {
-      return;
-    }
+    const activeContract = requireContract(contract);
 
-    const existingInvoice = await createManagedInvoiceForContract(adminApi, contract);
+    const existingInvoice = await createManagedInvoiceForContract(adminApi, activeContract);
     createdInvoices.push(existingInvoice);
 
     const invoicePage = new StaffInvoiceListPage(page);
     await page.goto("/staff/invoices");
     await invoicePage.openAddInvoiceModal();
-    await invoicePage.selectAddCustomer(contract.customer.id);
-    await invoicePage.selectAddContract(contract.id);
+    await invoicePage.selectAddCustomer(activeContract.customer.id);
+    await invoicePage.selectAddContract(activeContract.id);
     await invoicePage.fillAddInvoiceForm({
       month: existingInvoice.month,
       year: existingInvoice.year,
@@ -131,21 +136,19 @@ test.describe("Staff - Invoice List @regression", () => {
         FROM invoice
         WHERE contract_id = ? AND customer_id = ? AND month = ? AND year = ?
       `,
-      [contract.id, contract.customer.id, existingInvoice.month, existingInvoice.year]
+      [activeContract.id, activeContract.customer.id, existingInvoice.month, existingInvoice.year]
     );
     expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
   test("[E2E-STF-INV-004] - Staff Invoice List - Invoice Edit - Usage Due Date and Status Update", async ({ page, adminApi }) => {
-    if (!contract) {
-      return;
-    }
+    const activeContract = requireContract(contract);
 
-    const invoice = await createManagedInvoiceForContract(adminApi, contract);
+    const invoice = await createManagedInvoiceForContract(adminApi, activeContract);
     createdInvoices.push(invoice);
 
     const invoicePage = new StaffInvoiceListPage(page);
-    const updatedDueDate = new Date().toISOString().slice(0, 10);
+    const updatedDueDate = nextMonthDueDate(invoice.month, invoice.year);
 
     await page.goto("/staff/invoices");
     await invoicePage.waitForTableData();
@@ -169,11 +172,9 @@ test.describe("Staff - Invoice List @regression", () => {
   });
 
   test("[E2E-STF-INV-005] - Staff Invoice List - Invoice Deletion - Owned Invoice Deletion from List", async ({ page, adminApi }) => {
-    if (!contract) {
-      return;
-    }
+    const activeContract = requireContract(contract);
 
-    const invoice = await createManagedInvoiceForContract(adminApi, contract);
+    const invoice = await createManagedInvoiceForContract(adminApi, activeContract);
     createdInvoices.push(invoice);
 
     const invoicePage = new StaffInvoiceListPage(page);

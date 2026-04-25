@@ -33,8 +33,19 @@ type InvoiceSeedOverrides = Partial<{
   status: "PENDING" | "PAID" | "OVERDUE";
 }>;
 
-export function previousInvoicePeriod(baseDate = new Date()): { month: number; year: number; dueDate: string } {
-  const invoiceDate = new Date(baseDate);
+function resolveBaseDate(baseDate?: Date): Date {
+  if (baseDate) {
+    return baseDate;
+  }
+
+  const configured = process.env.TEST_BASE_DATE;
+  const parsed = configured ? new Date(configured) : new Date();
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+export function previousInvoicePeriod(baseDate?: Date): { month: number; year: number; dueDate: string } {
+  const resolvedBaseDate = resolveBaseDate(baseDate);
+  const invoiceDate = new Date(resolvedBaseDate);
   invoiceDate.setMonth(invoiceDate.getMonth() - 1);
 
   const month = invoiceDate.getMonth() + 1;

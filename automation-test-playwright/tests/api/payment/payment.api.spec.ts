@@ -13,14 +13,24 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
   let nonexistentInvoiceId: number;
   let tempInvoice: Awaited<ReturnType<typeof TempEntityHelper.taoInvoiceTam>> | null = null;
 
+  async function findNonexistentInvoiceId(): Promise<number> {
+    const candidates = [2_147_483_647, 2_147_483_646, 2_147_483_645];
+    for (const candidate of candidates) {
+      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ? LIMIT 1", [candidate]);
+      if (rows.length === 0) {
+        return candidate;
+      }
+    }
+
+    throw new Error("Could not find a stable nonexistent invoice id for payment tests.");
+  }
+
   test.beforeAll(async ({ playwright }) => {
     adminContext = await createRoleContext(playwright, "admin");
     tempInvoice = await TempEntityHelper.taoInvoiceTam(adminContext);
     customerInvoiceId = tempInvoice.id;
     customerUsername = tempInvoice.contract.customer.username;
-
-    const maxRow = await MySqlDbClient.query<{ maxId: number }>("SELECT MAX(id) AS maxId FROM invoice");
-    nonexistentInvoiceId = (maxRow[0]?.maxId ?? 0) + 99999;
+    nonexistentInvoiceId = await findNonexistentInvoiceId();
   });
 
   test.afterAll(async () => {
