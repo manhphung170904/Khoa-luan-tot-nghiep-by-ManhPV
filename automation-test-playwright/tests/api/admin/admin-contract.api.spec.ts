@@ -40,7 +40,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
 
   test("[CTR-005] - API Admin Contract - Contract Dates - End Date Before Start Date Validation", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
-    cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
+    cleanupRegistry.addLabeled(`Delete contract scenario ${temp.id}`, () => TempEntityHelper.xoaContractTam(adminApi, temp));
 
     const payload = TestDataFactory.buildContractPayload({
       customerId: temp.customer.id,
@@ -82,8 +82,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
 
   test("[CTR-003] - API Admin Contract - Building Reference - Nonexistent Building Validation", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
-    cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
-    // cleaned try
+    cleanupRegistry.addLabeled(`Delete contract scenario ${temp.id}`, () => TempEntityHelper.xoaContractTam(adminApi, temp));
       const response = await adminApi.post("/api/v1/admin/contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildContractPayload({
@@ -104,13 +103,11 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         [temp.customer.id, 999999, temp.staff.id]
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    // cleaned finally
   });
 
   test("[CTR-004] - API Admin Contract - Customer Reference - Nonexistent Customer Validation", async ({ adminApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(adminApi);
-    cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, temp));
-    // cleaned try
+    cleanupRegistry.addLabeled(`Delete contract scenario ${temp.id}`, () => TempEntityHelper.xoaContractTam(adminApi, temp));
       const response = await adminApi.post("/api/v1/admin/contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildContractPayload({
@@ -131,16 +128,14 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         [999999, temp.building.id, temp.staff.id]
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    // cleaned finally
   });
 
   test("[CTR-012] - API Admin Contract - Staff Assignment - Building Assignment Restriction", async ({ adminApi, cleanupRegistry }) => {
     const managedContract = await TempEntityHelper.taoContractTam(adminApi);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(adminApi);
-    cleanupRegistry.add(() => TempEntityHelper.xoaStaffTam(adminApi, outsiderStaff.id));
-    cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, managedContract));
+    cleanupRegistry.addLabeled(`Delete staff ${outsiderStaff.id}`, () => TempEntityHelper.xoaStaffTam(adminApi, outsiderStaff.id));
+    cleanupRegistry.addLabeled(`Delete contract scenario ${managedContract.id}`, () => TempEntityHelper.xoaContractTam(adminApi, managedContract));
 
-    // cleaned try
       const response = await adminApi.post("/api/v1/admin/contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildContractPayload({
@@ -161,7 +156,6 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         [managedContract.customer.id, managedContract.building.id, outsiderStaff.id]
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    // cleaned finally
   });
 
   test("[CTR-013] - API Admin Contract - Staff Assignment - Customer Assignment Restriction", async ({ adminApi, cleanupRegistry }) => {
@@ -170,13 +164,12 @@ test.describe("Admin - API Contract @api-write @regression", () => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(adminApi, assignedManager.id);
     await TempEntityHelper.capNhatPhanCongBuilding(adminApi, contractStaff.id, [tempBuilding.id]);
-    cleanupRegistry.add(() => TempEntityHelper.xoaStaffTam(adminApi, assignedManager.id));
-    cleanupRegistry.add(() => TempEntityHelper.xoaStaffTam(adminApi, contractStaff.id));
-    cleanupRegistry.add(() => TempEntityHelper.xoaBuildingTam(adminApi, tempBuilding.id));
-    cleanupRegistry.add(() => TempEntityHelper.xoaCustomerTam(adminApi, tempCustomer.id));
-    cleanupRegistry.add(() => TempEntityHelper.capNhatPhanCongBuilding(adminApi, contractStaff.id, []));
+    cleanupRegistry.addLabeled(`Delete staff ${assignedManager.id}`, () => TempEntityHelper.xoaStaffTam(adminApi, assignedManager.id));
+    cleanupRegistry.addLabeled(`Delete staff ${contractStaff.id}`, () => TempEntityHelper.xoaStaffTam(adminApi, contractStaff.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(adminApi, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(adminApi, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${contractStaff.id}`, () => TempEntityHelper.capNhatPhanCongBuilding(adminApi, contractStaff.id, []));
 
-    // cleaned try
       const response = await adminApi.post("/api/v1/admin/contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildContractPayload({
@@ -197,7 +190,6 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         [tempCustomer.id, tempBuilding.id, contractStaff.id]
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    // cleaned finally
   });
 
   test("[CTR-014] - API Admin Contract - Update Contract - Nonexistent Contract Rejection", async ({ adminApi, cleanupRegistry }) => {
@@ -206,7 +198,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
     await TempEntityHelper.capNhatPhanCongBuilding(adminApi, tempStaff.id, [tempBuilding.id]);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(adminApi, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongCustomer(adminApi, tempStaff.id, [tempCustomer.id]);
-    cleanupRegistry.add(() => TempEntityHelper.xoaContractTam(adminApi, {
+    cleanupRegistry.addLabeled("Delete nonexistent contract scenario dependencies", () => TempEntityHelper.xoaContractTam(adminApi, {
       id: 0,
       staff: tempStaff,
       customer: tempCustomer,
@@ -239,11 +231,11 @@ test.describe("Admin - API Contract @api-write @regression", () => {
     await TempEntityHelper.capNhatPhanCongBuilding(adminApi, tempStaff.id, [tempBuilding.id]);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(adminApi, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongCustomer(adminApi, tempStaff.id, [tempCustomer.id]);
-    cleanupRegistry.add(() => TempEntityHelper.xoaStaffTam(adminApi, tempStaff.id));
-    cleanupRegistry.add(() => TempEntityHelper.xoaBuildingTam(adminApi, tempBuilding.id));
-    cleanupRegistry.add(() => TempEntityHelper.xoaCustomerTam(adminApi, tempCustomer.id));
-    cleanupRegistry.add(() => TempEntityHelper.capNhatPhanCongBuilding(adminApi, tempStaff.id, []));
-    cleanupRegistry.add(() => TempEntityHelper.capNhatPhanCongCustomer(adminApi, tempStaff.id, []));
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(adminApi, tempStaff.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(adminApi, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(adminApi, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () => TempEntityHelper.capNhatPhanCongBuilding(adminApi, tempStaff.id, []));
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () => TempEntityHelper.capNhatPhanCongCustomer(adminApi, tempStaff.id, []));
 
     let createdContractId = 0;
 
@@ -363,7 +355,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
       createdContractId = 0;
     } finally {
       if (createdContractId) {
-        cleanupRegistry.add(async () => {
+        cleanupRegistry.addLabeled(`Delete contract ${createdContractId}`, async () => {
           await adminApi.delete(`/api/v1/admin/contracts/${createdContractId}`, { failOnStatusCode: false });
         });
       }

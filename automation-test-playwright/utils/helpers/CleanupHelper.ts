@@ -3,12 +3,22 @@ export type CleanupTask = {
   action: () => Promise<unknown> | unknown;
 };
 
+export type CleanupRegistryLike = {
+  addLabeled(label: string, action: () => Promise<unknown> | unknown): void;
+};
+
 type CleanupOptions = {
   throwOnError?: boolean;
   logPrefix?: string;
 };
 
 export class CleanupHelper {
+  static register(registry: CleanupRegistryLike, tasks: CleanupTask[]): void {
+    for (const task of tasks) {
+      registry.addLabeled(task.label, task.action);
+    }
+  }
+
   static async run(tasks: CleanupTask[], options: CleanupOptions = {}): Promise<void> {
     const errors: unknown[] = [];
     const logPrefix = options.logPrefix ?? "[Cleanup Warning]";

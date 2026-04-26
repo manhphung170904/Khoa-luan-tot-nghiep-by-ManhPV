@@ -13,7 +13,7 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
 
   constructor(page: Page) {
     super(page);
-    this.emptyState = this.page.getByText(/Chưa có hóa đơn nào/i).first();
+    this.emptyState = this.page.getByText(/chưa có hóa đơn nào|chua co hoa don nao/i).first();
     this.statsValues = this.page.locator(".stat-value");
     this.visibleModal = this.page.locator(".modal.show");
     this.invoiceCards = this.anyLocator('[data-testid="customer-invoice-card"]', ".invoice-card");
@@ -66,12 +66,12 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
   }
 
   async expectEmptyState(): Promise<void> {
-    await expect(this.emptyState).toContainText(/chưa có hóa đơn nào/i);
+    await expect(this.emptyState).toContainText(/chưa có hóa đơn nào|chua co hoa don nao/i);
   }
 
   async expectLoaded(): Promise<void> {
-    await expect(this.page).toHaveTitle(/Thanh toán|invoice/i);
-    await expect(this.page.getByRole("heading", { name: /thanh toán/i })).toBeVisible();
+    await expect(this.page).toHaveTitle(/Thanh toán|Thanh toan|invoice/i);
+    await expect(this.page.getByRole("heading", { name: /thanh toán|thanh toan/i })).toBeVisible();
   }
 
   async assertLoaded(): Promise<void> {

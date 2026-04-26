@@ -49,6 +49,11 @@ Chi tiet kien truc xem them trong `docs/architecture.md`.
 - `@extended`: nhom mo rong, co the chay sau.
 - `@api-read`, `@api-write`, `@otp`: tag dang duoc dung trong API suite.
 
+## 3.1. Metadata test case
+- Metadata `testId`, `layer`, `actor`, `feature` duoc auto-parse tu title test trong fixture, khong can gan tag rieng.
+- Title nen giu format: `[ID] - Layer Actor Feature - Scenario - Expected Behavior`.
+- Khong doi ID test case khi refactor framework; neu doi behavior moi cap nhat ID.
+
 ## 4. Huong dan viet POM
 - Moi POM chi chiu trach nhiem cho mot page.
 - Locator dat trong constructor hoac property ro rang.
@@ -71,6 +76,9 @@ Framework ho tro:
 
 Chon moi truong qua bien `APP_ENV` va `BASE_URL_*` trong file `.env`.
 
+Seed data dung chung nhu account mac dinh va dia chi toa nha test phai doc tu `.env`.
+Khong hard-code district/ward/street moi trong spec neu co the dung `TestDataFactory`.
+
 ## 6.1. Quy tac an toan du lieu
 - Mac dinh framework khong duoc phep sua hoac xoa du lieu that.
 - Cac test sau se bi xem la pha du lieu: `DELETE`, cap nhat `username`, `email`, `password`, cap nhat assignment, va CRUD ghi xuong co so du lieu.
@@ -88,6 +96,10 @@ $env:ALLOW_DESTRUCTIVE_TESTS="true"
 - Runtime output va report duoc gom trong `.runtime/`.
 - HTML/JUnit report top-level se duoc lam moi moi lan chay; `.runtime/test-results/` chi giu lai mot so run gan day.
 - Test nen tai su dung `AuthSessionHelper`, `TempEntityHelper`, va fixture hien co khi phu hop.
+- API test co response kho debug nen attach qua fixture `apiDebug.attachResponse(response, { name })`.
+- Mutation test nen dang ky cleanup bang `cleanupRegistry.addLabeled(...)` de report cleanup loi co ten ro rang.
+- Neu test can cleanup ngay trong `finally`, uu tien gom task qua `CleanupHelper.run([...])` va dat label ro rang.
+- Neu co fixture `cleanupRegistry`, dang ky cleanup cang som cang tot, ngay sau khi tao temp data.
 
 ## 8. Quy trinh de nghi truoc khi merge
 1. `npm run typecheck`

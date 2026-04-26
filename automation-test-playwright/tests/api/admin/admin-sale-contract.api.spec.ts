@@ -5,6 +5,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { CleanupHelper } from "@helpers/CleanupHelper";
+import { TempEntityCleanupService } from "@helpers/TempEntityCleanupService";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
@@ -85,10 +86,15 @@ test.describe("Admin - API Sale Contract @regression", () => {
     expect(errorBody.message).toMatch(/customer|khách hàng|vui lòng chọn/i);
   });
 
-  test("[SC-003] - API Admin Sale Contract - Building Reference - Nonexistent Building Validation", async () => {
+  test("[SC-003] - API Admin Sale Contract - Building Reference - Nonexistent Building Validation", async ({ cleanupRegistry }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
 
     try {
       const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -116,12 +122,21 @@ test.describe("Admin - API Sale Contract @regression", () => {
     }
   });
 
-  test("[SC-004] - API Admin Sale Contract - Staff Reference - Invalid Staff Validation", async () => {
+  test("[SC-004] - API Admin Sale Contract - Staff Reference - Invalid Staff Validation", async ({ cleanupRegistry }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
 
     try {
       const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -151,12 +166,19 @@ test.describe("Admin - API Sale Contract @regression", () => {
     }
   });
 
-  test("[SC-013] - API Admin Sale Contract - Staff Assignment - Building Assignment Restriction", async () => {
+  test("[SC-013] - API Admin Sale Contract - Staff Assignment - Building Assignment Restriction", async ({ cleanupRegistry }) => {
     const assignedManager = await TempEntityHelper.taoStaffTam(admin);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, assignedManager.id);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, outsiderStaff.id, [tempCustomer.id]);
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${outsiderStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, outsiderStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete staff ${outsiderStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, outsiderStaff.id));
+    cleanupRegistry.addLabeled(`Delete staff ${assignedManager.id}`, () => TempEntityHelper.xoaStaffTam(admin, assignedManager.id));
 
     try {
       const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -184,12 +206,19 @@ test.describe("Admin - API Sale Contract @regression", () => {
     }
   });
 
-  test("[SC-014] - API Admin Sale Contract - Staff Assignment - Customer Assignment Restriction", async () => {
+  test("[SC-014] - API Admin Sale Contract - Staff Assignment - Customer Assignment Restriction", async ({ cleanupRegistry }) => {
     const assignedManager = await TempEntityHelper.taoStaffTam(admin);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, assignedManager.id);
     await TempEntityHelper.capNhatPhanCongBuilding(admin, outsiderStaff.id, [tempBuilding.id]);
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${outsiderStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, outsiderStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete staff ${outsiderStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, outsiderStaff.id));
+    cleanupRegistry.addLabeled(`Delete staff ${assignedManager.id}`, () => TempEntityHelper.xoaStaffTam(admin, assignedManager.id));
 
     try {
       const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -217,12 +246,21 @@ test.describe("Admin - API Sale Contract @regression", () => {
     }
   });
 
-  test("[SC-015] - API Admin Sale Contract - Building Type - Rental Building Rejection", async () => {
+  test("[SC-015] - API Admin Sale Contract - Building Type - Rental Building Rejection", async ({ cleanupRegistry }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_RENT");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
 
     try {
       const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -250,8 +288,9 @@ test.describe("Admin - API Sale Contract @regression", () => {
     }
   });
 
-  test("[SC-016] - API Admin Sale Contract - Duplicate Transaction - Sold Building Sale Restriction", async () => {
+  test("[SC-016] - API Admin Sale Contract - Duplicate Transaction - Sold Building Sale Restriction", async ({ cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoSaleContractTam(admin);
+    cleanupRegistry.addLabeled(`Delete sale contract scenario ${temp.id}`, () => TempEntityHelper.xoaSaleContractTam(admin, temp));
     try {
       const response = await admin.post("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
@@ -278,12 +317,21 @@ test.describe("Admin - API Sale Contract @regression", () => {
     }
   });
 
-  test("[SC-005] - API Admin Sale Contract - Sale Contract Lifecycle - Create List Filter Update and Delete Flow", async () => {
+  test("[SC-005] - API Admin Sale Contract - Sale Contract Lifecycle - Create List Filter Update and Delete Flow", async ({ cleanupRegistry }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
 
     let createdSaleContractId = 0;
 

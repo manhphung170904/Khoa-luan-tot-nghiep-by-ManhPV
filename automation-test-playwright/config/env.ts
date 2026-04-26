@@ -90,6 +90,13 @@ export const env = {
   workers: toNumber(process.env.WORKERS, 1),
   retryPolicy,
   testSupportOtpToken: optionalDefault("TEST_SUPPORT_OTP_TOKEN", "test-otp-token"),
+  testDataSeed: {
+    districtId: toNumber(process.env.TEST_DISTRICT_ID, 1),
+    ward: optionalDefault("TEST_BUILDING_WARD", "Xuan La"),
+    street: optionalDefault("TEST_BUILDING_STREET", "Vo Chi Cong"),
+    latitude: toNumber(process.env.TEST_BUILDING_LATITUDE, 21.0686),
+    longitude: toNumber(process.env.TEST_BUILDING_LONGITUDE, 105.8033)
+  },
   dbJdbcUrl: process.env.DB_JDBC_URL ?? process.env.SPRING_DATASOURCE_URL ?? optionalDefault("DB_JDBC_URL", "jdbc:mysql://localhost:3306/estate"),
   dbUsername: process.env.DB_USERNAME ?? process.env.SPRING_DATASOURCE_USERNAME ?? optionalDefault("DB_USERNAME", "root"),
   dbPassword: process.env.DB_PASSWORD ?? process.env.SPRING_DATASOURCE_PASSWORD ?? optionalDefault("DB_PASSWORD", "123456"),

@@ -109,7 +109,7 @@ export class TestDataFactory {
   ): Record<string, unknown> {
     const suffix = this.taoHauToDuyNhat("building");
     return {
-      districtId: 1,
+      districtId: env.testDataSeed.districtId,
       numberOfFloor: 10,
       numberOfBasement: 1,
       floorArea: 200,
@@ -122,8 +122,8 @@ export class TestDataFactory {
       electricityFee: transactionType === "FOR_RENT" ? 3500 : null,
       salePrice: transactionType === "FOR_SALE" ? 3000000000 : null,
       name: `PW Building ${suffix}`,
-      ward: "Xuan La",
-      street: "Vo Chi Cong",
+      ward: env.testDataSeed.ward,
+      street: env.testDataSeed.street,
       propertyType: "OFFICE",
       transactionType,
       direction: "DONG",
@@ -132,8 +132,8 @@ export class TestDataFactory {
       linkOfBuilding: "https://example.com",
       image: null,
       rentAreaValues: "50,100",
-      latitude: 21.0686,
-      longitude: 105.8033,
+      latitude: env.testDataSeed.latitude,
+      longitude: env.testDataSeed.longitude,
       staffIds: [],
       ...overrides
     };

@@ -20,6 +20,10 @@ export class BasePage {
     return this.page.locator(selectors.join(", "));
   }
 
+  visible(locator: Locator): Locator {
+    return locator.filter({ visible: true });
+  }
+
   testId(id: string): Locator {
     return this.page.getByTestId(id);
   }

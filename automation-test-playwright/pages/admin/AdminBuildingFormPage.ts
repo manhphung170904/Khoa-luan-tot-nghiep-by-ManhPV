@@ -113,7 +113,7 @@ export class AdminBuildingFormPage extends RoutedCrudFormPage {
   }
 
   async expectLockBanner(): Promise<void> {
-    await expect(this.page.locator("text=không thể chỉnh sửa").first()).toBeVisible();
+    await expect(this.page.getByText(/không thể chỉnh sửa|khong the chinh sua/i).first()).toBeVisible();
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {

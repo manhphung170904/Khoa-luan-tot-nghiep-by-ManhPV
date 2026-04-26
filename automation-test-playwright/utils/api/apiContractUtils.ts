@@ -1,4 +1,4 @@
-import { expect, type APIResponse } from "@playwright/test";
+import { expect, type APIResponse, type TestInfo } from "@playwright/test";
 
 export type ApiCoverageStatus = "covered" | "partial" | "missing" | "defect-driven";
 export type EndpointKind = "readonly" | "mutation" | "upload" | "otp-auth" | "background-trigger";
@@ -34,20 +34,88 @@ export type ExpectedPageBody = {
 };
 
 export function expectStatusExact(response: APIResponse, expected: number, context: string): void {
+  const contentType = response.headers()["content-type"] ?? "unknown content-type";
   expect(
     response.status(),
-    `${context}: expected HTTP ${expected}, got ${response.status()} for ${response.url()}`
+    `${context}: expected HTTP ${expected}, got ${response.status()} for ${response.url()} (${contentType})`
   ).toBe(expected);
 }
 
+export type ApiDebugAttachmentOptions = {
+  name?: string;
+  maxBodyLength?: number;
+};
+
+export async function responseTextPreview(response: APIResponse, maxLength = 1000): Promise<string> {
+  const body = await response.text().catch(() => "");
+  return body.length > maxLength ? `${body.slice(0, maxLength)}...` : body;
+}
+
+export async function buildApiResponseDebugAttachment(
+  response: APIResponse,
+  options: ApiDebugAttachmentOptions = {}
+): Promise<{ name: string; body: string; contentType: string }> {
+  const contentType = response.headers()["content-type"] ?? "text/plain";
+  const safeUrl = response.url().replace(/[?#].*$/, "");
+  const name = options.name ?? `api-${response.status()}-${safeUrl.split("/").filter(Boolean).pop() ?? "response"}`;
+  const bodyPreview = await responseTextPreview(response, options.maxBodyLength ?? 5000);
+
+  return {
+    name,
+    contentType: "application/json",
+    body: JSON.stringify(
+      {
+        url: response.url(),
+        status: response.status(),
+        statusText: response.statusText(),
+        headers: response.headers(),
+        contentType,
+        bodyPreview
+      },
+      null,
+      2
+    )
+  };
+}
+
+export async function attachApiResponse(
+  testInfo: TestInfo,
+  response: APIResponse,
+  options: ApiDebugAttachmentOptions = {}
+): Promise<void> {
+  const attachment = await buildApiResponseDebugAttachment(response, options);
+  await testInfo.attach(attachment.name, {
+    body: attachment.body,
+    contentType: attachment.contentType
+  });
+}
+
 export async function expectJsonArray(response: APIResponse): Promise<unknown[]> {
-  const payload = (await response.json()) as unknown;
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    throw new Error(
+      `Expected JSON array response from ${response.url()}, got ${response.status()}. Body preview: ${await responseTextPreview(response)}`,
+      { cause: error }
+    );
+  }
+
   expect(Array.isArray(payload), "Expected JSON array response").toBeTruthy();
   return payload as unknown[];
 }
 
 export async function expectJsonObject<T extends object>(response: APIResponse): Promise<T> {
-  const payload = (await response.json()) as unknown;
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    throw new Error(
+      `Expected JSON object response from ${response.url()}, got ${response.status()}. Body preview: ${await responseTextPreview(response)}`,
+      { cause: error }
+    );
+  }
+
   expect(typeof payload).toBe("object");
   expect(payload).not.toBeNull();
   return payload as T;
