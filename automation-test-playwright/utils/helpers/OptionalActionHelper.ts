@@ -7,7 +7,7 @@ export class OptionalActionHelper {
       return false;
     }
 
-    await target.first().click();
+    await target.nth(0).click();
     return true;
   }
 
@@ -17,7 +17,7 @@ export class OptionalActionHelper {
       return false;
     }
 
-    await target.first().fill(value);
+    await target.nth(0).fill(value);
     return true;
   }
 
@@ -27,7 +27,7 @@ export class OptionalActionHelper {
       return false;
     }
 
-    await target.first().selectOption(value);
+    await target.nth(0).selectOption(value);
     return true;
   }
 }

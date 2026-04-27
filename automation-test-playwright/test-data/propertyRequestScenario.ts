@@ -1,6 +1,6 @@
 import type { APIRequestContext } from "@playwright/test";
 import { createRoleContext } from "@api/adminApiUtils";
-import { CleanupHelper } from "@helpers/CleanupHelper";
+import { CleanupHelper, type CleanupRegistryLike } from "@helpers/CleanupHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 
 type RequestContextFactory = {
@@ -23,7 +23,8 @@ export type PropertyRequestScenario = {
 
 export async function createPropertyRequestScenario(
   playwright: RequestContextFactory,
-  requestType: "RENT" | "BUY" = "RENT"
+  requestType: "RENT" | "BUY" = "RENT",
+  cleanupRegistry?: CleanupRegistryLike
 ): Promise<PropertyRequestScenario> {
   const admin = await createRoleContext(playwright, "admin");
   const tempBuilding = await TempEntityHelper.taoBuildingTam(
@@ -42,7 +43,8 @@ export async function createPropertyRequestScenario(
     requestType
   );
 
-  return {
+  let cleaned = false;
+  const scenario: PropertyRequestScenario = {
     admin,
     customer,
     customerUsername: tempCustomer.username,
@@ -52,6 +54,11 @@ export async function createPropertyRequestScenario(
     staffId: tempStaff.id,
     propertyRequestId: propertyRequest.id,
     cleanup: async () => {
+      if (cleaned) {
+        return;
+      }
+
+      cleaned = true;
       await CleanupHelper.run([
         { label: "Dispose customer API context", action: () => customer.dispose() },
         { label: `Delete property request ${propertyRequest.id}`, action: () => TempEntityHelper.xoaPropertyRequestTam(propertyRequest.id) },
@@ -64,4 +71,7 @@ export async function createPropertyRequestScenario(
       ]);
     }
   };
+
+  cleanupRegistry?.addLabeled(`Cleanup property request scenario ${propertyRequest.id}`, () => scenario.cleanup());
+  return scenario;
 }

@@ -28,7 +28,7 @@ export class AdminPropertyRequestListPage extends RoutedCrudListPage {
   }
 
   rowByRequestId(requestId: number): Locator {
-    return this.page.locator("#requestTableBody tr").filter({ hasText: `#${requestId}` }).first();
+    return this.firstVisible(this.page.locator("#requestTableBody tr").filter({ hasText: `#${requestId}` }));
   }
 
   async openDetail(requestId: number): Promise<void> {

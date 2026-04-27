@@ -2,52 +2,22 @@ import { expect, test } from "@fixtures/api.fixture";
 import type { APIRequestContext } from "@playwright/test";
 import { expectApiErrorBody, expectApiMessage } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { env } from "@config/env";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
-import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
-
-type TempStaff = {
-  id: number;
-  username: string;
-  email: string;
-  phone: string;
-};
+import {
+  createAuthenticatedTempProfileScenario,
+  type AuthenticatedTempProfileScenario,
+  type TempProfileUser
+} from "@data/tempProfileScenario";
 
 test.describe("Staff - API Profile @api-write @otp @regression", () => {
-  let bootstrapAdmin: APIRequestContext;
+  let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let staffContext: APIRequestContext;
-  let tempStaff: TempStaff;
+  let tempStaff: TempProfileUser;
   let currentPassword: string;
-
-  const createTempStaff = async (): Promise<TempStaff> => {
-    const payload = TestDataFactory.buildAdminStaffPayload();
-    const response = await bootstrapAdmin.post("/api/v1/admin/staff", {
-      failOnStatusCode: false,
-      data: payload
-    });
-    await expectApiMessage(response, {
-      status: 200,
-      message: apiExpectedMessages.admin.staff.create,
-      dataMode: "null"
-    });
-
-    const rows = await MySqlDbClient.query<TempStaff>(
-      `
-        SELECT id, username, email, phone
-        FROM staff
-        WHERE username = ?
-        ORDER BY id DESC
-        LIMIT 1
-      `,
-      [String(payload.username)]
-    );
-    expect(rows.length).toBe(1);
-    return rows[0]!;
-  };
 
   const sendOtp = async (purpose: string) => {
     const response = await staffContext.post(`/api/v1/staff/profile/otp/${purpose}`, {
@@ -60,26 +30,16 @@ test.describe("Staff - API Profile @api-write @otp @regression", () => {
     });
   };
 
-  test.beforeAll(async ({ playwright }) => {
-    bootstrapAdmin = await ApiSessionHelper.newContext(playwright, "admin");
-  });
-
-  test.beforeEach(async ({ playwright }) => {
-    tempStaff = await createTempStaff();
-    staffContext = await ApiSessionHelper.newContext(playwright);
-    currentPassword = env.defaultPassword;
-
-    const loginResponse = await ApiSessionHelper.login(staffContext, tempStaff.username, currentPassword);
-    expect(loginResponse.status()).toBe(200);
+  test.beforeEach(async ({ playwright, adminApi }) => {
+    profileScenario = await createAuthenticatedTempProfileScenario(playwright, adminApi, "staff");
+    staffContext = profileScenario.context;
+    tempStaff = profileScenario.user;
+    currentPassword = profileScenario.currentPassword;
   });
 
   test.afterEach(async () => {
-    await staffContext.dispose();
-    await TempEntityHelper.xoaStaffTam(bootstrapAdmin, tempStaff.id);
-  });
-
-  test.afterAll(async () => {
-    await bootstrapAdmin.dispose();
+    await profileScenario?.cleanup();
+    profileScenario = undefined;
   });
 
   test("[STF-PRO-001] - API Staff Profile - Authentication - Mutation Endpoint Access Without Login Rejection", async ({ request }) => {

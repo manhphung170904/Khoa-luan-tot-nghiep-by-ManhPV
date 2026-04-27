@@ -11,9 +11,11 @@ export class CustomerPropertyRequestListPage extends CustomerShellPage {
   }
 
   cardByRequestId(id: number): Locator {
-    return this.requestList.locator(".request-card").filter({
-      has: this.page.locator(".request-id", { hasText: `Yêu cầu #${id}` })
-    }).first();
+    return this.firstVisible(
+      this.requestList.locator(".request-card").filter({
+        has: this.page.locator(".request-id", { hasText: `Yêu cầu #${id}` })
+      })
+    );
   }
 
   async expectRequestVisible(id: number): Promise<void> {

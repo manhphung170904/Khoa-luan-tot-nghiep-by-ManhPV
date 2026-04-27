@@ -37,11 +37,11 @@ export class CustomerTransactionHistoryPage extends RoutedCrudListPage {
   }
 
   async submitFilters(): Promise<void> {
-    await this.transactionFilterForm.locator(".btn-filter, button[type='submit']").first().click();
+    await this.firstVisible(this.transactionFilterForm.locator(".btn-filter, button[type='submit']")).click();
   }
 
   async resetFilters(): Promise<void> {
-    await this.transactionFilterForm.locator(".btn-reset, button[type='button']").first().click();
+    await this.firstVisible(this.transactionFilterForm.locator(".btn-reset, button[type='button']")).click();
   }
 
   async expectResultCountBanner(total: number): Promise<void> {
@@ -50,7 +50,7 @@ export class CustomerTransactionHistoryPage extends RoutedCrudListPage {
   }
 
   rowByBuildingName(buildingName: string): Locator {
-    return this.transactionTableBody.locator("tr").filter({ hasText: buildingName }).first();
+    return this.firstVisible(this.transactionTableBody.locator("tr").filter({ hasText: buildingName }));
   }
 
   async openTransactionDetail(buildingName: string): Promise<void> {
@@ -65,7 +65,7 @@ export class CustomerTransactionHistoryPage extends RoutedCrudListPage {
 
   async closeDetailModal(): Promise<void> {
     const modal = this.page.locator(".modal.show");
-    await modal.locator(".modal-header .btn-close, .modal-footer button").first().click();
+    await this.firstVisible(modal.locator(".modal-header .btn-close, .modal-footer button")).click();
     await expect(modal).toBeHidden();
   }
 

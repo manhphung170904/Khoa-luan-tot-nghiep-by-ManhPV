@@ -33,7 +33,7 @@ export class StaffCustomerListPage extends RoutedCrudListPage {
   }
 
   rowByCustomerName(name: string): Locator {
-    return this.page.locator("#customerTableBody tr").filter({ hasText: name }).first();
+    return this.firstVisible(this.page.locator("#customerTableBody tr").filter({ hasText: name }));
   }
 
   async openCustomerDetail(name: string): Promise<void> {

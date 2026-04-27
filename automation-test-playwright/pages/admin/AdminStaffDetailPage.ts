@@ -12,7 +12,7 @@ export class AdminStaffDetailPage extends RoutedCrudDetailPage {
 
   async expectLoaded(staffId: number): Promise<void> {
     await expect(this.page).toHaveURL(new RegExp(`/admin/staff/${staffId}$`));
-    await expect(this.page.locator(".role-badge").first()).toBeVisible();
+    await expect(this.firstVisible(this.page.locator(".role-badge"))).toBeVisible();
   }
 
   async deleteStaff(): Promise<void> {

@@ -20,18 +20,18 @@ export class AdminReportPage extends AdminRoutedPage {
   }
 
   async selectYear(value: string): Promise<void> {
-    await this.page.locator(".year-select, select[name='year']").first().selectOption(value);
+    await this.firstVisible(this.page.locator(".year-select, select[name='year']")).selectOption(value);
   }
 
   async submitYearFilter(): Promise<void> {
-    const submitButton = this.page.locator("form.year-selector-form button, button[type='submit']").first();
+    const submitButton = this.firstVisible(this.page.locator("form.year-selector-form button, button[type='submit']"));
     if (await submitButton.count()) {
       await submitButton.click();
     }
   }
 
   async expectYearSelected(value: string): Promise<void> {
-    await expect(this.page.locator(".year-select, select[name='year']").first()).toHaveValue(value);
+    await expect(this.firstVisible(this.page.locator(".year-select, select[name='year']"))).toHaveValue(value);
   }
 
   async triggerPrint(): Promise<void> {

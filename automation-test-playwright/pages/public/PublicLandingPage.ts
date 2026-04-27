@@ -25,9 +25,9 @@ export class PublicLandingPage extends BasePage {
     this.filterForm = this.anyLocator('[data-testid="public-filter-form"]', "#filterForm", "form");
     this.filterBody = this.anyLocator('[data-testid="public-filter-body"]', "#filterBody");
     this.toggleFilterButton = this.anyLocator('[data-testid="public-filter-toggle"]', ".btn-toggle-filter");
-    this.buildingNameInput = this.anyLocator('[data-testid="public-building-name"]', '[name="name"]').first();
-    this.searchButton = this.anyLocator('[data-testid="public-search"]', 'button[type="submit"]').first();
-    this.resetButton = this.anyLocator('[data-testid="public-reset"]', ".btn-reset").first();
+    this.buildingNameInput = this.firstVisible(this.anyLocator('[data-testid="public-building-name"]', '[name="name"]'));
+    this.searchButton = this.firstVisible(this.anyLocator('[data-testid="public-search"]', 'button[type="submit"]'));
+    this.resetButton = this.firstVisible(this.anyLocator('[data-testid="public-reset"]', ".btn-reset"));
     this.totalBuilding = this.anyLocator('[data-testid="public-total-building"]', "#totalBuilding");
     this.buildingList = this.anyLocator('[data-testid="public-building-list"]', "#buildingList");
     this.buildingCards = this.page.locator('[data-testid="building-card"], .building-card');
@@ -37,7 +37,7 @@ export class PublicLandingPage extends BasePage {
     this.detailModal = this.page.locator("#modalContainer .modal.show");
     this.detailModalTitle = this.detailModal.locator(".modal-title");
     this.detailModalBody = this.detailModal.locator(".modal-body");
-    this.detailModalCloseButton = this.detailModal.locator(".btn-close, .modal-footer button").first();
+    this.detailModalCloseButton = this.firstVisible(this.detailModal.locator(".btn-close, .modal-footer button"));
   }
 
   async open(query = ""): Promise<void> {
@@ -102,7 +102,7 @@ export class PublicLandingPage extends BasePage {
   }
 
   cardByName(name: string): Locator {
-    return this.page.locator('[data-testid="building-card"], .building-card', { hasText: name }).first();
+    return this.firstVisible(this.page.locator('[data-testid="building-card"], .building-card', { hasText: name }));
   }
 
   async openBuildingDetailsByName(name: string): Promise<void> {
@@ -111,7 +111,7 @@ export class PublicLandingPage extends BasePage {
   }
 
   async openFirstBuildingDetails(): Promise<void> {
-    await this.buildingCards.first().click();
+    await this.firstVisible(this.buildingCards).click();
     await expect(this.detailModal).toBeVisible();
   }
 
@@ -222,7 +222,7 @@ export class PublicLandingPage extends BasePage {
   }
 
   async expectHasResults(): Promise<void> {
-    await expect(this.buildingCards.first()).toBeVisible();
+    await expect(this.firstVisible(this.buildingCards)).toBeVisible();
   }
 
   async assertLoaded(): Promise<void> {

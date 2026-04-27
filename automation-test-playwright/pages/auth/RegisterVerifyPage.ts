@@ -7,13 +7,13 @@ export class RegisterVerifyPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.otpInput = page.locator('input[name="otp"]').first();
-    this.verifyButton = this.anyLocator(
+    this.otpInput = this.firstVisible(page.locator('input[name="otp"]'));
+    this.verifyButton = this.firstVisible(this.anyLocator(
       '[data-testid="register-verify-submit"]',
       'form[action="/auth/register/verify"] button[type="submit"]',
       "button.submit",
       'button:has-text("Xác nhận")'
-    ).first();
+    ));
   }
 
   async open(email: string): Promise<void> {

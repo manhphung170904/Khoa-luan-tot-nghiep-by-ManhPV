@@ -92,6 +92,10 @@ export const env = {
   testSupportOtpToken: optionalDefault("TEST_SUPPORT_OTP_TOKEN", "test-otp-token"),
   testDataSeed: {
     districtId: toNumber(process.env.TEST_DISTRICT_ID, 1),
+    buildingId: toNumber(process.env.TEST_BUILDING_ID, 1),
+    contractId: toNumber(process.env.TEST_CONTRACT_ID, 1),
+    customerId: toNumber(process.env.TEST_CUSTOMER_ID, 1),
+    staffId: toNumber(process.env.TEST_STAFF_ID, 1),
     ward: optionalDefault("TEST_BUILDING_WARD", "Xuan La"),
     street: optionalDefault("TEST_BUILDING_STREET", "Vo Chi Cong"),
     latitude: toNumber(process.env.TEST_BUILDING_LATITUDE, 21.0686),

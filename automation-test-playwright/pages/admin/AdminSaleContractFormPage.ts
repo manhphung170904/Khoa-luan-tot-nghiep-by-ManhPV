@@ -26,15 +26,15 @@ export class AdminSaleContractFormPage extends RoutedCrudFormPage {
   }
 
   async selectBuilding(buildingId: number | string): Promise<void> {
-    await this.page.locator("#buildingId, [name='buildingId']").first().selectOption(String(buildingId));
+    await this.firstVisible(this.page.locator("#buildingId, [name='buildingId']")).selectOption(String(buildingId));
   }
 
   async selectCustomer(customerId: number | string): Promise<void> {
-    await this.page.locator("#customerSelect, [name='customerId']").first().selectOption(String(customerId));
+    await this.firstVisible(this.page.locator("#customerSelect, [name='customerId']")).selectOption(String(customerId));
   }
 
   async selectStaff(staffId: number | string): Promise<void> {
-    await this.staffSelect.first().selectOption(String(staffId));
+    await this.firstVisible(this.staffSelect).selectOption(String(staffId));
   }
 
   async fillSalePrice(value: number): Promise<void> {
@@ -50,7 +50,7 @@ export class AdminSaleContractFormPage extends RoutedCrudFormPage {
   }
 
   async waitForStaffOptions(): Promise<void> {
-    const select = this.staffSelect.first();
+    const select = this.firstVisible(this.staffSelect);
     await expect(async () => {
       const count = await select.locator("option").count();
       expect(count).toBeGreaterThan(1);

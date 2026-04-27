@@ -24,6 +24,14 @@ export class BasePage {
     return locator.filter({ visible: true });
   }
 
+  firstVisible(locator: Locator): Locator {
+    return this.visible(locator).nth(0);
+  }
+
+  lastVisible(locator: Locator): Locator {
+    return this.visible(locator).nth(-1);
+  }
+
   testId(id: string): Locator {
     return this.page.getByTestId(id);
   }

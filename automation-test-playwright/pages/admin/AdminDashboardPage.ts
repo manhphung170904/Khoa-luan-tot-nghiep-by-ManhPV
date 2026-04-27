@@ -44,10 +44,10 @@ export class AdminDashboardPage extends AdminRoutedPage {
   }
 
   async expectRecentBuildingVisible(buildingName: string): Promise<void> {
-    await expect(this.page.locator("#recentBuildingsContainer .recent-item").filter({ hasText: buildingName }).first()).toBeVisible();
+    await expect(this.firstVisible(this.page.locator("#recentBuildingsContainer .recent-item").filter({ hasText: buildingName }))).toBeVisible();
   }
 
   async openRecentBuilding(buildingName: string): Promise<void> {
-    await this.page.locator("#recentBuildingsContainer .recent-item").filter({ hasText: buildingName }).first().click();
+    await this.firstVisible(this.page.locator("#recentBuildingsContainer .recent-item").filter({ hasText: buildingName })).click();
   }
 }

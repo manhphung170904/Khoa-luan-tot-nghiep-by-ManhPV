@@ -98,10 +98,10 @@ export class AdminBuildingFormPage extends RoutedCrudFormPage {
   }
 
   async setCoordinates(latitude: number, longitude: number): Promise<void> {
-    await this.page.locator('[name="latitude"], #latInput').first().evaluate((element, value) => {
+    await this.firstVisible(this.page.locator('[name="latitude"], #latInput')).evaluate((element, value) => {
       (element as HTMLInputElement).value = String((value as { lat: number }).lat);
     }, { lat: latitude });
-    await this.page.locator('[name="longitude"], #lngInput').first().evaluate((element, value) => {
+    await this.firstVisible(this.page.locator('[name="longitude"], #lngInput')).evaluate((element, value) => {
       (element as HTMLInputElement).value = String((value as { lng: number }).lng);
     }, { lng: longitude });
   }
@@ -113,7 +113,7 @@ export class AdminBuildingFormPage extends RoutedCrudFormPage {
   }
 
   async expectLockBanner(): Promise<void> {
-    await expect(this.page.getByText(/không thể chỉnh sửa|khong the chinh sua/i).first()).toBeVisible();
+    await expect(this.firstVisible(this.page.getByText(/không thể chỉnh sửa|khong the chinh sua/i))).toBeVisible();
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {

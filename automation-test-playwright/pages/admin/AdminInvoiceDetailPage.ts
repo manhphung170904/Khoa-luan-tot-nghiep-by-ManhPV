@@ -14,7 +14,7 @@ export class AdminInvoiceDetailPage extends RoutedCrudDetailPage {
 
   async expectLoaded(invoiceId: number): Promise<void> {
     await expect(this.page).toHaveURL(new RegExp(`/admin/invoice/${invoiceId}$`));
-    await expect(this.payButton.or(this.deleteButton).first()).toBeVisible();
+    await expect(this.firstVisible(this.payButton.or(this.deleteButton))).toBeVisible();
   }
 
   async confirmInvoicePaid(): Promise<void> {

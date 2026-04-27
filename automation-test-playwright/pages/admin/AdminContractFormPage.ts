@@ -28,19 +28,19 @@ export class AdminContractFormPage extends RoutedCrudFormPage {
   }
 
   async selectBuilding(buildingId: number | string): Promise<void> {
-    await this.page.locator("#buildingSelect, [name='buildingId']").first().selectOption(String(buildingId));
+    await this.firstVisible(this.page.locator("#buildingSelect, [name='buildingId']")).selectOption(String(buildingId));
   }
 
   async selectCustomer(customerId: number | string): Promise<void> {
-    await this.page.locator("#customerSelect, [name='customerId']").first().selectOption(String(customerId));
+    await this.firstVisible(this.page.locator("#customerSelect, [name='customerId']")).selectOption(String(customerId));
   }
 
   async selectRentArea(rentArea: number | string): Promise<void> {
-    await this.rentAreaSelect.first().selectOption(String(rentArea));
+    await this.firstVisible(this.rentAreaSelect).selectOption(String(rentArea));
   }
 
   async selectStaff(staffId: number | string): Promise<void> {
-    await this.staffSelect.first().selectOption(String(staffId));
+    await this.firstVisible(this.staffSelect).selectOption(String(staffId));
   }
 
   async fillRentPrice(value: number): Promise<void> {
@@ -57,7 +57,7 @@ export class AdminContractFormPage extends RoutedCrudFormPage {
   }
 
   async waitForRentAreaOptions(): Promise<void> {
-    const select = this.rentAreaSelect.first();
+    const select = this.firstVisible(this.rentAreaSelect);
     await expect(select).toBeEnabled();
     await expect(async () => {
       const count = await select.locator("option").count();
@@ -66,7 +66,7 @@ export class AdminContractFormPage extends RoutedCrudFormPage {
   }
 
   async waitForStaffOptions(): Promise<void> {
-    const select = this.staffSelect.first();
+    const select = this.firstVisible(this.staffSelect);
     await expect(async () => {
       const count = await select.locator("option").count();
       expect(count).toBeGreaterThan(1);
@@ -74,7 +74,7 @@ export class AdminContractFormPage extends RoutedCrudFormPage {
   }
 
   async expectNoCommonStaffOption(): Promise<void> {
-    await expect(this.staffSelect.first()).toContainText(/không có nhân viên|khong co nhan vien/i);
+    await expect(this.firstVisible(this.staffSelect)).toContainText(/khÃ´ng cÃ³ nhÃ¢n viÃªn|khong co nhan vien/i);
   }
 
   async openQuickAssignModal(): Promise<void> {

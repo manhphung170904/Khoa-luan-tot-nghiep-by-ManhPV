@@ -6,7 +6,7 @@ export class CrudDetailPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.pageHeader = page.locator("h1, h2").first();
+    this.pageHeader = this.firstVisible(page.locator("h1, h2"));
   }
 
   async expectHeaderContains(text: string): Promise<void> {

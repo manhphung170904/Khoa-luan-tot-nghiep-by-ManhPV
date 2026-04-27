@@ -2,53 +2,22 @@ import { expect, test } from "@fixtures/api.fixture";
 import type { APIRequestContext } from "@playwright/test";
 import { expectApiErrorBody, expectApiMessage } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { env } from "@config/env";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
-import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
-
-type TempCustomer = {
-  id: number;
-  username: string;
-  email: string;
-  phone: string;
-};
+import {
+  createAuthenticatedTempProfileScenario,
+  type AuthenticatedTempProfileScenario,
+  type TempProfileUser
+} from "@data/tempProfileScenario";
 
 test.describe("Customer - API Profile @api-write @otp @regression", () => {
-  let bootstrapAdmin: APIRequestContext;
+  let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let customerContext: APIRequestContext;
-  let managerStaffId = 0;
-  let tempCustomer: TempCustomer;
+  let tempCustomer: TempProfileUser;
   let currentPassword: string;
-
-  const createTempCustomer = async (): Promise<TempCustomer> => {
-    const payload = TestDataFactory.buildCustomerPayload({ staffIds: [managerStaffId] });
-    const response = await bootstrapAdmin.post("/api/v1/admin/customers", {
-      failOnStatusCode: false,
-      data: payload
-    });
-    await expectApiMessage(response, {
-      status: 200,
-      message: apiExpectedMessages.admin.customers.create,
-      dataMode: "null"
-    });
-
-    const rows = await MySqlDbClient.query<TempCustomer>(
-      `
-        SELECT id, username, email, phone
-        FROM customer
-        WHERE username = ?
-        ORDER BY id DESC
-        LIMIT 1
-      `,
-      [String(payload.username)]
-    );
-    expect(rows.length).toBe(1);
-    return rows[0]!;
-  };
 
   const sendOtp = async (purpose: string) => {
     const response = await customerContext.post(`/api/v1/customer/profile/otp/${purpose}`, {
@@ -61,30 +30,16 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
     });
   };
 
-  test.beforeAll(async ({ playwright }) => {
-    bootstrapAdmin = await ApiSessionHelper.newContext(playwright, "admin");
-  });
-
-  test.beforeEach(async ({ playwright }) => {
-    const tempStaff = await TempEntityHelper.taoStaffTam(bootstrapAdmin);
-    managerStaffId = tempStaff.id;
-    tempCustomer = await createTempCustomer();
-    customerContext = await ApiSessionHelper.newContext(playwright);
-    currentPassword = env.defaultPassword;
-
-    const loginResponse = await ApiSessionHelper.login(customerContext, tempCustomer.username, currentPassword);
-    expect(loginResponse.status()).toBe(200);
+  test.beforeEach(async ({ playwright, adminApi }) => {
+    profileScenario = await createAuthenticatedTempProfileScenario(playwright, adminApi, "customer");
+    customerContext = profileScenario.context;
+    tempCustomer = profileScenario.user;
+    currentPassword = profileScenario.currentPassword;
   });
 
   test.afterEach(async () => {
-    await customerContext.dispose();
-    await TempEntityHelper.xoaCustomerTam(bootstrapAdmin, tempCustomer.id);
-    await TempEntityHelper.xoaStaffTam(bootstrapAdmin, managerStaffId);
-    managerStaffId = 0;
-  });
-
-  test.afterAll(async () => {
-    await bootstrapAdmin.dispose();
+    await profileScenario?.cleanup();
+    profileScenario = undefined;
   });
 
   test("[CUS-PRO-001] - API Customer Profile - Authentication - Mutation Endpoint Access Without Login Rejection", async ({ request }) => {

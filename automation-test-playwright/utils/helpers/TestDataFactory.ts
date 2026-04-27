@@ -2,6 +2,9 @@ import { env } from "@config/env";
 import { runtimePaths } from "@config/paths";
 
 export class TestDataFactory {
+  static readonly missingId = 999999999;
+  static readonly missingSmallId = 999999;
+
   private static uniqueCounter = 0;
 
   static runToken(): string {
@@ -145,9 +148,9 @@ export class TestDataFactory {
     const endDate = new Date(baseDate.getFullYear() + 1, 11, 31);
 
     return {
-      customerId: 1,
-      buildingId: 1,
-      staffId: 1,
+      customerId: env.testDataSeed.customerId,
+      buildingId: env.testDataSeed.buildingId,
+      staffId: env.testDataSeed.staffId,
       rentPrice: 1000000,
       rentArea: 50,
       startDate: this.formatDate(startDate),
@@ -166,8 +169,8 @@ export class TestDataFactory {
     const dueDate = `${dueDateValue.getFullYear()}-${String(dueDateValue.getMonth() + 1).padStart(2, "0")}-10`;
 
     return {
-      contractId: 1,
-      customerId: 1,
+      contractId: env.testDataSeed.contractId,
+      customerId: env.testDataSeed.customerId,
       month,
       year,
       status: "PENDING",
@@ -182,9 +185,9 @@ export class TestDataFactory {
 
   static buildSaleContractPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     return {
-      buildingId: 1,
-      customerId: 1,
-      staffId: 1,
+      buildingId: env.testDataSeed.buildingId,
+      customerId: env.testDataSeed.customerId,
+      staffId: env.testDataSeed.staffId,
       salePrice: 3000000000,
       transferDate: null,
       note: "Hop dong mua ban test",
@@ -200,7 +203,7 @@ export class TestDataFactory {
     const desiredEndDate = this.addMonths(desiredStartDate, 12);
 
     return {
-      buildingId: 1,
+      buildingId: env.testDataSeed.buildingId,
       requestType,
       desiredArea: requestType === "RENT" ? 80 : null,
       desiredStartDate: requestType === "RENT" ? this.formatDate(desiredStartDate) : null,

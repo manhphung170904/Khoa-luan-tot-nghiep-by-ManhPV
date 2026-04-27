@@ -36,15 +36,15 @@ export class StaffSaleContractListPage extends StaffRoutedPage {
   }
 
   async submitFilters(): Promise<void> {
-    await this.filterForm.locator(".btn-filter.btn-search, button[type='submit']").first().click();
+    await this.firstVisible(this.filterForm.locator(".btn-filter.btn-search, button[type='submit']")).click();
   }
 
   async resetFilters(): Promise<void> {
-    await this.filterForm.locator(".btn-filter.btn-reset, button[type='button']").first().click();
+    await this.firstVisible(this.filterForm.locator(".btn-filter.btn-reset, button[type='button']")).click();
   }
 
   rowByBuildingName(buildingName: string): Locator {
-    return this.tableBody.locator("tr").filter({ hasText: buildingName }).first();
+    return this.firstVisible(this.tableBody.locator("tr").filter({ hasText: buildingName }));
   }
 
   async expectRowVisible(buildingName: string): Promise<void> {
@@ -63,7 +63,7 @@ export class StaffSaleContractListPage extends StaffRoutedPage {
 
   async closeDetailModal(): Promise<void> {
     const modal = this.page.locator(".modal.show");
-    await modal.locator(".modal-header .btn-close, .modal-footer button").first().click();
+    await this.firstVisible(modal.locator(".modal-header .btn-close, .modal-footer button")).click();
     await expect(modal).toBeHidden();
   }
 

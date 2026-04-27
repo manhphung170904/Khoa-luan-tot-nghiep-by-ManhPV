@@ -21,12 +21,12 @@ export class StaffInvoiceListPage extends RoutedCrudListPage {
   async expectLoaded(): Promise<void> {
     await expect(this.page).toHaveURL(/\/staff\/invoices/);
     await expect(this.page.locator('a.nav-link.active[href="/staff/invoices"]')).toBeVisible();
-    await expect(this.page.locator("h1").first()).toBeVisible();
+    await expect(this.firstVisible(this.page.locator("h1"))).toBeVisible();
     await expect(this.invoiceTableBody).toBeVisible();
   }
 
   rowByInvoiceId(invoiceId: number): Locator {
-    return this.page.locator("#invoiceTableBody tr").filter({ hasText: String(invoiceId) }).first();
+    return this.firstVisible(this.page.locator("#invoiceTableBody tr").filter({ hasText: String(invoiceId) }));
   }
 
   visibleModal(): Locator {
@@ -110,7 +110,7 @@ export class StaffInvoiceListPage extends RoutedCrudListPage {
       PAID: "statusPaid",
       OVERDUE: "statusOverdue"
     } as const;
-    await modal.locator(`label[for^="${statusIdMap[input.status]}-"]`).first().click();
+    await this.firstVisible(modal.locator(`label[for^="${statusIdMap[input.status]}-"]`)).click();
   }
 
   async saveVisibleEditForm(): Promise<void> {

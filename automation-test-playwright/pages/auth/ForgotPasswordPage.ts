@@ -7,8 +7,8 @@ export class ForgotPasswordPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.emailInput = this.anyLocator('[data-testid="forgot-password-email"]', 'input[name="email"]', 'input[type="email"]').first();
-    this.submitButton = this.anyLocator('[data-testid="forgot-password-submit"]', 'button[type="submit"]').first();
+    this.emailInput = this.firstVisible(this.anyLocator('[data-testid="forgot-password-email"]', 'input[name="email"]', 'input[type="email"]'));
+    this.submitButton = this.firstVisible(this.anyLocator('[data-testid="forgot-password-submit"]', 'button[type="submit"]'));
   }
 
   async open(): Promise<void> {

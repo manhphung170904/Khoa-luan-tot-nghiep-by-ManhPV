@@ -1,24 +1,14 @@
 import { expect, test } from "@fixtures/api.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
-import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TempEntityCleanupService } from "@helpers/TempEntityCleanupService";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
 test.describe("Admin - API Sale Contract @regression", () => {
-  let admin: APIRequestContext;
-
-  test.beforeAll(async ({ playwright }) => {
-    admin = await ApiSessionHelper.newContext(playwright, "admin");
-  });
-
-  test.afterAll(async () => {
-    await admin.dispose();
-  });
+  const missingId = TestDataFactory.missingId;
+  const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[SC-001] - API Admin Sale Contract - Authentication - Create Sale Contract Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/sale-contracts", {
@@ -32,7 +22,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
     });
   });
 
-  test("[SC-002] - API Admin Sale Contract - Sale Price - Zero Value Validation", async () => {
+  test("[SC-002] - API Admin Sale Contract - Sale Price - Zero Value Validation", async ({ adminApi: admin }) => {
     const payload = TestDataFactory.buildSaleContractPayload({ salePrice: 0 });
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
@@ -48,7 +38,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC-012] - API Admin Sale Contract - Sale Price - Negative Value Validation", async () => {
+  test("[SC-012] - API Admin Sale Contract - Sale Price - Negative Value Validation", async ({ adminApi: admin }) => {
     const payload = TestDataFactory.buildSaleContractPayload({ salePrice: -1 });
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
@@ -64,7 +54,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC-010] - API Admin Sale Contract - Building Reference - Missing Building Validation", async () => {
+  test("[SC-010] - API Admin Sale Contract - Building Reference - Missing Building Validation", async ({ adminApi: admin }) => {
     const invalidPayload = TestDataFactory.buildSaleContractPayload() as Record<string, unknown>;
     delete invalidPayload.buildingId;
     const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -75,7 +65,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
     expect(errorBody.message).toMatch(/building|bất động sản|tòa nhà|vui lòng chọn/i);
   });
 
-  test("[SC-011] - API Admin Sale Contract - Customer Reference - Missing Customer Validation", async () => {
+  test("[SC-011] - API Admin Sale Contract - Customer Reference - Missing Customer Validation", async ({ adminApi: admin }) => {
     const invalidPayload = TestDataFactory.buildSaleContractPayload() as Record<string, unknown>;
     delete invalidPayload.customerId;
     const response = await admin.post("/api/v1/admin/sale-contracts", {
@@ -86,278 +76,231 @@ test.describe("Admin - API Sale Contract @regression", () => {
     expect(errorBody.message).toMatch(/customer|khách hàng|vui lòng chọn/i);
   });
 
-  test("[SC-003] - API Admin Sale Contract - Building Reference - Nonexistent Building Validation", async ({ cleanupRegistry }) => {
+  test("[SC-003] - API Admin Sale Contract - Building Reference - Nonexistent Building Validation", async ({ adminApi: admin, cleanupRegistry }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
     cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
       TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
     );
-    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
-    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
 
-    try {
-      const response = await admin.post("/api/v1/admin/sale-contracts", {
+    const response = await admin.post("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildSaleContractPayload({
-          buildingId: 999999,
+          buildingId: missingSmallId,
           customerId: tempCustomer.id,
           staffId: tempStaff.id
         })
-      });
-      const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/building|tòa nhà|bất động sản|không tìm thấy|not found/i);
+    });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    expect(errorBody.message).toMatch(/building|tòa nhà|bất động sản|không tìm thấy|not found/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
-        [999999, tempCustomer.id, tempStaff.id]
-      );
-      expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    } finally {
-      await CleanupHelper.run([
-        { label: `Reset customer assignments for staff ${tempStaff.id}`, action: () => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []) },
-        { label: `Delete customer ${tempCustomer.id}`, action: () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id) },
-        { label: `Delete staff ${tempStaff.id}`, action: () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id) }
-      ]);
-    }
+        [missingSmallId, tempCustomer.id, tempStaff.id]
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC-004] - API Admin Sale Contract - Staff Reference - Invalid Staff Validation", async ({ cleanupRegistry }) => {
+  test("[SC-004] - API Admin Sale Contract - Staff Reference - Invalid Staff Validation", async ({ adminApi: admin, cleanupRegistry }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
-    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
-      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
-    );
-    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
-      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
-    );
-    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
-    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
     cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
+    TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
+    TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
+    );
 
-    try {
-      const response = await admin.post("/api/v1/admin/sale-contracts", {
+    const response = await admin.post("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildSaleContractPayload({
           buildingId: tempBuilding.id,
           customerId: tempCustomer.id,
           staffId: -1
         })
-      });
-      const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/staff|nhân viên|không tìm thấy|not found/i);
+    });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    expect(errorBody.message).toMatch(/staff|nhân viên|không tìm thấy|not found/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
         [tempBuilding.id, tempCustomer.id, -1]
-      );
-      expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    } finally {
-      await CleanupHelper.run([
-        { label: `Reset customer assignments for staff ${tempStaff.id}`, action: () => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []) },
-        { label: `Reset building assignments for staff ${tempStaff.id}`, action: () => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []) },
-        { label: `Delete customer ${tempCustomer.id}`, action: () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id) },
-        { label: `Delete building ${tempBuilding.id}`, action: () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id) },
-        { label: `Delete staff ${tempStaff.id}`, action: () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id) }
-      ]);
-    }
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC-013] - API Admin Sale Contract - Staff Assignment - Building Assignment Restriction", async ({ cleanupRegistry }) => {
+  test("[SC-013] - API Admin Sale Contract - Staff Assignment - Building Assignment Restriction", async ({ adminApi: admin, cleanupRegistry }) => {
     const assignedManager = await TempEntityHelper.taoStaffTam(admin);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, assignedManager.id);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, outsiderStaff.id, [tempCustomer.id]);
-    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${outsiderStaff.id}`, () =>
-      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, outsiderStaff.id, []))
-    );
-    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
-    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
-    cleanupRegistry.addLabeled(`Delete staff ${outsiderStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, outsiderStaff.id));
     cleanupRegistry.addLabeled(`Delete staff ${assignedManager.id}`, () => TempEntityHelper.xoaStaffTam(admin, assignedManager.id));
+    cleanupRegistry.addLabeled(`Delete staff ${outsiderStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, outsiderStaff.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${outsiderStaff.id}`, () =>
+    TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, outsiderStaff.id, []))
+    );
 
-    try {
-      const response = await admin.post("/api/v1/admin/sale-contracts", {
+    const response = await admin.post("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildSaleContractPayload({
           buildingId: tempBuilding.id,
           customerId: tempCustomer.id,
           staffId: outsiderStaff.id
         })
-      });
-      const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/staff|phân công|building|tòa nhà/i);
+    });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    expect(errorBody.message).toMatch(/staff|phân công|building|tòa nhà/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
         [tempBuilding.id, tempCustomer.id, outsiderStaff.id]
-      );
-      expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    } finally {
-      await TempEntityHelper.capNhatPhanCongCustomer(admin, outsiderStaff.id, []);
-      await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id);
-      await TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id);
-      await TempEntityHelper.xoaStaffTam(admin, outsiderStaff.id);
-      await TempEntityHelper.xoaStaffTam(admin, assignedManager.id);
-    }
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC-014] - API Admin Sale Contract - Staff Assignment - Customer Assignment Restriction", async ({ cleanupRegistry }) => {
+  test("[SC-014] - API Admin Sale Contract - Staff Assignment - Customer Assignment Restriction", async ({ adminApi: admin, cleanupRegistry }) => {
     const assignedManager = await TempEntityHelper.taoStaffTam(admin);
     const outsiderStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, assignedManager.id);
     await TempEntityHelper.capNhatPhanCongBuilding(admin, outsiderStaff.id, [tempBuilding.id]);
-    cleanupRegistry.addLabeled(`Reset building assignments for staff ${outsiderStaff.id}`, () =>
-      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, outsiderStaff.id, []))
-    );
-    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
-    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
-    cleanupRegistry.addLabeled(`Delete staff ${outsiderStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, outsiderStaff.id));
     cleanupRegistry.addLabeled(`Delete staff ${assignedManager.id}`, () => TempEntityHelper.xoaStaffTam(admin, assignedManager.id));
+    cleanupRegistry.addLabeled(`Delete staff ${outsiderStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, outsiderStaff.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${outsiderStaff.id}`, () =>
+    TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, outsiderStaff.id, []))
+    );
 
-    try {
-      const response = await admin.post("/api/v1/admin/sale-contracts", {
+    const response = await admin.post("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildSaleContractPayload({
           buildingId: tempBuilding.id,
           customerId: tempCustomer.id,
           staffId: outsiderStaff.id
         })
-      });
-      const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/staff|phân công|customer|khách hàng/i);
+    });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    expect(errorBody.message).toMatch(/staff|phân công|customer|khách hàng/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
         [tempBuilding.id, tempCustomer.id, outsiderStaff.id]
-      );
-      expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    } finally {
-      await TempEntityHelper.capNhatPhanCongBuilding(admin, outsiderStaff.id, []);
-      await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id);
-      await TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id);
-      await TempEntityHelper.xoaStaffTam(admin, outsiderStaff.id);
-      await TempEntityHelper.xoaStaffTam(admin, assignedManager.id);
-    }
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC-015] - API Admin Sale Contract - Building Type - Rental Building Rejection", async ({ cleanupRegistry }) => {
+  test("[SC-015] - API Admin Sale Contract - Building Type - Rental Building Rejection", async ({ adminApi: admin, cleanupRegistry }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_RENT");
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
-    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
-      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
-    );
-    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
-      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
-    );
-    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
-    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
     cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
+    TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
+    TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
+    );
 
-    try {
-      const response = await admin.post("/api/v1/admin/sale-contracts", {
+    const response = await admin.post("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildSaleContractPayload({
           buildingId: tempBuilding.id,
           customerId: tempCustomer.id,
           staffId: tempStaff.id
         })
-      });
-      const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-      expect(errorBody.message).toMatch(/sale|bán|mua bán|transaction|giao dịch|không phải loại mua bán/i);
+    });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
+    expect(errorBody.message).toMatch(/sale|bán|mua bán|transaction|giao dịch|không phải loại mua bán/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
         [tempBuilding.id, tempCustomer.id, tempStaff.id]
-      );
-      expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    } finally {
-      await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []);
-      await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []);
-      await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id);
-      await TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id);
-      await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
-    }
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC-016] - API Admin Sale Contract - Duplicate Transaction - Sold Building Sale Restriction", async ({ cleanupRegistry }) => {
+  test("[SC-016] - API Admin Sale Contract - Duplicate Transaction - Sold Building Sale Restriction", async ({ adminApi: admin, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoSaleContractTam(admin);
     cleanupRegistry.addLabeled(`Delete sale contract scenario ${temp.id}`, () => TempEntityHelper.xoaSaleContractTam(admin, temp));
-    try {
-      const response = await admin.post("/api/v1/admin/sale-contracts", {
+    const response = await admin.post("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildSaleContractPayload({
           buildingId: temp.building.id,
           customerId: temp.customer.id,
           staffId: temp.staff.id
         })
-      });
-      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
+    });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/sale-contracts"
-      });
-      expect(errorBody.message).toMatch(/sold|đã (được )?bán|sale contract|hợp đồng mua bán/i);
+    });
+    expect(errorBody.message).toMatch(/sold|đã (được )?bán|sale contract|hợp đồng mua bán/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ?",
         [temp.building.id]
-      );
-      expect(Number(rows[0]?.count ?? 0)).toBe(1);
-    } finally {
-      await TempEntityHelper.xoaSaleContractTam(admin, temp);
-    }
+    );
+    expect(Number(rows[0]?.count ?? 0)).toBe(1);
   });
 
-  test("[SC-005] - API Admin Sale Contract - Sale Contract Lifecycle - Create List Filter Update and Delete Flow", async ({ cleanupRegistry }) => {
+  test("[SC-005] - API Admin Sale Contract - Sale Contract Lifecycle - Create List Filter Update and Delete Flow", async ({ adminApi: admin, cleanupRegistry }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
     await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
     await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
-    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
-      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
-    );
-    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
-      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
-    );
-    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
-    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
     cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
+    TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
+    TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
+    );
 
     let createdSaleContractId = 0;
 
-    try {
-      const payload = TestDataFactory.buildSaleContractPayload({
+    const payload = TestDataFactory.buildSaleContractPayload({
         buildingId: tempBuilding.id,
         customerId: tempCustomer.id,
         staffId: tempStaff.id,
         transferDate: null
-      });
+    });
 
-      const createResponse = await admin.post("/api/v1/admin/sale-contracts", {
+    const createResponse = await admin.post("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         data: payload
-      });
-      await expectApiMessage(createResponse, {
+    });
+    await expectApiMessage(createResponse, {
         status: 200,
         message: apiExpectedMessages.admin.saleContracts.create,
         dataMode: "null"
-      });
+    });
 
-      const saleRows = await MySqlDbClient.query<{
+    const saleRows = await MySqlDbClient.query<{
         id: number;
         sale_price: number;
         note: string;
-      }>(
+    }>(
         `
           SELECT id, sale_price, note
           FROM sale_contract
@@ -366,17 +309,21 @@ test.describe("Admin - API Sale Contract @regression", () => {
           LIMIT 1
         `,
         [tempCustomer.id, tempBuilding.id]
-      );
-      expect(saleRows.length).toBe(1);
-      createdSaleContractId = saleRows[0]!.id;
-      expect(Number(saleRows[0]!.sale_price)).toBe(Number(payload.salePrice));
-      expect(saleRows[0]!.note).toBe(payload.note);
+    );
+    expect(saleRows.length).toBe(1);
+    createdSaleContractId = saleRows[0]!.id;
+    const saleContractIdForCleanup = createdSaleContractId;
+    cleanupRegistry.addLabeled(`Delete sale contract ${saleContractIdForCleanup}`, async () => {
+        await MySqlDbClient.execute("DELETE FROM sale_contract WHERE id = ?", [saleContractIdForCleanup]);
+    });
+    expect(Number(saleRows[0]!.sale_price)).toBe(Number(payload.salePrice));
+    expect(saleRows[0]!.note).toBe(payload.note);
 
-      const listResponse = await admin.get("/api/v1/admin/sale-contracts", {
+    const listResponse = await admin.get("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         params: { page: 1, size: 100, customerName: tempCustomer.fullName }
-      });
-      const listBody = await expectPageBody<{
+    });
+    const listBody = await expectPageBody<{
         content?: Array<{
           id: number;
           building?: string;
@@ -385,27 +332,27 @@ test.describe("Admin - API Sale Contract @regression", () => {
           salePrice?: number | string;
         }>;
         totalElements?: number;
-      }>(listResponse, { status: 200 });
-      const listedItem = listBody.content?.find((item) => item.id === createdSaleContractId);
-      expect(listedItem).toBeDefined();
-      expect(listedItem?.building).toBe(tempBuilding.name);
-      expect(listedItem?.customer).toBe(tempCustomer.fullName);
-      expect(listedItem?.staff).toBe(tempStaff.fullName);
-      expect(Number(listedItem?.salePrice)).toBe(Number(payload.salePrice));
+    }>(listResponse, { status: 200 });
+    const listedItem = listBody.content?.find((item) => item.id === createdSaleContractId);
+    expect(listedItem).toBeDefined();
+    expect(listedItem?.building).toBe(tempBuilding.name);
+    expect(listedItem?.customer).toBe(tempCustomer.fullName);
+    expect(listedItem?.staff).toBe(tempStaff.fullName);
+    expect(Number(listedItem?.salePrice)).toBe(Number(payload.salePrice));
 
-      const filterResponse = await admin.get("/api/v1/admin/sale-contracts", {
+    const filterResponse = await admin.get("/api/v1/admin/sale-contracts", {
         failOnStatusCode: false,
         params: { buildingId: tempBuilding.id, page: 1, size: 10 }
-      });
-      const filterBody = await expectPageBody<{
+    });
+    const filterBody = await expectPageBody<{
         content?: Array<{ id: number; building?: string }>;
         totalElements?: number;
-      }>(filterResponse, { status: 200 });
-      const filteredItem = filterBody.content?.find((item) => item.id === createdSaleContractId);
-      expect(filteredItem).toBeDefined();
-      expect(filteredItem?.building).toBe(tempBuilding.name);
+    }>(filterResponse, { status: 200 });
+    const filteredItem = filterBody.content?.find((item) => item.id === createdSaleContractId);
+    expect(filteredItem).toBeDefined();
+    expect(filteredItem?.building).toBe(tempBuilding.name);
 
-      const updateResponse = await admin.put(`/api/v1/admin/sale-contracts/${createdSaleContractId}`, {
+    const updateResponse = await admin.put(`/api/v1/admin/sale-contracts/${createdSaleContractId}`, {
         failOnStatusCode: false,
         data: {
           ...payload,
@@ -414,53 +361,43 @@ test.describe("Admin - API Sale Contract @regression", () => {
           transferDate: "2026-06-16",
           note: "Updated note"
         }
-      });
-      await expectApiMessage(updateResponse, {
+    });
+    await expectApiMessage(updateResponse, {
         status: 200,
         message: apiExpectedMessages.admin.saleContracts.update,
         dataMode: "null"
-      });
+    });
 
-      const updatedRows = await MySqlDbClient.query<{
+    const updatedRows = await MySqlDbClient.query<{
         sale_price: number;
         note: string;
         transfer_date: string | null;
-      }>(
+    }>(
         "SELECT sale_price, note, DATE_FORMAT(transfer_date, '%Y-%m-%d') AS transfer_date FROM sale_contract WHERE id = ?",
         [createdSaleContractId]
-      );
+    );
 
-      // Current backend edit flow only persists transferDate; salePrice and note remain unchanged.
-      expect(Number(updatedRows[0]!.sale_price)).toBe(Number(payload.salePrice));
-      expect(updatedRows[0]!.note).toBe(payload.note);
-      expect(updatedRows[0]!.transfer_date).toBe("2026-06-16");
+    // Current backend edit flow only persists transferDate; salePrice and note remain unchanged.
+    expect(Number(updatedRows[0]!.sale_price)).toBe(Number(payload.salePrice));
+    expect(updatedRows[0]!.note).toBe(payload.note);
+    expect(updatedRows[0]!.transfer_date).toBe("2026-06-16");
 
-      const deleteResponse = await admin.delete(`/api/v1/admin/sale-contracts/${createdSaleContractId}`, {
+    const deleteResponse = await admin.delete(`/api/v1/admin/sale-contracts/${createdSaleContractId}`, {
         failOnStatusCode: false
-      });
-      await expectApiMessage(deleteResponse, {
+    });
+    await expectApiMessage(deleteResponse, {
         status: 200,
         message: apiExpectedMessages.admin.saleContracts.delete,
         dataMode: "null"
-      });
+    });
 
-      const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM sale_contract WHERE id = ?", [createdSaleContractId]);
-      expect(deletedRows.length).toBe(0);
-      createdSaleContractId = 0;
-    } finally {
-      if (createdSaleContractId) {
-        await admin.delete(`/api/v1/admin/sale-contracts/${createdSaleContractId}`, { failOnStatusCode: false });
-      }
-      await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []);
-      await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []);
-      await TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id);
-      await TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id);
-      await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
-    }
+    const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM sale_contract WHERE id = ?", [createdSaleContractId]);
+    expect(deletedRows.length).toBe(0);
+    createdSaleContractId = 0;
   });
 
-  test("[SC-017] - API Admin Sale Contract - Update Sale Contract - Nonexistent ID Rejection", async () => {
-    const response = await admin.put("/api/v1/admin/sale-contracts/999999999", {
+  test("[SC-017] - API Admin Sale Contract - Update Sale Contract - Nonexistent ID Rejection", async ({ adminApi: admin }) => {
+    const response = await admin.put(`/api/v1/admin/sale-contracts/${missingId}`, {
       failOnStatusCode: false,
       data: TestDataFactory.buildSaleContractPayload({
         buildingId: 1,
@@ -473,20 +410,20 @@ test.describe("Admin - API Sale Contract @regression", () => {
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
-      path: "/api/v1/admin/sale-contracts/999999999"
+      path: `/api/v1/admin/sale-contracts/${missingId}`
     });
     expect(errorBody.message).toMatch(/sale contract|hợp đồng mua bán|không tìm thấy|không tồn tại|not found/i);
   });
 
-  test("[SC-018] - API Admin Sale Contract - Delete Sale Contract - Nonexistent ID Rejection", async () => {
-    const response = await admin.delete("/api/v1/admin/sale-contracts/999999999", {
+  test("[SC-018] - API Admin Sale Contract - Delete Sale Contract - Nonexistent ID Rejection", async ({ adminApi: admin }) => {
+    const response = await admin.delete(`/api/v1/admin/sale-contracts/${missingId}`, {
       failOnStatusCode: false
     });
 
     await expectApiErrorBody(response, {
       status: 400,
       code: "BAD_REQUEST",
-      path: "/api/v1/admin/sale-contracts/999999999"
+      path: `/api/v1/admin/sale-contracts/${missingId}`
     });
   });
 });

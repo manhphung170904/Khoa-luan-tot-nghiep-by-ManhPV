@@ -23,9 +23,9 @@ export class StaffProfilePage extends StaffRoutedPage {
     this.usernameModal = this.modalById("editUsernameModal");
     this.phoneModal = this.modalById("editPhoneModal");
     this.passwordModal = this.modalById("changePasswordModal");
-    this.usernameAction = this.page.locator('[data-bs-target="#editUsernameModal"]').first();
-    this.phoneAction = this.page.locator('[data-bs-target="#editPhoneModal"]').first();
-    this.passwordAction = this.page.locator('[data-bs-target="#changePasswordModal"]').first();
+    this.usernameAction = this.firstVisible(this.page.locator('[data-bs-target="#editUsernameModal"]'));
+    this.phoneAction = this.firstVisible(this.page.locator('[data-bs-target="#editPhoneModal"]'));
+    this.passwordAction = this.firstVisible(this.page.locator('[data-bs-target="#changePasswordModal"]'));
   }
 
   async expectLoaded(): Promise<void> {
@@ -117,10 +117,11 @@ export class StaffProfilePage extends StaffRoutedPage {
   }
 
   private infoValueByLabel(label: RegExp): Locator {
-    return this.page
-      .locator(".info-item")
-      .filter({ has: this.page.locator(".info-label", { hasText: label }) })
-      .locator(".info-value")
-      .first();
+    return this.firstVisible(
+      this.page
+        .locator(".info-item")
+        .filter({ has: this.page.locator(".info-label", { hasText: label }) })
+        .locator(".info-value")
+    );
   }
 }

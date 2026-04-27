@@ -37,7 +37,7 @@ export class CustomerContractListPage extends RoutedCrudListPage {
   }
 
   cardByBuildingName(name: string): Locator {
-    return this.page.locator("#contractList .contract-container").filter({ hasText: name }).first();
+    return this.firstVisible(this.page.locator("#contractList .contract-container").filter({ hasText: name }));
   }
 
   async expectEmptyState(): Promise<void> {

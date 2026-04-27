@@ -34,15 +34,15 @@ export class CustomerBuildingListPage extends RoutedCrudListPage {
   }
 
   cardByBuildingName(name: string): Locator {
-    return this.page.locator("#buildingList .building-card").filter({ hasText: name }).first();
+    return this.firstVisible(this.page.locator("#buildingList .building-card").filter({ hasText: name }));
   }
 
   private detailModalByName(name: string): Locator {
     if (this.currentModalTarget) {
-      return this.page.locator(this.currentModalTarget).filter({ hasText: name }).last();
+      return this.lastVisible(this.page.locator(this.currentModalTarget).filter({ hasText: name }));
     }
 
-    return this.page.locator("#modalContainer .modal").filter({ hasText: name }).last();
+    return this.lastVisible(this.page.locator("#modalContainer .modal").filter({ hasText: name }));
   }
 
   async openBuildingDetail(name: string): Promise<void> {

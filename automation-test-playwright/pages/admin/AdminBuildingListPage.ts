@@ -58,7 +58,7 @@ export class AdminBuildingListPage extends RoutedCrudListPage {
   }
 
   rowByBuildingName(name: string): Locator {
-    return this.page.locator("#buildingTableBody tr").filter({ hasText: name }).first();
+    return this.firstVisible(this.page.locator("#buildingTableBody tr").filter({ hasText: name }));
   }
 
   async openDetail(name: string): Promise<void> {

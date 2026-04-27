@@ -78,7 +78,7 @@ export class AdminBuildingAdditionalInfoPage extends BasePage {
   }
 
   private rowByName(type: "legal" | "amenity" | "planning" | "supplier", name: string): Locator {
-    return this.section(type).locator("tbody tr").filter({ hasText: name }).first();
+    return this.firstVisible(this.section(type).locator("tbody tr").filter({ hasText: name }));
   }
 
   async openCreateModal(type: "legal" | "amenity" | "planning" | "supplier"): Promise<void> {
@@ -88,7 +88,7 @@ export class AdminBuildingAdditionalInfoPage extends BasePage {
 
   async closeModal(type: "legal" | "amenity" | "planning" | "supplier"): Promise<void> {
     const modal = this.modal(type);
-    await modal.locator(".btn-modal-cancel, .btn-close").first().click();
+    await this.firstVisible(modal.locator(".btn-modal-cancel, .btn-close")).click();
     await expect(modal).toBeHidden();
   }
 

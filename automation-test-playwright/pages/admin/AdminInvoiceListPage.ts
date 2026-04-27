@@ -20,10 +20,11 @@ export class AdminInvoiceListPage extends RoutedCrudListPage {
   }
 
   rowByInvoiceId(invoiceId: number): Locator {
-    return this.page
-      .locator("#invoiceTableBody tr")
-      .filter({ has: this.page.locator(".invoice-id", { hasText: String(invoiceId) }) })
-      .first();
+    return this.firstVisible(
+      this.page
+        .locator("#invoiceTableBody tr")
+        .filter({ has: this.page.locator(".invoice-id", { hasText: String(invoiceId) }) })
+    );
   }
 
   async waitForTableData(): Promise<void> {

@@ -26,14 +26,14 @@ export class CustomerHomePage extends CustomerRoutedPage {
   }
 
   async openContracts(): Promise<void> {
-    await this.page.locator('.view-all[href="/customer/contract/list"], .nav-link[href="/customer/contract/list"]').first().click();
+    await this.firstVisible(this.page.locator('.view-all[href="/customer/contract/list"], .nav-link[href="/customer/contract/list"]')).click();
   }
 
   async openBuildings(): Promise<void> {
-    await this.page.locator('.nav-link[href="/customer/building/list"]').first().click();
+    await this.firstVisible(this.page.locator('.nav-link[href="/customer/building/list"]')).click();
   }
 
   async openProfile(): Promise<void> {
-    await this.page.locator('a[href="/customer/profile"]').first().click();
+    await this.firstVisible(this.page.locator('a[href="/customer/profile"]')).click();
   }
 }

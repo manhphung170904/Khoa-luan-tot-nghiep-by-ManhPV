@@ -78,6 +78,7 @@ Chon moi truong qua bien `APP_ENV` va `BASE_URL_*` trong file `.env`.
 
 Seed data dung chung nhu account mac dinh va dia chi toa nha test phai doc tu `.env`.
 Khong hard-code district/ward/street moi trong spec neu co the dung `TestDataFactory`.
+Payload mac dinh trong `TestDataFactory` doc cac ID seed qua `TEST_BUILDING_ID`, `TEST_CONTRACT_ID`, `TEST_CUSTOMER_ID`, `TEST_STAFF_ID`.
 
 ## 6.1. Quy tac an toan du lieu
 - Mac dinh framework khong duoc phep sua hoac xoa du lieu that.
@@ -100,6 +101,39 @@ $env:ALLOW_DESTRUCTIVE_TESTS="true"
 - Mutation test nen dang ky cleanup bang `cleanupRegistry.addLabeled(...)` de report cleanup loi co ten ro rang.
 - Neu test can cleanup ngay trong `finally`, uu tien gom task qua `CleanupHelper.run([...])` va dat label ro rang.
 - Neu co fixture `cleanupRegistry`, dang ky cleanup cang som cang tot, ngay sau khi tao temp data.
+- `cleanupRegistry` chay theo LIFO. Dang ky cleanup theo thu tu nguoc voi thu tu can chay; vi du dang ky delete entity truoc, reset assignment sau, de khi flush thi reset chay truoc delete.
+- Neu API test can login bang user tam vua tao, dung scenario helper tap trung nhu `createAuthenticatedTempProfileScenario(...)`. Helper phai dispose context truoc, sau do moi xoa user tam bang `adminApi`.
+- E2E duoc phep giu `test.afterEach` cleanup khi data phu thuoc state cuc bo cua scenario. Khong bo DB assertion trong E2E neu assertion dang xac nhan side effect nghiep vu.
+- ID am/khong ton tai dung chung phai lay tu `TestDataFactory.missingId` hoac `TestDataFactory.missingSmallId`; khong hard-code them so moi trong spec/catalog.
+
+Vi du nen dung:
+
+```ts
+const temp = await TempEntityHelper.taoContractTam(adminApi);
+cleanupRegistry.addLabeled(`Delete contract scenario ${temp.id}`, () => TempEntityHelper.xoaContractTam(adminApi, temp));
+```
+
+```ts
+const scenario = await createStaffInvoiceScenario(playwright, cleanupRegistry);
+cleanupRegistry.addLabeled(`Delete invoice ${invoiceId}`, () => cleanupStaffInvoiceById(invoiceId));
+```
+
+Vi du khong nen them moi:
+
+```ts
+const missingId = 999999999;
+```
+
+Dung:
+
+```ts
+const missingId = TestDataFactory.missingId;
+```
+
+## 7.1. Locator va POM
+- Khi can lay phan tu dau/cuoi dang visible trong POM, dung `firstVisible()` va `lastVisible()` cua `BasePage`.
+- Khong them `.first()` / `.last()` truc tiep vao page object moi neu co the dung helper visible da co.
+- Neu app co `data-testid`, uu tien `getByTestId`. Neu chua co test id on dinh, khong refactor locator lon chi de doi style selector.
 
 ## 8. Quy trinh de nghi truoc khi merge
 1. `npm run typecheck`

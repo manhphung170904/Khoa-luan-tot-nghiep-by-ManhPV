@@ -33,7 +33,7 @@ export class StaffBuildingListPage extends RoutedCrudListPage {
   }
 
   cardByBuildingName(name: string): Locator {
-    return this.page.locator("#buildingCardsContainer .building-card").filter({ hasText: name }).first();
+    return this.firstVisible(this.page.locator("#buildingCardsContainer .building-card").filter({ hasText: name }));
   }
 
   async openBuildingDetail(name: string): Promise<void> {

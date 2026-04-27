@@ -24,7 +24,7 @@ export class AdminStaffListPage extends RoutedCrudListPage {
   }
 
   rowByStaffName(fullName: string): Locator {
-    return this.page.locator("tbody tr").filter({ hasText: fullName }).first();
+    return this.firstVisible(this.page.locator("tbody tr").filter({ hasText: fullName }));
   }
 
   async filterByFullName(fullName: string): Promise<void> {

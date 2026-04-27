@@ -13,7 +13,7 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
 
   constructor(page: Page) {
     super(page);
-    this.emptyState = this.page.getByText(/chưa có hóa đơn nào|chua co hoa don nao/i).first();
+    this.emptyState = this.firstVisible(this.page.getByText(/chưa có hóa đơn nào|chua co hoa don nao/i));
     this.statsValues = this.page.locator(".stat-value");
     this.visibleModal = this.page.locator(".modal.show");
     this.invoiceCards = this.anyLocator('[data-testid="customer-invoice-card"]', ".invoice-card");
@@ -27,11 +27,11 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
   }
 
   async openFirstInvoiceSummary(): Promise<void> {
-    await this.invoiceSummaries.first().click();
+    await this.firstVisible(this.invoiceSummaries).click();
   }
 
   async openFirstPaymentModal(): Promise<void> {
-    await this.paymentButtons.first().click();
+    await this.firstVisible(this.paymentButtons).click();
   }
 
   async openFirstPaymentModalIfAvailable(): Promise<boolean> {
@@ -47,7 +47,7 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
   }
 
   async closeVisibleModal(): Promise<void> {
-    await this.visibleModal.locator(".modal-header .btn-close, .modal-footer button").first().click();
+    await this.firstVisible(this.visibleModal.locator(".modal-header .btn-close, .modal-footer button")).click();
   }
 
   async readStats(): Promise<{ unpaidCount: string; totalPayable: string }> {
@@ -58,7 +58,7 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
   }
 
   async firstInvoiceCardText(): Promise<string> {
-    return (await this.invoiceCards.first().innerText()).trim();
+    return (await this.firstVisible(this.invoiceCards).innerText()).trim();
   }
 
   async visibleModalText(): Promise<string> {

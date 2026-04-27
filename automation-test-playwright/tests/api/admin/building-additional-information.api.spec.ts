@@ -1,25 +1,17 @@
 import { expect, test } from "@fixtures/api.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { ApiFileFixtures } from "@api/apiFileFixtures";
-import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { expectApiErrorBody, expectApiMessage, expectArrayBody, expectObjectBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 import { cleanupUploadedFileByName } from "@helpers/UploadedFileCleanupHelper";
 
 test.describe("Admin - API Building Additional Information @extended", () => {
-  let admin: APIRequestContext;
-
-  test.beforeAll(async ({ playwright }) => {
-    admin = await ApiSessionHelper.newContext(playwright, "admin");
-  });
-
-  test.afterAll(async () => {
-    await admin.dispose();
-  });
+  const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[BAI-001] - API Admin Building Additional Information - CRUD Lifecycle - Legal Authority Amenity Supplier and Planning Map Flow", async ({
+    adminApi: admin,
     request
   }) => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_RENT");
@@ -339,7 +331,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
     }
   });
 
-  test("[BAI-002] - API Admin Building Additional Information - Planning Map Image - Authentication Type Size and JPG Upload Validation", async ({ request }) => {
+  test("[BAI-002] - API Admin Building Additional Information - Planning Map Image - Authentication Type Size and JPG Upload Validation", async ({ adminApi: admin, request }) => {
     let uploadedFilename = "";
     const anonymousUpload = await request.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -418,50 +410,50 @@ test.describe("Admin - API Building Additional Information @extended", () => {
     }
   });
 
-  test("[BAI-003] - API Admin Building Additional Information - Resource Reference - Missing Resource 400 Handling", async () => {
+  test("[BAI-003] - API Admin Building Additional Information - Resource Reference - Missing Resource 400 Handling", async ({ adminApi: admin }) => {
     const missingLegalAuthority = await admin.put(
-      "/api/v1/admin/building-additional-information/legal-authorities/999999",
+      `/api/v1/admin/building-additional-information/legal-authorities/${missingSmallId}`,
       {
         failOnStatusCode: false,
-        data: { buildingId: 999999, authorityName: "Missing", authorityType: "NOTARY" }
+        data: { buildingId: missingSmallId, authorityName: "Missing", authorityType: "NOTARY" }
       }
     );
     const missingLegalAuthorityError = await expectApiErrorBody<{ message?: string }>(missingLegalAuthority, {
       status: 400,
       code: "BAD_REQUEST",
-      path: "/api/v1/admin/building-additional-information/legal-authorities/999999"
+      path: `/api/v1/admin/building-additional-information/legal-authorities/${missingSmallId}`
     });
     expect(missingLegalAuthorityError.message).toMatch(/legal|authority|cơ quan pháp lý|không tìm thấy|not found/i);
 
     const missingAmenity = await admin.delete(
-      "/api/v1/admin/building-additional-information/nearby-amenities/999999",
+      `/api/v1/admin/building-additional-information/nearby-amenities/${missingSmallId}`,
       { failOnStatusCode: false }
     );
     const missingAmenityError = await expectApiErrorBody<{ message?: string }>(missingAmenity, {
       status: 400,
       code: "BAD_REQUEST",
-      path: "/api/v1/admin/building-additional-information/nearby-amenities/999999"
+      path: `/api/v1/admin/building-additional-information/nearby-amenities/${missingSmallId}`
     });
     expect(missingAmenityError.message).toMatch(/amenity|tiện ích|lân cận|không tìm thấy|not found/i);
 
-    const missingSupplier = await admin.delete("/api/v1/admin/building-additional-information/suppliers/999999", {
+    const missingSupplier = await admin.delete(`/api/v1/admin/building-additional-information/suppliers/${missingSmallId}`, {
       failOnStatusCode: false
     });
     const missingSupplierError = await expectApiErrorBody<{ message?: string }>(missingSupplier, {
       status: 400,
       code: "BAD_REQUEST",
-      path: "/api/v1/admin/building-additional-information/suppliers/999999"
+      path: `/api/v1/admin/building-additional-information/suppliers/${missingSmallId}`
     });
     expect(missingSupplierError.message).toMatch(/supplier|nhà cung cấp|không tìm thấy|not found/i);
 
     const missingPlanningMap = await admin.delete(
-      "/api/v1/admin/building-additional-information/planning-maps/999999",
+      `/api/v1/admin/building-additional-information/planning-maps/${missingSmallId}`,
       { failOnStatusCode: false }
     );
     const missingPlanningMapError = await expectApiErrorBody<{ message?: string }>(missingPlanningMap, {
       status: 400,
       code: "BAD_REQUEST",
-      path: "/api/v1/admin/building-additional-information/planning-maps/999999"
+      path: `/api/v1/admin/building-additional-information/planning-maps/${missingSmallId}`
     });
     expect(missingPlanningMapError.message).toMatch(/planning|map|bản đồ|quy hoạch|không tồn tại|không tìm thấy|not found/i);
   });

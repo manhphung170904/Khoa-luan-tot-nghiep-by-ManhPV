@@ -1,22 +1,12 @@
 import { expect, test } from "@fixtures/api.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { expectApiErrorBody, expectApiMessage, expectArrayBody, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
 test.describe("Admin - API Staff @regression", () => {
-  let admin: APIRequestContext;
-
-  test.beforeAll(async ({ playwright }) => {
-    admin = await ApiSessionHelper.newContext(playwright, "admin");
-  });
-
-  test.afterAll(async () => {
-    await admin.dispose();
-  });
+  const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[STF-001] - API Admin Staff - Authentication - Create Staff Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/staff", {
@@ -30,7 +20,7 @@ test.describe("Admin - API Staff @regression", () => {
     });
   });
 
-  test("[STF-002] - API Admin Staff - Username - Minimum Length Validation", async () => {
+  test("[STF-002] - API Admin Staff - Username - Minimum Length Validation", async ({ adminApi: admin }) => {
     const shortUsername = "abc";
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -47,7 +37,7 @@ test.describe("Admin - API Staff @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF-017] - API Admin Staff - Password - Minimum Length Validation", async () => {
+  test("[STF-017] - API Admin Staff - Password - Minimum Length Validation", async ({ adminApi: admin }) => {
     const username = TestDataFactory.taoUsername("stfpwd");
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -64,7 +54,7 @@ test.describe("Admin - API Staff @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF-003] - API Admin Staff - Phone Number - Invalid Format Validation", async () => {
+  test("[STF-003] - API Admin Staff - Phone Number - Invalid Format Validation", async ({ adminApi: admin }) => {
     const invalidPhone = "1987654321";
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -81,7 +71,7 @@ test.describe("Admin - API Staff @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF-018] - API Admin Staff - Full Name - Maximum Length Validation", async () => {
+  test("[STF-018] - API Admin Staff - Full Name - Maximum Length Validation", async ({ adminApi: admin }) => {
     const oversizeName = "A".repeat(101);
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -95,7 +85,7 @@ test.describe("Admin - API Staff @regression", () => {
     expect(errorBody.message).toMatch(/full.?name|họ tên|tối đa|max|ký tự/i);
   });
 
-  test("[STF-015] - API Admin Staff - Username - Minimum Length Boundary Acceptance", async () => {
+  test("[STF-015] - API Admin Staff - Username - Minimum Length Boundary Acceptance", async ({ adminApi: admin }) => {
     const username = TestDataFactory.taoUsername("ab").slice(0, 4);
     const payload = TestDataFactory.buildAdminStaffPayload({
       username,
@@ -118,7 +108,7 @@ test.describe("Admin - API Staff @regression", () => {
     await admin.delete(`/api/v1/admin/staff/${rows[0]!.id}`, { failOnStatusCode: false });
   });
 
-  test("[STF-016] - API Admin Staff - Username - Maximum Length Validation", async () => {
+  test("[STF-016] - API Admin Staff - Username - Maximum Length Validation", async ({ adminApi: admin }) => {
     const longUsername = "a".repeat(31);
     const response = await admin.post("/api/v1/admin/staff", {
       failOnStatusCode: false,
@@ -135,7 +125,7 @@ test.describe("Admin - API Staff @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF-019] - API Admin Staff - Building Assignment - Active Contract Removal Restriction", async () => {
+  test("[STF-019] - API Admin Staff - Building Assignment - Active Contract Removal Restriction", async ({ adminApi: admin }) => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.put(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`, {
@@ -159,7 +149,7 @@ test.describe("Admin - API Staff @regression", () => {
     }
   });
 
-  test("[STF-020] - API Admin Staff - Customer Assignment - Active Contract Removal Restriction", async () => {
+  test("[STF-020] - API Admin Staff - Customer Assignment - Active Contract Removal Restriction", async ({ adminApi: admin }) => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     try {
       const response = await admin.put(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`, {
@@ -183,7 +173,7 @@ test.describe("Admin - API Staff @regression", () => {
     }
   });
 
-  test("[STF-004] - API Admin Staff - Staff Lifecycle - Create and Full Assignment Flow", async () => {
+  test("[STF-004] - API Admin Staff - Staff Lifecycle - Create and Full Assignment Flow", async ({ adminApi: admin }) => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_RENT");
     const tempManager = await TempEntityHelper.taoStaffTam(admin);
     const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempManager.id);
@@ -337,14 +327,14 @@ test.describe("Admin - API Staff @regression", () => {
       const assignedBuildings = await expectArrayBody<number>(assignedBuildingsResponse, 200);
       expect(assignedBuildings).toContain(tempBuilding.id);
 
-      const assignMissingStaff = await admin.put("/api/v1/admin/staff/999999/assignments/buildings", {
+      const assignMissingStaff = await admin.put(`/api/v1/admin/staff/${missingSmallId}/assignments/buildings`, {
         failOnStatusCode: false,
         data: [tempBuilding.id]
       });
       const assignMissingStaffError = await expectApiErrorBody<{ message?: string }>(assignMissingStaff, {
         status: 400,
         code: "BAD_REQUEST",
-        path: "/api/v1/admin/staff/999999/assignments/buildings"
+        path: `/api/v1/admin/staff/${missingSmallId}/assignments/buildings`
       });
       expect(assignMissingStaffError.message).toMatch(/staff|nhân viên|không tồn tại|không tìm thấy|not found/i);
 
@@ -371,13 +361,13 @@ test.describe("Admin - API Staff @regression", () => {
       const stillExistsRows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE id = ?", [createdStaffId]);
       expect(Number(stillExistsRows[0]?.count ?? 0)).toBe(1);
 
-      const missingDelete = await admin.delete("/api/v1/admin/staff/999999", {
+      const missingDelete = await admin.delete(`/api/v1/admin/staff/${missingSmallId}`, {
         failOnStatusCode: false
       });
       const missingDeleteError = await expectApiErrorBody<{ message?: string }>(missingDelete, {
         status: 400,
         code: "BAD_REQUEST",
-        path: "/api/v1/admin/staff/999999"
+        path: `/api/v1/admin/staff/${missingSmallId}`
       });
       expect(missingDeleteError.message).toMatch(/staff|nhân viên|không tồn tại|không tìm thấy|not found/i);
 

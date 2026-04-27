@@ -11,13 +11,13 @@ export class CrudListPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.tableBody = page.locator("tbody");
-    this.filterForm = page.locator("form").first();
+    this.filterForm = this.firstVisible(page.locator("form"));
     this.searchButton = page.locator("form button[type='submit'], .btn-filter.btn-search");
     this.resetButton = page.locator(".btn-filter.btn-reset, form button[type='reset']");
   }
 
   async search(): Promise<void> {
-    const button = this.searchButton.first();
+    const button = this.firstVisible(this.searchButton);
     await expect(button).toBeVisible();
     await expect(button).toBeEnabled();
     await button.click();
@@ -28,7 +28,7 @@ export class CrudListPage extends BasePage {
       return false;
     }
 
-    const button = this.searchButton.first();
+    const button = this.firstVisible(this.searchButton);
     await expect(button).toBeVisible();
     await expect(button).toBeEnabled();
     await button.click();
@@ -37,7 +37,7 @@ export class CrudListPage extends BasePage {
 
   async resetFilters(): Promise<void> {
     if (await this.resetButton.count()) {
-      await this.resetButton.first().click();
+      await this.firstVisible(this.resetButton).click();
     }
   }
 
@@ -58,23 +58,23 @@ export class CrudListPage extends BasePage {
   }
 
   rowByText(text: string): Locator {
-    return this.page.locator("tbody tr", { hasText: text }).first();
+    return this.firstVisible(this.page.locator("tbody tr", { hasText: text }));
   }
 
   firstRowLink(hrefPart: string): Locator {
-    return this.page.locator(`tbody a[href*="${hrefPart}"]`).first();
+    return this.firstVisible(this.page.locator(`tbody a[href*="${hrefPart}"]`));
   }
 
   firstViewButton(): Locator {
-    return this.page.locator('tbody .btn-view, tbody a[title*="Xem"]').first();
+    return this.firstVisible(this.page.locator('tbody .btn-view, tbody a[title*="Xem"]'));
   }
 
   firstEditButton(): Locator {
-    return this.page.locator('tbody .btn-edit, tbody a[title*="Chỉnh"], tbody a[title*="Sửa"]').first();
+    return this.firstVisible(this.page.locator('tbody .btn-edit, tbody a[title*="Chỉnh"], tbody a[title*="Chinh"], tbody a[title*="Sửa"], tbody a[title*="Sua"]'));
   }
 
   async clickRowLink(rowText: string, hrefPart: string): Promise<void> {
-    await this.rowByText(rowText).locator(`a[href*="${hrefPart}"]`).first().click();
+    await this.firstVisible(this.rowByText(rowText).locator(`a[href*="${hrefPart}"]`)).click();
   }
 
   async clickFirstRowLink(hrefPart: string): Promise<void> {
@@ -90,7 +90,7 @@ export class CrudListPage extends BasePage {
   }
 
   async deleteRow(rowText: string): Promise<void> {
-    await this.rowByText(rowText).locator('[title*="Xóa"], .btn-delete').first().click();
+    await this.firstVisible(this.rowByText(rowText).locator('[title*="Xóa"], [title*="Xoa"], .btn-delete')).click();
   }
 
   async expectRowVisible(text: string): Promise<void> {

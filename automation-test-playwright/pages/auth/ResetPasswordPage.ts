@@ -9,10 +9,10 @@ export class ResetPasswordPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.otpInput = this.anyLocator('[data-testid="reset-password-otp"]', 'input[name="otp"]').first();
-    this.newPasswordInput = this.anyLocator('[data-testid="reset-password-new"]', 'input[name="newPassword"]').first();
-    this.confirmPasswordInput = this.anyLocator('[data-testid="reset-password-confirm"]', 'input[name="confirmPassword"]').first();
-    this.submitButton = this.anyLocator('[data-testid="reset-password-submit"]', 'button[type="submit"]').first();
+    this.otpInput = this.firstVisible(this.anyLocator('[data-testid="reset-password-otp"]', 'input[name="otp"]'));
+    this.newPasswordInput = this.firstVisible(this.anyLocator('[data-testid="reset-password-new"]', 'input[name="newPassword"]'));
+    this.confirmPasswordInput = this.firstVisible(this.anyLocator('[data-testid="reset-password-confirm"]', 'input[name="confirmPassword"]'));
+    this.submitButton = this.firstVisible(this.anyLocator('[data-testid="reset-password-submit"]', 'button[type="submit"]'));
   }
 
   async open(email: string): Promise<void> {

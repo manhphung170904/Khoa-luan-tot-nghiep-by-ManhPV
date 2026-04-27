@@ -7,8 +7,8 @@ export class RegisterPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.emailInput = this.anyLocator('[data-testid="register-email"]', 'input[name="email"]', 'input[type="email"]').first();
-    this.submitButton = this.anyLocator('[data-testid="register-submit"]', 'button[type="submit"]').first();
+    this.emailInput = this.firstVisible(this.anyLocator('[data-testid="register-email"]', 'input[name="email"]', 'input[type="email"]'));
+    this.submitButton = this.firstVisible(this.anyLocator('[data-testid="register-submit"]', 'button[type="submit"]'));
   }
 
   async open(): Promise<void> {

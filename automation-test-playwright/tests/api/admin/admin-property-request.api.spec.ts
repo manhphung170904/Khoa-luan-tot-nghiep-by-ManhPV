@@ -8,6 +8,8 @@ import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
 test.describe("Admin - API Property Request @regression", () => {
+  const missingId = TestDataFactory.missingId;
+
   test.afterAll(async () => {
   });
 
@@ -28,112 +30,92 @@ test.describe("Admin - API Property Request @regression", () => {
     }
   });
 
-  test("[API-ADM-PRQ-002] - API Admin Property Request - Listing - Pending Request Page Schema", async ({ playwright }) => {
-    const scenario = await createPropertyRequestScenario(playwright, "RENT");
-    try {
-      const response = await scenario.admin.get("/api/v1/admin/property-requests?page=1&size=10&status=PENDING", {
-        failOnStatusCode: false,
-        maxRedirects: 0
-      });
-      const payload = await expectPageBody<{ content?: Array<{ id: number; status?: string }> }>(response, { status: 200 });
-      expect(payload.content?.some((item) => item.id === scenario.propertyRequestId && item.status === "PENDING")).toBeTruthy();
-    } finally {
-      await CleanupHelper.run([
-        { label: `Cleanup property request scenario ${scenario.propertyRequestId}`, action: () => scenario.cleanup() }
-      ]);
-    }
+  test("[API-ADM-PRQ-002] - API Admin Property Request - Listing - Pending Request Page Schema", async ({ playwright, cleanupRegistry }) => {
+    const scenario = await createPropertyRequestScenario(playwright, "RENT", cleanupRegistry);
+    const response = await scenario.admin.get("/api/v1/admin/property-requests?page=1&size=10&status=PENDING", {
+      failOnStatusCode: false,
+      maxRedirects: 0
+    });
+    const payload = await expectPageBody<{ content?: Array<{ id: number; status?: string }> }>(response, { status: 200 });
+    expect(payload.content?.some((item) => item.id === scenario.propertyRequestId && item.status === "PENDING")).toBeTruthy();
   });
 
-  test("[API-ADM-PRQ-003] - API Admin Property Request - Rent Request Detail - Contract Autofill Data Retrieval @extended", async ({ playwright }) => {
-    const scenario = await createPropertyRequestScenario(playwright, "RENT");
-    try {
-      const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
-        failOnStatusCode: false,
-        maxRedirects: 0
-      });
-      const detail = await expectObjectBody<{
-        id?: number;
-        buildingId?: number;
-        customerId?: number;
-        status?: string;
-        requestType?: string;
-      }>(detailResponse, 200, ["id", "buildingId", "customerId", "status", "requestType"]);
-      expect(detail.id).toBe(scenario.propertyRequestId);
-      expect(detail.buildingId).toBe(scenario.buildingId);
-      expect(detail.customerId).toBe(scenario.customerId);
-      expect(detail.status).toBe("PENDING");
-      expect(detail.requestType).toBe("RENT");
+  test("[API-ADM-PRQ-003] - API Admin Property Request - Rent Request Detail - Contract Autofill Data Retrieval @extended", async ({ playwright, cleanupRegistry }) => {
+    const scenario = await createPropertyRequestScenario(playwright, "RENT", cleanupRegistry);
+    const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
+      failOnStatusCode: false,
+      maxRedirects: 0
+    });
+    const detail = await expectObjectBody<{
+      id?: number;
+      buildingId?: number;
+      customerId?: number;
+      status?: string;
+      requestType?: string;
+    }>(detailResponse, 200, ["id", "buildingId", "customerId", "status", "requestType"]);
+    expect(detail.id).toBe(scenario.propertyRequestId);
+    expect(detail.buildingId).toBe(scenario.buildingId);
+    expect(detail.customerId).toBe(scenario.customerId);
+    expect(detail.status).toBe("PENDING");
+    expect(detail.requestType).toBe("RENT");
 
-      const contractDataResponse = await scenario.admin.get(
-        `/api/v1/admin/property-requests/${scenario.propertyRequestId}/contract-data`,
-        { failOnStatusCode: false, maxRedirects: 0 }
-      );
-      const contractData = await expectObjectBody<{ buildingId?: number; customerId?: number; rentArea?: number }>(
-        contractDataResponse,
-        200,
-        ["buildingId", "customerId", "rentArea"]
-      );
-      expect(contractData.buildingId).toBe(scenario.buildingId);
-      expect(contractData.customerId).toBe(scenario.customerId);
-      expect(typeof contractData.rentArea).toBe("number");
-    } finally {
-      await CleanupHelper.run([
-        { label: `Cleanup property request scenario ${scenario.propertyRequestId}`, action: () => scenario.cleanup() }
-      ]);
-    }
+    const contractDataResponse = await scenario.admin.get(
+      `/api/v1/admin/property-requests/${scenario.propertyRequestId}/contract-data`,
+      { failOnStatusCode: false, maxRedirects: 0 }
+    );
+    const contractData = await expectObjectBody<{ buildingId?: number; customerId?: number; rentArea?: number }>(
+      contractDataResponse,
+      200,
+      ["buildingId", "customerId", "rentArea"]
+    );
+    expect(contractData.buildingId).toBe(scenario.buildingId);
+    expect(contractData.customerId).toBe(scenario.customerId);
+    expect(typeof contractData.rentArea).toBe("number");
   });
 
-  test("[API-ADM-PRQ-004] - API Admin Property Request - Buy Request Detail - Sale Contract Autofill Data Retrieval @extended", async ({ playwright }) => {
-    const scenario = await createPropertyRequestScenario(playwright, "BUY");
-    try {
-      const response = await scenario.admin.get(
-        `/api/v1/admin/property-requests/${scenario.propertyRequestId}/sale-contract-data`,
-        { failOnStatusCode: false, maxRedirects: 0 }
-      );
-      const payload = await expectObjectBody<{ buildingId?: number; customerId?: number; salePrice?: number }>(
-        response,
-        200,
-        ["buildingId", "customerId", "salePrice"]
-      );
-      expect(payload.buildingId).toBe(scenario.buildingId);
-      expect(payload.customerId).toBe(scenario.customerId);
-      expect(typeof payload.salePrice).toBe("number");
-    } finally {
-      await scenario.cleanup();
-    }
+  test("[API-ADM-PRQ-004] - API Admin Property Request - Buy Request Detail - Sale Contract Autofill Data Retrieval @extended", async ({ playwright, cleanupRegistry }) => {
+    const scenario = await createPropertyRequestScenario(playwright, "BUY", cleanupRegistry);
+    const response = await scenario.admin.get(
+      `/api/v1/admin/property-requests/${scenario.propertyRequestId}/sale-contract-data`,
+      { failOnStatusCode: false, maxRedirects: 0 }
+    );
+    const payload = await expectObjectBody<{ buildingId?: number; customerId?: number; salePrice?: number }>(
+      response,
+      200,
+      ["buildingId", "customerId", "salePrice"]
+    );
+    expect(payload.buildingId).toBe(scenario.buildingId);
+    expect(payload.customerId).toBe(scenario.customerId);
+    expect(typeof payload.salePrice).toBe("number");
   });
 
-  test("[API-ADM-PRQ-005] - API Admin Property Request - Pending Request Status - Rejection with Status Update @extended", async ({ playwright }) => {
-    const scenario = await createPropertyRequestScenario(playwright, "RENT");
-    try {
-      const rejectResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/reject`, {
-        failOnStatusCode: false,
-        maxRedirects: 0,
-        data: { reason: "Contract data mismatch" }
-      });
-      await expectApiMessage(rejectResponse, {
-        status: 200,
-        message: apiExpectedMessages.admin.propertyRequests.reject,
-        dataMode: "null"
-      });
+  test("[API-ADM-PRQ-005] - API Admin Property Request - Pending Request Status - Rejection with Status Update @extended", async ({ playwright, cleanupRegistry }) => {
+    const scenario = await createPropertyRequestScenario(playwright, "RENT", cleanupRegistry);
+    const rejectResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/reject`, {
+      failOnStatusCode: false,
+      maxRedirects: 0,
+      data: { reason: "Contract data mismatch" }
+    });
+    await expectApiMessage(rejectResponse, {
+      status: 200,
+      message: apiExpectedMessages.admin.propertyRequests.reject,
+      dataMode: "null"
+    });
 
-      const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
-        failOnStatusCode: false,
-        maxRedirects: 0
-      });
-      const detail = await expectObjectBody<{ status?: string; adminNote?: string }>(detailResponse, 200, ["status"]);
-      expect(detail.status).toBe("REJECTED");
-      expect(detail.adminNote).toBe("Contract data mismatch");
+    const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
+      failOnStatusCode: false,
+      maxRedirects: 0
+    });
+    const detail = await expectObjectBody<{ status?: string; adminNote?: string }>(detailResponse, 200, ["status"]);
+    expect(detail.status).toBe("REJECTED");
+    expect(detail.adminNote).toBe("Contract data mismatch");
 
-      const rows = await MySqlDbClient.query<{ status: string; admin_note: string }>(
-        "SELECT status, admin_note FROM property_request WHERE id = ?",
-        [scenario.propertyRequestId]
-      );
-      expect(rows[0]?.status).toBe("REJECTED");
-      expect(rows[0]?.admin_note).toBe("Contract data mismatch");
-    } finally {
-      await scenario.cleanup();
-    }
+    const rows = await MySqlDbClient.query<{ status: string; admin_note: string }>(
+      "SELECT status, admin_note FROM property_request WHERE id = ?",
+      [scenario.propertyRequestId]
+    );
+    expect(rows[0]?.status).toBe("REJECTED");
+    expect(rows[0]?.admin_note).toBe("Contract data mismatch");
   });
 
   test("[API-ADM-PRQ-006] - API Admin Property Request - Rent Request Approval - Linked Contract Matching Approval @extended", async ({ playwright }) => {
@@ -289,14 +271,14 @@ test.describe("Admin - API Property Request @regression", () => {
   test("[API-ADM-PRQ-008] - API Admin Property Request - Request ID - Nonexistent Request 400 Response @extended", async ({ playwright }) => {
     const admin = await createRoleContext(playwright, "admin");
     try {
-      const response = await admin.get("/api/v1/admin/property-requests/999999999", {
+      const response = await admin.get(`/api/v1/admin/property-requests/${missingId}`, {
         failOnStatusCode: false,
         maxRedirects: 0
       });
       await expectApiErrorBody(response, {
         status: 400,
         code: "BAD_REQUEST",
-        path: "/api/v1/admin/property-requests/999999999"
+        path: `/api/v1/admin/property-requests/${missingId}`
       });
     } finally {
       await admin.dispose();

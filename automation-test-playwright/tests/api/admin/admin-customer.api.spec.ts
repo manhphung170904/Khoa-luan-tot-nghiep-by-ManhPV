@@ -1,23 +1,13 @@
 import { expect, test } from "@fixtures/api.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
 test.describe("Admin - API Customer @regression", () => {
-  let admin: APIRequestContext;
-
-  test.beforeAll(async ({ playwright }) => {
-    admin = await ApiSessionHelper.newContext(playwright, "admin");
-  });
-
-  test.afterAll(async () => {
-    await admin.dispose();
-  });
+  const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[CUS-001] - API Admin Customer - Authentication - Create Customer Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/customers", {
@@ -31,7 +21,7 @@ test.describe("Admin - API Customer @regression", () => {
     });
   });
 
-  test("[CUS-002] - API Admin Customer - Staff Assignment - Empty Staff Assignment Validation", async () => {
+  test("[CUS-002] - API Admin Customer - Staff Assignment - Empty Staff Assignment Validation", async ({ adminApi: admin }) => {
     const username = TestDataFactory.taoUsername("cusemptystaff");
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
@@ -48,9 +38,10 @@ test.describe("Admin - API Customer @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[CUS-009] - API Admin Customer - Username - Minimum Length Validation", async () => {
+  test("[CUS-009] - API Admin Customer - Username - Minimum Length Validation", async ({ adminApi: admin, cleanupRegistry }) => {
     const shortUsername = "abc";
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload({ username: shortUsername, staffIds: [tempStaff.id] })
@@ -64,12 +55,12 @@ test.describe("Admin - API Customer @regression", () => {
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [shortUsername]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS-003] - API Admin Customer - Password - Minimum Length Validation", async () => {
+  test("[CUS-003] - API Admin Customer - Password - Minimum Length Validation", async ({ adminApi: admin, cleanupRegistry }) => {
     const username = TestDataFactory.taoUsername("cuspwd");
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload({ username, password: "123", staffIds: [tempStaff.id] })
@@ -83,12 +74,12 @@ test.describe("Admin - API Customer @regression", () => {
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [username]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS-010] - API Admin Customer - Email - Maximum Length Validation", async () => {
+  test("[CUS-010] - API Admin Customer - Email - Maximum Length Validation", async ({ adminApi: admin, cleanupRegistry }) => {
     const oversizedEmail = `${"a".repeat(95)}@b.com`;
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload({ email: oversizedEmail, staffIds: [tempStaff.id] })
@@ -102,12 +93,12 @@ test.describe("Admin - API Customer @regression", () => {
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE email = ?", [oversizedEmail]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS-011] - API Admin Customer - Phone Number - Invalid Format Validation", async () => {
+  test("[CUS-011] - API Admin Customer - Phone Number - Invalid Format Validation", async ({ adminApi: admin, cleanupRegistry }) => {
     const invalidPhone = "9999999999";
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
     const response = await admin.post("/api/v1/admin/customers", {
       failOnStatusCode: false,
       data: TestDataFactory.buildCustomerPayload({ phone: invalidPhone, staffIds: [tempStaff.id] })
@@ -121,10 +112,9 @@ test.describe("Admin - API Customer @regression", () => {
 
     const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE phone = ?", [invalidPhone]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
-    await TempEntityHelper.xoaStaffTam(admin, tempStaff.id);
   });
 
-  test("[CUS-004] - API Admin Customer - Customer Lifecycle - Create List Search and Delete Flow", async () => {
+  test("[CUS-004] - API Admin Customer - Customer Lifecycle - Create List Search and Delete Flow", async ({ adminApi: admin }) => {
     const tempStaff = await TempEntityHelper.taoStaffTam(admin);
     const customerPayload = TestDataFactory.buildCustomerPayload({ staffIds: [tempStaff.id] });
     let createdCustomerId = 0;
@@ -201,13 +191,13 @@ test.describe("Admin - API Customer @regression", () => {
         await TempEntityHelper.xoaContractTam(admin, customerWithContract);
       }
 
-      const missingDelete = await admin.delete("/api/v1/admin/customers/999999", {
+      const missingDelete = await admin.delete(`/api/v1/admin/customers/${missingSmallId}`, {
         failOnStatusCode: false
       });
       const missingDeleteError = await expectApiErrorBody<{ message?: string }>(missingDelete, {
         status: 400,
         code: "BAD_REQUEST",
-        path: "/api/v1/admin/customers/999999"
+        path: `/api/v1/admin/customers/${missingSmallId}`
       });
       expect(missingDeleteError.message).toMatch(/customer|khách hàng|không tồn tại|không tìm thấy|not found/i);
 
@@ -231,7 +221,7 @@ test.describe("Admin - API Customer @regression", () => {
     }
   });
 
-  test("[CUS-012] - API Admin Customer - Delete Customer - Active Sale Contract Deletion Restriction", async () => {
+  test("[CUS-012] - API Admin Customer - Delete Customer - Active Sale Contract Deletion Restriction", async ({ adminApi: admin }) => {
     const customerWithSaleContract = await TempEntityHelper.taoSaleContractTam(admin);
 
     try {

@@ -17,7 +17,7 @@ export class CustomerServicePage extends CustomerRoutedPage {
   }
 
   cardByTitle(title: string): Locator {
-    return this.page.locator(".service-card").filter({ hasText: title }).first();
+    return this.firstVisible(this.page.locator(".service-card").filter({ hasText: title }));
   }
 
   async expectCardVisible(title: string): Promise<void> {

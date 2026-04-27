@@ -10,16 +10,16 @@ export class RegisterCompletePage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.fullNameInput = page.locator('input[name="fullName"]').first();
-    this.usernameInput = page.locator('input[name="username"]').first();
-    this.passwordInput = page.locator('input[name="password"]').first();
-    this.confirmPasswordInput = page.locator('input[name="confirmPassword"]').first();
-    this.completeButton = this.anyLocator(
+    this.fullNameInput = this.firstVisible(page.locator('input[name="fullName"]'));
+    this.usernameInput = this.firstVisible(page.locator('input[name="username"]'));
+    this.passwordInput = this.firstVisible(page.locator('input[name="password"]'));
+    this.confirmPasswordInput = this.firstVisible(page.locator('input[name="confirmPassword"]'));
+    this.completeButton = this.firstVisible(this.anyLocator(
       '[data-testid="register-complete-submit"]',
       'form[action="/auth/register/complete"] button[type="submit"]',
       "button.submit",
       'button:has-text("Tạo tài khoản")'
-    ).first();
+    ));
   }
 
   async open(ticket: string, email: string): Promise<void> {

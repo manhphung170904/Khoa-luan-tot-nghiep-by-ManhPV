@@ -12,7 +12,7 @@ export class AdminCustomerDetailPage extends RoutedCrudDetailPage {
 
   async expectLoaded(customerId: number): Promise<void> {
     await expect(this.page).toHaveURL(new RegExp(`/admin/customer/${customerId}$`));
-    await expect(this.page.locator(".strip-id").first()).toBeVisible();
+    await expect(this.firstVisible(this.page.locator(".strip-id"))).toBeVisible();
   }
 
   async deleteCustomer(): Promise<void> {

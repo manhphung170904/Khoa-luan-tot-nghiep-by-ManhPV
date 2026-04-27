@@ -1,69 +1,13 @@
 import { test, expect } from "@fixtures/api.fixture";
-import type { APIRequestContext } from "@playwright/test";
 import { createAnonymousContext, createRoleContext } from "@api/adminApiUtils";
 import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
-import { CleanupHelper } from "@helpers/CleanupHelper";
-import { TestDataFactory } from "@helpers/TestDataFactory";
-import { TempEntityHelper } from "@helpers/TempEntityHelper";
-
-type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
-type PlaywrightLike = Parameters<typeof createRoleContext>[0];
-type StaffInvoiceScenario = {
-  adminContext: APIRequestContext;
-  staffContext: APIRequestContext;
-  tempContract: TempContract;
-  validPayload: Record<string, unknown>;
-};
-
-const createStaffInvoiceScenario = async (playwright: PlaywrightLike): Promise<StaffInvoiceScenario> => {
-  const adminContext = await createRoleContext(playwright, "admin");
-  const tempContract = await TempEntityHelper.taoContractTam(adminContext);
-  const staffContext = await createRoleContext(playwright, "staff", tempContract.staff.username);
-  const validPayload = TestDataFactory.buildInvoicePayload({
-    contractId: tempContract.id,
-    customerId: tempContract.customer.id,
-    details: [{ description: "Staff created invoice", amount: 1500000 }]
-  });
-
-  return {
-    adminContext,
-    staffContext,
-    tempContract,
-    validPayload
-  };
-};
-
-const cleanupInvoiceById = async (invoiceId?: number): Promise<void> => {
-  if (!invoiceId) {
-    return;
-  }
-
-  await CleanupHelper.run([
-    { label: `Delete invoice detail rows for invoice ${invoiceId}`, action: () => MySqlDbClient.execute("DELETE FROM invoice_detail WHERE invoice_id = ?", [invoiceId]) },
-    { label: `Delete invoice ${invoiceId}`, action: () => MySqlDbClient.execute("DELETE FROM invoice WHERE id = ?", [invoiceId]) }
-  ]);
-};
-
-const cleanupStaffInvoiceScenario = async (scenario?: Partial<StaffInvoiceScenario>, invoiceId?: number): Promise<void> => {
-  const tasks = [
-    { label: `Cleanup invoice ${invoiceId ?? "(none)"}`, action: () => cleanupInvoiceById(invoiceId) },
-    { label: "Dispose staff API context", action: () => scenario?.staffContext?.dispose() },
-    {
-      label: `Cleanup temp contract ${scenario?.tempContract?.id ?? "(none)"}`,
-      action: () => scenario?.tempContract && scenario?.adminContext
-        ? TempEntityHelper.xoaContractTam(scenario.adminContext, scenario.tempContract)
-        : undefined
-    },
-    { label: "Dispose admin API context", action: () => scenario?.adminContext?.dispose() }
-  ];
-  await CleanupHelper.run(tasks);
-};
+import { cleanupStaffInvoiceById, createStaffInvoiceScenario } from "@data/staffInvoiceScenario";
 
 test.describe("Staff - API Invoice @regression", () => {
-  test("[API-STF-INV-001] - API Staff Invoice - Authentication - Anonymous Create Access Rejection", async ({ playwright }) => {
-    const scenario = await createStaffInvoiceScenario(playwright);
+  test("[API-STF-INV-001] - API Staff Invoice - Authentication - Anonymous Create Access Rejection", async ({ playwright, cleanupRegistry }) => {
+    const scenario = await createStaffInvoiceScenario(playwright, cleanupRegistry);
     const anonymous = await createAnonymousContext(playwright);
 
     try {
@@ -79,7 +23,6 @@ test.describe("Staff - API Invoice @regression", () => {
       });
     } finally {
       await anonymous.dispose();
-      await cleanupStaffInvoiceScenario(scenario);
     }
   });
 
@@ -101,11 +44,8 @@ test.describe("Staff - API Invoice @regression", () => {
     }
   });
 
-  test("[API-STF-INV-003] - API Staff Invoice - Create Invoice - Assigned Contract Invoice Creation", async ({ playwright }) => {
-    const scenario = await createStaffInvoiceScenario(playwright);
-    let createdInvoiceId = 0;
-
-    try {
+  test("[API-STF-INV-003] - API Staff Invoice - Create Invoice - Assigned Contract Invoice Creation", async ({ playwright, cleanupRegistry }) => {
+    const scenario = await createStaffInvoiceScenario(playwright, cleanupRegistry);
       const response = await scenario.staffContext.post("/api/v1/staff/invoices", {
         failOnStatusCode: false,
         maxRedirects: 0,
@@ -122,7 +62,8 @@ test.describe("Staff - API Invoice @regression", () => {
         [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
       );
       expect(rows.length).toBe(1);
-      createdInvoiceId = rows[0]!.id;
+      const createdInvoiceId = rows[0]!.id;
+      cleanupRegistry.addLabeled(`Delete staff-created invoice ${createdInvoiceId}`, () => cleanupStaffInvoiceById(createdInvoiceId));
       expect(Number(rows[0]!.total_amount)).toBeGreaterThan(0);
       expect(rows[0]!.status).toBe("PENDING");
 
@@ -131,16 +72,10 @@ test.describe("Staff - API Invoice @regression", () => {
         [createdInvoiceId]
       );
       expect(Number(detailRows[0]?.count ?? 0)).toBeGreaterThan(0);
-    } finally {
-      await cleanupStaffInvoiceScenario(scenario, createdInvoiceId);
-    }
   });
 
-  test("[API-STF-INV-004] - API Staff Invoice - Listing - Assigned Invoice Retrieval @smoke", async ({ playwright }) => {
-    const scenario = await createStaffInvoiceScenario(playwright);
-    let createdInvoiceId = 0;
-
-    try {
+  test("[API-STF-INV-004] - API Staff Invoice - Listing - Assigned Invoice Retrieval @smoke", async ({ playwright, cleanupRegistry }) => {
+    const scenario = await createStaffInvoiceScenario(playwright, cleanupRegistry);
       const createResponse = await scenario.staffContext.post("/api/v1/staff/invoices", {
         failOnStatusCode: false,
         maxRedirects: 0,
@@ -157,7 +92,8 @@ test.describe("Staff - API Invoice @regression", () => {
         [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
       );
       expect(createdRows.length).toBe(1);
-      createdInvoiceId = createdRows[0]!.id;
+      const createdInvoiceId = createdRows[0]!.id;
+      cleanupRegistry.addLabeled(`Delete staff-created invoice ${createdInvoiceId}`, () => cleanupStaffInvoiceById(createdInvoiceId));
 
       const response = await scenario.staffContext.get("/api/v1/staff/invoices?page=1&size=20", {
         failOnStatusCode: false,
@@ -173,16 +109,10 @@ test.describe("Staff - API Invoice @regression", () => {
       expect(createdItem).toBeDefined();
       expect(Number(createdItem?.totalAmount)).toBeGreaterThan(0);
       expect(createdItem?.status).toBeTruthy();
-    } finally {
-      await cleanupStaffInvoiceScenario(scenario, createdInvoiceId);
-    }
   });
 
-  test("[API-STF-INV-005] - API Staff Invoice - Update Invoice - Owned Invoice Update", async ({ playwright }) => {
-    const scenario = await createStaffInvoiceScenario(playwright);
-    let createdInvoiceId = 0;
-
-    try {
+  test("[API-STF-INV-005] - API Staff Invoice - Update Invoice - Owned Invoice Update", async ({ playwright, cleanupRegistry }) => {
+    const scenario = await createStaffInvoiceScenario(playwright, cleanupRegistry);
       const createResponse = await scenario.staffContext.post("/api/v1/staff/invoices", {
         failOnStatusCode: false,
         maxRedirects: 0,
@@ -199,7 +129,8 @@ test.describe("Staff - API Invoice @regression", () => {
         [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
       );
       expect(createdRows.length).toBe(1);
-      createdInvoiceId = createdRows[0]!.id;
+      const createdInvoiceId = createdRows[0]!.id;
+      cleanupRegistry.addLabeled(`Delete staff-created invoice ${createdInvoiceId}`, () => cleanupStaffInvoiceById(createdInvoiceId));
 
       const response = await scenario.staffContext.put(`/api/v1/staff/invoices/${createdInvoiceId}`, {
         failOnStatusCode: false,
@@ -228,13 +159,10 @@ test.describe("Staff - API Invoice @regression", () => {
         [createdInvoiceId]
       );
       expect(Number(detailRows[0]?.count ?? 0)).toBeGreaterThan(0);
-    } finally {
-      await cleanupStaffInvoiceScenario(scenario, createdInvoiceId);
-    }
   });
 
-  test("[API-STF-INV-006] - API Staff Invoice - Delete Invoice - Owned Invoice Deletion", async ({ playwright }) => {
-    const scenario = await createStaffInvoiceScenario(playwright);
+  test("[API-STF-INV-006] - API Staff Invoice - Delete Invoice - Owned Invoice Deletion", async ({ playwright, cleanupRegistry }) => {
+    const scenario = await createStaffInvoiceScenario(playwright, cleanupRegistry);
     let createdInvoiceId = 0;
 
     try {
@@ -285,7 +213,9 @@ test.describe("Staff - API Invoice @regression", () => {
       expect(Number(detailRows[0]?.count ?? 0)).toBe(0);
       createdInvoiceId = 0;
     } finally {
-      await cleanupStaffInvoiceScenario(scenario, createdInvoiceId);
+      if (createdInvoiceId) {
+        cleanupRegistry.addLabeled(`Delete staff-created invoice ${createdInvoiceId}`, () => cleanupStaffInvoiceById(createdInvoiceId));
+      }
     }
   });
 });

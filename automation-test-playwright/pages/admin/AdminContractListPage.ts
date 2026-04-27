@@ -57,7 +57,7 @@ export class AdminContractListPage extends RoutedCrudListPage {
   }
 
   rowByContractText(text: string): Locator {
-    return this.page.locator("#contractTableBody tr").filter({ hasText: text }).first();
+    return this.firstVisible(this.page.locator("#contractTableBody tr").filter({ hasText: text }));
   }
 
   async submitFilters(): Promise<void> {

@@ -12,7 +12,7 @@ export class AdminSaleContractDetailPage extends RoutedCrudDetailPage {
 
   async expectLoaded(contractId: number): Promise<void> {
     await expect(this.page).toHaveURL(new RegExp(`/admin/sale-contract/${contractId}$`));
-    await expect(this.page.locator(".contract-strip").first()).toBeVisible();
+    await expect(this.firstVisible(this.page.locator(".contract-strip"))).toBeVisible();
   }
 
   async deleteSaleContract(): Promise<void> {

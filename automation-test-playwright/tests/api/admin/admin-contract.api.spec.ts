@@ -6,6 +6,9 @@ import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
 test.describe("Admin - API Contract @api-write @regression", () => {
+  const missingId = TestDataFactory.missingId;
+  const missingSmallId = TestDataFactory.missingSmallId;
+
   test("[CTR-001] - API Admin Contract - Authentication - Create Contract Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,
@@ -87,7 +90,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         failOnStatusCode: false,
         data: TestDataFactory.buildContractPayload({
           customerId: temp.customer.id,
-          buildingId: 999999,
+          buildingId: missingSmallId,
           staffId: temp.staff.id
         })
       });
@@ -100,7 +103,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
-        [temp.customer.id, 999999, temp.staff.id]
+        [temp.customer.id, missingSmallId, temp.staff.id]
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
@@ -111,7 +114,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
       const response = await adminApi.post("/api/v1/admin/contracts", {
         failOnStatusCode: false,
         data: TestDataFactory.buildContractPayload({
-          customerId: 999999,
+          customerId: missingSmallId,
           buildingId: temp.building.id,
           staffId: temp.staff.id
         })
@@ -125,7 +128,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
-        [999999, temp.building.id, temp.staff.id]
+        [missingSmallId, temp.building.id, temp.staff.id]
       );
       expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
@@ -205,7 +208,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
       building: tempBuilding
     }));
 
-    const response = await adminApi.put("/api/v1/admin/contracts/999999999", {
+    const response = await adminApi.put(`/api/v1/admin/contracts/${missingId}`, {
       failOnStatusCode: false,
       data: TestDataFactory.buildContractPayload({
         customerId: tempCustomer.id,
@@ -217,7 +220,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
       status: 400,
       code: "BAD_REQUEST",
-      path: "/api/v1/admin/contracts/999999999"
+      path: `/api/v1/admin/contracts/${missingId}`
     });
     expect(errorBody.message).toMatch(/contract|hợp đồng|không tồn tại|không tìm thấy|not found/i);
   });
@@ -331,13 +334,13 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         dataMode: "null"
       });
 
-      const missingDelete = await adminApi.delete("/api/v1/admin/contracts/999999", {
+      const missingDelete = await adminApi.delete(`/api/v1/admin/contracts/${missingSmallId}`, {
         failOnStatusCode: false
       });
       const missingDeleteError = await expectApiErrorBody<{ message?: string }>(missingDelete, {
         status: 400,
         code: "BAD_REQUEST",
-        path: "/api/v1/admin/contracts/999999"
+        path: `/api/v1/admin/contracts/${missingSmallId}`
       });
       expect(missingDeleteError.message).toMatch(/contract|hợp đồng|không tồn tại|không tìm thấy|not found/i);
 

@@ -3,19 +3,15 @@ import type { APIRequestContext } from "@playwright/test";
 import { expectApiErrorBody, expectApiMessage } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
-import { env } from "@config/env";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { MySqlDbClient } from "@db/MySqlDbClient";
-import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
-
-type TempAdmin = {
-  id: number;
-  username: string;
-  email: string;
-  phone: string;
-};
+import {
+  createAuthenticatedTempProfileScenario,
+  type AuthenticatedTempProfileScenario,
+  type TempProfileUser
+} from "@data/tempProfileScenario";
 
 type ExistingIdentity = {
   username: string;
@@ -24,49 +20,11 @@ type ExistingIdentity = {
 };
 
 test.describe("Admin - API Profile @api-write @otp @regression", () => {
-  let bootstrapAdminContext: APIRequestContext;
+  let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let tempAdminContext: APIRequestContext;
-  let tempAdmin: TempAdmin;
+  let tempAdmin: TempProfileUser;
   let existingIdentity: ExistingIdentity;
   let currentPassword: string;
-
-  const createTempAdmin = async (): Promise<TempAdmin> => {
-    const username = TestDataFactory.taoUsername("adm");
-    const email = TestDataFactory.taoEmail("pw-admin-profile");
-    const phone = TestDataFactory.taoSoDienThoai();
-
-    const createResponse = await bootstrapAdminContext.post("/api/v1/admin/staff", {
-      failOnStatusCode: false,
-      data: {
-        username,
-        password: env.defaultPassword,
-        fullName: `PW Admin Profile ${TestDataFactory.taoMaDuyNhat("name")}`,
-        phone,
-        email,
-        role: "ADMIN"
-      }
-    });
-
-    await expectApiMessage(createResponse, {
-      status: 200,
-      message: apiExpectedMessages.admin.staff.create,
-      dataMode: "null"
-    });
-
-    const rows = await MySqlDbClient.query<TempAdmin>(
-      `
-        SELECT id, username, email, phone
-        FROM staff
-        WHERE username = ?
-        ORDER BY id DESC
-        LIMIT 1
-      `,
-      [username]
-    );
-
-    expect(rows.length).toBe(1);
-    return rows[0]!;
-  };
 
   const sendOtp = async (purpose: string) => {
     const response = await tempAdminContext.post(`/api/v1/admin/profile/otp/${purpose}`, {
@@ -80,12 +38,12 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
     });
   };
 
-  test.beforeAll(async ({ playwright }) => {
-    bootstrapAdminContext = await ApiSessionHelper.newContext(playwright, "admin");
-  });
+  test.beforeEach(async ({ playwright, adminApi }) => {
+    profileScenario = await createAuthenticatedTempProfileScenario(playwright, adminApi, "admin");
+    tempAdminContext = profileScenario.context;
+    tempAdmin = profileScenario.user;
+    currentPassword = profileScenario.currentPassword;
 
-  test.beforeEach(async ({ playwright }) => {
-    tempAdmin = await createTempAdmin();
     const existingIdentityRows = await MySqlDbClient.query<ExistingIdentity>(
       `
         SELECT username, email, phone
@@ -101,23 +59,11 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
     );
     expect(existingIdentityRows.length).toBe(1);
     existingIdentity = existingIdentityRows[0]!;
-    tempAdminContext = await ApiSessionHelper.newContext(playwright);
-    currentPassword = env.defaultPassword;
-
-    const loginResponse = await ApiSessionHelper.login(tempAdminContext, tempAdmin.username, currentPassword);
-    expect(loginResponse.status()).toBe(200);
   });
 
   test.afterEach(async () => {
-    await tempAdminContext.dispose();
-
-    if (tempAdmin?.id) {
-      await TempEntityHelper.xoaStaffTam(bootstrapAdminContext, tempAdmin.id);
-    }
-  });
-
-  test.afterAll(async () => {
-    await bootstrapAdminContext.dispose();
+    await profileScenario?.cleanup();
+    profileScenario = undefined;
   });
 
   test("[PRF-005] - API Admin Profile - Email - Update Without Login Rejection", async ({ request }) => {
