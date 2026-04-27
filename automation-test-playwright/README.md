@@ -38,7 +38,9 @@ automation-test-playwright/
 |   |-- files/
 |   |-- invoiceTempData.ts
 |   |-- profileTempUsers.ts
-|   `-- propertyRequestScenario.ts
+|   |-- propertyRequestScenario.ts
+|   |-- staffInvoiceScenario.ts
+|   `-- tempProfileScenario.ts
 |-- tests/
 |   |-- api/
 |   `-- e2e/

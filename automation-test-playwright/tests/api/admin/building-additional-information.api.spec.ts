@@ -458,7 +458,3 @@ test.describe("Admin - API Building Additional Information @extended", () => {
     expect(missingPlanningMapError.message).toMatch(/planning|map|bản đồ|quy hoạch|không tồn tại|không tìm thấy|not found/i);
   });
 });
-
-
-
-

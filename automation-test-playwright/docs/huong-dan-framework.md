@@ -94,6 +94,7 @@ $env:ALLOW_DESTRUCTIVE_TESTS="true"
 
 ## 7. Session va dang nhap nhanh
 - Test nen uu tien import `@fixtures/api.fixture` cho API suite va `@fixtures/base.fixture` cho E2E suite; neu chua co fixture dung lai ro rang thi khoi tao POM truc tiep trong spec.
+- Neu chi can role mac dinh, dung san `adminApi`, `staffApi`, `customerApi`, hoac `anonymousApi` thay vi tu tao context trong spec. Chi goi `createRoleContext(...)` khi can login bang user tam hoac username rieng cua scenario.
 - Runtime output va report duoc gom trong `.runtime/`.
 - HTML/JUnit report top-level se duoc lam moi moi lan chay; `.runtime/test-results/` chi giu lai mot so run gan day.
 - Test nen tai su dung `AuthSessionHelper`, `TempEntityHelper`, va fixture hien co khi phu hop.
@@ -105,8 +106,17 @@ $env:ALLOW_DESTRUCTIVE_TESTS="true"
 - Neu API test can login bang user tam vua tao, dung scenario helper tap trung nhu `createAuthenticatedTempProfileScenario(...)`. Helper phai dispose context truoc, sau do moi xoa user tam bang `adminApi`.
 - E2E duoc phep giu `test.afterEach` cleanup khi data phu thuoc state cuc bo cua scenario. Khong bo DB assertion trong E2E neu assertion dang xac nhan side effect nghiep vu.
 - ID am/khong ton tai dung chung phai lay tu `TestDataFactory.missingId` hoac `TestDataFactory.missingSmallId`; khong hard-code them so moi trong spec/catalog.
+- Trang thai invoice, payment method, transaction type va cac amount nghiep vu lap lai phai lay tu `TestDataFactory.invoiceStatus`, `TestDataFactory.paymentMethod`, `TestDataFactory.transactionType`, `TestDataFactory.testAmount`.
+- Spec co `beforeAll` dung shared entity hoac mutate chung state phai cau hinh `test.describe.configure({ mode: "serial" })`.
 
 Vi du nen dung:
+
+```ts
+test("anonymous access", async ({ anonymousApi }) => {
+  const response = await anonymousApi.get("/api/v1/admin/resources", { failOnStatusCode: false });
+  // assert response
+});
+```
 
 ```ts
 const temp = await TempEntityHelper.taoContractTam(adminApi);
@@ -118,16 +128,23 @@ const scenario = await createStaffInvoiceScenario(playwright, cleanupRegistry);
 cleanupRegistry.addLabeled(`Delete invoice ${invoiceId}`, () => cleanupStaffInvoiceById(invoiceId));
 ```
 
+```ts
+const adminSession = await createAdminE2ESession(page, adminApi, "/admin/building/list");
+await adminSession.cleanup();
+```
+
 Vi du khong nen them moi:
 
 ```ts
 const missingId = 999999999;
+const status = "PENDING";
 ```
 
 Dung:
 
 ```ts
 const missingId = TestDataFactory.missingId;
+const status = TestDataFactory.invoiceStatus.pending;
 ```
 
 ## 7.1. Locator va POM

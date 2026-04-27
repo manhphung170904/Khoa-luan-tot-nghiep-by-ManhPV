@@ -16,6 +16,8 @@ type AuthUser = {
 };
 
 test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
+  test.describe.configure({ mode: "serial" });
+
   let validLocalEmail = "";
 
   function buildAuthUser(prefix = "testuser_auth"): AuthUser {
@@ -400,7 +402,3 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
     });
   });
 });
-
-
-
-

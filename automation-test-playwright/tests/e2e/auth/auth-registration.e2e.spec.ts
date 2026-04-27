@@ -161,6 +161,3 @@ test.describe("Auth - Registration @regression", () => {
     }
   });
 });
-
-
-

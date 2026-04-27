@@ -7,6 +7,8 @@ import { TestDataFactory } from "@helpers/TestDataFactory";
 
 test.describe("Admin - API Invoice @regression", () => {
   const missingSmallId = TestDataFactory.missingSmallId;
+  const invoiceStatus = TestDataFactory.invoiceStatus;
+  const invoiceAmount = TestDataFactory.testAmount;
 
   const now = new Date();
   const prevMonth = now.getMonth() === 0 ? 12 : now.getMonth();
@@ -14,6 +16,50 @@ test.describe("Admin - API Invoice @regression", () => {
   const dueDateMonth = prevMonth === 12 ? 1 : prevMonth + 1;
   const dueDateYear = prevMonth === 12 ? prevYear + 1 : prevYear;
   const dueDate = `${dueDateYear}-${String(dueDateMonth).padStart(2, "0")}-15`;
+
+  async function findInvoiceByPeriod(contractId: number, month: number, year: number) {
+    return MySqlDbClient.query<{ id: number; total_amount: number; status?: string }>(
+      `
+        SELECT id, total_amount, status
+        FROM invoice
+        WHERE contract_id = ? AND month = ? AND year = ?
+        ORDER BY id DESC
+        LIMIT 1
+      `,
+      [contractId, month, year]
+    );
+  }
+
+  async function findUtilityMeterByPeriod(contractId: number, month: number, year: number) {
+    return MySqlDbClient.query<{
+      electricity_old: number;
+      electricity_new: number;
+      water_old: number;
+      water_new: number;
+    }>(
+      `
+        SELECT electricity_old, electricity_new, water_old, water_new
+        FROM utility_meter
+        WHERE contract_id = ? AND month = ? AND year = ?
+        LIMIT 1
+      `,
+      [contractId, month, year]
+    );
+  }
+
+  async function expectUtilityUsage(
+    contractId: number,
+    month: number,
+    year: number,
+    expected: { electricityNew: number; waterNew: number }
+  ): Promise<void> {
+    const utilityRows = await findUtilityMeterByPeriod(contractId, month, year);
+    expect(utilityRows.length).toBe(1);
+    expect(utilityRows[0]!.electricity_old).toBe(0);
+    expect(utilityRows[0]!.water_old).toBe(0);
+    expect(utilityRows[0]!.electricity_new).toBe(expected.electricityNew);
+    expect(utilityRows[0]!.water_new).toBe(expected.waterNew);
+  }
 
   test("[INV-001] - API Admin Invoice - Authentication - Create Invoice Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/invoices", {
@@ -37,7 +83,7 @@ test.describe("Admin - API Invoice @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/invoices"
     });
-    expect(errorBody.message).toMatch(/month|tháng|integer/i);
+    expect(errorBody.message).toMatch(/month|thang|integer/i);
   });
 
   test("[INV-015] - API Admin Invoice - Invoice Month - Current Month Creation Restriction", async ({ adminApi: admin, cleanupRegistry }) => {
@@ -61,7 +107,7 @@ test.describe("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/current|tháng hiện tại|liền trước|invoice month/i);
+      expect(errorBody.message).toMatch(/current|thang hien tai|lien truoc|invoice month/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
@@ -88,7 +134,7 @@ test.describe("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/contract|hợp đồng|không tìm thấy/i);
+      expect(errorBody.message).toMatch(/contract|hop dong|khong tim thay/i);
     }
   });
 
@@ -109,7 +155,7 @@ test.describe("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/customer|khách hàng|không khớp|hợp đồng/i);
+      expect(errorBody.message).toMatch(/customer|khach hang|khong khop|hop dong/i);
     }
   });
 
@@ -131,7 +177,7 @@ test.describe("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/due|hạn thanh toán|ngày|sau tháng lập hóa đơn/i);
+      expect(errorBody.message).toMatch(/due|han thanh toan|ngay|sau thang lap hoa don/i);
 
       const rows = await MySqlDbClient.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
@@ -206,7 +252,7 @@ test.describe("Admin - API Invoice @regression", () => {
       );
       expect(invoiceRows.length).toBe(1);
       createdInvoiceId = invoiceRows[0]!.id;
-      expect(invoiceRows[0]!.status).toBe("PENDING");
+      expect(invoiceRows[0]!.status).toBe(invoiceStatus.pending);
 
       const statusUpdateResponse = await admin.put("/api/v1/admin/invoices/status", {
         failOnStatusCode: false
@@ -221,7 +267,7 @@ test.describe("Admin - API Invoice @regression", () => {
         "SELECT status FROM invoice WHERE id = ?",
         [createdInvoiceId]
       );
-      expect(overdueRows[0]!.status).toBe("OVERDUE");
+      expect(overdueRows[0]!.status).toBe(invoiceStatus.overdue);
     } finally {
       if (createdInvoiceId) {
         await admin.delete(`/api/v1/admin/invoices/${createdInvoiceId}`, { failOnStatusCode: false });
@@ -251,42 +297,15 @@ test.describe("Admin - API Invoice @regression", () => {
         dataMode: "null"
       });
 
-      const invoiceRows = await MySqlDbClient.query<{
-        id: number;
-        total_amount: number;
-      }>(
-        `
-          SELECT id, total_amount
-          FROM invoice
-          WHERE contract_id = ? AND month = ? AND year = ?
-          ORDER BY id DESC
-          LIMIT 1
-        `,
-        [tempContract.id, payload.month, payload.year]
-      );
+      const invoiceRows = await findInvoiceByPeriod(tempContract.id, Number(payload.month), Number(payload.year));
       expect(invoiceRows.length).toBe(1);
       createdInvoiceId = invoiceRows[0]!.id;
       expect(Number(invoiceRows[0]!.total_amount)).toBe(Number(payload.totalAmount));
 
-      const utilityRows = await MySqlDbClient.query<{
-        electricity_old: number;
-        electricity_new: number;
-        water_old: number;
-        water_new: number;
-      }>(
-        `
-          SELECT electricity_old, electricity_new, water_old, water_new
-          FROM utility_meter
-          WHERE contract_id = ? AND month = ? AND year = ?
-          LIMIT 1
-        `,
-        [tempContract.id, payload.month, payload.year]
-      );
-      expect(utilityRows.length).toBe(1);
-      expect(utilityRows[0]!.electricity_old).toBe(0);
-      expect(utilityRows[0]!.water_old).toBe(0);
-      expect(utilityRows[0]!.electricity_new).toBe(Number(payload.electricityUsage));
-      expect(utilityRows[0]!.water_new).toBe(Number(payload.waterUsage));
+      await expectUtilityUsage(tempContract.id, Number(payload.month), Number(payload.year), {
+        electricityNew: Number(payload.electricityUsage),
+        waterNew: Number(payload.waterUsage)
+      });
 
       const duplicateResponse = await admin.post("/api/v1/admin/invoices", {
         failOnStatusCode: false,
@@ -297,7 +316,7 @@ test.describe("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(duplicateError.message).toMatch(/duplicate|tồn tại|đã có|trùng|hóa đơn|tháng|năm/i);
+      expect(duplicateError.message).toMatch(/duplicate|ton tai|da co|trung|hoa don|thang|nam/i);
 
       const listResponse = await admin.get("/api/v1/admin/invoices", {
         failOnStatusCode: false,
@@ -328,7 +347,7 @@ test.describe("Admin - API Invoice @regression", () => {
         data: {
           ...payload,
           id: createdInvoiceId,
-          totalAmount: 19999,
+          totalAmount: invoiceAmount.adminInvoiceUpdateTotal,
           details: [],
           electricityUsage: 22,
           waterUsage: 11
@@ -344,27 +363,12 @@ test.describe("Admin - API Invoice @regression", () => {
         "SELECT total_amount FROM invoice WHERE id = ?",
         [createdInvoiceId]
       );
-      expect(Number(updatedRows[0]!.total_amount)).toBe(19999);
+      expect(Number(updatedRows[0]!.total_amount)).toBe(invoiceAmount.adminInvoiceUpdateTotal);
 
-      const updatedUtilityRows = await MySqlDbClient.query<{
-        electricity_old: number;
-        electricity_new: number;
-        water_old: number;
-        water_new: number;
-      }>(
-        `
-          SELECT electricity_old, electricity_new, water_old, water_new
-          FROM utility_meter
-          WHERE contract_id = ? AND month = ? AND year = ?
-          LIMIT 1
-        `,
-        [tempContract.id, payload.month, payload.year]
-      );
-      expect(updatedUtilityRows.length).toBe(1);
-      expect(updatedUtilityRows[0]!.electricity_old).toBe(0);
-      expect(updatedUtilityRows[0]!.water_old).toBe(0);
-      expect(updatedUtilityRows[0]!.electricity_new).toBe(22);
-      expect(updatedUtilityRows[0]!.water_new).toBe(11);
+      await expectUtilityUsage(tempContract.id, Number(payload.month), Number(payload.year), {
+        electricityNew: 22,
+        waterNew: 11
+      });
 
       const confirmResponse = await admin.post(`/api/v1/admin/invoices/${createdInvoiceId}/confirm`, {
         failOnStatusCode: false
@@ -376,7 +380,7 @@ test.describe("Admin - API Invoice @regression", () => {
       });
 
       const paidRows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [createdInvoiceId]);
-      expect(paidRows[0]!.status).toBe("PAID");
+      expect(paidRows[0]!.status).toBe(invoiceStatus.paid);
 
       const missingConfirm = await admin.post(`/api/v1/admin/invoices/${missingSmallId}/confirm`, {
         failOnStatusCode: false
@@ -392,7 +396,7 @@ test.describe("Admin - API Invoice @regression", () => {
         data: {
           ...payload,
           id: createdInvoiceId,
-          totalAmount: 99999
+          totalAmount: invoiceAmount.adminInvoiceRejectedUpdateTotal
         }
       });
       const updatePaidError = await expectApiErrorBody<{ message?: string }>(updatePaidResponse, {
@@ -400,14 +404,14 @@ test.describe("Admin - API Invoice @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/invoices/${createdInvoiceId}`
       });
-      expect(updatePaidError.message).toMatch(/paid|đã thanh toán|không thể cập nhật|đang chờ xử lý/i);
+      expect(updatePaidError.message).toMatch(/paid|da thanh toan|khong the cap nhat|dang cho xu ly/i);
 
       const unchangedRows = await MySqlDbClient.query<{ total_amount: number; status: string }>(
         "SELECT total_amount, status FROM invoice WHERE id = ?",
         [createdInvoiceId]
       );
-      expect(Number(unchangedRows[0]!.total_amount)).toBe(19999);
-      expect(unchangedRows[0]!.status).toBe("PAID");
+      expect(Number(unchangedRows[0]!.total_amount)).toBe(invoiceAmount.adminInvoiceUpdateTotal);
+      expect(unchangedRows[0]!.status).toBe(invoiceStatus.paid);
 
       const statusUpdateResponse = await admin.put("/api/v1/admin/invoices/status", {
         failOnStatusCode: false
@@ -444,7 +448,3 @@ test.describe("Admin - API Invoice @regression", () => {
     }
   });
 });
-
-
-
-

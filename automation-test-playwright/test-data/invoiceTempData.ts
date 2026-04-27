@@ -4,6 +4,7 @@ import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
+type InvoiceStatus = (typeof TestDataFactory.invoiceStatus)[keyof typeof TestDataFactory.invoiceStatus];
 
 export type TempInvoiceRecord = {
   id: number;
@@ -11,7 +12,7 @@ export type TempInvoiceRecord = {
   customerId: number;
   month: number;
   year: number;
-  status: "PENDING" | "PAID" | "OVERDUE";
+  status: InvoiceStatus;
 };
 
 const DEFAULT_CONTRACT_VALUES = {
@@ -30,7 +31,7 @@ type InvoiceSeedOverrides = Partial<{
   dueDate: string;
   electricityUsage: number;
   waterUsage: number;
-  status: "PENDING" | "PAID" | "OVERDUE";
+  status: InvoiceStatus;
 }>;
 
 function resolveBaseDate(baseDate?: Date): Date {
@@ -88,7 +89,7 @@ export function buildManagedInvoicePayload(
     month,
     year,
     dueDate,
-    status: overrides.status ?? "PENDING",
+    status: overrides.status ?? TestDataFactory.invoiceStatus.pending,
     totalAmount,
     details,
     electricityUsage,

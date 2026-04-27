@@ -7,7 +7,7 @@ export default defineConfig({
   testDir: "./tests",
   globalSetup: "./config/global-setup.ts",
   globalTeardown: "./config/global-teardown.ts",
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: env.retryPolicy.ui,
   workers: process.env.CI ? 2 : env.workers,

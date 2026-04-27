@@ -179,6 +179,3 @@ test.describe("Auth - API REST Session @regression", () => {
     expect(afterRows[0]!.total).toBe(beforeRows[0]!.total);
   });
 });
-
-
-

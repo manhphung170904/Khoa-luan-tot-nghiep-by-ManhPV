@@ -427,7 +427,3 @@ test.describe("Admin - API Sale Contract @regression", () => {
     });
   });
 });
-
-
-
-

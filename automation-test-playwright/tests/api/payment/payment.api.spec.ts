@@ -5,8 +5,11 @@ import { expectStatusExact } from "@api/apiContractUtils";
 import { MySqlDbClient } from "@db/MySqlDbClient";
 import { env } from "@config/env";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
+import { TestDataFactory } from "@helpers/TestDataFactory";
 
 test.describe("Payment - API QR Payment @api-write @regression", () => {
+  test.describe.configure({ mode: "serial" });
+
   let adminContext: APIRequestContext;
   let customerUsername = env.customerUsername;
   let customerInvoiceId: number;
@@ -38,8 +41,8 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
       const existingRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [tempInvoice.id]);
       if (existingRows.length > 0) {
         await MySqlDbClient.execute(
-          "UPDATE invoice SET status = 'PENDING', paid_date = NULL, payment_method = NULL, transaction_code = NULL WHERE id = ?",
-          [tempInvoice.id]
+          "UPDATE invoice SET status = ?, paid_date = NULL, payment_method = NULL, transaction_code = NULL WHERE id = ?",
+          [TestDataFactory.invoiceStatus.pending, tempInvoice.id]
         );
       }
       await TempEntityHelper.xoaInvoiceTam(adminContext, tempInvoice);
@@ -48,32 +51,22 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
     await adminContext.dispose();
   });
 
-  test("[API-PAY-001] - API Payment - QR Payment - Anonymous Access Rejection", async ({ playwright }) => {
-    const anonymous = await playwright.request.newContext({ baseURL: env.baseUrl });
-    try {
-      const response = await anonymous.get(`/payment-demo/qr/${customerInvoiceId}`, {
-        failOnStatusCode: false,
-        maxRedirects: 0
-      });
-      expectStatusExact(response, 302, "Anonymous QR access currently redirects to login");
-      expect(response.headers().location ?? "").toContain("/login");
-    } finally {
-      await anonymous.dispose();
-    }
+  test("[API-PAY-001] - API Payment - QR Payment - Anonymous Access Rejection", async ({ anonymousApi }) => {
+    const response = await anonymousApi.get(`/payment-demo/qr/${customerInvoiceId}`, {
+      failOnStatusCode: false,
+      maxRedirects: 0
+    });
+    expectStatusExact(response, 302, "Anonymous QR access currently redirects to login");
+    expect(response.headers().location ?? "").toContain("/login");
   });
 
-  test("[API-PAY-002] - API Payment - QR Payment - Admin Access to Customer Invoice Rejection", async ({ playwright }) => {
-    const admin = await createRoleContext(playwright, "admin");
-    try {
-      const response = await admin.get(`/payment-demo/qr/${customerInvoiceId}`, {
-        failOnStatusCode: false,
-        maxRedirects: 0
-      });
-      expectStatusExact(response, 302, "Admin QR access currently redirects to login");
-      expect(response.headers().location ?? "").toContain("/login");
-    } finally {
-      await admin.dispose();
-    }
+  test("[API-PAY-002] - API Payment - QR Payment - Admin Access to Customer Invoice Rejection", async ({ adminApi }) => {
+    const response = await adminApi.get(`/payment-demo/qr/${customerInvoiceId}`, {
+      failOnStatusCode: false,
+      maxRedirects: 0
+    });
+    expectStatusExact(response, 302, "Admin QR access currently redirects to login");
+    expect(response.headers().location ?? "").toContain("/login");
   });
 
   test("[API-PAY-003] - API Payment - Invoice Reference - Nonexistent Invoice 404 Response", async ({ playwright }) => {
@@ -101,7 +94,8 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
       expect(response.headers()["content-type"] ?? "").toContain("text/html");
 
       const bodyHtml = await response.text();
-      expect(bodyHtml).toMatch(/thanh toán bằng qr|qr payment/i);
+      const normalizedBodyHtml = bodyHtml.normalize("NFD").replace(/\p{Diacritic}/gu, "");
+      expect(normalizedBodyHtml).toMatch(/thanh toan bang qr|qr payment/i);
       expect(bodyHtml).toContain("img.vietqr.io");
       expect(bodyHtml).toContain(`MOONNEST INV ${customerInvoiceId}`);
       expect(bodyHtml).toContain(`/payment-demo/qr/confirm/${customerInvoiceId}`);
@@ -142,8 +136,8 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
         [customerInvoiceId]
       );
       expect(rows.length).toBe(1);
-      expect(rows[0]!.status).toBe("PAID");
-      expect(rows[0]!.payment_method).toBe("BANK_QR");
+      expect(rows[0]!.status).toBe(TestDataFactory.invoiceStatus.paid);
+      expect(rows[0]!.payment_method).toBe(TestDataFactory.paymentMethod.bankQr);
       expect(rows[0]!.transaction_code).toMatch(new RegExp(`^QR-${customerInvoiceId}-\\d{14}$`));
       expect(rows[0]!.paid_date).toBeTruthy();
     } finally {
@@ -151,7 +145,3 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
     }
   });
 });
-
-
-
-

@@ -21,12 +21,12 @@ test.describe("Admin - API Security Matrix @regression", () => {
   };
 
   for (const endpoint of adminEndpointCatalog) {
-    test(`${endpoint.id} - API Admin Security - Authentication - Unauthenticated Access Rejection @smoke`, async ({ anonymousApi }) => {
+    test(`[${endpoint.id}] - API Admin Security - Authentication - Unauthenticated Access Rejection @smoke`, async ({ anonymousApi }) => {
       const response = await sendRequest(anonymousApi, endpoint);
       await expectSecurityBodyIfJson(response, 401);
     });
 
-    test(`${endpoint.id} - API Admin Security - Session - Invalid Session Rejection`, async ({ playwright }) => {
+    test(`[${endpoint.id}] - API Admin Security - Session - Invalid Session Rejection`, async ({ playwright }) => {
       const context = await createAnonymousContext(playwright, true);
       try {
         const response = await sendRequest(context, endpoint);
@@ -36,17 +36,14 @@ test.describe("Admin - API Security Matrix @regression", () => {
       }
     });
 
-    test(`${endpoint.id} - API Admin Security - Authorization - Staff Role Rejection`, async ({ staffApi }) => {
+    test(`[${endpoint.id}] - API Admin Security - Authorization - Staff Role Rejection`, async ({ staffApi }) => {
       const response = await sendRequest(staffApi, endpoint);
       await expectSecurityBodyIfJson(response, 403);
     });
 
-    test(`${endpoint.id} - API Admin Security - Authorization - Customer Role Rejection`, async ({ customerApi }) => {
+    test(`[${endpoint.id}] - API Admin Security - Authorization - Customer Role Rejection`, async ({ customerApi }) => {
       const response = await sendRequest(customerApi, endpoint);
       await expectSecurityBodyIfJson(response, 403);
     });
   }
 });
-
-
-

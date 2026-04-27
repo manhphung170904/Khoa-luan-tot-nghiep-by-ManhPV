@@ -125,52 +125,48 @@ test.describe("Admin - API Staff @regression", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[STF-019] - API Admin Staff - Building Assignment - Active Contract Removal Restriction", async ({ adminApi: admin }) => {
+  test("[STF-019] - API Admin Staff - Building Assignment - Active Contract Removal Restriction", async ({ adminApi: admin, cleanupRegistry }) => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
-    try {
-      const response = await admin.put(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`, {
-        failOnStatusCode: false,
-        data: []
-      });
-      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
-        status: 400,
-        code: "BAD_REQUEST",
-        path: `/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`
-      });
-      expect(errorBody.message).toMatch(/building|tòa nhà|contract|hợp đồng|phân công/i);
+    cleanupRegistry.addLabeled(`Delete contract scenario ${tempContract.id}`, () => TempEntityHelper.xoaContractTam(admin, tempContract));
 
-      const assignmentsResponse = await admin.get(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`, {
-        failOnStatusCode: false
-      });
-      const assignments = await expectArrayBody<number>(assignmentsResponse, 200);
-      expect(assignments).toContain(tempContract.building.id);
-    } finally {
-      await TempEntityHelper.xoaContractTam(admin, tempContract);
-    }
+    const response = await admin.put(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`, {
+      failOnStatusCode: false,
+      data: []
+    });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: `/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`
+    });
+    expect(errorBody.message).toMatch(/building|tòa nhà|contract|hợp đồng|phân công/i);
+
+    const assignmentsResponse = await admin.get(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`, {
+      failOnStatusCode: false
+    });
+    const assignments = await expectArrayBody<number>(assignmentsResponse, 200);
+    expect(assignments).toContain(tempContract.building.id);
   });
 
-  test("[STF-020] - API Admin Staff - Customer Assignment - Active Contract Removal Restriction", async ({ adminApi: admin }) => {
+  test("[STF-020] - API Admin Staff - Customer Assignment - Active Contract Removal Restriction", async ({ adminApi: admin, cleanupRegistry }) => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
-    try {
-      const response = await admin.put(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`, {
-        failOnStatusCode: false,
-        data: []
-      });
-      const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
-        status: 400,
-        code: "BAD_REQUEST",
-        path: `/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`
-      });
-      expect(errorBody.message).toMatch(/customer|khách hàng|contract|hợp đồng|phân công/i);
+    cleanupRegistry.addLabeled(`Delete contract scenario ${tempContract.id}`, () => TempEntityHelper.xoaContractTam(admin, tempContract));
 
-      const assignmentsResponse = await admin.get(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`, {
-        failOnStatusCode: false
-      });
-      const assignments = await expectArrayBody<number>(assignmentsResponse, 200);
-      expect(assignments).toContain(tempContract.customer.id);
-    } finally {
-      await TempEntityHelper.xoaContractTam(admin, tempContract);
-    }
+    const response = await admin.put(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`, {
+      failOnStatusCode: false,
+      data: []
+    });
+    const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: `/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`
+    });
+    expect(errorBody.message).toMatch(/customer|khách hàng|contract|hợp đồng|phân công/i);
+
+    const assignmentsResponse = await admin.get(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`, {
+      failOnStatusCode: false
+    });
+    const assignments = await expectArrayBody<number>(assignmentsResponse, 200);
+    expect(assignments).toContain(tempContract.customer.id);
   });
 
   test("[STF-004] - API Admin Staff - Staff Lifecycle - Create and Full Assignment Flow", async ({ adminApi: admin }) => {

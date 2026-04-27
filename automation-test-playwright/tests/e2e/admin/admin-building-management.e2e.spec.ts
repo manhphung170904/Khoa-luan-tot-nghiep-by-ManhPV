@@ -6,39 +6,30 @@ import { AdminBuildingDetailPage } from "@pages/admin/AdminBuildingDetailPage";
 import { AdminBuildingFormPage } from "@pages/admin/AdminBuildingFormPage";
 import { AdminBuildingListPage } from "@pages/admin/AdminBuildingListPage";
 import {
-  cleanupTempStaffProfileUser,
-  createTempStaffProfileUser,
-  loginAsTempUser,
-  type TempStaffProfileUser
-} from "@data/profileTempUsers";
+  cleanupTempBuildingIds,
+  cleanupTempContracts,
+  createAdminE2ESession,
+  type AdminE2ESession
+} from "@data/e2eAdminScenario";
 
 test.describe("Admin - Building Management @regression", () => {
-  let adminUser: TempStaffProfileUser | null = null;
+  let adminSession: AdminE2ESession | null = null;
   const cleanupBuildingIds = new Set<number>();
   const cleanupContracts: Array<Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>> = [];
 
   test.beforeEach(async ({ page, adminApi }) => {
-    adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
-    await loginAsTempUser(page, adminUser.username, adminUser.password);
-    await page.goto("/admin/building/list");
+    adminSession = await createAdminE2ESession(page, adminApi, "/admin/building/list");
   });
 
   test.afterEach(async ({ adminApi }) => {
-    for (const contract of cleanupContracts.splice(0)) {
-      await TempEntityHelper.xoaContractTam(adminApi, contract);
-    }
-
-    for (const buildingId of cleanupBuildingIds) {
-      await TempEntityHelper.xoaBuildingTam(adminApi, buildingId);
-    }
-    cleanupBuildingIds.clear();
-
-    await cleanupTempStaffProfileUser(adminApi, adminUser);
-    adminUser = null;
+    await cleanupTempContracts(adminApi, cleanupContracts);
+    await cleanupTempBuildingIds(adminApi, cleanupBuildingIds);
+    await adminSession?.cleanup();
+    adminSession = null;
   });
 
   test("[E2E-ADM-BLD-001] - Admin Building Management - Building Search - Filter and Detail View", async ({ page, adminApi }) => {
-    const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
+    const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, TestDataFactory.transactionType.rent);
     cleanupBuildingIds.add(tempBuilding.id);
 
     const listPage = new AdminBuildingListPage(page);
@@ -47,7 +38,7 @@ test.describe("Admin - Building Management @regression", () => {
     await page.goto("/admin/building/list");
     await listPage.expectLoaded();
     await listPage.filterByName(tempBuilding.name);
-    await listPage.filterByTransactionType("FOR_RENT");
+    await listPage.filterByTransactionType(TestDataFactory.transactionType.rent);
     await listPage.search();
     await listPage.waitForTableData();
 
@@ -65,7 +56,7 @@ test.describe("Admin - Building Management @regression", () => {
     await page.goto("/admin/building/list");
     await listPage.openAddForm();
     await formPage.expectAddLoaded();
-    await formPage.setTransactionType("FOR_RENT");
+    await formPage.setTransactionType(TestDataFactory.transactionType.rent);
     await formPage.fillCommonFields({
       name: buildingName,
       districtId: "1",
@@ -104,14 +95,14 @@ test.describe("Admin - Building Management @regression", () => {
       [buildingName]
     );
     expect(rows.length).toBe(1);
-    expect(rows[0]!.transaction_type).toBe("FOR_RENT");
+    expect(rows[0]!.transaction_type).toBe(TestDataFactory.transactionType.rent);
     expect(Number(rows[0]!.floor_area)).toBe(450);
     expect(rows[0]!.tax_code).toBe(taxCode);
     cleanupBuildingIds.add(rows[0]!.id);
   });
 
   test("[E2E-ADM-BLD-003] - Admin Building Management - Building Edit - Unlocked Building Update", async ({ page, adminApi }) => {
-    const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
+    const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, TestDataFactory.transactionType.rent);
     cleanupBuildingIds.add(tempBuilding.id);
 
     const formPage = new AdminBuildingFormPage(page);
@@ -157,7 +148,7 @@ test.describe("Admin - Building Management @regression", () => {
   });
 
   test("[E2E-ADM-BLD-005] - Admin Building Management - Building Deletion - Unlocked Building Deletion from List", async ({ page, adminApi }) => {
-    const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, "FOR_RENT");
+    const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, TestDataFactory.transactionType.rent);
 
     const listPage = new AdminBuildingListPage(page);
     await page.goto("/admin/building/list");

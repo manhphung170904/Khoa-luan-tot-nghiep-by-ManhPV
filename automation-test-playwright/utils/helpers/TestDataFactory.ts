@@ -4,6 +4,30 @@ import { runtimePaths } from "@config/paths";
 export class TestDataFactory {
   static readonly missingId = 999999999;
   static readonly missingSmallId = 999999;
+  static readonly invoiceStatus = {
+    pending: "PENDING",
+    paid: "PAID",
+    overdue: "OVERDUE"
+  } as const;
+
+  static readonly paymentMethod = {
+    bankQr: "BANK_QR"
+  } as const;
+
+  static readonly transactionType = {
+    rent: "FOR_RENT",
+    sale: "FOR_SALE"
+  } as const;
+
+  static readonly testAmount = {
+    staffInvoiceUpdateTotal: 9999,
+    adminInvoiceUpdateTotal: 19999,
+    adminInvoiceRejectedUpdateTotal: 99999
+  } as const;
+
+  static readonly testDate = {
+    farPastDueDate: "2000-01-01"
+  } as const;
 
   private static uniqueCounter = 0;
 
@@ -108,7 +132,7 @@ export class TestDataFactory {
 
   static buildBuildingPayload(
     overrides: Record<string, unknown> = {},
-    transactionType: "FOR_RENT" | "FOR_SALE" = "FOR_RENT"
+    transactionType: "FOR_RENT" | "FOR_SALE" = TestDataFactory.transactionType.rent
   ): Record<string, unknown> {
     const suffix = this.taoHauToDuyNhat("building");
     return {
@@ -116,14 +140,14 @@ export class TestDataFactory {
       numberOfFloor: 10,
       numberOfBasement: 1,
       floorArea: 200,
-      rentPrice: transactionType === "FOR_RENT" ? 1000000 : null,
-      deposit: transactionType === "FOR_RENT" ? 2000000 : null,
-      serviceFee: transactionType === "FOR_RENT" ? 100000 : null,
-      carFee: transactionType === "FOR_RENT" ? 50000 : null,
-      motorbikeFee: transactionType === "FOR_RENT" ? 20000 : null,
-      waterFee: transactionType === "FOR_RENT" ? 15000 : null,
-      electricityFee: transactionType === "FOR_RENT" ? 3500 : null,
-      salePrice: transactionType === "FOR_SALE" ? 3000000000 : null,
+      rentPrice: transactionType === TestDataFactory.transactionType.rent ? 1000000 : null,
+      deposit: transactionType === TestDataFactory.transactionType.rent ? 2000000 : null,
+      serviceFee: transactionType === TestDataFactory.transactionType.rent ? 100000 : null,
+      carFee: transactionType === TestDataFactory.transactionType.rent ? 50000 : null,
+      motorbikeFee: transactionType === TestDataFactory.transactionType.rent ? 20000 : null,
+      waterFee: transactionType === TestDataFactory.transactionType.rent ? 15000 : null,
+      electricityFee: transactionType === TestDataFactory.transactionType.rent ? 3500 : null,
+      salePrice: transactionType === TestDataFactory.transactionType.sale ? 3000000000 : null,
       name: `PW Building ${suffix}`,
       ward: env.testDataSeed.ward,
       street: env.testDataSeed.street,
@@ -173,7 +197,7 @@ export class TestDataFactory {
       customerId: env.testDataSeed.customerId,
       month,
       year,
-      status: "PENDING",
+      status: TestDataFactory.invoiceStatus.pending,
       dueDate,
       totalAmount: 1500000,
       details: [{ description: "Phi dich vu test", amount: 1500000 }],

@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+﻿import { expect, type Locator, type Page } from "@playwright/test";
 import { env } from "@config/env";
 
 export class BasePage {
@@ -93,7 +93,10 @@ export class BasePage {
   async expectSweetAlertContainsText(text: string | RegExp): Promise<void> {
     const popup = this.toastPopup();
     await expect(popup).toBeVisible();
-    await expect(popup).not.toContainText(/đang xử lý|dang xu ly|vui lòng đợi|vui long doi|processing|please wait/i);
+    await expect(async () => {
+      const normalizedText = this.normalizeLooseText((await popup.textContent()) ?? "");
+      expect(normalizedText).not.toMatch(/dang xu ly|vui long doi|processing|please wait/i);
+    }).toPass({ timeout: env.expectTimeout });
 
     await expect(async () => {
       const rawText = ((await popup.textContent()) ?? "").trim();

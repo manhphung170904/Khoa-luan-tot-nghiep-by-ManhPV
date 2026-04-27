@@ -2,7 +2,6 @@ import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { MySqlDbClient } from "@db/MySqlDbClient";
-import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
@@ -221,27 +220,17 @@ test.describe("Admin - API Customer @regression", () => {
     }
   });
 
-  test("[CUS-012] - API Admin Customer - Delete Customer - Active Sale Contract Deletion Restriction", async ({ adminApi: admin }) => {
+  test("[CUS-012] - API Admin Customer - Delete Customer - Active Sale Contract Deletion Restriction", async ({ adminApi: admin, cleanupRegistry }) => {
     const customerWithSaleContract = await TempEntityHelper.taoSaleContractTam(admin);
+    cleanupRegistry.addLabeled(`Delete sale contract scenario ${customerWithSaleContract.id}`, () => TempEntityHelper.xoaSaleContractTam(admin, customerWithSaleContract));
 
-    try {
-      const deleteWithSaleContract = await admin.delete(`/api/v1/admin/customers/${customerWithSaleContract.customer.id}`, {
-        failOnStatusCode: false
-      });
-      await expectApiErrorBody(deleteWithSaleContract, {
-        status: 400,
-        code: "BAD_REQUEST",
-        path: `/api/v1/admin/customers/${customerWithSaleContract.customer.id}`
-      });
-    } finally {
-      await CleanupHelper.run([
-        { label: `Delete sale contract ${customerWithSaleContract.id}`, action: () => MySqlDbClient.execute("DELETE FROM sale_contract WHERE id = ?", [customerWithSaleContract.id]) },
-        { label: `Reset customer assignments for staff ${customerWithSaleContract.staff.id}`, action: () => TempEntityHelper.capNhatPhanCongCustomer(admin, customerWithSaleContract.staff.id, []) },
-        { label: `Reset building assignments for staff ${customerWithSaleContract.staff.id}`, action: () => TempEntityHelper.capNhatPhanCongBuilding(admin, customerWithSaleContract.staff.id, []) },
-        { label: `Delete customer ${customerWithSaleContract.customer.id}`, action: () => TempEntityHelper.xoaCustomerTam(admin, customerWithSaleContract.customer.id) },
-        { label: `Delete building ${customerWithSaleContract.building.id}`, action: () => TempEntityHelper.xoaBuildingTam(admin, customerWithSaleContract.building.id) },
-        { label: `Delete staff ${customerWithSaleContract.staff.id}`, action: () => TempEntityHelper.xoaStaffTam(admin, customerWithSaleContract.staff.id) }
-      ]);
-    }
+    const deleteWithSaleContract = await admin.delete(`/api/v1/admin/customers/${customerWithSaleContract.customer.id}`, {
+      failOnStatusCode: false
+    });
+    await expectApiErrorBody(deleteWithSaleContract, {
+      status: 400,
+      code: "BAD_REQUEST",
+      path: `/api/v1/admin/customers/${customerWithSaleContract.customer.id}`
+    });
   });
 });

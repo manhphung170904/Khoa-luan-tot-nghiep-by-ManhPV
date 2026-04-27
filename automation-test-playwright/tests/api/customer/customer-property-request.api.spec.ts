@@ -111,7 +111,3 @@ test.describe("Customer - API Property Request @regression", () => {
     expect(cancelledRequest?.status).toBe("CANCELLED");
   });
 });
-
-
-
-

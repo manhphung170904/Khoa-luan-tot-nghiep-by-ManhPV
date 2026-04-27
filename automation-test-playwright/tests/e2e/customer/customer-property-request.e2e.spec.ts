@@ -111,6 +111,3 @@ test.describe("Customer - Property Request @regression", () => {
     expect(rows[0]?.contract_id).toBe(contractRows[0]!.id);
   });
 });
-
-
-

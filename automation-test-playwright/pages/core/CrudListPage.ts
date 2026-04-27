@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+﻿import { expect, type Locator, type Page } from "@playwright/test";
 import { OptionalActionHelper } from "@helpers/OptionalActionHelper";
 import { BasePage } from "./BasePage";
 
@@ -70,7 +70,7 @@ export class CrudListPage extends BasePage {
   }
 
   firstEditButton(): Locator {
-    return this.firstVisible(this.page.locator('tbody .btn-edit, tbody a[title*="Chỉnh"], tbody a[title*="Chinh"], tbody a[title*="Sửa"], tbody a[title*="Sua"]'));
+    return this.firstVisible(this.page.locator('tbody .btn-edit, tbody a[title*="Ch\\1EC9 nh"], tbody a[title*="Chinh"], tbody a[title*="S\\1EED a"], tbody a[title*="Sua"]'));
   }
 
   async clickRowLink(rowText: string, hrefPart: string): Promise<void> {
@@ -90,7 +90,7 @@ export class CrudListPage extends BasePage {
   }
 
   async deleteRow(rowText: string): Promise<void> {
-    await this.firstVisible(this.rowByText(rowText).locator('[title*="Xóa"], [title*="Xoa"], .btn-delete')).click();
+    await this.firstVisible(this.rowByText(rowText).locator('[title*="X\\F3 a"], [title*="Xoa"], .btn-delete')).click();
   }
 
   async expectRowVisible(text: string): Promise<void> {
