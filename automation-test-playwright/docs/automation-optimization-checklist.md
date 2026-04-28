@@ -40,15 +40,14 @@ Optimize the Playwright + TypeScript automation framework step by step without r
   - Customer payment subset passed 2/2.
   - Staff invoice edit passed 1/1.
   - Staff API lifecycle `STF-004` passed 1/1.
-- Annotated confirmed backend/API contract defects with `test.fail()` so CI stays green while still alerting when backend behavior is fixed.
-- Final safe regression: `npm.cmd run test:regression:safe` passed 531/531 with expected-fail annotations active and global teardown reporting no orphaned test data.
+- Left confirmed backend/API contract defects as real failing tests, per project preference, so backend issues remain visible in regression output.
+- Latest safe regression without expected-fail annotations: 524/531 passed, 7 failed, and global teardown reported no orphaned test data.
 
 ## Regression Findings
 
 - Initial safe regression after broad cleanup: 486/531 passed, 45 failed.
-- Follow-up safe regression before backend-defect annotation: 524/531 passed, 7 failed.
-- Final safe regression after backend-defect annotation: 531/531 passed.
-- Known backend/API contract deviations are documented with `test.fail()`:
+- Latest safe regression: 524/531 passed, 7 failed.
+- Known backend/API contract deviations intentionally remain as failing tests:
   - `BLD-014`: invalid `propertyType` returns 500 instead of the expected 400 validation error.
   - `BLD-016`: invalid pagination (`page=0`, `size=0`) returns 500 instead of the expected 400 validation error.
   - `BLD-019`: deleting a building with active sale contract returns 500 instead of a controlled 400 business error.
@@ -82,7 +81,7 @@ Optimize the Playwright + TypeScript automation framework step by step without r
    - Treat CSS selector fallbacks in `BasePage.actionButton()` as transitional.
    - Continue removing mojibake/text-fragile selectors where loose normalized text or structural locators are safer.
 
-6. When backend defects are fixed, remove the matching `test.fail()` annotations and re-run targeted API tests plus safe regression.
+6. When backend defects are fixed, re-run the matching targeted API tests plus safe regression.
 
 ## Verification Rule
 

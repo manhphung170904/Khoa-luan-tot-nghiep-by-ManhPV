@@ -1,6 +1,6 @@
 import { expect, test } from "@fixtures/api.fixture";
 import type { APIRequestContext } from "@playwright/test";
-import { expectApiErrorBody, expectApiMessage } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectApiMessage, expectLooseApiText } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
@@ -112,7 +112,7 @@ test.describe("Staff - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/username"
     });
-    expect(errorBody.message).toMatch(/otp|ma|xac thuc/i);
+    expectLooseApiText(errorBody.message, /otp|ma|xac thuc|khong tim thay|het han/i);
 
     const rows = await TestDbRepository.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.username).toBe(originalUsername);
@@ -155,7 +155,7 @@ test.describe("Staff - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|m?t kh?u|mat khau|hi?n t?i|hien tai|khng dng|khong dung/i);
+    expectLooseApiText(errorBody.message, /password|mat khau|hien tai|khong dung/i);
 
     const rows = await TestDbRepository.query<{ email: string }>("SELECT email FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.email).toBe(originalEmail);
@@ -218,7 +218,7 @@ test.describe("Staff - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|m|ma|xc th?c|xac thuc|h?t h?n|het han/i);
+    expectLooseApiText(errorBody.message, /otp|ma|xac thuc|het han|khong tim thay/i);
 
     const rows = await TestDbRepository.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.phone).toBe(originalPhone);
@@ -244,7 +244,7 @@ test.describe("Staff - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/password"
     });
-    expect(errorBody.message).toMatch(/short|ng?n|ngan|t nh?t|it nhat|min|k t?|ky tu/i);
+    expectLooseApiText(errorBody.message, /short|ngan|it nhat|min|ky tu/i);
 
     const newHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
     expect(newHashRows[0]!.password).toBe(oldHash);

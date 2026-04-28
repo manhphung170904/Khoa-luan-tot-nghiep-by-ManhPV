@@ -1,6 +1,6 @@
 import { expect, test } from "@fixtures/api.fixture";
 import type { APIRequestContext } from "@playwright/test";
-import { expectApiErrorBody, expectApiMessage } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectApiMessage, expectLooseApiText } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
@@ -167,7 +167,7 @@ test.describe("Admin - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
-    expect(errorBody.message).toMatch(/otp|m|ma|xc th?c|xac thuc|khng h?p l?|khong hop le/i);
+    expectLooseApiText(errorBody.message, /otp|ma|xac thuc|khong hop le|khong tim thay|het han/i);
 
     const latestRows = await TestDbRepository.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
@@ -224,7 +224,7 @@ test.describe("Admin - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
-    expect(errorBody.message).toMatch(/username|tn dang nh?p|ten dang nhap|dang nh?p|dang nhap|d du?c s? d?ng|da duoc su dung|t?n t?i|ton tai|trng|trung/i);
+    expectLooseApiText(errorBody.message, /username|ten dang nhap|dang nhap|da duoc su dung|ton tai|trung/i);
 
     const latestRows = await TestDbRepository.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
@@ -251,7 +251,7 @@ test.describe("Admin - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|m|ma|xc th?c|xac thuc|h?t h?n|het han|khng tm th?y|khong tim thay/i);
+    expectLooseApiText(errorBody.message, /otp|ma|xac thuc|het han|khong tim thay/i);
 
     const latestRows = await TestDbRepository.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
@@ -308,7 +308,7 @@ test.describe("Admin - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/phone|di?n tho?i|dien thoai|d du?c s? d?ng|da duoc su dung|t?n t?i|ton tai|trng|trung/i);
+    expectLooseApiText(errorBody.message, /phone|dien thoai|da duoc su dung|ton tai|trung/i);
 
     const latestRows = await TestDbRepository.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
@@ -335,7 +335,7 @@ test.describe("Admin - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|m?t kh?u|mat khau|hi?n t?i|hien tai|incorrect|khng dng|khong dung|sai/i);
+    expectLooseApiText(errorBody.message, /password|mat khau|hien tai|incorrect|khong dung|sai/i);
 
     const latestRows = await TestDbRepository.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
@@ -383,7 +383,7 @@ test.describe("Admin - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
-    expect(errorBody.message).toMatch(/email|t?n t?i|ton tai|trng|trung/i);
+    expectLooseApiText(errorBody.message, /email|ton tai|trung/i);
 
     const latestRows = await TestDbRepository.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
@@ -412,7 +412,7 @@ test.describe("Admin - API Profile @api @api-write @destructive @otp @regression
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/password"
     });
-    expect(errorBody.message).toMatch(/otp|m|ma|xc th?c|xac thuc|h?t h?n|het han|khng tm th?y|khong tim thay/i);
+    expectLooseApiText(errorBody.message, /otp|ma|xac thuc|het han|khong tim thay/i);
 
     const latestRows = await TestDbRepository.query<{ password: string }>(
       "SELECT password FROM staff WHERE id = ? LIMIT 1",
