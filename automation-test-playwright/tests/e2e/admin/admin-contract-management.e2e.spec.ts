@@ -1,6 +1,7 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
 import type { APIRequestContext } from "@playwright/test";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { AdminContractDetailPage } from "@pages/admin/AdminContractDetailPage";
 import { AdminContractFormPage } from "@pages/admin/AdminContractFormPage";
@@ -17,7 +18,7 @@ type TempCustomer = Awaited<ReturnType<typeof TempEntityHelper.taoCustomerTam>>;
 type TempBuilding = Awaited<ReturnType<typeof TempEntityHelper.taoBuildingTam>>;
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Admin - Contract Management @regression", () => {
+test.describe("Admin - Contract Management @regression @e2e", () => {
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupContractIds = new Set<number>();
   const cleanupCustomerIds = new Set<number>();
@@ -27,7 +28,7 @@ test.describe("Admin - Contract Management @regression", () => {
   test.beforeEach(async ({ page, adminApi }) => {
     adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
-    await page.goto("/admin/contract/list");
+    await new NavigationPage(page).open("/admin/contract/list");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -92,7 +93,7 @@ test.describe("Admin - Contract Management @regression", () => {
     const listPage = new AdminContractListPage(page);
     const detailPage = new AdminContractDetailPage(page);
 
-    await page.goto(`/admin/contract/search?customerId=${tempContract.customer.id}&buildingId=${tempContract.building.id}`);
+    await new NavigationPage(page).open(`/admin/contract/search?customerId=${tempContract.customer.id}&buildingId=${tempContract.building.id}`);
     await listPage.expectLoaded();
     await listPage.waitForTableData();
     await expect(listPage.rowByContractText(tempContract.customer.fullName)).toBeVisible();
@@ -104,7 +105,7 @@ test.describe("Admin - Contract Management @regression", () => {
     const scenario = await createAssignableScenario(adminApi);
     const formPage = new AdminContractFormPage(page);
 
-    await page.goto("/admin/contract/add");
+    await new NavigationPage(page).open("/admin/contract/add");
     await formPage.expectAddLoaded();
     await formPage.selectBuilding(scenario.building.id);
     await formPage.waitForRentAreaOptions();
@@ -115,9 +116,9 @@ test.describe("Admin - Contract Management @regression", () => {
     await formPage.fillRentPrice(1450000);
     await formPage.fillDates("2026-06-01", "2026-12-31");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/thành công|thanh cong|them hop dong|thêm hợp đồng|success/i);
+    await formPage.expectSweetAlertContains(/thnh cng|thanh cong|them hop dong|thm h?p d?ng|success/i);
 
-    const rows = await MySqlDbClient.query<{ id: number; rent_price: number; start_date: string; end_date: string }>(
+    const rows = await TestDbRepository.query<{ id: number; rent_price: number; start_date: string; end_date: string }>(
       `
         SELECT id, rent_price,
                DATE_FORMAT(start_date, '%Y-%m-%d') AS start_date,
@@ -141,7 +142,7 @@ test.describe("Admin - Contract Management @regression", () => {
     const scenario = await createAssignableScenario(adminApi);
     const formPage = new AdminContractFormPage(page);
 
-    await page.goto("/admin/contract/add");
+    await new NavigationPage(page).open("/admin/contract/add");
     await formPage.expectAddLoaded();
     await formPage.selectBuilding(scenario.building.id);
     await formPage.waitForRentAreaOptions();
@@ -152,9 +153,9 @@ test.describe("Admin - Contract Management @regression", () => {
     await formPage.fillRentPrice(1500000);
     await formPage.fillDates("2026-09-01", "2026-08-01");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/ngày kết thúc|ngay ket thuc|cảnh báo|canh bao|warning/i);
+    await formPage.expectSweetAlertContains(/ngy k?t thc|ngay ket thuc|c?nh bo|canh bao|warning/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND rent_price = ?",
       [scenario.customer.id, scenario.building.id, 1500000]
     );
@@ -169,15 +170,15 @@ test.describe("Admin - Contract Management @regression", () => {
     cleanupCustomerIds.add(tempContract.customer.id);
 
     const formPage = new AdminContractFormPage(page);
-    await page.goto(`/admin/contract/edit/${tempContract.id}`);
+    await new NavigationPage(page).open(`/admin/contract/edit/${tempContract.id}`);
     await formPage.expectEditLoaded(tempContract.id);
     await formPage.fillDates("2026-01-15", "2026-11-30");
     await formPage.fillRentPrice(2500000);
     await formPage.selectStatus("ACTIVE");
     await formPage.submitContract();
-    await formPage.expectSweetAlertContains(/thành công|thanh cong|cập nhật|cap nhat|success/i);
+    await formPage.expectSweetAlertContains(/thnh cng|thanh cong|c?p nh?t|cap nhat|success/i);
 
-    const rows = await MySqlDbClient.query<{ rent_price: number; end_date: string; status: string }>(
+    const rows = await TestDbRepository.query<{ rent_price: number; end_date: string; status: string }>(
       "SELECT rent_price, DATE_FORMAT(end_date, '%Y-%m-%d') AS end_date, status FROM contract WHERE id = ?",
       [tempContract.id]
     );
@@ -193,10 +194,10 @@ test.describe("Admin - Contract Management @regression", () => {
     cleanupBuildingIds.add(tempContract.building.id);
     cleanupCustomerIds.add(tempContract.customer.id);
 
-    await MySqlDbClient.execute("UPDATE contract SET status = 'EXPIRED' WHERE id = ?", [tempContract.id]);
+    await TestDbRepository.execute("UPDATE contract SET status = 'EXPIRED' WHERE id = ?", [tempContract.id]);
 
     const formPage = new AdminContractFormPage(page);
-    await page.goto(`/admin/contract/edit/${tempContract.id}`);
+    await new NavigationPage(page).open(`/admin/contract/edit/${tempContract.id}`);
     await formPage.expectEditLoaded(tempContract.id);
     await formPage.expectExpiredBanner();
   });
@@ -209,14 +210,14 @@ test.describe("Admin - Contract Management @regression", () => {
     cleanupCustomerIds.add(tempContract.customer.id);
 
     const detailPage = new AdminContractDetailPage(page);
-    await page.goto(`/admin/contract/${tempContract.id}`);
+    await new NavigationPage(page).open(`/admin/contract/${tempContract.id}`);
     await detailPage.expectLoaded(tempContract.id);
     await detailPage.deleteContract();
     await detailPage.confirmSweetAlert();
-    await detailPage.expectSweetAlertContains(/thành công|thanh cong|xoa hop dong|xóa hợp đồng|success/i);
+    await detailPage.expectSweetAlertContains(/thnh cng|thanh cong|xoa hop dong|xa h?p d?ng|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM contract WHERE id = ?", [tempContract.id]);
+      const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM contract WHERE id = ?", [tempContract.id]);
       return rows.length;
     }).toBe(0);
 

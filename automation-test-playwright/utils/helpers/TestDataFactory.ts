@@ -67,6 +67,12 @@ export class TestDataFactory {
     return `${prefix}-${this.runToken()}-${timestamp}-${counter}`;
   }
 
+  static assertIncludesRunToken(value: string, label = "test data value"): void {
+    if (!value.toLowerCase().includes(this.runToken())) {
+      throw new Error(`${label} must include runToken ${this.runToken()} to keep cleanup safe and parallel-friendly.`);
+    }
+  }
+
   static taoHauToDuyNhat(prefix = "pw"): string {
     return this.taoMaDuyNhat(prefix);
   }

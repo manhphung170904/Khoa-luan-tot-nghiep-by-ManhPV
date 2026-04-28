@@ -1,6 +1,7 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
 import type { APIRequestContext } from "@playwright/test";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { AdminSaleContractDetailPage } from "@pages/admin/AdminSaleContractDetailPage";
 import { AdminSaleContractFormPage } from "@pages/admin/AdminSaleContractFormPage";
@@ -17,7 +18,7 @@ type TempCustomer = Awaited<ReturnType<typeof TempEntityHelper.taoCustomerTam>>;
 type TempBuilding = Awaited<ReturnType<typeof TempEntityHelper.taoBuildingTam>>;
 type TempSaleContract = Awaited<ReturnType<typeof TempEntityHelper.taoSaleContractTam>>;
 
-test.describe("Admin - Sale Contract Management @regression", () => {
+test.describe("Admin - Sale Contract Management @regression @e2e", () => {
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupSaleContractIds = new Set<number>();
   const cleanupCustomerIds = new Set<number>();
@@ -27,7 +28,7 @@ test.describe("Admin - Sale Contract Management @regression", () => {
   test.beforeEach(async ({ page, adminApi }) => {
     adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
-    await page.goto("/admin/sale-contract/list");
+    await new NavigationPage(page).open("/admin/sale-contract/list");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -92,7 +93,7 @@ test.describe("Admin - Sale Contract Management @regression", () => {
     const listPage = new AdminSaleContractListPage(page);
     const detailPage = new AdminSaleContractDetailPage(page);
 
-    await page.goto(`/admin/sale-contract/search?customerId=${tempSaleContract.customer.id}&buildingId=${tempSaleContract.building.id}`);
+    await new NavigationPage(page).open(`/admin/sale-contract/search?customerId=${tempSaleContract.customer.id}&buildingId=${tempSaleContract.building.id}`);
     await listPage.expectLoaded();
     await listPage.waitForTableData();
     await expect(listPage.rowBySaleContractText(tempSaleContract.customer.fullName)).toBeVisible();
@@ -104,7 +105,7 @@ test.describe("Admin - Sale Contract Management @regression", () => {
     const scenario = await createAssignableScenario(adminApi);
     const formPage = new AdminSaleContractFormPage(page);
 
-    await page.goto("/admin/sale-contract/add");
+    await new NavigationPage(page).open("/admin/sale-contract/add");
     await formPage.expectAddLoaded();
     await formPage.selectBuilding(scenario.building.id);
     await formPage.selectCustomer(scenario.customer.id);
@@ -115,7 +116,7 @@ test.describe("Admin - Sale Contract Management @regression", () => {
     await formPage.submitSaleContract();
     await formPage.expectSweetAlertContains(/thanh cong|them hop dong|success/i);
 
-    const rows = await MySqlDbClient.query<{ id: number; sale_price: number }>(
+    const rows = await TestDbRepository.query<{ id: number; sale_price: number }>(
       `
         SELECT id, sale_price
         FROM sale_contract
@@ -138,14 +139,14 @@ test.describe("Admin - Sale Contract Management @regression", () => {
     cleanupCustomerIds.add(tempSaleContract.customer.id);
 
     const formPage = new AdminSaleContractFormPage(page);
-    await page.goto(`/admin/sale-contract/edit/${tempSaleContract.id}`);
+    await new NavigationPage(page).open(`/admin/sale-contract/edit/${tempSaleContract.id}`);
     await formPage.expectEditLoaded(tempSaleContract.id);
     await formPage.fillTransferDate("2026-06-16");
     await formPage.submitSaleContract();
     await formPage.expectSweetAlertContains(/thanh cong|cap nhat|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ transfer_date: string }>(
+      const rows = await TestDbRepository.query<{ transfer_date: string }>(
         "SELECT DATE_FORMAT(transfer_date, '%Y-%m-%d') AS transfer_date FROM sale_contract WHERE id = ?",
         [tempSaleContract.id]
       );
@@ -160,19 +161,19 @@ test.describe("Admin - Sale Contract Management @regression", () => {
     cleanupBuildingIds.add(tempSaleContract.building.id);
     cleanupCustomerIds.add(tempSaleContract.customer.id);
 
-    const beforeRows = await MySqlDbClient.query<{ transfer_date: string | null }>(
+    const beforeRows = await TestDbRepository.query<{ transfer_date: string | null }>(
       "SELECT DATE_FORMAT(transfer_date, '%Y-%m-%d') AS transfer_date FROM sale_contract WHERE id = ?",
       [tempSaleContract.id]
     );
 
     const formPage = new AdminSaleContractFormPage(page);
-    await page.goto(`/admin/sale-contract/edit/${tempSaleContract.id}`);
+    await new NavigationPage(page).open(`/admin/sale-contract/edit/${tempSaleContract.id}`);
     await formPage.expectEditLoaded(tempSaleContract.id);
     await formPage.fillTransferDate("2025-01-01");
     await formPage.submitSaleContract();
     await formPage.expectSweetAlertContains(/ngay ban giao|khong hop le|transfer date/i);
 
-    const afterRows = await MySqlDbClient.query<{ transfer_date: string | null }>(
+    const afterRows = await TestDbRepository.query<{ transfer_date: string | null }>(
       "SELECT DATE_FORMAT(transfer_date, '%Y-%m-%d') AS transfer_date FROM sale_contract WHERE id = ?",
       [tempSaleContract.id]
     );
@@ -187,14 +188,14 @@ test.describe("Admin - Sale Contract Management @regression", () => {
     cleanupCustomerIds.add(tempSaleContract.customer.id);
 
     const detailPage = new AdminSaleContractDetailPage(page);
-    await page.goto(`/admin/sale-contract/${tempSaleContract.id}`);
+    await new NavigationPage(page).open(`/admin/sale-contract/${tempSaleContract.id}`);
     await detailPage.expectLoaded(tempSaleContract.id);
     await detailPage.deleteSaleContract();
     await detailPage.confirmSweetAlert();
     await detailPage.expectSweetAlertContains(/thanh cong|xoa hop dong mua ban|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM sale_contract WHERE id = ?", [tempSaleContract.id]);
+      const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM sale_contract WHERE id = ?", [tempSaleContract.id]);
       return rows.length;
     }).toBe(0);
 

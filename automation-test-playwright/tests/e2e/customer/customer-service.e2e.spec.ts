@@ -6,14 +6,15 @@ import {
   loginAsTempUser,
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
+import { NavigationPage } from "@pages/core/NavigationPage";
 
-test.describe("Customer - Service @regression", () => {
+test.describe("Customer - Service @regression @e2e", () => {
   let tempUser: TempCustomerProfileUser | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {
     tempUser = await createTempCustomerProfileUser(adminApi);
     await loginAsTempUser(page, tempUser.username, tempUser.password);
-    await page.goto("/customer/service");
+    await new NavigationPage(page).open("/customer/service");
   });
 
   test.afterEach(async ({ adminApi }) => {

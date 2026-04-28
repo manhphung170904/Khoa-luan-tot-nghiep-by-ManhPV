@@ -60,6 +60,6 @@ export class AdminStaffDetailPage extends RoutedCrudDetailPage {
   }
 
   async confirmSweetAlert(): Promise<void> {
-    await this.page.locator(".swal2-confirm").click();
+    await super.confirmSweetAlert();
   }
 }

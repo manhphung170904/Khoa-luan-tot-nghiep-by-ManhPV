@@ -69,24 +69,15 @@ export class AdminBuildingFormPage extends RoutedCrudFormPage {
     if (typeof data.waterFee === "number") await this.fillNumberField("waterFee", data.waterFee);
     if (typeof data.electricityFee === "number") await this.fillNumberField("electricityFee", data.electricityFee);
     if (data.rentAreaValues) {
-      await this.page.evaluate(() => {
-        const win = window as typeof window & {
-          areaTags?: string[];
-          renderTags?: () => void;
-        };
-
-        if (Array.isArray(win.areaTags)) {
-          win.areaTags.length = 0;
-        }
-
-        if (typeof win.renderTags === "function") {
-          win.renderTags();
-        }
-      });
-
       const tagInput = this.page.locator("#tagRealInput");
+      const removeButtons = this.page.locator(".area-tag button, .tag .remove-tag, .tag .tag-remove, .rent-area-tag .btn-close");
+      while ((await removeButtons.count()) > 0) {
+        await removeButtons.first().click();
+      }
       await expect(tagInput).toBeVisible();
       await tagInput.click();
+      await tagInput.press("Control+A");
+      await tagInput.press("Backspace");
       await tagInput.type(data.rentAreaValues);
       await tagInput.press("Enter");
       await expect(this.page.locator("#rentAreaValuesInput")).toHaveValue(data.rentAreaValues);
@@ -98,12 +89,8 @@ export class AdminBuildingFormPage extends RoutedCrudFormPage {
   }
 
   async setCoordinates(latitude: number, longitude: number): Promise<void> {
-    await this.firstVisible(this.page.locator('[name="latitude"], #latInput')).evaluate((element, value) => {
-      (element as HTMLInputElement).value = String((value as { lat: number }).lat);
-    }, { lat: latitude });
-    await this.firstVisible(this.page.locator('[name="longitude"], #lngInput')).evaluate((element, value) => {
-      (element as HTMLInputElement).value = String((value as { lng: number }).lng);
-    }, { lng: longitude });
+    await this.setInputValue(this.page.locator('[name="latitude"], #latInput').first(), String(latitude));
+    await this.setInputValue(this.page.locator('[name="longitude"], #lngInput').first(), String(longitude));
   }
 
   async selectStaffIds(staffIds: number[]): Promise<void> {
@@ -113,7 +100,7 @@ export class AdminBuildingFormPage extends RoutedCrudFormPage {
   }
 
   async expectLockBanner(): Promise<void> {
-    await expect(this.firstVisible(this.page.getByText(/không thể chỉnh sửa|khong the chinh sua/i))).toBeVisible();
+    await expect(this.page.locator("main .bi-lock-fill").first()).toBeVisible();
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {

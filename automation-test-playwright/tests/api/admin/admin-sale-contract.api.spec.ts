@@ -1,12 +1,12 @@
 import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityCleanupService } from "@helpers/TempEntityCleanupService";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Sale Contract @regression", () => {
+test.describe("Admin - API Sale Contract @regression @api", () => {
   const missingId = TestDataFactory.missingId;
   const missingSmallId = TestDataFactory.missingSmallId;
 
@@ -29,9 +29,9 @@ test.describe("Admin - API Sale Contract @regression", () => {
       data: payload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/sale|giá|price|bán/i);
+    expect(errorBody.message).toMatch(/sale|gi|price|bn/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND sale_price = ?",
       [payload.buildingId, payload.customerId, payload.salePrice]
     );
@@ -45,9 +45,9 @@ test.describe("Admin - API Sale Contract @regression", () => {
       data: payload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/sale|giá|price|bán/i);
+    expect(errorBody.message).toMatch(/sale|gi|price|bn/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND sale_price = ?",
       [payload.buildingId, payload.customerId, payload.salePrice]
     );
@@ -62,7 +62,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
       data: invalidPayload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/building|bất động sản|tòa nhà|vui lòng chọn/i);
+    expect(errorBody.message).toMatch(/building|b?t d?ng s?n|ta nh|vui lng ch?n/i);
   });
 
   test("[SC-011] - API Admin Sale Contract - Customer Reference - Missing Customer Validation", async ({ adminApi: admin }) => {
@@ -73,7 +73,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
       data: invalidPayload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/customer|khách hàng|vui lòng chọn/i);
+    expect(errorBody.message).toMatch(/customer|khch hng|vui lng ch?n/i);
   });
 
   test("[SC-003] - API Admin Sale Contract - Building Reference - Nonexistent Building Validation", async ({ adminApi: admin, cleanupRegistry }) => {
@@ -95,9 +95,9 @@ test.describe("Admin - API Sale Contract @regression", () => {
         })
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/building|tòa nhà|bất động sản|không tìm thấy|not found/i);
+    expect(errorBody.message).toMatch(/building|ta nh|b?t d?ng s?n|khng tm th?y|not found/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
         [missingSmallId, tempCustomer.id, tempStaff.id]
     );
@@ -129,9 +129,9 @@ test.describe("Admin - API Sale Contract @regression", () => {
         })
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/staff|nhân viên|không tìm thấy|not found/i);
+    expect(errorBody.message).toMatch(/staff|nhn vin|khng tm th?y|not found/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
         [tempBuilding.id, tempCustomer.id, -1]
     );
@@ -161,9 +161,9 @@ test.describe("Admin - API Sale Contract @regression", () => {
         })
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/staff|phân công|building|tòa nhà/i);
+    expect(errorBody.message).toMatch(/staff|phn cng|building|ta nh/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
         [tempBuilding.id, tempCustomer.id, outsiderStaff.id]
     );
@@ -193,9 +193,9 @@ test.describe("Admin - API Sale Contract @regression", () => {
         })
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/staff|phân công|customer|khách hàng/i);
+    expect(errorBody.message).toMatch(/staff|phn cng|customer|khch hng/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
         [tempBuilding.id, tempCustomer.id, outsiderStaff.id]
     );
@@ -227,9 +227,9 @@ test.describe("Admin - API Sale Contract @regression", () => {
         })
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/sale|bán|mua bán|transaction|giao dịch|không phải loại mua bán/i);
+    expect(errorBody.message).toMatch(/sale|bn|mua bn|transaction|giao d?ch|khng ph?i lo?i mua bn/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
         [tempBuilding.id, tempCustomer.id, tempStaff.id]
     );
@@ -252,9 +252,9 @@ test.describe("Admin - API Sale Contract @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/sale-contracts"
     });
-    expect(errorBody.message).toMatch(/sold|đã (được )?bán|sale contract|hợp đồng mua bán/i);
+    expect(errorBody.message).toMatch(/sold|d (du?c )?bn|sale contract|h?p d?ng mua bn/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ?",
         [temp.building.id]
     );
@@ -296,7 +296,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
         dataMode: "null"
     });
 
-    const saleRows = await MySqlDbClient.query<{
+    const saleRows = await TestDbRepository.query<{
         id: number;
         sale_price: number;
         note: string;
@@ -314,7 +314,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
     createdSaleContractId = saleRows[0]!.id;
     const saleContractIdForCleanup = createdSaleContractId;
     cleanupRegistry.addLabeled(`Delete sale contract ${saleContractIdForCleanup}`, async () => {
-        await MySqlDbClient.execute("DELETE FROM sale_contract WHERE id = ?", [saleContractIdForCleanup]);
+        await TestDbRepository.execute("DELETE FROM sale_contract WHERE id = ?", [saleContractIdForCleanup]);
     });
     expect(Number(saleRows[0]!.sale_price)).toBe(Number(payload.salePrice));
     expect(saleRows[0]!.note).toBe(payload.note);
@@ -368,7 +368,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
         dataMode: "null"
     });
 
-    const updatedRows = await MySqlDbClient.query<{
+    const updatedRows = await TestDbRepository.query<{
         sale_price: number;
         note: string;
         transfer_date: string | null;
@@ -391,7 +391,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
         dataMode: "null"
     });
 
-    const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM sale_contract WHERE id = ?", [createdSaleContractId]);
+    const deletedRows = await TestDbRepository.query<{ id: number }>("SELECT id FROM sale_contract WHERE id = ?", [createdSaleContractId]);
     expect(deletedRows.length).toBe(0);
     createdSaleContractId = 0;
   });
@@ -412,7 +412,7 @@ test.describe("Admin - API Sale Contract @regression", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/sale-contracts/${missingId}`
     });
-    expect(errorBody.message).toMatch(/sale contract|hợp đồng mua bán|không tìm thấy|không tồn tại|not found/i);
+    expect(errorBody.message).toMatch(/sale contract|h?p d?ng mua bn|khng tm th?y|khng t?n t?i|not found/i);
   });
 
   test("[SC-018] - API Admin Sale Contract - Delete Sale Contract - Nonexistent ID Rejection", async ({ adminApi: admin }) => {

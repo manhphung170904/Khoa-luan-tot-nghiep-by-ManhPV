@@ -15,7 +15,7 @@ const readOnlyModules: ReadonlyModule[] = [
   { id: "API-STF-READ-005", name: "Invoice", path: "/api/v1/staff/invoices?page=1&size=5" }
 ];
 
-test.describe("Staff - API Read-Only @regression", () => {
+test.describe("Staff - API Read-Only @regression @api", () => {
   for (const module of readOnlyModules) {
     test(`[${module.id}] - API Staff Read-Only - Authentication - Anonymous Access Rejection @smoke`, async ({ anonymousApi }) => {
       const response = await anonymousApi.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });

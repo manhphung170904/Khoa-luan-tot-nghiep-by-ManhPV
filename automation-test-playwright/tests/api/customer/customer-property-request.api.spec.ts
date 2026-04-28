@@ -2,11 +2,11 @@ import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectArrayBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { createAnonymousContext } from "@api/adminApiUtils";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
-test.describe("Customer - API Property Request @regression", () => {
+test.describe("Customer - API Property Request @regression @api", () => {
   test.afterAll(async () => {
   });
 
@@ -77,9 +77,9 @@ test.describe("Customer - API Property Request @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/customer/property-requests"
     });
-    expect(errorBody.message).toMatch(/pending|tồn tại|yêu cầu|đang chờ xử lý/i);
+    expect(errorBody.message).toMatch(/pending|t?n t?i|yu c?u|dang ch? x? l/i);
 
-    const duplicateRows = await MySqlDbClient.query<{ count: number }>(
+    const duplicateRows = await TestDbRepository.query<{ count: number }>(
         `
           SELECT COUNT(*) AS count
           FROM property_request

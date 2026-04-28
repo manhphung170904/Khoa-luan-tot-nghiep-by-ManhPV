@@ -1,26 +1,27 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { CustomerPropertyRequestListPage } from "@pages/customer/CustomerPropertyRequestListPage";
 import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
 import { loginAsTempUser } from "@data/profileTempUsers";
 
-test.describe("Customer - Property Request @regression", () => {
+test.describe("Customer - Property Request @regression @e2e", () => {
   let scenario: PropertyRequestScenario | null = null;
   let createdContractId = 0;
 
   test.beforeEach(async ({ page, playwright }) => {
     scenario = await createPropertyRequestScenario(playwright, "RENT");
     await loginAsTempUser(page, scenario.customerUsername);
-    await page.goto("/customer/property-request/list");
+    await new NavigationPage(page).open("/customer/property-request/list");
   });
 
   test.afterEach(async () => {
     if (scenario) {
       if (createdContractId) {
         await CleanupHelper.run([
-          { label: `Delete property request ${scenario.propertyRequestId}`, action: () => MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario!.propertyRequestId]) },
+          { label: `Delete property request ${scenario.propertyRequestId}`, action: () => TestDbRepository.execute("DELETE FROM property_request WHERE id = ?", [scenario!.propertyRequestId]) },
           {
             label: `Delete contract ${createdContractId}`,
             action: () => scenario!.admin.delete(`/api/v1/admin/contracts/${createdContractId}`, { failOnStatusCode: false })
@@ -40,7 +41,7 @@ test.describe("Customer - Property Request @regression", () => {
     await requestPage.expectLoaded();
     await requestPage.expectRequestVisible(scenario!.propertyRequestId);
     await requestPage.expectRequestContains(scenario!.propertyRequestId, scenario!.buildingName);
-    await requestPage.expectRequestContains(scenario!.propertyRequestId, /chờ xử lý|cho xu ly|pending/i);
+    await requestPage.expectRequestContains(scenario!.propertyRequestId, "Cho xu ly");
     await requestPage.expectCancelButtonVisible(scenario!.propertyRequestId);
   });
 
@@ -49,15 +50,15 @@ test.describe("Customer - Property Request @regression", () => {
     await requestPage.expectLoaded();
     await requestPage.cancelRequest(scenario!.propertyRequestId);
     await requestPage.confirmSweetAlert();
-    await expect(requestPage.toastPopup()).toContainText(/thành công|thanh cong|đã hủy yêu cầu|da huy yeu cau|success/i);
+    await requestPage.expectSweetAlertContainsText(/thnh cng|thanh cong|d h?y yu c?u|da huy yeu cau|success/i);
 
     await page.reload();
     await requestPage.expectLoaded();
     await requestPage.expectRequestVisible(scenario!.propertyRequestId);
-    await requestPage.expectRequestContains(scenario!.propertyRequestId, /đã hủy|da huy|cancelled/i);
+    await requestPage.expectRequestContains(scenario!.propertyRequestId, "Da huy");
     await requestPage.expectCancelButtonHidden(scenario!.propertyRequestId);
 
-    const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM property_request WHERE id = ?", [
+    const rows = await TestDbRepository.query<{ status: string }>("SELECT status FROM property_request WHERE id = ?", [
       scenario!.propertyRequestId
     ]);
     expect(rows[0]?.status).toBe("CANCELLED");
@@ -76,7 +77,7 @@ test.describe("Customer - Property Request @regression", () => {
     });
     expect(createContractResponse.status()).toBe(200);
 
-    const contractRows = await MySqlDbClient.query<{ id: number }>(
+    const contractRows = await TestDbRepository.query<{ id: number }>(
       `
         SELECT id
         FROM contract
@@ -95,15 +96,15 @@ test.describe("Customer - Property Request @regression", () => {
     });
     expect(approveResponse.status()).toBe(200);
 
-    await page.goto("/customer/property-request/list");
+    await new NavigationPage(page).open("/customer/property-request/list");
 
     const requestPage = new CustomerPropertyRequestListPage(page);
     await requestPage.expectLoaded();
     await requestPage.expectRequestVisible(scenario!.propertyRequestId);
-    await requestPage.expectRequestContains(scenario!.propertyRequestId, /đã duyệt|da duyet|approved/i);
+    await requestPage.expectRequestContains(scenario!.propertyRequestId, "Da duyet");
     await requestPage.expectCancelButtonHidden(scenario!.propertyRequestId);
 
-    const rows = await MySqlDbClient.query<{ status: string; contract_id: number | null }>(
+    const rows = await TestDbRepository.query<{ status: string; contract_id: number | null }>(
       "SELECT status, contract_id FROM property_request WHERE id = ?",
       [scenario!.propertyRequestId]
     );

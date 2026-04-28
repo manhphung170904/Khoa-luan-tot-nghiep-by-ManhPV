@@ -1,11 +1,11 @@
 import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Contract @api-write @regression", () => {
+test.describe("Admin - API Contract @api-write @destructive @regression", () => {
   const missingId = TestDataFactory.missingId;
   const missingSmallId = TestDataFactory.missingSmallId;
 
@@ -32,9 +32,9 @@ test.describe("Admin - API Contract @api-write @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts"
     });
-    expect(errorBody.message).toMatch(/rent|giá|price/i);
+    expect(errorBody.message).toMatch(/rent|gi|price/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND rent_price = ?",
       [payload.customerId, payload.buildingId, payload.rentPrice]
     );
@@ -61,9 +61,9 @@ test.describe("Admin - API Contract @api-write @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/contracts"
     });
-    expect(errorBody.message).toMatch(/end|start|ngày/i);
+    expect(errorBody.message).toMatch(/end|start|ngy/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND start_date = ? AND end_date = ?",
       [payload.customerId, payload.buildingId, payload.startDate, payload.endDate]
     );
@@ -99,9 +99,9 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
-      expect(errorBody.message).toMatch(/building|bất động sản|tòa nhà/i);
+      expect(errorBody.message).toMatch(/building|b?t d?ng s?n|ta nh/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+      const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
         [temp.customer.id, missingSmallId, temp.staff.id]
       );
@@ -124,9 +124,9 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
-      expect(errorBody.message).toMatch(/customer|khách hàng|không tìm thấy/i);
+      expect(errorBody.message).toMatch(/customer|khch hng|khng tm th?y/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+      const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
         [missingSmallId, temp.building.id, temp.staff.id]
       );
@@ -152,9 +152,9 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
-      expect(errorBody.message).toMatch(/staff|phân công|building|tòa nhà/i);
+      expect(errorBody.message).toMatch(/staff|phn cng|building|ta nh/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+      const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
         [managedContract.customer.id, managedContract.building.id, outsiderStaff.id]
       );
@@ -186,9 +186,9 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/contracts"
       });
-      expect(errorBody.message).toMatch(/staff|phân công|customer|khách hàng/i);
+      expect(errorBody.message).toMatch(/staff|phn cng|customer|khch hng/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+      const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM contract WHERE customer_id = ? AND building_id = ? AND staff_id = ?",
         [tempCustomer.id, tempBuilding.id, contractStaff.id]
       );
@@ -222,7 +222,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/contracts/${missingId}`
     });
-    expect(errorBody.message).toMatch(/contract|hợp đồng|không tồn tại|không tìm thấy|not found/i);
+    expect(errorBody.message).toMatch(/contract|h?p d?ng|khng t?n t?i|khng tm th?y|not found/i);
   });
 
   test("[CTR-006] - API Admin Contract - Contract Lifecycle - Create List Filter Update Status Update and Delete Flow", async ({
@@ -259,7 +259,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         dataMode: "null"
       });
 
-      const contractRows = await MySqlDbClient.query<{
+      const contractRows = await TestDbRepository.query<{
         id: number;
         rent_price: number;
         rent_area: number;
@@ -318,7 +318,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         dataMode: "null"
       });
 
-      const updatedRows = await MySqlDbClient.query<{ rent_price: number; status: string }>(
+      const updatedRows = await TestDbRepository.query<{ rent_price: number; status: string }>(
         "SELECT rent_price, status FROM contract WHERE id = ?",
         [createdContractId]
       );
@@ -342,7 +342,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/contracts/${missingSmallId}`
       });
-      expect(missingDeleteError.message).toMatch(/contract|hợp đồng|không tồn tại|không tìm thấy|not found/i);
+      expect(missingDeleteError.message).toMatch(/contract|h?p d?ng|khng t?n t?i|khng tm th?y|not found/i);
 
       const deleteResponse = await adminApi.delete(`/api/v1/admin/contracts/${createdContractId}`, {
         failOnStatusCode: false
@@ -353,7 +353,7 @@ test.describe("Admin - API Contract @api-write @regression", () => {
         dataMode: "null"
       });
 
-      const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM contract WHERE id = ?", [createdContractId]);
+      const deletedRows = await TestDbRepository.query<{ id: number }>("SELECT id FROM contract WHERE id = ?", [createdContractId]);
       expect(deletedRows.length).toBe(0);
       createdContractId = 0;
     } finally {

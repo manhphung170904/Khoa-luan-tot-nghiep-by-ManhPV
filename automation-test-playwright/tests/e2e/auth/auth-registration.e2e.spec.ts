@@ -1,7 +1,7 @@
 import { expect, test } from "@fixtures/base.fixture";
 import type { APIRequestContext, Page } from "@playwright/test";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { cleanupDatabaseScope } from "@db/TestDataCleanup";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { LoginPage } from "@pages/auth/LoginPage";
@@ -27,7 +27,7 @@ function buildRegistrationUser(prefix: string): RegistrationUser {
 }
 
 async function cleanupRegistrationUser(user: RegistrationUser): Promise<void> {
-  const rows = await MySqlDbClient.query<{ id: number }>(
+  const rows = await TestDbRepository.query<{ id: number }>(
     "SELECT id FROM customer WHERE email = ? OR username = ?",
     [user.email, user.username]
   );
@@ -38,7 +38,7 @@ async function cleanupRegistrationUser(user: RegistrationUser): Promise<void> {
 }
 
 async function assertNoRegisteredCustomer(user: RegistrationUser): Promise<void> {
-  const rows = await MySqlDbClient.query<{ count: number }>(
+  const rows = await TestDbRepository.query<{ count: number }>(
     "SELECT COUNT(*) AS count FROM customer WHERE email = ? OR username = ?",
     [user.email, user.username]
   );
@@ -69,7 +69,7 @@ async function completeRegistrationFlow(
   await page.waitForURL(/\/customer\/home/);
 }
 
-test.describe("Auth - Registration @regression", () => {
+test.describe("Auth - Registration @regression @e2e", () => {
   test.afterEach(async () => {
   });
 
@@ -79,13 +79,13 @@ test.describe("Auth - Registration @regression", () => {
     try {
       await completeRegistrationFlow(page, request, user);
 
-      const createdRows = await MySqlDbClient.query<{ username: string }>(
+      const createdRows = await TestDbRepository.query<{ username: string }>(
         "SELECT username FROM customer WHERE email = ? AND username = ?",
         [user.email, user.username]
       );
       expect(createdRows.length).toBe(1);
 
-      const otpRows = await MySqlDbClient.query<{ status: string }>(
+      const otpRows = await TestDbRepository.query<{ status: string }>(
         `
           SELECT status
           FROM email_verification
@@ -115,11 +115,11 @@ test.describe("Auth - Registration @regression", () => {
       await verifyPage.verifyOtp("000000");
       await page.waitForURL(/\/register\/verify\?/);
       await verifyPage.expectPopupContains(
-        /xác thực thất bại|xac thuc that bai|otp khong hop le|ma otp khong hop le|verification failed/i
+        /xac thuc that bai|otp khong hop le|ma otp khong hop le|verification failed/i
       );
       await expect(page).not.toHaveURL(/\/register\/complete\?/);
 
-      const otpRows = await MySqlDbClient.query<{ status: string }>(
+      const otpRows = await TestDbRepository.query<{ status: string }>(
         `
           SELECT status
           FROM email_verification
@@ -154,7 +154,7 @@ test.describe("Auth - Registration @regression", () => {
       await loginPage.login(user.username, "WrongPassword!123");
       await page.waitForURL(/\/login\?errorMessage=/);
       await loginPage.expectPopupContains(
-        /đăng nhập thất bại|dang nhap that bai|sai tài khoản hoặc mật khẩu|sai tai khoan hoac mat khau|login failed/i
+        /dang nhap that bai|sai tai khoan hoac mat khau|login failed/i
       );
     } finally {
       await cleanupRegistrationUser(user);

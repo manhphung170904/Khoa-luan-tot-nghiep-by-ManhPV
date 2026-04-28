@@ -1,6 +1,7 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { CustomerProfilePage } from "@pages/customer/CustomerProfilePage";
 import { AuthSessionHelper } from "@helpers/AuthSessionHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
@@ -16,13 +17,13 @@ function requireTempUser(tempUser: TempCustomerProfileUser | null): TempCustomer
   return tempUser!;
 }
 
-test.describe("Customer - Profile @regression", () => {
+test.describe("Customer - Profile @regression @e2e", () => {
   let tempUser: TempCustomerProfileUser | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {
     tempUser = await createTempCustomerProfileUser(adminApi);
     await loginAsTempUser(page, tempUser.username, tempUser.password);
-    await page.goto("/customer/profile");
+    await new NavigationPage(page).open("/customer/profile");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -44,9 +45,9 @@ test.describe("Customer - Profile @regression", () => {
 
   test("[E2E-CUS-PRO-002] - Customer Profile - Success Message - Success SweetAlert Display", async ({ page }) => {
     const profilePage = new CustomerProfilePage(page);
-    await page.goto("/customer/profile?successMessage=Cap%20nhat%20thanh%20cong");
+    await new NavigationPage(page).open("/customer/profile?successMessage=Cap%20nhat%20thanh%20cong");
 
-    await profilePage.expectSweetAlertContains(/cập nhật thành công|cap nhat thanh cong|thành công|thanh cong/i);
+    await profilePage.expectSweetAlertContains(/c?p nh?t thnh cng|cap nhat thanh cong|thnh cng|thanh cong/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
@@ -58,15 +59,15 @@ test.describe("Customer - Profile @regression", () => {
 
     await profilePage.openUsernameModal();
     await profilePage.sendOtpFromModal("username");
-    await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
+    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_USERNAME");
     await profilePage.submitUsernameChange(TestDataFactory.taoUsername("cust"), otp);
-    await profilePage.expectSweetAlertContains(/lỗi|loi|thất bại|that bai|error|đã có mật khẩu|da co mat khau/i);
+    await profilePage.expectSweetAlertContains(/l?i|loi|th?t b?i|that bai|error|d c m?t kh?u|da co mat khau/i);
     await profilePage.confirmSweetAlertIfPresent();
 
-    const dbRows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [activeUser.id]);
+    const dbRows = await TestDbRepository.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [activeUser.id]);
     expect(dbRows[0]?.username).toBe(activeUser.username);
     expect((await profilePage.readProfileValues()).username).toBe(originalValues.username);
   });
@@ -79,14 +80,14 @@ test.describe("Customer - Profile @regression", () => {
 
     await profilePage.openPhoneModal();
     await profilePage.sendOtpFromModal("phone");
-    await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
+    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PHONE");
     await profilePage.submitPhoneChange(newPhone, otp);
-    await profilePage.expectSweetAlertContains(/thành công|thanh cong|cập nhật số|cap nhat so/i);
+    await profilePage.expectSweetAlertContains(/thnh cng|thanh cong|c?p nh?t s?|cap nhat so/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [activeUser.id]);
+      const rows = await TestDbRepository.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [activeUser.id]);
       return rows[0]?.phone ?? "";
     }).toBe(newPhone);
   });
@@ -95,7 +96,7 @@ test.describe("Customer - Profile @regression", () => {
     const profilePage = new CustomerProfilePage(page);
 
     await profilePage.submitPasswordChange("ValidPass1!", "DifferentPass1!", "000000");
-    await profilePage.expectSweetAlertContains(/không khớp|khong khop/i);
+    await profilePage.expectSweetAlertContains(/khng kh?p|khong khop/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
@@ -104,19 +105,19 @@ test.describe("Customer - Profile @regression", () => {
 
     const profilePage = new CustomerProfilePage(page);
     const newPassword = "NewCustomerPwd1!";
-    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [activeUser.id]);
+    const oldHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [activeUser.id]);
     const oldHash = oldHashRows[0]!.password;
 
     await profilePage.openPasswordModal();
     await profilePage.sendOtpFromModal("password");
-    await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
+    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PASSWORD");
     await profilePage.submitPasswordChange(newPassword, newPassword, otp);
-    await profilePage.expectSweetAlertContains(/thành công|thanh cong|mật khẩu|mat khau/i);
+    await profilePage.expectSweetAlertContains(/thnh cng|thanh cong|m?t kh?u|mat khau/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [activeUser.id]);
+      const rows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [activeUser.id]);
       return rows[0]?.password ?? "";
     }).not.toBe(oldHash);
 

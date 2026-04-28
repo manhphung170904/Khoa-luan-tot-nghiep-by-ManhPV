@@ -5,7 +5,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import {
   createAuthenticatedTempProfileScenario,
@@ -19,7 +19,7 @@ type ExistingIdentity = {
   phone: string;
 };
 
-test.describe("Admin - API Profile @api-write @otp @regression", () => {
+test.describe("Admin - API Profile @api-write @destructive @otp @regression", () => {
   let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let tempAdminContext: APIRequestContext;
   let tempAdmin: TempProfileUser;
@@ -44,7 +44,7 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
     tempAdmin = profileScenario.user;
     currentPassword = profileScenario.currentPassword;
 
-    const existingIdentityRows = await MySqlDbClient.query<ExistingIdentity>(
+    const existingIdentityRows = await TestDbRepository.query<ExistingIdentity>(
       `
         SELECT username, email, phone
         FROM staff
@@ -150,7 +150,7 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
   });
 
   test("[PRF-002] - API Admin Profile - Username - Invalid OTP Rejection", async () => {
-    const originalRows = await MySqlDbClient.query<{ username: string }>(
+    const originalRows = await TestDbRepository.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -167,9 +167,9 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
-    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|không hợp lệ|khong hop le/i);
+    expect(errorBody.message).toMatch(/otp|m|ma|xc th?c|xac thuc|khng h?p l?|khong hop le/i);
 
-    const latestRows = await MySqlDbClient.query<{ username: string }>(
+    const latestRows = await TestDbRepository.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -195,7 +195,7 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
       dataMode: "null"
     });
 
-    const staffRows = await MySqlDbClient.query<{ username: string }>(
+    const staffRows = await TestDbRepository.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -224,9 +224,9 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/username"
     });
-    expect(errorBody.message).toMatch(/username|tên đăng nhập|ten dang nhap|đăng nhập|dang nhap|đã được sử dụng|da duoc su dung|tồn tại|ton tai|trùng|trung/i);
+    expect(errorBody.message).toMatch(/username|tn dang nh?p|ten dang nhap|dang nh?p|dang nhap|d du?c s? d?ng|da duoc su dung|t?n t?i|ton tai|trng|trung/i);
 
-    const latestRows = await MySqlDbClient.query<{ username: string }>(
+    const latestRows = await TestDbRepository.query<{ username: string }>(
       "SELECT username FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -234,7 +234,7 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
   });
 
   test("[PRF-003] - API Admin Profile - Phone Number - Invalid OTP Rejection", async () => {
-    const originalRows = await MySqlDbClient.query<{ phone: string }>(
+    const originalRows = await TestDbRepository.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -251,9 +251,9 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han|không tìm thấy|khong tim thay/i);
+    expect(errorBody.message).toMatch(/otp|m|ma|xc th?c|xac thuc|h?t h?n|het han|khng tm th?y|khong tim thay/i);
 
-    const latestRows = await MySqlDbClient.query<{ phone: string }>(
+    const latestRows = await TestDbRepository.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -279,7 +279,7 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
       dataMode: "null"
     });
 
-    const staffRows = await MySqlDbClient.query<{ phone: string }>(
+    const staffRows = await TestDbRepository.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -308,9 +308,9 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/phone|điện thoại|dien thoai|đã được sử dụng|da duoc su dung|tồn tại|ton tai|trùng|trung/i);
+    expect(errorBody.message).toMatch(/phone|di?n tho?i|dien thoai|d du?c s? d?ng|da duoc su dung|t?n t?i|ton tai|trng|trung/i);
 
-    const latestRows = await MySqlDbClient.query<{ phone: string }>(
+    const latestRows = await TestDbRepository.query<{ phone: string }>(
       "SELECT phone FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -318,7 +318,7 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
   });
 
   test("[PRF-004] - API Admin Profile - Email - Incorrect Current Password Rejection", async () => {
-    const originalRows = await MySqlDbClient.query<{ email: string }>(
+    const originalRows = await TestDbRepository.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -335,9 +335,9 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|mật khẩu|mat khau|hiện tại|hien tai|incorrect|không đúng|khong dung|sai/i);
+    expect(errorBody.message).toMatch(/password|m?t kh?u|mat khau|hi?n t?i|hien tai|incorrect|khng dng|khong dung|sai/i);
 
-    const latestRows = await MySqlDbClient.query<{ email: string }>(
+    const latestRows = await TestDbRepository.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -360,7 +360,7 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
       dataMode: "null"
     });
 
-    const staffRows = await MySqlDbClient.query<{ email: string }>(
+    const staffRows = await TestDbRepository.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -383,9 +383,9 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/email"
     });
-    expect(errorBody.message).toMatch(/email|tồn tại|ton tai|trùng|trung/i);
+    expect(errorBody.message).toMatch(/email|t?n t?i|ton tai|trng|trung/i);
 
-    const latestRows = await MySqlDbClient.query<{ email: string }>(
+    const latestRows = await TestDbRepository.query<{ email: string }>(
       "SELECT email FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -393,7 +393,7 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
   });
 
   test("[PRF-010] - API Admin Profile - Password - Invalid OTP Rejection", async () => {
-    const originalRows = await MySqlDbClient.query<{ password: string }>(
+    const originalRows = await TestDbRepository.query<{ password: string }>(
       "SELECT password FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );
@@ -412,9 +412,9 @@ test.describe("Admin - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/profile/password"
     });
-    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han|không tìm thấy|khong tim thay/i);
+    expect(errorBody.message).toMatch(/otp|m|ma|xc th?c|xac thuc|h?t h?n|het han|khng tm th?y|khong tim thay/i);
 
-    const latestRows = await MySqlDbClient.query<{ password: string }>(
+    const latestRows = await TestDbRepository.query<{ password: string }>(
       "SELECT password FROM staff WHERE id = ? LIMIT 1",
       [tempAdmin.id]
     );

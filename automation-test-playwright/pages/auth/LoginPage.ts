@@ -47,7 +47,6 @@ export class LoginPage extends BasePage {
   }
 
   async expectPopupContains(text: string | RegExp): Promise<void> {
-    await expect(this.toastPopup()).toBeVisible();
-    await expect(this.toastPopup()).toContainText(text);
+    await this.expectSweetAlertContainsText(text);
   }
 }

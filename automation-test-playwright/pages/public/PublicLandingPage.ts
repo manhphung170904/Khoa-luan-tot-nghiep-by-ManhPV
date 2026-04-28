@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { BasePage } from "../core/BasePage";
+import { BrowserStorageHelper } from "@helpers/BrowserStorageHelper";
 import { OptionalActionHelper } from "@helpers/OptionalActionHelper";
 
 export class PublicLandingPage extends BasePage {
@@ -163,7 +164,7 @@ export class PublicLandingPage extends BasePage {
   }
 
   async resultSummaryText(): Promise<string> {
-    return ((await this.totalBuilding.textContent()) ?? "").trim();
+    return this.locatorLooseText(this.totalBuilding);
   }
 
   async paginationCount(): Promise<number> {
@@ -186,7 +187,7 @@ export class PublicLandingPage extends BasePage {
   }
 
   async storedFilterCollapsedValue(): Promise<string | null> {
-    return this.page.evaluate(() => window.localStorage.getItem("filterCollapsed"));
+    return BrowserStorageHelper.localStorageValue(this.page, "filterCollapsed");
   }
 
   async filterValue(fieldName: string): Promise<string> {
@@ -209,6 +210,10 @@ export class PublicLandingPage extends BasePage {
     if (buildingName) {
       await expect(this.detailModalBody).toContainText(buildingName);
     }
+  }
+
+  async detailModalLooseText(): Promise<string> {
+    return this.locatorLooseText(this.detailModalBody);
   }
 
   async expectResultsLoaded(): Promise<void> {

@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { runtimePaths } from "./paths";
+import { environmentTestData } from "@data/environments";
 
 dotenv.config();
 
@@ -72,6 +73,59 @@ const retryPolicy = {
 const adminUsernames = parseCandidates(process.env.ADMIN_USERNAMES ?? process.env.ADMIN_USERNAME, strictEnvironmentConfig ? [] : ["manh1709", "ntn162"]);
 const staffUsernames = parseCandidates(process.env.STAFF_USERNAMES ?? process.env.STAFF_USERNAME, strictEnvironmentConfig ? [] : ["tmq0102"]);
 const customerUsernames = parseCandidates(process.env.CUSTOMER_USERNAMES ?? process.env.CUSTOMER_USERNAME, strictEnvironmentConfig ? [] : ["abcVietNam"]);
+const selectedEnvironmentTestData = environmentTestData[environmentName];
+
+const localOnlyDefaults = {
+  adminUsernames: ["manh1709", "ntn162"],
+  staffUsernames: ["tmq0102"],
+  customerUsernames: ["abcVietNam"],
+  defaultPassword: "12345678",
+  testSupportOtpToken: "test-otp-token",
+  dbUsername: "root",
+  dbPassword: "123456"
+};
+
+const isLocalEnvironment = environmentName === "local";
+
+const assertValidUrl = (name: string, value: string): void => {
+  try {
+    new URL(value);
+  } catch {
+    throw new Error(`Invalid ${name}: "${value}".`);
+  }
+};
+
+const assertNonLocalSecret = (name: string, value: string, forbiddenValues: string[]): void => {
+  if (isLocalEnvironment) {
+    return;
+  }
+
+  if (forbiddenValues.includes(value)) {
+    throw new Error(`${name} uses a local-only default value in ${environmentName}. Configure a real value via environment variables.`);
+  }
+};
+
+const assertNonLocalCandidates = (name: string, values: string[], forbiddenValues: string[]): void => {
+  if (isLocalEnvironment) {
+    return;
+  }
+
+  const forbidden = values.filter((value) => forbiddenValues.includes(value));
+  if (forbidden.length > 0) {
+    throw new Error(`${name} contains local-only default account(s) in ${environmentName}: ${forbidden.join(", ")}.`);
+  }
+};
+
+const assertNonLocalBaseUrl = (value: string): void => {
+  if (isLocalEnvironment) {
+    return;
+  }
+
+  const parsedUrl = new URL(value);
+  if (["localhost", "127.0.0.1", "0.0.0.0"].includes(parsedUrl.hostname)) {
+    throw new Error(`BASE_URL points to a local host in ${environmentName}. Configure the target environment URL explicitly.`);
+  }
+};
 
 export const env = {
   appEnv: environmentName,
@@ -91,18 +145,31 @@ export const env = {
   retryPolicy,
   testSupportOtpToken: optionalDefault("TEST_SUPPORT_OTP_TOKEN", "test-otp-token"),
   testDataSeed: {
-    districtId: toNumber(process.env.TEST_DISTRICT_ID, 1),
-    buildingId: toNumber(process.env.TEST_BUILDING_ID, 1),
-    contractId: toNumber(process.env.TEST_CONTRACT_ID, 1),
-    customerId: toNumber(process.env.TEST_CUSTOMER_ID, 1),
-    staffId: toNumber(process.env.TEST_STAFF_ID, 1),
-    ward: optionalDefault("TEST_BUILDING_WARD", "Xuan La"),
-    street: optionalDefault("TEST_BUILDING_STREET", "Vo Chi Cong"),
-    latitude: toNumber(process.env.TEST_BUILDING_LATITUDE, 21.0686),
-    longitude: toNumber(process.env.TEST_BUILDING_LONGITUDE, 105.8033)
+    districtId: toNumber(process.env.TEST_DISTRICT_ID, selectedEnvironmentTestData.districtId),
+    buildingId: toNumber(process.env.TEST_BUILDING_ID, selectedEnvironmentTestData.buildingId),
+    contractId: toNumber(process.env.TEST_CONTRACT_ID, selectedEnvironmentTestData.contractId),
+    customerId: toNumber(process.env.TEST_CUSTOMER_ID, selectedEnvironmentTestData.customerId),
+    staffId: toNumber(process.env.TEST_STAFF_ID, selectedEnvironmentTestData.staffId),
+    ward: process.env.TEST_BUILDING_WARD ?? selectedEnvironmentTestData.ward,
+    street: process.env.TEST_BUILDING_STREET ?? selectedEnvironmentTestData.street,
+    latitude: toNumber(process.env.TEST_BUILDING_LATITUDE, selectedEnvironmentTestData.latitude),
+    longitude: toNumber(process.env.TEST_BUILDING_LONGITUDE, selectedEnvironmentTestData.longitude)
   },
   dbJdbcUrl: process.env.DB_JDBC_URL ?? process.env.SPRING_DATASOURCE_URL ?? optionalDefault("DB_JDBC_URL", "jdbc:mysql://localhost:3306/estate"),
   dbUsername: process.env.DB_USERNAME ?? process.env.SPRING_DATASOURCE_USERNAME ?? optionalDefault("DB_USERNAME", "root"),
   dbPassword: process.env.DB_PASSWORD ?? process.env.SPRING_DATASOURCE_PASSWORD ?? optionalDefault("DB_PASSWORD", "123456"),
   dbPoolLimit: toNumber(process.env.DB_POOL_LIMIT, 5)
 };
+
+assertValidUrl("BASE_URL", env.baseUrl);
+assertNonLocalBaseUrl(env.baseUrl);
+assertNonLocalCandidates("ADMIN_USERNAMES", env.adminUsernames, localOnlyDefaults.adminUsernames);
+assertNonLocalCandidates("STAFF_USERNAMES", env.staffUsernames, localOnlyDefaults.staffUsernames);
+assertNonLocalCandidates("CUSTOMER_USERNAMES", env.customerUsernames, localOnlyDefaults.customerUsernames);
+assertNonLocalSecret("ADMIN_USERNAME", env.adminUsername, localOnlyDefaults.adminUsernames);
+assertNonLocalSecret("STAFF_USERNAME", env.staffUsername, localOnlyDefaults.staffUsernames);
+assertNonLocalSecret("CUSTOMER_USERNAME", env.customerUsername, localOnlyDefaults.customerUsernames);
+assertNonLocalSecret("DEFAULT_PASSWORD", env.defaultPassword, [localOnlyDefaults.defaultPassword]);
+assertNonLocalSecret("TEST_SUPPORT_OTP_TOKEN", env.testSupportOtpToken, [localOnlyDefaults.testSupportOtpToken]);
+assertNonLocalSecret("DB_USERNAME", env.dbUsername, [localOnlyDefaults.dbUsername]);
+assertNonLocalSecret("DB_PASSWORD", env.dbPassword, [localOnlyDefaults.dbPassword]);

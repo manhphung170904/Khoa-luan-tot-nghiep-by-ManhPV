@@ -1,5 +1,6 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { AdminDashboardPage } from "@pages/admin/AdminDashboardPage";
 import {
@@ -9,7 +10,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin - Dashboard @regression", () => {
+test.describe("Admin - Dashboard @regression @e2e", () => {
   let adminUser: TempStaffProfileUser | null = null;
   let tempBuildingId: number | null = null;
   let tempBuildingName = "";
@@ -21,7 +22,7 @@ test.describe("Admin - Dashboard @regression", () => {
     tempBuildingName = tempBuilding.name;
 
     await loginAsTempUser(page, adminUser.username, adminUser.password);
-    await page.goto("/admin/dashboard");
+    await new NavigationPage(page).open("/admin/dashboard");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -49,15 +50,15 @@ test.describe("Admin - Dashboard @regression", () => {
     await dashboardPage.openBuildingsFromStatCard();
     await expect(page).toHaveURL(/\/admin\/building\/list/);
 
-    await page.goto("/admin/dashboard");
+    await new NavigationPage(page).open("/admin/dashboard");
     await dashboardPage.openCustomersFromStatCard();
     await expect(page).toHaveURL(/\/admin\/customer\/list/);
 
-    await page.goto("/admin/dashboard");
+    await new NavigationPage(page).open("/admin/dashboard");
     await dashboardPage.openStaffsFromStatCard();
     await expect(page).toHaveURL(/\/admin\/staff\/list/);
 
-    await page.goto("/admin/dashboard");
+    await new NavigationPage(page).open("/admin/dashboard");
     await dashboardPage.openContractsFromStatCard();
     await expect(page).toHaveURL(/\/admin\/contract\/list/);
   });
@@ -69,7 +70,7 @@ test.describe("Admin - Dashboard @regression", () => {
     await dashboardPage.openRecentBuilding(tempBuildingName);
     await expect(page).toHaveURL(new RegExp(`/admin/building/${tempBuildingId}$`));
 
-    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM building WHERE id = ? AND name = ?", [
+    const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM building WHERE id = ? AND name = ?", [
       tempBuildingId,
       tempBuildingName
     ]);

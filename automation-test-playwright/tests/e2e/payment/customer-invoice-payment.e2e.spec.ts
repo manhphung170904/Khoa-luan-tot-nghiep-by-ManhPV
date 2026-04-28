@@ -1,5 +1,6 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { InvoiceDbRepository, TestDbRepository } from "@db/repositories";
 import { CustomerInvoicePage } from "@pages/customer/CustomerInvoicePage";
 import { CustomerPaymentQrPage } from "@pages/customer/CustomerPaymentQrPage";
 import {
@@ -17,7 +18,7 @@ function requireContract(contract: TempContract | null): TempContract {
   return contract!;
 }
 
-test.describe("Customer - Invoice Payment @regression", () => {
+test.describe("Customer - Invoice Payment @regression @e2e", () => {
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
 
@@ -26,7 +27,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
     createdInvoices = [];
 
     await loginAsTempUser(page, contract.customer.username);
-    await page.goto("/customer/invoice/list");
+    await new NavigationPage(page).open("/customer/invoice/list");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -49,7 +50,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
     createdInvoices.push(invoice);
 
     const invoicePage = new CustomerInvoicePage(page);
-    await page.goto("/customer/invoice/list");
+    await new NavigationPage(page).open("/customer/invoice/list");
     await invoicePage.expectLoaded();
 
     const stats = await invoicePage.readStats();
@@ -61,13 +62,13 @@ test.describe("Customer - Invoice Payment @regression", () => {
     expect(cardText).toContain(activeContract.building.name);
 
     await invoicePage.openFirstPaymentModal();
-    const modalText = await invoicePage.visibleModalText();
-    expect(modalText).toMatch(/invoice|chi tiết|chi tiet|hóa đơn|hoa don/i);
-    expect(modalText).toContain(activeContract.building.name);
-    expect(modalText).toMatch(/tổng cộng|tong cong|total/i);
+    const modalText = await invoicePage.visibleModalLooseText();
+    expect(modalText).toMatch(/invoice|chi tiet|hoa/i);
+    expect(modalText).toContain(activeContract.building.name.toLowerCase());
+    expect(modalText).toMatch(/tong cong|total/i);
     expect(modalText).toContain(String(invoice.id));
 
-    const invoiceRows = await MySqlDbClient.query<{ status: string; total_amount: number }>(
+    const invoiceRows = await TestDbRepository.query<{ status: string; total_amount: number }>(
       "SELECT status, total_amount FROM invoice WHERE id = ?",
       [invoice.id]
     );
@@ -84,7 +85,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
     const invoicePage = new CustomerInvoicePage(page);
     const qrPage = new CustomerPaymentQrPage(page);
 
-    await page.goto("/customer/invoice/list");
+    await new NavigationPage(page).open("/customer/invoice/list");
     await invoicePage.openFirstPaymentModal();
     await invoicePage.confirmPaymentInModal();
     await invoicePage.continueSweetAlertRedirect();
@@ -92,7 +93,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
     await qrPage.expectLoaded(invoice.id);
     await qrPage.expectMetaContains(new RegExp(`MOONNEST INV ${invoice.id}`));
 
-    const invoiceRows = await MySqlDbClient.query<{ status: string }>(
+    const invoiceRows = await TestDbRepository.query<{ status: string }>(
       "SELECT status FROM invoice WHERE id = ?",
       [invoice.id]
     );
@@ -108,7 +109,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
     const invoicePage = new CustomerInvoicePage(page);
     const qrPage = new CustomerPaymentQrPage(page);
 
-    await page.goto("/customer/invoice/list");
+    await new NavigationPage(page).open("/customer/invoice/list");
     await invoicePage.openFirstPaymentModal();
     await invoicePage.confirmPaymentInModal();
     await invoicePage.continueSweetAlertRedirect();
@@ -116,28 +117,17 @@ test.describe("Customer - Invoice Payment @regression", () => {
 
     await qrPage.confirmPayment();
     await expect(page).toHaveURL(/\/customer\/invoice\/list\?paySuccess/);
-    await expect(page.locator(".swal2-popup")).toContainText(/thanh toán thành công|thanh toan thanh cong|payment success|paysuccess/i);
+    await invoicePage.expectPaymentSuccessAlert();
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{
-        status: string;
-        payment_method: string | null;
-        transaction_code: string | null;
-        paid_date: string | null;
-      }>("SELECT status, payment_method, transaction_code, paid_date FROM invoice WHERE id = ?", [invoice.id]);
-      return rows[0] ?? null;
+      return InvoiceDbRepository.paymentById(invoice.id);
     }).toMatchObject({
       status: "PAID",
       payment_method: "BANK_QR"
     });
 
-    const paidRows = await MySqlDbClient.query<{
-      status: string;
-      payment_method: string | null;
-      transaction_code: string | null;
-      paid_date: string | null;
-    }>("SELECT status, payment_method, transaction_code, paid_date FROM invoice WHERE id = ?", [invoice.id]);
-    expect(paidRows[0]?.transaction_code).toMatch(new RegExp(`^QR-${invoice.id}-\\d{14}$`));
-    expect(paidRows[0]?.paid_date).toBeTruthy();
+    const paidInvoice = await InvoiceDbRepository.paymentById(invoice.id);
+    expect(paidInvoice?.transaction_code).toMatch(new RegExp(`^QR-${invoice.id}-\\d{14}$`));
+    expect(paidInvoice?.paid_date).toBeTruthy();
 
     await invoicePage.expectEmptyState();
   });
@@ -145,7 +135,7 @@ test.describe("Customer - Invoice Payment @regression", () => {
   test("[E2E-CUS-PAY-004] - Customer Invoice Payment - Empty State - No Unpaid Invoices Display", async ({ page }) => {
     const invoicePage = new CustomerInvoicePage(page);
 
-    await page.goto("/customer/invoice/list");
+    await new NavigationPage(page).open("/customer/invoice/list");
     await invoicePage.expectLoaded();
     await invoicePage.expectEmptyState();
   });

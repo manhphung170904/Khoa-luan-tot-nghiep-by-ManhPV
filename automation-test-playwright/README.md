@@ -10,9 +10,10 @@ Day la framework kiem thu tu dong bang Playwright + TypeScript duoc tach rieng c
 ## 2. Cau truc thu muc hien tai
 
 ```text
-automation-test-playwright/
+repo-root/
 |-- .github/
 |   `-- workflows/
+|-- automation-test-playwright/
 |       `-- playwright.yml
 |-- config/
 |   |-- env.ts
@@ -36,6 +37,7 @@ automation-test-playwright/
 |   `-- staff/
 |-- test-data/
 |   |-- files/
+|   |-- environments/
 |   |-- invoiceTempData.ts
 |   |-- profileTempUsers.ts
 |   |-- propertyRequestScenario.ts
@@ -63,7 +65,7 @@ automation-test-playwright/
 - `utils/helpers/`: helper dung chung cho session, cleanup, bootstrap data, va utility phu tro.
 - `utils/api/`: helper API, endpoint catalog, contract utility.
 - `utils/db/`: ket noi va truy van DB phuc vu xac minh du lieu.
-- `test-data/`: file fixture va helper/scenario du lieu dung chung cho test.
+- `test-data/`: file fixture, data theo moi truong va helper/scenario du lieu dung chung cho test.
 - `config/`: cau hinh moi truong, retry, setup/teardown.
 - `.runtime/`: luu ket qua chay, screenshot, trace, video, HTML report, JUnit report.
 
@@ -94,7 +96,6 @@ npm run test
 
 Bat che do pha du lieu co chu y:
 ```bash
-$env:ALLOW_DESTRUCTIVE_TESTS="true"
 npm run test:api:destructive
 ```
 
@@ -115,6 +116,8 @@ Framework hien uu tien fixture de cap `adminApi`, `staffApi`, `customerApi`, `an
 - Moi test case phai giu `Test ID` va `Test Name`.
 - Moi page object chi nen dai dien cho mot man hinh hoac mot khu vuc chuc nang ro rang.
 - Uu tien locator theo thu tu: `data-testid -> id -> name -> fallback`.
+- Test API/E2E phai co tag lop `@api` hoac `@e2e`; test mutation/destructive phai gan `@destructive`.
+- Test data dong phai duoc tao qua `TestDataFactory` de co `runToken` trong ten/email/username.
 - Khong viet logic nghiep vu vao POM.
 - Khong hard-code du lieu moi trong test neu co the dua vao `test-data/` hoac `TestDataFactory`.
 

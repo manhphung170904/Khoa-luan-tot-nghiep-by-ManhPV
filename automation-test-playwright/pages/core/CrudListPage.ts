@@ -66,11 +66,11 @@ export class CrudListPage extends BasePage {
   }
 
   firstViewButton(): Locator {
-    return this.firstVisible(this.page.locator('tbody .btn-view, tbody a[title*="Xem"]'));
+    return this.actionButton(this.tableBody, "view");
   }
 
   firstEditButton(): Locator {
-    return this.firstVisible(this.page.locator('tbody .btn-edit, tbody a[title*="Ch\\1EC9 nh"], tbody a[title*="Chinh"], tbody a[title*="S\\1EED a"], tbody a[title*="Sua"]'));
+    return this.actionButton(this.tableBody, "edit");
   }
 
   async clickRowLink(rowText: string, hrefPart: string): Promise<void> {
@@ -90,7 +90,7 @@ export class CrudListPage extends BasePage {
   }
 
   async deleteRow(rowText: string): Promise<void> {
-    await this.firstVisible(this.rowByText(rowText).locator('[title*="X\\F3 a"], [title*="Xoa"], .btn-delete')).click();
+    await this.actionButton(this.rowByText(rowText), "delete").click();
   }
 
   async expectRowVisible(text: string): Promise<void> {

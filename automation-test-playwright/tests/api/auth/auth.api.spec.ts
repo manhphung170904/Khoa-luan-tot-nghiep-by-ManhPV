@@ -4,7 +4,7 @@ import { env } from "@config/env";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { expectStatusExact } from "@api/apiContractUtils";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { cleanupDatabaseScope } from "@db/TestDataCleanup";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
@@ -15,7 +15,7 @@ type AuthUser = {
   fullName: string;
 };
 
-test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
+test.describe("Auth - API Web Flow @api-write @destructive @otp @regression", () => {
   test.describe.configure({ mode: "serial" });
 
   let validLocalEmail = "";
@@ -30,7 +30,7 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
   }
 
   async function cleanupAuthUser(user: AuthUser): Promise<void> {
-    const rows = await MySqlDbClient.query<{ id: number }>(
+    const rows = await TestDbRepository.query<{ id: number }>(
       "SELECT id FROM customer WHERE email = ? OR username = ?",
       [user.email, user.username]
     );
@@ -62,7 +62,7 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
   }
 
   test.beforeAll(async () => {
-    const customers = await MySqlDbClient.query<{ email: string }>(
+    const customers = await TestDbRepository.query<{ email: string }>(
       "SELECT email FROM customer WHERE username = ? LIMIT 1",
       [env.customerUsername]
     );
@@ -72,7 +72,7 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
       return;
     }
 
-    const staffRows = await MySqlDbClient.query<{ email: string }>(
+    const staffRows = await TestDbRepository.query<{ email: string }>(
       "SELECT email FROM staff WHERE username = ? LIMIT 1",
       [env.staffUsername]
     );
@@ -80,7 +80,7 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
   });
 
   async function ensureUserRegistered(request: APIRequestContext, user: AuthUser): Promise<void> {
-    const existingRows = await MySqlDbClient.query<{ count: number }>(
+    const existingRows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM customer WHERE username = ? AND email = ?",
       [user.username, user.email]
     );
@@ -106,7 +106,7 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
     expect(response.headers().location).toContain("/login-success");
   }
 
-  test.describe("Auth - API Login and Authentication", () => {
+  test.describe("Auth - API Login and Authentication @api", () => {
     test("[API-TC-001] - API Authentication - Login - Valid Credentials Return JWT Cookie and Redirect @smoke", async ({
       request
     }) => {
@@ -151,7 +151,7 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
     });
   });
 
-  test.describe("Auth - API Registration and Database Verification", () => {
+  test.describe("Auth - API Registration and Database Verification @api", () => {
     test("[API-TC-004] - API Authentication - Registration OTP - OTP Generation and Pending Verification Persistence", async ({
       request
     }) => {
@@ -228,7 +228,7 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
       const cookies = response.headersArray().filter((header) => header.name.toLowerCase() === "set-cookie");
       expect(cookies.length).toBeGreaterThan(0);
 
-      const createdRows = await MySqlDbClient.query<{ username: string; email: string }>(
+      const createdRows = await TestDbRepository.query<{ username: string; email: string }>(
         "SELECT username, email FROM customer WHERE username = ? AND email = ?",
         [user.username, user.email]
       );
@@ -265,64 +265,74 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
       expect(response.headers().location).toContain("/register/complete");
       expect(response.headers().location).toContain("errorMessage");
 
-      const createdRows = await MySqlDbClient.query<{ count: number }>(
+      const createdRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM customer WHERE email = ? OR username = ?",
         [isolatedUser.email, `${isolatedUser.username}_failed`]
       );
       expect(Number(createdRows[0]?.count ?? 0)).toBe(0);
 
-      await MySqlDbClient.execute("DELETE FROM email_verification WHERE email = ?", [isolatedUser.email]);
+      await TestDbRepository.execute("DELETE FROM email_verification WHERE email = ?", [isolatedUser.email]);
     });
   });
 
-  test.describe("Auth - API Forgot Password and Reset", () => {
+  test.describe("Auth - API Forgot Password and Reset @api", () => {
     test("[API-TC-008] - API Authentication - Forgot Password - OTP Generation and Database Persistence", async ({
       request
     }) => {
       expect(validLocalEmail).toBeTruthy();
-      const response = await request.post("/api/v1/auth/forgot-password", {
-        params: { email: validLocalEmail },
-        failOnStatusCode: false,
-        maxRedirects: 0
-      });
-      expectStatusExact(response, 200, "Forgot-password API should generate a reset OTP");
+      const baselineVerificationId = await ApiOtpHelper.latestVerificationId(validLocalEmail, "RESET_PASSWORD");
+      try {
+        const response = await request.post("/api/v1/auth/forgot-password", {
+          params: { email: validLocalEmail },
+          failOnStatusCode: false,
+          maxRedirects: 0
+        });
+        expectStatusExact(response, 200, "Forgot-password API should generate a reset OTP");
 
-      const rows = await MySqlDbClient.query<{ id: number; email: string; purpose: string; status: string }>(
-        `
-          SELECT id, email, purpose, status
-          FROM email_verification
-          WHERE email = ? AND purpose = ?
-          ORDER BY id DESC
-          LIMIT 1
-        `,
-        [validLocalEmail, "RESET_PASSWORD"]
-      );
-      expect(rows.length).toBeGreaterThan(0);
-      expect(rows[0]!.status).toBe("PENDING");
+        const rows = await TestDbRepository.query<{ id: number; email: string; purpose: string; status: string }>(
+          `
+            SELECT id, email, purpose, status
+            FROM email_verification
+            WHERE email = ? AND purpose = ?
+            ORDER BY id DESC
+            LIMIT 1
+          `,
+          [validLocalEmail, "RESET_PASSWORD"]
+        );
+        expect(rows.length).toBeGreaterThan(0);
+        expect(rows[0]!.status).toBe("PENDING");
+      } finally {
+        await ApiOtpHelper.deleteVerificationsAfter(validLocalEmail, "RESET_PASSWORD", baselineVerificationId);
+      }
     });
 
     test("[API-TC-009] - API Authentication - Password Reset - Invalid OTP Rejection @extended", async ({ request }) => {
       expect(validLocalEmail).toBeTruthy();
-      await request.post("/api/v1/auth/forgot-password", {
-        params: { email: validLocalEmail },
-        failOnStatusCode: false,
-        maxRedirects: 0
-      });
+      const baselineVerificationId = await ApiOtpHelper.latestVerificationId(validLocalEmail, "RESET_PASSWORD");
+      try {
+        await request.post("/api/v1/auth/forgot-password", {
+          params: { email: validLocalEmail },
+          failOnStatusCode: false,
+          maxRedirects: 0
+        });
 
-      const response = await request.post("/auth/reset-password", {
-        form: {
-          email: validLocalEmail,
-          otp: "000000",
-          newPassword: "NewPassword123",
-          confirmPassword: "NewPassword123"
-        },
-        failOnStatusCode: false,
-        maxRedirects: 0
-      });
+        const response = await request.post("/auth/reset-password", {
+          form: {
+            email: validLocalEmail,
+            otp: "000000",
+            newPassword: "NewPassword123",
+            confirmPassword: "NewPassword123"
+          },
+          failOnStatusCode: false,
+          maxRedirects: 0
+        });
 
-      expectStatusExact(response, 302, "Reset password with invalid OTP should redirect with error");
-      expect(response.headers().location).toContain("/auth/reset-password");
-      expect(response.headers().location).toContain("errorMessage");
+        expectStatusExact(response, 302, "Reset password with invalid OTP should redirect with error");
+        expect(response.headers().location).toContain("/auth/reset-password");
+        expect(response.headers().location).toContain("errorMessage");
+      } finally {
+        await ApiOtpHelper.deleteVerificationsAfter(validLocalEmail, "RESET_PASSWORD", baselineVerificationId);
+      }
     });
 
     test("[API-TC-011] - API Authentication - Password Reset - Successful Reset and Login Data Update", async ({
@@ -376,7 +386,7 @@ test.describe("Auth - API Web Flow @api-write @otp @regression", () => {
     });
   });
 
-  test.describe("Auth - API Logout", () => {
+  test.describe("Auth - API Logout @api", () => {
     test("[API-TC-010] - API Authentication - Logout - Authentication Cookie Clearance and Login Redirect @smoke", async ({
       request
     }) => {

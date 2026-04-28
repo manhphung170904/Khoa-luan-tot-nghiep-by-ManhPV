@@ -74,7 +74,7 @@ export class AdminBuildingListPage extends RoutedCrudListPage {
   }
 
   async deleteBuilding(name: string): Promise<void> {
-    await this.rowByBuildingName(name).locator(".btn-delete").click();
+    await this.actionButton(this.rowByBuildingName(name), "delete").click();
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {
@@ -82,6 +82,6 @@ export class AdminBuildingListPage extends RoutedCrudListPage {
   }
 
   async confirmSweetAlert(): Promise<void> {
-    await this.page.locator(".swal2-confirm").click();
+    await super.confirmSweetAlert();
   }
 }

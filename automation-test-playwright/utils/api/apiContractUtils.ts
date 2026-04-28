@@ -44,6 +44,14 @@ export function expectStatusExact(response: APIResponse, expected: number, conte
 export type ApiDebugAttachmentOptions = {
   name?: string;
   maxBodyLength?: number;
+  request?: ApiDebugRequest;
+};
+
+export type ApiDebugRequest = {
+  actor?: string;
+  method?: string;
+  path?: string;
+  options?: unknown;
 };
 
 export async function responseTextPreview(response: APIResponse, maxLength = 1000): Promise<string> {
@@ -68,6 +76,7 @@ export async function buildApiResponseDebugAttachment(
         url: response.url(),
         status: response.status(),
         statusText: response.statusText(),
+        request: options.request,
         headers: response.headers(),
         contentType,
         bodyPreview

@@ -1,6 +1,7 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
 import type { APIRequestContext } from "@playwright/test";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { AdminBuildingAdditionalInfoPage } from "@pages/admin/AdminBuildingAdditionalInfoPage";
@@ -30,7 +31,7 @@ async function deleteAdditionalRecord(adminApi: APIRequestContext, type: Additio
   });
 }
 
-test.describe("Admin - Building Additional Information @regression", () => {
+test.describe("Admin - Building Additional Information @regression @e2e", () => {
   let adminUser: TempStaffProfileUser | null = null;
   let buildingId: number | null = null;
   let buildingName = "";
@@ -48,7 +49,7 @@ test.describe("Admin - Building Additional Information @regression", () => {
     buildingName = tempBuilding.name;
 
     await loginAsTempUser(page, adminUser.username, adminUser.password);
-    await page.goto(`/admin/building-additional-information/${tempBuilding.id}`);
+    await new NavigationPage(page).open(`/admin/building-additional-information/${tempBuilding.id}`);
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -95,7 +96,7 @@ test.describe("Admin - Building Additional Information @regression", () => {
     });
     await additionalInfoPage.expectLegalAuthorityVisible(authorityName);
 
-    const createdRows = await MySqlDbClient.query<{ id: number }>(
+    const createdRows = await TestDbRepository.query<{ id: number }>(
       "SELECT id FROM legal_authority WHERE building_id = ? AND authority_name = ? ORDER BY id DESC LIMIT 1",
       [buildingId, authorityName]
     );
@@ -109,7 +110,7 @@ test.describe("Admin - Building Additional Information @regression", () => {
     });
     await additionalInfoPage.expectLegalAuthorityVisible(updatedName);
 
-    const updatedRows = await MySqlDbClient.query<{ authority_name: string; authority_type: string }>(
+    const updatedRows = await TestDbRepository.query<{ authority_name: string; authority_type: string }>(
       "SELECT authority_name, authority_type FROM legal_authority WHERE id = ?",
       [cleanupIds.legal[cleanupIds.legal.length - 1]]
     );
@@ -143,12 +144,12 @@ test.describe("Admin - Building Additional Information @regression", () => {
     });
     await additionalInfoPage.expectAmenityVisible(amenityName);
 
-    const amenityRows = await MySqlDbClient.query<{ id: number }>(
+    const amenityRows = await TestDbRepository.query<{ id: number }>(
       "SELECT id FROM nearby_amenity WHERE building_id = ? AND name = ? ORDER BY id DESC LIMIT 1",
       [buildingId, amenityName]
     );
     cleanupIds.amenity.push(amenityRows[0]!.id);
-    const createdAmenityRows = await MySqlDbClient.query<{ name: string; amenity_type: string; distance_meter: number }>(
+    const createdAmenityRows = await TestDbRepository.query<{ name: string; amenity_type: string; distance_meter: number }>(
       "SELECT name, amenity_type, distance_meter FROM nearby_amenity WHERE id = ?",
       [amenityRows[0]!.id]
     );
@@ -166,12 +167,12 @@ test.describe("Admin - Building Additional Information @regression", () => {
     });
     await additionalInfoPage.expectSupplierVisible(supplierName);
 
-    const supplierRows = await MySqlDbClient.query<{ id: number }>(
+    const supplierRows = await TestDbRepository.query<{ id: number }>(
       "SELECT id FROM supplier WHERE building_id = ? AND name = ? ORDER BY id DESC LIMIT 1",
       [buildingId, supplierName]
     );
     cleanupIds.supplier.push(supplierRows[0]!.id);
-    const createdSupplierRows = await MySqlDbClient.query<{ name: string; service_type: string; email: string }>(
+    const createdSupplierRows = await TestDbRepository.query<{ name: string; service_type: string; email: string }>(
       "SELECT name, service_type, email FROM supplier WHERE id = ?",
       [supplierRows[0]!.id]
     );
@@ -198,12 +199,12 @@ test.describe("Admin - Building Additional Information @regression", () => {
     });
     await additionalInfoPage.expectPlanningMapVisible(mapType);
 
-    const planningRows = await MySqlDbClient.query<{ id: number }>(
+    const planningRows = await TestDbRepository.query<{ id: number }>(
       "SELECT id FROM planning_map WHERE building_id = ? AND map_type = ? ORDER BY id DESC LIMIT 1",
       [buildingId, mapType]
     );
     cleanupIds.planning.push(planningRows[0]!.id);
-    const createdPlanningRows = await MySqlDbClient.query<{ map_type: string; issued_by: string; image_url: string }>(
+    const createdPlanningRows = await TestDbRepository.query<{ map_type: string; issued_by: string; image_url: string }>(
       "SELECT map_type, issued_by, image_url FROM planning_map WHERE id = ?",
       [planningRows[0]!.id]
     );
@@ -215,11 +216,11 @@ test.describe("Admin - Building Additional Information @regression", () => {
     await additionalInfoPage.deletePlanningMap(mapType);
     cleanupIds.planning.pop();
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM planning_map WHERE id = ?", [planningRows[0]!.id]);
+      const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM planning_map WHERE id = ?", [planningRows[0]!.id]);
       return rows.length;
     }).toBe(0);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ total: number }>(
+      const rows = await TestDbRepository.query<{ total: number }>(
         "SELECT COUNT(*) AS total FROM planning_map WHERE building_id = ?",
         [buildingId]
       );

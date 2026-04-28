@@ -108,7 +108,7 @@ export class AdminBuildingAdditionalInfoPage extends BasePage {
   }
 
   async editLegalAuthority(currentName: string, data: Partial<LegalAuthorityForm>): Promise<void> {
-    await this.rowByName("legal", currentName).locator(".btn-edit").click();
+    await this.actionButton(this.rowByName("legal", currentName), "edit").click();
     await expect(this.modal("legal")).toBeVisible();
     if (data.authorityName !== undefined) {
       await this.page.locator("#legal-authorityName").fill(data.authorityName);
@@ -132,7 +132,7 @@ export class AdminBuildingAdditionalInfoPage extends BasePage {
   }
 
   async deleteLegalAuthority(name: string): Promise<void> {
-    await this.rowByName("legal", name).locator(".btn-delete").click();
+    await this.actionButton(this.rowByName("legal", name), "delete").click();
     await this.confirmSweetAlert();
   }
 
@@ -145,15 +145,9 @@ export class AdminBuildingAdditionalInfoPage extends BasePage {
     await this.page.locator("#amenity-name").fill(data.name);
     await this.page.locator("#amenity-amenityType").selectOption(data.amenityType);
     await this.page.locator("#amenity-address").fill(data.address);
-    await this.page.locator("#amenity-latitude").evaluate((element, value) => {
-      (element as HTMLInputElement).value = value;
-    }, data.latitude);
-    await this.page.locator("#amenity-longitude").evaluate((element, value) => {
-      (element as HTMLInputElement).value = value;
-    }, data.longitude);
-    await this.page.locator("#amenity-distanceMeter").evaluate((element, value) => {
-      (element as HTMLInputElement).value = value;
-    }, data.distanceMeter ?? "500");
+    await this.setInputValue(this.page.locator("#amenity-latitude"), data.latitude);
+    await this.setInputValue(this.page.locator("#amenity-longitude"), data.longitude);
+    await this.setInputValue(this.page.locator("#amenity-distanceMeter"), data.distanceMeter ?? "500");
     await this.saveModal("amenity");
   }
 
@@ -168,9 +162,7 @@ export class AdminBuildingAdditionalInfoPage extends BasePage {
     await this.page.locator("#planning-issuedDate").fill(data.issuedDate);
     await this.page.locator("#planning-expiredDate").fill(data.expiredDate);
     await this.page.locator("#planning-note").fill(data.note ?? "");
-    await this.page.locator("#planning-imageUrl").evaluate((element, value) => {
-      (element as HTMLInputElement).value = value;
-    }, data.existingImageUrl);
+    await this.setInputValue(this.page.locator("#planning-imageUrl"), data.existingImageUrl);
     await this.saveModal("planning");
   }
 
@@ -179,7 +171,7 @@ export class AdminBuildingAdditionalInfoPage extends BasePage {
   }
 
   async deletePlanningMap(mapType: string): Promise<void> {
-    await this.rowByName("planning", mapType).locator(".btn-delete").click();
+    await this.actionButton(this.rowByName("planning", mapType), "delete").click();
     await this.confirmSweetAlert();
   }
 
@@ -199,9 +191,10 @@ export class AdminBuildingAdditionalInfoPage extends BasePage {
   }
 
   async expectValidationPopupContains(text: string | RegExp): Promise<void> {
-    await expect(this.toastPopup()).toBeVisible();
-    await expect(this.toastPopup()).toContainText(text);
+    const popup = this.toastPopup();
+    await expect(popup).toBeVisible();
+    await expect(popup).toContainText(text);
     await this.confirmSweetAlert();
-    await expect(this.toastPopup()).toBeHidden();
+    await expect(popup).toBeHidden();
   }
 }

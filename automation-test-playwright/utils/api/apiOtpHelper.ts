@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { OtpDbRepository } from "@db/repositories";
 
 type EmailVerificationRow = {
   id: number;
@@ -36,6 +37,14 @@ export class ApiOtpHelper {
     );
 
     return rows[0] ?? null;
+  }
+
+  static async latestVerificationId(email: string, purpose: string): Promise<number> {
+    return OtpDbRepository.latestVerificationId(email, purpose);
+  }
+
+  static async deleteVerificationsAfter(email: string, purpose: string, minId: number): Promise<void> {
+    await OtpDbRepository.deleteVerificationsAfter(email, purpose, minId);
   }
 
   static async setLatestPendingOtp(email: string, purpose: string, otp: string): Promise<void> {

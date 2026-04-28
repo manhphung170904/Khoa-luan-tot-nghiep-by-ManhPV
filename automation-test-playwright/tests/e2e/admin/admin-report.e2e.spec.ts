@@ -1,4 +1,5 @@
 import { expect, test } from "@fixtures/base.fixture";
+import { BrowserPrintSpy } from "@helpers/BrowserPrintSpy";
 import { AdminReportPage } from "@pages/admin/AdminReportPage";
 import {
   cleanupTempStaffProfileUser,
@@ -7,13 +8,13 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin - Report @regression", () => {
+test.describe("Admin - Report @regression @e2e", () => {
   let adminUser: TempStaffProfileUser | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {
     adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
-    await page.goto("/admin/report");
+    await new AdminReportPage(page).open();
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -32,9 +33,7 @@ test.describe("Admin - Report @regression", () => {
     const reportPage = new AdminReportPage(page);
     await reportPage.expectLoaded();
 
-    const availableYears = await page.locator(".year-select option").evaluateAll((options) =>
-      options.map((option) => (option as HTMLOptionElement).value)
-    );
+    const availableYears = await reportPage.availableYears();
 
     expect(availableYears.length).toBeGreaterThan(0);
     const targetYear = availableYears[availableYears.length - 1]!;
@@ -46,19 +45,10 @@ test.describe("Admin - Report @regression", () => {
     const reportPage = new AdminReportPage(page);
     await reportPage.expectLoaded();
 
-    let printTriggered = false;
-    await page.exposeFunction("__e2eMarkPrint", () => {
-      printTriggered = true;
-    });
-    await page.evaluate(() => {
-      const originalPrint = window.print;
-      window.print = () => {
-        void (window as typeof window & { __e2eMarkPrint: () => void }).__e2eMarkPrint();
-        window.print = originalPrint;
-      };
-    });
+    const printSpy = new BrowserPrintSpy(page);
+    await printSpy.install();
 
     await reportPage.triggerPrint();
-    expect(printTriggered).toBeTruthy();
+    expect(printSpy.wasTriggered()).toBeTruthy();
   });
 });

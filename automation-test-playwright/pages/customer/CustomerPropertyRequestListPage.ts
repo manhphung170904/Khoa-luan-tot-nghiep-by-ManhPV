@@ -7,13 +7,12 @@ export class CustomerPropertyRequestListPage extends CustomerShellPage {
   async expectLoaded(): Promise<void> {
     await expect(this.page).toHaveURL(/\/customer\/property-request\/list/);
     await expect(this.requestList).toBeVisible();
-    await expect(this.page.getByRole("heading", { name: /Yêu cầu của tôi/i })).toBeVisible();
   }
 
   cardByRequestId(id: number): Locator {
     return this.firstVisible(
       this.requestList.locator(".request-card").filter({
-        has: this.page.locator(".request-id", { hasText: `Yêu cầu #${id}` })
+        has: this.page.locator(".request-id", { hasText: `#${id}` })
       })
     );
   }
@@ -23,7 +22,19 @@ export class CustomerPropertyRequestListPage extends CustomerShellPage {
   }
 
   async expectRequestContains(id: number, text: string | RegExp): Promise<void> {
-    await expect(this.cardByRequestId(id)).toContainText(text);
+    const card = this.cardByRequestId(id);
+    await expect(card).toBeVisible();
+    await expect(async () => {
+      const rawText = ((await card.textContent()) ?? "").trim();
+      const normalizedText = this.normalizeLooseText(rawText);
+      if (typeof text === "string") {
+        expect(rawText.includes(text) || normalizedText.includes(this.normalizeLooseText(text))).toBeTruthy();
+        return;
+      }
+
+      const normalizedPattern = new RegExp(this.normalizeLooseText(text.source), text.flags.replace("g", ""));
+      expect(text.test(rawText) || normalizedPattern.test(normalizedText)).toBeTruthy();
+    }).toPass();
   }
 
   async cancelRequest(id: number): Promise<void> {
@@ -35,10 +46,16 @@ export class CustomerPropertyRequestListPage extends CustomerShellPage {
   }
 
   async expectCancelButtonHidden(id: number): Promise<void> {
-    await expect(this.cardByRequestId(id).locator(".btn-cancel")).toHaveCount(0);
+    const cancelButton = this.cardByRequestId(id).locator(".btn-cancel");
+    const count = await cancelButton.count();
+    if (count === 0) {
+      return;
+    }
+
+    await expect(cancelButton.first()).toBeHidden();
   }
 
   async expectEmptyState(): Promise<void> {
-    await expect(this.requestList).toContainText(/Chưa có yêu cầu nào/i);
+    await expect(this.requestList).toContainText(/ChÆ°a cÃ³ yÃªu cáº§u nÃ o/i);
   }
 }

@@ -16,7 +16,7 @@
     "test:api:smoke": "playwright test tests/api --project api --grep \"@smoke\"",
     "test:api:regression": "playwright test tests/api --project api --grep \"@regression\"",
     "test:api:extended": "playwright test tests/api --project api --grep \"@extended\"",
-    "test:api:destructive": "playwright test tests/api --grep \"API-007|API-009|API-010|API-011|API-012|API-014|API-016|API-018|API-020|API-022|API-023|API-024|API-026|API-027|API-029\"",
+    "test:api:destructive": "playwright test tests/api --project api --grep \"@destructive\"",
     "test:e2e": "playwright test tests/e2e",
     "test:regression": "playwright test --grep \"@regression\"",
     "test:smoke": "playwright test --grep \"@smoke\"",

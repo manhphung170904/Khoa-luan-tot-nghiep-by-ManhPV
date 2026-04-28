@@ -6,14 +6,15 @@ import {
   loginAsTempUser,
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
+import { NavigationPage } from "@pages/core/NavigationPage";
 
-test.describe("Customer - Home @regression", () => {
+test.describe("Customer - Home @regression @e2e", () => {
   let tempUser: TempCustomerProfileUser | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {
     tempUser = await createTempCustomerProfileUser(adminApi);
     await loginAsTempUser(page, tempUser.username, tempUser.password);
-    await page.goto("/customer/home");
+    await new NavigationPage(page).open("/customer/home");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -34,7 +35,7 @@ test.describe("Customer - Home @regression", () => {
     await homePage.openContracts();
     await page.waitForURL(/\/customer\/contract\/list|\/customer\/contracts/);
 
-    await page.goto("/customer/home");
+    await new NavigationPage(page).open("/customer/home");
     await homePage.openBuildings();
     await page.waitForURL(/\/customer\/building\/list|\/customer\/buildings/);
   });

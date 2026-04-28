@@ -7,5 +7,7 @@
 
 Quy uoc ngan gon:
 - File input mau dat trong `test-data/files/`.
+- Seed data theo moi truong dat trong `test-data/environments/<env>.json`.
 - Helper tao temp user, temp invoice, property request scenario va E2E session dat trong `test-data/*.ts`.
 - Utility tong quat cap framework thi dat trong `utils/helpers/`.
+- Ten/email/username du lieu dong phai tao qua `TestDataFactory` de bat buoc co `runToken`, giup cleanup an toan khi chay song song hoac tren CI.

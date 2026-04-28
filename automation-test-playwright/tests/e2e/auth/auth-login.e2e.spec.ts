@@ -6,7 +6,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Auth - Login @regression", () => {
+test.describe("Auth - Login @regression @e2e", () => {
   let tempUser: TempCustomerProfileUser | null = null;
 
   test.afterEach(async ({ adminApi }) => {

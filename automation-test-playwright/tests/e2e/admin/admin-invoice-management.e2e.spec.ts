@@ -1,6 +1,7 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
 import { env } from "@config/env";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { AdminInvoiceDetailPage } from "@pages/admin/AdminInvoiceDetailPage";
 import { AdminInvoiceFormPage } from "@pages/admin/AdminInvoiceFormPage";
 import { AdminInvoiceListPage } from "@pages/admin/AdminInvoiceListPage";
@@ -31,7 +32,7 @@ function nextMonthDueDate(month: number, year: number, day = 20): string {
   return `${dueYear}-${String(dueMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-test.describe("Admin - Invoice Management @regression", () => {
+test.describe("Admin - Invoice Management @regression @e2e", () => {
   let adminUser: TempStaffProfileUser | null = null;
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
@@ -42,7 +43,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     createdInvoices = [];
 
     await loginAsTempUser(page, adminUser.username, env.defaultPassword);
-    await page.goto("/admin/invoice/list");
+    await new NavigationPage(page).open("/admin/invoice/list");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -64,7 +65,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     createdInvoices.push(invoice);
 
     const listPage = new AdminInvoiceListPage(page);
-    await page.goto("/admin/invoice/list");
+    await new NavigationPage(page).open("/admin/invoice/list");
     await listPage.expectLoaded();
     await listPage.waitForTableData();
 
@@ -84,7 +85,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     const formPage = new AdminInvoiceFormPage(page);
     const period = previousInvoicePeriod();
 
-    await page.goto("/admin/invoice/list");
+    await new NavigationPage(page).open("/admin/invoice/list");
     await listPage.openAddForm();
     await formPage.expectAddLoaded();
     await formPage.fillAddForm({
@@ -99,7 +100,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     await formPage.submitInvoice();
     await formPage.expectSweetAlertContains(/thanh cong|success/i);
 
-    const rows = await MySqlDbClient.query<{ id: number; status: string }>(
+    const rows = await TestDbRepository.query<{ id: number; status: string }>(
       `
         SELECT id, status
         FROM invoice
@@ -131,7 +132,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     const formPage = new AdminInvoiceFormPage(page);
     const updatedDueDate = nextMonthDueDate(invoice.month, invoice.year);
 
-    await page.goto(`/admin/invoice/edit/${invoice.id}`);
+    await new NavigationPage(page).open(`/admin/invoice/edit/${invoice.id}`);
     await formPage.expectEditLoaded(invoice.id);
     await formPage.fillEditForm({
       dueDate: updatedDueDate,
@@ -142,7 +143,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     await formPage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ due_date: string }>(
+      const rows = await TestDbRepository.query<{ due_date: string }>(
         "SELECT DATE_FORMAT(due_date, '%Y-%m-%d') AS due_date FROM invoice WHERE id = ?",
         [invoice.id]
       );
@@ -156,10 +157,10 @@ test.describe("Admin - Invoice Management @regression", () => {
     const invoice = await createManagedInvoiceForContract(adminApi, activeContract);
     createdInvoices.push(invoice);
 
-    await MySqlDbClient.execute("UPDATE invoice SET status = 'PAID' WHERE id = ?", [invoice.id]);
+    await TestDbRepository.execute("UPDATE invoice SET status = 'PAID' WHERE id = ?", [invoice.id]);
 
     const formPage = new AdminInvoiceFormPage(page);
-    await page.goto(`/admin/invoice/edit/${invoice.id}`);
+    await new NavigationPage(page).open(`/admin/invoice/edit/${invoice.id}`);
     await formPage.expectEditLoaded(invoice.id);
     await formPage.expectWarningVisible();
   });
@@ -171,14 +172,14 @@ test.describe("Admin - Invoice Management @regression", () => {
     createdInvoices.push(invoice);
 
     const detailPage = new AdminInvoiceDetailPage(page);
-    await page.goto(`/admin/invoice/${invoice.id}`);
+    await new NavigationPage(page).open(`/admin/invoice/${invoice.id}`);
     await detailPage.expectLoaded(invoice.id);
     await detailPage.confirmInvoicePaid();
     await detailPage.confirmSweetAlert();
     await detailPage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);
+      const rows = await TestDbRepository.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);
       return rows[0]?.status ?? "";
     }).toBe("PAID");
   });
@@ -190,7 +191,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     createdInvoices.push(invoice);
 
     const listPage = new AdminInvoiceListPage(page);
-    await page.goto("/admin/invoice/list");
+    await new NavigationPage(page).open("/admin/invoice/list");
     await listPage.waitForTableData();
     await listPage.filterByCustomer(activeContract.customer.id);
     await listPage.filterByMonth(invoice.month);
@@ -202,7 +203,7 @@ test.describe("Admin - Invoice Management @regression", () => {
     await listPage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);
+      const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);
       return rows.length;
     }).toBe(0);
 
@@ -214,16 +215,16 @@ test.describe("Admin - Invoice Management @regression", () => {
 
     const invoice = await createManagedInvoiceForContract(adminApi, activeContract);
     createdInvoices.push(invoice);
-    await MySqlDbClient.execute("UPDATE invoice SET due_date = ?, status = 'PENDING' WHERE id = ?", ["2000-01-01", invoice.id]);
+    await TestDbRepository.execute("UPDATE invoice SET due_date = ?, status = 'PENDING' WHERE id = ?", ["2000-01-01", invoice.id]);
 
     const listPage = new AdminInvoiceListPage(page);
-    await page.goto("/admin/invoice/list");
+    await new NavigationPage(page).open("/admin/invoice/list");
     await listPage.updateStatuses();
     await listPage.confirmSweetAlert();
     await listPage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);
+      const rows = await TestDbRepository.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [invoice.id]);
       return rows[0]?.status ?? "";
     }).toBe("OVERDUE");
   });

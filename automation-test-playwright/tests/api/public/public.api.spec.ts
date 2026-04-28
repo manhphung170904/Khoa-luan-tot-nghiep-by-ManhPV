@@ -1,13 +1,13 @@
 import { expect, test } from "@fixtures/api.fixture";
 import { expectArrayBody, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 
 test.describe("Public - API Building @api-read @regression", () => {
-  test.describe("GET /api/v1/public/buildings", () => {
+  test.describe("GET /api/v1/public/buildings @api", () => {
     test("[API-TC-026] - API Public Building - Search - Database Matched Search Results @smoke", async ({
       anonymousApi
     }) => {
-      const wardRows = await MySqlDbClient.query<{ ward: string }>(
+      const wardRows = await TestDbRepository.query<{ ward: string }>(
         "SELECT ward FROM building WHERE ward IS NOT NULL AND ward <> '' LIMIT 1"
       );
       const ward = wardRows.length > 0 ? wardRows[0]!.ward : "Ward 1";
@@ -29,14 +29,14 @@ test.describe("Public - API Building @api-read @regression", () => {
         expect(typeof data[0]!.transactionType).toBe("string");
 
         const returnedIds = data.map((item) => Number(item.id)).filter((id) => Number.isFinite(id));
-        const dbRows = await MySqlDbClient.query<{ id: number }>(
+        const dbRows = await TestDbRepository.query<{ id: number }>(
           "SELECT id FROM building WHERE LOWER(ward) LIKE ?",
           [`%${ward.toLowerCase()}%`]
         );
         const dbIds = new Set(dbRows.map((row) => row.id));
         expect(returnedIds.every((id) => dbIds.has(id))).toBeTruthy();
 
-        const countRows = await MySqlDbClient.query<{ total: number }>(
+        const countRows = await TestDbRepository.query<{ total: number }>(
           "SELECT COUNT(*) AS total FROM building WHERE LOWER(ward) LIKE ?",
           [`%${ward.toLowerCase()}%`]
         );
@@ -53,7 +53,7 @@ test.describe("Public - API Building @api-read @regression", () => {
         }
       });
       const data = await expectArrayBody(response, 200);
-      expect(data.length).toBeGreaterThanOrEqual(0);
+      expect(data).toEqual([]);
     });
 
     test("[API-TC-028] - API Public Building - Pagination - Paged Building List Retrieval", async ({ anonymousApi }) => {

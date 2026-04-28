@@ -1,5 +1,5 @@
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
 type PublicBuildingRow = {
@@ -49,7 +49,7 @@ const BASE_BUILDING_SELECT = `
 `;
 
 const getSingleVisibleBuilding = async (extraWhere = "", params: Array<string | number> = []): Promise<PublicBuildingRow | null> => {
-  const rows = await MySqlDbClient.query<PublicBuildingRow>(
+  const rows = await TestDbRepository.query<PublicBuildingRow>(
     `
       ${BASE_BUILDING_SELECT}
       WHERE ${PUBLIC_VISIBILITY_WHERE}
@@ -64,7 +64,7 @@ const getSingleVisibleBuilding = async (extraWhere = "", params: Array<string | 
 };
 
 const getVisibleBuildingCount = async (): Promise<number> => {
-  const rows = await MySqlDbClient.query<{ total: number }>(
+  const rows = await TestDbRepository.query<{ total: number }>(
     `
       SELECT COUNT(*) AS total
       FROM building b
@@ -79,7 +79,15 @@ const skipIfMissingPublicSeed = (condition: boolean, requirement: string): void 
   test.skip(condition, `[Public seed precondition] ${requirement}`);
 };
 
-test.describe("Public - Building Browsing @regression", () => {
+const normalizeExpectedText = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
+
+test.describe("Public - Building Browsing @regression @e2e", () => {
   test.beforeEach(async ({ publicPage }) => {
     await publicPage.open();
     await publicPage.expectResultsLoaded();
@@ -93,7 +101,7 @@ test.describe("Public - Building Browsing @regression", () => {
     await expect(publicPage.filterForm).toBeVisible();
     await expect(publicPage.searchButton).toBeVisible();
     await publicPage.expectHasResults();
-    await expect(await publicPage.resultSummaryText()).toMatch(/tìm thấy|tim thay|found/i);
+    await expect(await publicPage.resultSummaryText()).toMatch(/tm th?y|tim thay|found/i);
   });
 
   test("[E2E-PUB-BLD-002] - Public Building Browsing - Query Parameter - Building Name Prefill and Auto Search", async ({ publicPage }) => {
@@ -130,7 +138,7 @@ test.describe("Public - Building Browsing @regression", () => {
     await expect(publicPage.cardByName(targetBuilding.name)).toBeVisible();
     expect(await publicPage.cardCount()).toBeGreaterThan(0);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       `
         SELECT COUNT(*) AS count
         FROM building b
@@ -158,7 +166,7 @@ test.describe("Public - Building Browsing @regression", () => {
     await publicPage.openBuildingDetailsByName(targetBuilding.name);
     await expect(publicPage.detailModalBody).toContainText(targetBuilding.districtName ?? "");
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       `
         SELECT COUNT(*) AS count
         FROM building b
@@ -226,11 +234,12 @@ test.describe("Public - Building Browsing @regression", () => {
     await publicPage.searchByBuildingName(rentBuilding.name);
     await publicPage.openBuildingDetailsByName(rentBuilding.name);
 
-    await expect(publicPage.detailModalBody).toContainText(rentBuilding.name);
-    await expect(publicPage.detailModalBody).toContainText(/thông tin chung|thong tin chung|general information/i);
-    await expect(publicPage.detailModalBody).toContainText(/đặc điểm bất động sản|dac diem bat dong san|property features/i);
-    await expect(publicPage.detailModalBody).toContainText(/giá thuê|gia thue|rent price/i);
-    await expect(publicPage.detailModalBody).toContainText(/phí dịch vụ|phi dich vu|service fee/i);
+    const modalText = await publicPage.detailModalLooseText();
+    expect(modalText).toContain(normalizeExpectedText(rentBuilding.name));
+    expect(modalText).toMatch(/thong tin chung|general information/i);
+    expect(modalText).toMatch(/dac diem bat dong san|property features/i);
+    expect(modalText).toMatch(/gia thue|rent price/i);
+    expect(modalText).toMatch(/phi dich vu|service fee/i);
     expect(rentBuilding.rentPrice).toBeTruthy();
   });
 
@@ -244,9 +253,10 @@ test.describe("Public - Building Browsing @regression", () => {
     await publicPage.searchByBuildingName(saleBuilding.name);
     await publicPage.openBuildingDetailsByName(saleBuilding.name);
 
-    await expect(publicPage.detailModalBody).toContainText(saleBuilding.name);
-    await expect(publicPage.detailModalBody).toContainText(/giá bán|gia ban|sale price/i);
-    await expect(publicPage.detailModalBody).not.toContainText(/diện tích thuê khả dụng|rentable area/i);
+    const modalText = await publicPage.detailModalLooseText();
+    expect(modalText).toContain(normalizeExpectedText(saleBuilding.name));
+    expect(modalText).toMatch(/gia ban|sale price/i);
+    expect(modalText).not.toMatch(/dien tich thue kha dung|rentable area/i);
     expect(saleBuilding.salePrice).toBeTruthy();
   });
 

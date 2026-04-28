@@ -2,12 +2,12 @@ import { expect, test } from "@fixtures/api.fixture";
 import type { APIRequestContext } from "@playwright/test";
 import { createRoleContext } from "@api/adminApiUtils";
 import { expectStatusExact } from "@api/apiContractUtils";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { env } from "@config/env";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Payment - API QR Payment @api-write @regression", () => {
+test.describe("Payment - API QR Payment @api-write @destructive @regression", () => {
   test.describe.configure({ mode: "serial" });
 
   let adminContext: APIRequestContext;
@@ -19,7 +19,7 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
   async function findNonexistentInvoiceId(): Promise<number> {
     const candidates = [2_147_483_647, 2_147_483_646, 2_147_483_645];
     for (const candidate of candidates) {
-      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ? LIMIT 1", [candidate]);
+      const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM invoice WHERE id = ? LIMIT 1", [candidate]);
       if (rows.length === 0) {
         return candidate;
       }
@@ -38,9 +38,9 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
 
   test.afterAll(async () => {
     if (tempInvoice) {
-      const existingRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [tempInvoice.id]);
+      const existingRows = await TestDbRepository.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [tempInvoice.id]);
       if (existingRows.length > 0) {
-        await MySqlDbClient.execute(
+        await TestDbRepository.execute(
           "UPDATE invoice SET status = ?, paid_date = NULL, payment_method = NULL, transaction_code = NULL WHERE id = ?",
           [TestDataFactory.invoiceStatus.pending, tempInvoice.id]
         );
@@ -126,7 +126,7 @@ test.describe("Payment - API QR Payment @api-write @regression", () => {
       expectStatusExact(response, 302, "QR confirmation should redirect after success");
       expect(response.headers().location ?? "").toContain("/customer/invoice/list?paySuccess");
 
-      const rows = await MySqlDbClient.query<{
+      const rows = await TestDbRepository.query<{
         status: string;
         payment_method: string;
         transaction_code: string | null;

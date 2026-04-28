@@ -5,7 +5,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import {
   createAuthenticatedTempProfileScenario,
@@ -13,7 +13,7 @@ import {
   type TempProfileUser
 } from "@data/tempProfileScenario";
 
-test.describe("Staff - API Profile @api-write @otp @regression", () => {
+test.describe("Staff - API Profile @api-write @destructive @otp @regression", () => {
   let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let staffContext: APIRequestContext;
   let tempStaff: TempProfileUser;
@@ -112,9 +112,9 @@ test.describe("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/username"
     });
-    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc/i);
+    expect(errorBody.message).toMatch(/otp|ma|xac thuc/i);
 
-    const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempStaff.id]);
+    const rows = await TestDbRepository.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.username).toBe(originalUsername);
   });
 
@@ -136,7 +136,7 @@ test.describe("Staff - API Profile @api-write @otp @regression", () => {
       dataMode: "null"
     });
 
-    const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempStaff.id]);
+    const rows = await TestDbRepository.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.username).toBe(nextUsername);
     tempStaff.username = nextUsername;
   });
@@ -155,9 +155,9 @@ test.describe("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|mật khẩu|mat khau|hiện tại|hien tai|không đúng|khong dung/i);
+    expect(errorBody.message).toMatch(/password|m?t kh?u|mat khau|hi?n t?i|hien tai|khng dng|khong dung/i);
 
-    const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM staff WHERE id = ?", [tempStaff.id]);
+    const rows = await TestDbRepository.query<{ email: string }>("SELECT email FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.email).toBe(originalEmail);
   });
 
@@ -176,7 +176,7 @@ test.describe("Staff - API Profile @api-write @otp @regression", () => {
       dataMode: "null"
     });
 
-    const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM staff WHERE id = ?", [tempStaff.id]);
+    const rows = await TestDbRepository.query<{ email: string }>("SELECT email FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.email).toBe(newEmail);
     tempStaff.email = newEmail;
   });
@@ -199,7 +199,7 @@ test.describe("Staff - API Profile @api-write @otp @regression", () => {
       dataMode: "null"
     });
 
-    const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempStaff.id]);
+    const rows = await TestDbRepository.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.phone).toBe(nextPhone);
     tempStaff.phone = nextPhone;
   });
@@ -218,16 +218,16 @@ test.describe("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han/i);
+    expect(errorBody.message).toMatch(/otp|m|ma|xc th?c|xac thuc|h?t h?n|het han/i);
 
-    const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempStaff.id]);
+    const rows = await TestDbRepository.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [tempStaff.id]);
     expect(rows[0]!.phone).toBe(originalPhone);
   });
 
   test("[STF-PRO-008] - API Staff Profile - Password - Minimum Length Validation", async () => {
     await sendOtp("PROFILE_PASSWORD");
     const otp = await ApiOtpAccessHelper.latestOtp(staffContext, tempStaff.email, "PROFILE_PASSWORD");
-    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
+    const oldHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
     const oldHash = oldHashRows[0]!.password;
 
     const response = await staffContext.put("/api/v1/staff/profile/password", {
@@ -244,14 +244,14 @@ test.describe("Staff - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/staff/profile/password"
     });
-    expect(errorBody.message).toMatch(/short|ngắn|ngan|ít nhất|it nhat|min|ký tự|ky tu/i);
+    expect(errorBody.message).toMatch(/short|ng?n|ngan|t nh?t|it nhat|min|k t?|ky tu/i);
 
-    const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
+    const newHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
     expect(newHashRows[0]!.password).toBe(oldHash);
   });
 
   test("[STF-PRO-009] - API Staff Profile - Password - Successful Update with Valid OTP", async ({ playwright }) => {
-    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
+    const oldHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
     const oldHash = oldHashRows[0]!.password;
 
     await sendOtp("PROFILE_PASSWORD");
@@ -273,7 +273,7 @@ test.describe("Staff - API Profile @api-write @otp @regression", () => {
       dataMode: "null"
     });
 
-    const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
+    const newHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [tempStaff.id]);
     expect(newHashRows[0]!.password).not.toBe(oldHash);
     const otpRow = await ApiOtpHelper.latest(tempStaff.email, "PROFILE_PASSWORD");
     expect(otpRow?.status).toBe("USED");

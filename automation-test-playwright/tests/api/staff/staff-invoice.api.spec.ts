@@ -1,11 +1,11 @@
 import { test, expect } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { cleanupStaffInvoiceById, createStaffInvoiceScenario } from "@data/staffInvoiceScenario";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Staff - API Invoice @regression", () => {
+test.describe("Staff - API Invoice @regression @api", () => {
   test("[API-STF-INV-001] - API Staff Invoice - Authentication - Anonymous Create Access Rejection", async ({ playwright, anonymousApi, cleanupRegistry }) => {
     const scenario = await createStaffInvoiceScenario(playwright, cleanupRegistry);
 
@@ -46,7 +46,7 @@ test.describe("Staff - API Invoice @regression", () => {
       dataMode: "null"
     });
 
-    const rows = await MySqlDbClient.query<{ id: number; total_amount: number; status: string }>(
+    const rows = await TestDbRepository.query<{ id: number; total_amount: number; status: string }>(
       "SELECT id, total_amount, status FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
       [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
     );
@@ -56,7 +56,7 @@ test.describe("Staff - API Invoice @regression", () => {
     expect(Number(rows[0]!.total_amount)).toBeGreaterThan(0);
     expect(rows[0]!.status).toBe(TestDataFactory.invoiceStatus.pending);
 
-    const detailRows = await MySqlDbClient.query<{ count: number }>(
+    const detailRows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM invoice_detail WHERE invoice_id = ?",
       [createdInvoiceId]
     );
@@ -76,7 +76,7 @@ test.describe("Staff - API Invoice @regression", () => {
       dataMode: "null"
     });
 
-    const createdRows = await MySqlDbClient.query<{ id: number }>(
+    const createdRows = await TestDbRepository.query<{ id: number }>(
       "SELECT id FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
       [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
     );
@@ -113,7 +113,7 @@ test.describe("Staff - API Invoice @regression", () => {
       dataMode: "null"
     });
 
-    const createdRows = await MySqlDbClient.query<{ id: number }>(
+    const createdRows = await TestDbRepository.query<{ id: number }>(
       "SELECT id FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
       [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
     );
@@ -136,14 +136,14 @@ test.describe("Staff - API Invoice @regression", () => {
       dataMode: "null"
     });
 
-    const rows = await MySqlDbClient.query<{ total_amount: number }>(
+    const rows = await TestDbRepository.query<{ total_amount: number }>(
       "SELECT total_amount FROM invoice WHERE id = ?",
       [createdInvoiceId]
     );
     expect(rows.length).toBe(1);
     expect(Number(rows[0]!.total_amount)).toBe(TestDataFactory.testAmount.staffInvoiceUpdateTotal);
 
-    const detailRows = await MySqlDbClient.query<{ count: number }>(
+    const detailRows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM invoice_detail WHERE invoice_id = ?",
       [createdInvoiceId]
     );
@@ -163,7 +163,7 @@ test.describe("Staff - API Invoice @regression", () => {
       dataMode: "null"
     });
 
-    const createdRows = await MySqlDbClient.query<{ id: number }>(
+    const createdRows = await TestDbRepository.query<{ id: number }>(
       "SELECT id FROM invoice WHERE contract_id = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1",
       [scenario.validPayload.contractId, scenario.validPayload.month, scenario.validPayload.year]
     );
@@ -188,11 +188,11 @@ test.describe("Staff - API Invoice @regression", () => {
     const payload = await expectPageBody<{ content?: Array<{ id: number }> }>(searchResponse, { status: 200 });
     expect(payload.content?.some((item) => item.id === createdInvoiceId)).toBeFalsy();
 
-    const invoiceRows = await MySqlDbClient.query<{ count: number }>(
+    const invoiceRows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM invoice WHERE id = ?",
       [createdInvoiceId]
     );
-    const detailRows = await MySqlDbClient.query<{ count: number }>(
+    const detailRows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM invoice_detail WHERE invoice_id = ?",
       [createdInvoiceId]
     );

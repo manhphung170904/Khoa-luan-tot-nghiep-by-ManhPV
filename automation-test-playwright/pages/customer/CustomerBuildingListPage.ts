@@ -55,33 +55,7 @@ export class CustomerBuildingListPage extends RoutedCrudListPage {
     if (!this.currentModalTarget) {
       return;
     }
-
-    const visibleModal = this.detailModalByName(name);
-    if (await visibleModal.isVisible().catch(() => false)) {
-      return;
-    }
-
-    await this.page.evaluate(({ target, buildingName }) => {
-      const modal = Array.from(document.querySelectorAll(target))
-        .reverse()
-        .find((element) => element.textContent?.includes(buildingName)) as HTMLElement | undefined;
-      if (!modal) {
-        return;
-      }
-
-      const bootstrapApi = (window as typeof window & {
-        bootstrap?: { Modal?: { getOrCreateInstance: (element: Element) => { show: () => void } } };
-      }).bootstrap;
-
-      if (bootstrapApi?.Modal) {
-        bootstrapApi.Modal.getOrCreateInstance(modal).show();
-        return;
-      }
-
-      modal.style.display = "block";
-      modal.classList.add("show");
-      modal.removeAttribute("aria-hidden");
-    }, { target: this.currentModalTarget, buildingName: name });
+    await expect(this.detailModalByName(name)).toBeVisible();
   }
 
   async expectDetailModalContains(name: string): Promise<void> {

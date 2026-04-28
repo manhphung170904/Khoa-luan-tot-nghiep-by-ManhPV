@@ -1,18 +1,19 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { CustomerContractListPage } from "@pages/customer/CustomerContractListPage";
 import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Customer - Contract List @regression", () => {
+test.describe("Customer - Contract List @regression @e2e", () => {
   let tempContract: TempContract | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {
     tempContract = await TempEntityHelper.taoContractTam(adminApi);
     await loginAsTempUser(page, tempContract.customer.username);
-    await page.goto("/customer/contract/list");
+    await new NavigationPage(page).open("/customer/contract/list");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -26,7 +27,7 @@ test.describe("Customer - Contract List @regression", () => {
     await contractPage.waitForContractData();
     await expect(contractPage.cardByBuildingName(tempContract!.building.name)).toBeVisible();
 
-    const rows = await MySqlDbClient.query<{ status: string }>(
+    const rows = await TestDbRepository.query<{ status: string }>(
       "SELECT status FROM contract WHERE id = ? AND customer_id = ?",
       [tempContract!.id, tempContract!.customer.id]
     );
@@ -42,7 +43,7 @@ test.describe("Customer - Contract List @regression", () => {
     await contractPage.waitForContractData();
     await expect(contractPage.cardByBuildingName(tempContract!.building.name)).toBeVisible();
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       `
         SELECT COUNT(*) AS count
         FROM contract

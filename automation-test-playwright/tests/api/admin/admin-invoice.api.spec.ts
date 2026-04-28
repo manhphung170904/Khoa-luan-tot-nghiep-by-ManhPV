@@ -1,11 +1,11 @@
 import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Invoice @regression", () => {
+test.describe("Admin - API Invoice @regression @api", () => {
   const missingSmallId = TestDataFactory.missingSmallId;
   const invoiceStatus = TestDataFactory.invoiceStatus;
   const invoiceAmount = TestDataFactory.testAmount;
@@ -18,7 +18,7 @@ test.describe("Admin - API Invoice @regression", () => {
   const dueDate = `${dueDateYear}-${String(dueDateMonth).padStart(2, "0")}-15`;
 
   async function findInvoiceByPeriod(contractId: number, month: number, year: number) {
-    return MySqlDbClient.query<{ id: number; total_amount: number; status?: string }>(
+    return TestDbRepository.query<{ id: number; total_amount: number; status?: string }>(
       `
         SELECT id, total_amount, status
         FROM invoice
@@ -31,7 +31,7 @@ test.describe("Admin - API Invoice @regression", () => {
   }
 
   async function findUtilityMeterByPeriod(contractId: number, month: number, year: number) {
-    return MySqlDbClient.query<{
+    return TestDbRepository.query<{
       electricity_old: number;
       electricity_new: number;
       water_old: number;
@@ -109,7 +109,7 @@ test.describe("Admin - API Invoice @regression", () => {
       });
       expect(errorBody.message).toMatch(/current|thang hien tai|lien truoc|invoice month/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+      const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
         [temp.id, currentMonth, currentYear]
       );
@@ -179,7 +179,7 @@ test.describe("Admin - API Invoice @regression", () => {
       });
       expect(errorBody.message).toMatch(/due|han thanh toan|ngay|sau thang lap hoa don/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>(
+      const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
         [temp.id, prevMonth, prevYear]
       );
@@ -240,7 +240,7 @@ test.describe("Admin - API Invoice @regression", () => {
         dataMode: "null"
       });
 
-      const invoiceRows = await MySqlDbClient.query<{ id: number; status: string }>(
+      const invoiceRows = await TestDbRepository.query<{ id: number; status: string }>(
         `
           SELECT id, status
           FROM invoice
@@ -263,7 +263,7 @@ test.describe("Admin - API Invoice @regression", () => {
         dataMode: "null"
       });
 
-      const overdueRows = await MySqlDbClient.query<{ status: string }>(
+      const overdueRows = await TestDbRepository.query<{ status: string }>(
         "SELECT status FROM invoice WHERE id = ?",
         [createdInvoiceId]
       );
@@ -359,7 +359,7 @@ test.describe("Admin - API Invoice @regression", () => {
         dataMode: "null"
       });
 
-      const updatedRows = await MySqlDbClient.query<{ total_amount: number }>(
+      const updatedRows = await TestDbRepository.query<{ total_amount: number }>(
         "SELECT total_amount FROM invoice WHERE id = ?",
         [createdInvoiceId]
       );
@@ -379,7 +379,7 @@ test.describe("Admin - API Invoice @regression", () => {
         dataMode: "null"
       });
 
-      const paidRows = await MySqlDbClient.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [createdInvoiceId]);
+      const paidRows = await TestDbRepository.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [createdInvoiceId]);
       expect(paidRows[0]!.status).toBe(invoiceStatus.paid);
 
       const missingConfirm = await admin.post(`/api/v1/admin/invoices/${missingSmallId}/confirm`, {
@@ -406,7 +406,7 @@ test.describe("Admin - API Invoice @regression", () => {
       });
       expect(updatePaidError.message).toMatch(/paid|da thanh toan|khong the cap nhat|dang cho xu ly/i);
 
-      const unchangedRows = await MySqlDbClient.query<{ total_amount: number; status: string }>(
+      const unchangedRows = await TestDbRepository.query<{ total_amount: number; status: string }>(
         "SELECT total_amount, status FROM invoice WHERE id = ?",
         [createdInvoiceId]
       );
@@ -431,10 +431,10 @@ test.describe("Admin - API Invoice @regression", () => {
         dataMode: "null"
       });
 
-      const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [createdInvoiceId]);
+      const deletedRows = await TestDbRepository.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [createdInvoiceId]);
       expect(deletedRows.length).toBe(0);
 
-      const deletedUtilityRows = await MySqlDbClient.query<{ id: number }>(
+      const deletedUtilityRows = await TestDbRepository.query<{ id: number }>(
         "SELECT id FROM utility_meter WHERE contract_id = ? AND month = ? AND year = ?",
         [tempContract.id, payload.month, payload.year]
       );

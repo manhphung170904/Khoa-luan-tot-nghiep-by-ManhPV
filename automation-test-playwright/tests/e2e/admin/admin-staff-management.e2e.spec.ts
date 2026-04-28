@@ -1,5 +1,6 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { AdminStaffDetailPage } from "@pages/admin/AdminStaffDetailPage";
@@ -12,7 +13,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin - Staff Management @regression", () => {
+test.describe("Admin - Staff Management @regression @e2e", () => {
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupStaffIds = new Set<number>();
   const cleanupBuildingIds = new Set<number>();
@@ -21,7 +22,7 @@ test.describe("Admin - Staff Management @regression", () => {
   test.beforeEach(async ({ page, adminApi }) => {
     adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
-    await page.goto("/admin/staff/list");
+    await new NavigationPage(page).open("/admin/staff/list");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -59,7 +60,7 @@ test.describe("Admin - Staff Management @regression", () => {
       username: TestDataFactory.taoUsername("e2estf")
     });
 
-    await page.goto("/admin/staff/list");
+    await new NavigationPage(page).open("/admin/staff/list");
     await listPage.openAddForm();
     await formPage.expectLoaded();
     await formPage.fillStaffBasics({
@@ -71,9 +72,9 @@ test.describe("Admin - Staff Management @regression", () => {
     });
     await formPage.selectRole("STAFF");
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/them nhan vien|thêm nhân viên|thành công|thanh cong|success/i);
+    await formPage.expectSweetAlertContains(/them nhan vien|thm nhn vin|thnh cng|thanh cong|success/i);
 
-    const rows = await MySqlDbClient.query<{ id: number; role: string }>(
+    const rows = await TestDbRepository.query<{ id: number; role: string }>(
       "SELECT id, role FROM staff WHERE username = ? LIMIT 1",
       [String(payload.username)]
     );
@@ -89,7 +90,7 @@ test.describe("Admin - Staff Management @regression", () => {
     const listPage = new AdminStaffListPage(page);
     const detailPage = new AdminStaffDetailPage(page);
 
-    await page.goto(`/admin/staff/search?role=STAFF&fullName=${encodeURIComponent(staff.fullName)}`);
+    await new NavigationPage(page).open(`/admin/staff/search?role=STAFF&fullName=${encodeURIComponent(staff.fullName)}`);
     await listPage.expectLoaded();
     await listPage.waitForSearchTableData();
     await expect(listPage.rowByStaffName(staff.fullName)).toBeVisible();
@@ -108,13 +109,13 @@ test.describe("Admin - Staff Management @regression", () => {
     cleanupCustomerIds.add(customer.id);
 
     const detailPage = new AdminStaffDetailPage(page);
-    await page.goto(`/admin/staff/${targetStaff.id}`);
+    await new NavigationPage(page).open(`/admin/staff/${targetStaff.id}`);
     await detailPage.expectLoaded(targetStaff.id);
 
     await detailPage.openBuildingAssignments();
     await detailPage.setBuildingAssignment(building.id, true);
     await detailPage.saveBuildingAssignments();
-    await detailPage.expectSweetAlertContains(/cap nhat phan cong toa nha|cập nhật phân công tòa nhà|thành công|thanh cong|success/i);
+    await detailPage.expectSweetAlertContains(/cap nhat phan cong toa nha|c?p nh?t phn cng ta nh|thnh cng|thanh cong|success/i);
 
     await expect.poll(async () => {
       const response = await adminApi.get(`/api/v1/admin/staff/${targetStaff.id}/assignments/buildings`, {
@@ -124,11 +125,11 @@ test.describe("Admin - Staff Management @regression", () => {
       return data.includes(building.id);
     }).toBe(true);
 
-    await page.goto(`/admin/staff/${targetStaff.id}`);
+    await new NavigationPage(page).open(`/admin/staff/${targetStaff.id}`);
     await detailPage.openCustomerAssignments();
     await detailPage.setCustomerAssignment(customer.id, true);
     await detailPage.saveCustomerAssignments();
-    await detailPage.expectSweetAlertContains(/cap nhat phan cong khach hang|cập nhật phân công khách hàng|thành công|thanh cong|success/i);
+    await detailPage.expectSweetAlertContains(/cap nhat phan cong khach hang|c?p nh?t phn cng khch hng|thnh cng|thanh cong|success/i);
 
     await expect.poll(async () => {
       const response = await adminApi.get(`/api/v1/admin/staff/${targetStaff.id}/assignments/customers`, {
@@ -143,14 +144,14 @@ test.describe("Admin - Staff Management @regression", () => {
     const staff = await TempEntityHelper.taoStaffTam(adminApi, "STAFF");
 
     const listPage = new AdminStaffListPage(page);
-    await page.goto(`/admin/staff/search?role=STAFF&fullName=${encodeURIComponent(staff.fullName)}`);
+    await new NavigationPage(page).open(`/admin/staff/search?role=STAFF&fullName=${encodeURIComponent(staff.fullName)}`);
     await listPage.waitForSearchTableData();
     await listPage.deleteStaff(staff.fullName);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xoa nhan vien|xóa nhân viên|thành công|thanh cong|success/i);
+    await listPage.expectSweetAlertContains(/xoa nhan vien|xa nhn vin|thnh cng|thanh cong|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM staff WHERE id = ?", [staff.id]);
+      const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM staff WHERE id = ?", [staff.id]);
       return rows.length;
     }).toBe(0);
   });

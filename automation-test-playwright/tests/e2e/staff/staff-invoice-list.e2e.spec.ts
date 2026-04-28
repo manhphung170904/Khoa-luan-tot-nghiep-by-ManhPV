@@ -1,5 +1,6 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { StaffInvoiceListPage } from "@pages/staff/StaffInvoiceListPage";
 import {
   cleanupContractScenario,
@@ -23,7 +24,7 @@ function nextMonthDueDate(month: number, year: number, day = 20): string {
   return `${dueYear}-${String(dueMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-test.describe("Staff - Invoice List @regression", () => {
+test.describe("Staff - Invoice List @regression @e2e", () => {
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
 
@@ -32,7 +33,7 @@ test.describe("Staff - Invoice List @regression", () => {
     createdInvoices = [];
 
     await loginAsTempUser(page, contract.staff.username);
-    await page.goto("/staff/invoices");
+    await new NavigationPage(page).open("/staff/invoices");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -52,7 +53,7 @@ test.describe("Staff - Invoice List @regression", () => {
     createdInvoices.push(invoice);
 
     const invoicePage = new StaffInvoiceListPage(page);
-    await page.goto("/staff/invoices");
+    await new NavigationPage(page).open("/staff/invoices");
     await invoicePage.expectLoaded();
     await invoicePage.waitForTableData();
 
@@ -63,7 +64,7 @@ test.describe("Staff - Invoice List @regression", () => {
     await expect(invoicePage.rowByInvoiceId(invoice.id)).toContainText(activeContract.customer.fullName);
     await invoicePage.openViewModal(invoice.id);
     await expect(invoicePage.visibleModal()).toContainText(activeContract.building.name);
-    await expect(invoicePage.visibleModal()).toContainText(/chi tiết hóa đơn|chi tiet hoa don|invoice detail/i);
+    await expect.poll(() => invoicePage.visibleModalLooseText()).toMatch(/chi tiet hoa|invoice detail/i);
   });
 
   test("[E2E-STF-INV-002] - Staff Invoice List - Invoice Creation - Create Invoice from Add Modal", async ({ page }) => {
@@ -72,7 +73,7 @@ test.describe("Staff - Invoice List @regression", () => {
     const invoicePage = new StaffInvoiceListPage(page);
     const period = previousInvoicePeriod();
 
-    await page.goto("/staff/invoices");
+    await new NavigationPage(page).open("/staff/invoices");
     await invoicePage.openAddInvoiceModal();
     await invoicePage.selectAddCustomer(activeContract.customer.id);
     await invoicePage.selectAddContract(activeContract.id);
@@ -87,7 +88,7 @@ test.describe("Staff - Invoice List @regression", () => {
     await invoicePage.submitAddInvoice();
     await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
 
-    const rows = await MySqlDbClient.query<{ id: number }>(
+    const rows = await TestDbRepository.query<{ id: number }>(
       `
         SELECT id
         FROM invoice
@@ -116,7 +117,7 @@ test.describe("Staff - Invoice List @regression", () => {
     createdInvoices.push(existingInvoice);
 
     const invoicePage = new StaffInvoiceListPage(page);
-    await page.goto("/staff/invoices");
+    await new NavigationPage(page).open("/staff/invoices");
     await invoicePage.openAddInvoiceModal();
     await invoicePage.selectAddCustomer(activeContract.customer.id);
     await invoicePage.selectAddContract(activeContract.id);
@@ -128,9 +129,9 @@ test.describe("Staff - Invoice List @regression", () => {
       waterUsage: 7
     });
     await invoicePage.submitAddInvoice();
-    await invoicePage.expectSweetAlertContains(/lỗi|loi|đã tồn tại|da ton tai|error/i);
+    await invoicePage.expectSweetAlertContains(/l?i|loi|d t?n t?i|da ton tai|error/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       `
         SELECT COUNT(*) AS count
         FROM invoice
@@ -150,7 +151,7 @@ test.describe("Staff - Invoice List @regression", () => {
     const invoicePage = new StaffInvoiceListPage(page);
     const updatedDueDate = nextMonthDueDate(invoice.month, invoice.year);
 
-    await page.goto("/staff/invoices");
+    await new NavigationPage(page).open("/staff/invoices");
     await invoicePage.waitForTableData();
     await invoicePage.openEditModal(invoice.id);
     await invoicePage.fillVisibleEditForm({
@@ -163,7 +164,7 @@ test.describe("Staff - Invoice List @regression", () => {
     await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ status: string; due_date: string }>(
+      const rows = await TestDbRepository.query<{ status: string; due_date: string }>(
         "SELECT status, DATE_FORMAT(due_date, '%Y-%m-%d') AS due_date FROM invoice WHERE id = ?",
         [invoice.id]
       );
@@ -178,14 +179,14 @@ test.describe("Staff - Invoice List @regression", () => {
     createdInvoices.push(invoice);
 
     const invoicePage = new StaffInvoiceListPage(page);
-    await page.goto("/staff/invoices");
+    await new NavigationPage(page).open("/staff/invoices");
     await invoicePage.waitForTableData();
     await invoicePage.deleteInvoice(invoice.id);
     await invoicePage.confirmSweetAlert();
     await invoicePage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);
+      const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM invoice WHERE id = ?", [invoice.id]);
       return rows.length;
     }).toBe(0);
 

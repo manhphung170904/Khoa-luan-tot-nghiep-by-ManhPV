@@ -62,7 +62,7 @@ export class AdminSaleContractListPage extends RoutedCrudListPage {
   }
 
   async deleteSaleContract(text: string): Promise<void> {
-    await this.rowBySaleContractText(text).locator(".btn-delete").click();
+    await this.actionButton(this.rowBySaleContractText(text), "delete").click();
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {

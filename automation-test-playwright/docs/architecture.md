@@ -37,15 +37,18 @@ Framework duoc to chuc theo huong:
 ### `test-data/`
 - Day la noi chua file fixture va helper/scenario du lieu dung chung.
 - Phu hop cho upload fixture file, temp user bootstrap, property request scenario, invoice scenario.
+- `test-data/environments/` chua seed data theo `APP_ENV` (`local`, `dev`, `test`, `staging`) va duoc `config/env.ts` nap lam default truoc khi override bang bien moi truong.
 - Khi logic chua duoc dung lai va chu yeu phuc vu setup du lieu test, dat o day se gon hon viec mo them mot tang thu muc moi.
 - Xem them `test-data/README.md` de phan biet file fixture va helper bootstrap.
 
 ### `utils/db/`
 - Chua DB client va logic truy van dung chung.
+- Query lap lai nen dua vao `utils/db/repositories/` thay vi dat truc tiep trong spec.
 - Dung de verify persisted data khi assertion qua UI/API alone la chua du.
 
 ### `utils/api/`
 - Chua API utility, endpoint catalog, session helper, contract helper.
+- Client theo domain dat trong `utils/api/clients/` (`AdminBuildingApiClient`, `InvoiceApiClient`, `AuthApiClient`, ...).
 - Phu hop cho reusable request builder, auth/session flow, va API assertion utility.
 
 ## 3. Quy uoc dat code dung cho framework va dung cho suite

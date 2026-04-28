@@ -1,6 +1,6 @@
 import { expect, test } from "@fixtures/base.fixture";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { ForgotPasswordPage } from "@pages/auth/ForgotPasswordPage";
 import { LoginPage } from "@pages/auth/LoginPage";
 import { ResetPasswordPage } from "@pages/auth/ResetPasswordPage";
@@ -10,7 +10,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Auth - Password Reset @regression", () => {
+test.describe("Auth - Password Reset @regression @e2e", () => {
   let tempUser: TempCustomerProfileUser | null = null;
 
   test.beforeEach(async ({ adminApi }) => {
@@ -32,7 +32,7 @@ test.describe("Auth - Password Reset @regression", () => {
     await page.waitForURL(new RegExp(`/auth/reset-password\\?email=${encodeURIComponent(tempUser!.email)}`));
     await resetPage.expectLoaded(tempUser!.email);
 
-    const otpRows = await MySqlDbClient.query<{ status: string }>(
+    const otpRows = await TestDbRepository.query<{ status: string }>(
       `
         SELECT status
         FROM email_verification
@@ -54,7 +54,7 @@ test.describe("Auth - Password Reset @regression", () => {
     const loginPage = new LoginPage(page);
     const newPassword = "Password@456";
 
-    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempUser!.id]);
+    const oldHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempUser!.id]);
     const oldHash = oldHashRows[0]!.password;
 
     await forgotPage.open();
@@ -67,7 +67,7 @@ test.describe("Auth - Password Reset @regression", () => {
     await page.waitForURL(/\/login\?successMessage=/);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempUser!.id]);
+      const rows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempUser!.id]);
       return rows[0]?.password ?? "";
     }).not.toBe(oldHash);
 
@@ -90,6 +90,6 @@ test.describe("Auth - Password Reset @regression", () => {
 
     await resetPage.expectLoaded(tempUser!.email);
     await resetPage.resetPassword("123456", "Password@456", "Mismatch@456");
-    await resetPage.expectPopupContains(/mat khau khong khop|mật khẩu không khớp|khong khop/i);
+    await resetPage.expectPopupContains(/mat khau khong khop|m?t kh?u khng kh?p|khong khop/i);
   });
 });

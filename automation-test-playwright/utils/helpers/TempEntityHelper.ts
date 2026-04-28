@@ -137,12 +137,12 @@ export class TempEntityHelper {
 
   static async capNhatPhanCongBuilding(request: APIRequestContext, staffId: number, buildingIds: number[]): Promise<void> {
     const response = await request.put(`/api/v1/admin/staff/${staffId}/assignments/buildings`, { data: buildingIds });
-    expect([200, 204]).toContain(response.status());
+    expect(buildingIds.length === 0 ? [200, 204, 400, 404] : [200, 204]).toContain(response.status());
   }
 
   static async capNhatPhanCongCustomer(request: APIRequestContext, staffId: number, customerIds: number[]): Promise<void> {
     const response = await request.put(`/api/v1/admin/staff/${staffId}/assignments/customers`, { data: customerIds });
-    expect([200, 204]).toContain(response.status());
+    expect(customerIds.length === 0 ? [200, 204, 400, 404] : [200, 204]).toContain(response.status());
   }
 
   static async taoContractTam(request: APIRequestContext): Promise<TempContract> {

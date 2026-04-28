@@ -23,6 +23,12 @@ export class AdminReportPage extends AdminRoutedPage {
     await this.firstVisible(this.page.locator(".year-select, select[name='year']")).selectOption(value);
   }
 
+  async availableYears(): Promise<string[]> {
+    return this.firstVisible(this.page.locator(".year-select, select[name='year']")).locator("option").evaluateAll((options) =>
+      options.map((option) => (option as HTMLOptionElement).value)
+    );
+  }
+
   async submitYearFilter(): Promise<void> {
     const submitButton = this.firstVisible(this.page.locator("form.year-selector-form button, button[type='submit']"));
     if (await submitButton.count()) {

@@ -1,9 +1,10 @@
 import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectObjectBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
+import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { env } from "@config/env";
 import { ApiSessionHelper, type ApiUserRole } from "@api/apiSessionHelper";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
 type RoleScenario = {
@@ -17,7 +18,7 @@ const scenarios: RoleScenario[] = [
   { role: "customer", expectedRoleCode: "CUSTOMER" }
 ];
 
-test.describe("Auth - API REST Session @regression", () => {
+test.describe("Auth - API REST Session @regression @api", () => {
   for (const scenario of scenarios) {
     test(`[API-AUTH-REST-${scenario.expectedRoleCode}] - API Auth Session - Session Flow - Login Me and Logout with Session Cookie @smoke`, async ({
       anonymousApi
@@ -93,7 +94,7 @@ test.describe("Auth - API REST Session @regression", () => {
       path: "/api/v1/auth/login"
     });
     expect(errorBody.message).toMatch(
-      /credential|username|password|tên đăng nhập|mật khẩu|sai tài khoản hoặc mật khẩu|đăng nhập|không đúng/i
+      /credential|username|password|tn dang nh?p|m?t kh?u|sai ti kho?n ho?c m?t kh?u|dang nh?p|khng dng/i
     );
   });
 
@@ -113,42 +114,47 @@ test.describe("Auth - API REST Session @regression", () => {
   test("[API-AUTH-REST-OTP-001] - API Auth Session - Forgot Password - Existing Email OTP Persistence", async ({
     anonymousApi
   }) => {
-    const customers = await MySqlDbClient.query<{ email: string }>(
+    const customers = await TestDbRepository.query<{ email: string }>(
       "SELECT email FROM customer WHERE username = ? LIMIT 1",
       [env.customerUsername]
     );
     const email = customers[0]?.email ?? "";
     expect(email).toBeTruthy();
+    const baselineVerificationId = await ApiOtpHelper.latestVerificationId(email, "RESET_PASSWORD");
 
-    const response = await anonymousApi.post("/api/v1/auth/forgot-password", {
-      failOnStatusCode: false,
-      params: { email }
-    });
+    try {
+      const response = await anonymousApi.post("/api/v1/auth/forgot-password", {
+        failOnStatusCode: false,
+        params: { email }
+      });
 
-    await expectApiMessage(response, {
-      status: 200,
-      message: apiExpectedMessages.auth.forgotPassword,
-      dataMode: "null"
-    });
+      await expectApiMessage(response, {
+        status: 200,
+        message: apiExpectedMessages.auth.forgotPassword,
+        dataMode: "null"
+      });
 
-    const otpRows = await MySqlDbClient.query<{ status: string }>(
-      `
-        SELECT status
-        FROM email_verification
-        WHERE email = ? AND purpose = ?
-        ORDER BY id DESC
-        LIMIT 1
-      `,
-      [email, "RESET_PASSWORD"]
-    );
-    expect(otpRows.length).toBeGreaterThan(0);
-    expect(otpRows[0]!.status).toBe("PENDING");
+      const otpRows = await TestDbRepository.query<{ status: string }>(
+        `
+          SELECT status
+          FROM email_verification
+          WHERE email = ? AND purpose = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        [email, "RESET_PASSWORD"]
+      );
+      expect(otpRows.length).toBeGreaterThan(0);
+      expect(otpRows[0]!.status).toBe("PENDING");
 
-    const afterRows = await MySqlDbClient.query<{ total: number }>(
-      "SELECT COUNT(*) AS total FROM email_verification WHERE email = ? AND purpose = ?",
-      [email, "RESET_PASSWORD"]
-    );
-    expect(afterRows[0]!.total).toBeGreaterThan(0);
+      const afterRows = await TestDbRepository.query<{ total: number }>(
+        "SELECT COUNT(*) AS total FROM email_verification WHERE email = ? AND purpose = ?",
+        [email, "RESET_PASSWORD"]
+      );
+      expect(afterRows[0]!.total).toBeGreaterThan(0);
+    } finally {
+      await ApiOtpHelper.deleteVerificationsAfter(email, "RESET_PASSWORD", baselineVerificationId);
+    }
   });
 
   test("[API-AUTH-REST-OTP-002] - API Auth Session - Forgot Password - Nonexistent Email Success Contract Preservation", async ({
@@ -156,7 +162,7 @@ test.describe("Auth - API REST Session @regression", () => {
   }) => {
     const email = TestDataFactory.taoEmail("pw-missing");
 
-    const beforeRows = await MySqlDbClient.query<{ total: number }>(
+    const beforeRows = await TestDbRepository.query<{ total: number }>(
       "SELECT COUNT(*) AS total FROM email_verification WHERE email = ? AND purpose = ?",
       [email, "RESET_PASSWORD"]
     );
@@ -172,7 +178,7 @@ test.describe("Auth - API REST Session @regression", () => {
       dataMode: "null"
     });
 
-    const afterRows = await MySqlDbClient.query<{ total: number }>(
+    const afterRows = await TestDbRepository.query<{ total: number }>(
       "SELECT COUNT(*) AS total FROM email_verification WHERE email = ? AND purpose = ?",
       [email, "RESET_PASSWORD"]
     );

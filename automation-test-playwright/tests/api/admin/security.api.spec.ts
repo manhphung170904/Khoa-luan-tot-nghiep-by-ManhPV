@@ -3,7 +3,7 @@ import { adminEndpointCatalog } from "@api/adminEndpointCatalog";
 import { createAnonymousContext, sendRequest } from "@api/adminApiUtils";
 import { expectApiErrorBody, expectStatusExact } from "@api/apiContractUtils";
 
-test.describe("Admin - API Security Matrix @regression", () => {
+test.describe("Admin - API Security Matrix @regression @api", () => {
   test.describe.configure({ mode: "serial" });
 
   const expectSecurityBodyIfJson = async (response: Awaited<ReturnType<typeof sendRequest>>, status: 401 | 403) => {

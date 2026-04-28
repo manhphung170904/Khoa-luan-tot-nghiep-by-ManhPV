@@ -56,3 +56,20 @@ export async function cleanupUploadedFileByName(kind: UploadedFileKind, filename
     await fs.rm(filePath, { force: true }).catch(() => {});
   }
 }
+
+export class UploadedFileCleanupRegistry {
+  private readonly files: Array<{ kind: UploadedFileKind; filename?: string | null }> = [];
+
+  add(kind: UploadedFileKind, filename?: string | null): void {
+    this.files.push({ kind, filename });
+  }
+
+  async flush(): Promise<void> {
+    while (this.files.length > 0) {
+      const file = this.files.pop();
+      if (file) {
+        await cleanupUploadedFileByName(file.kind, file.filename);
+      }
+    }
+  }
+}

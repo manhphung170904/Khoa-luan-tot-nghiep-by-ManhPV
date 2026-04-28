@@ -1,11 +1,11 @@
 import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectArrayBody, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Staff @regression", () => {
+test.describe("Admin - API Staff @regression @api", () => {
   const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[STF-001] - API Admin Staff - Authentication - Create Staff Without Login Rejection", async ({ request }) => {
@@ -31,9 +31,9 @@ test.describe("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/username|đăng nhập|ít nhất|min/i);
+    expect(errorBody.message).toMatch(/username|dang nh?p|t nh?t|min/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [shortUsername]);
+    const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [shortUsername]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
@@ -48,9 +48,9 @@ test.describe("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/password|mật khẩu|ít nhất|min/i);
+    expect(errorBody.message).toMatch(/password|m?t kh?u|t nh?t|min/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [username]);
+    const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [username]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
@@ -65,9 +65,9 @@ test.describe("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/phone|điện thoại|không hợp lệ|invalid/i);
+    expect(errorBody.message).toMatch(/phone|di?n tho?i|khng h?p l?|invalid/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE phone = ?", [invalidPhone]);
+    const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE phone = ?", [invalidPhone]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
@@ -82,7 +82,7 @@ test.describe("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/full.?name|họ tên|tối đa|max|ký tự/i);
+    expect(errorBody.message).toMatch(/full.?name|h? tn|t?i da|max|k t?/i);
   });
 
   test("[STF-015] - API Admin Staff - Username - Minimum Length Boundary Acceptance", async ({ adminApi: admin }) => {
@@ -103,7 +103,7 @@ test.describe("Admin - API Staff @regression", () => {
       dataMode: "null"
     });
 
-    const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM staff WHERE username = ? LIMIT 1", [username]);
+    const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM staff WHERE username = ? LIMIT 1", [username]);
     expect(rows[0]?.id).toBeTruthy();
     await admin.delete(`/api/v1/admin/staff/${rows[0]!.id}`, { failOnStatusCode: false });
   });
@@ -119,9 +119,9 @@ test.describe("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/username|đăng nhập|tối đa|max|độ dài/i);
+    expect(errorBody.message).toMatch(/username|dang nh?p|t?i da|max|d? di/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [longUsername]);
+    const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [longUsername]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
@@ -138,7 +138,7 @@ test.describe("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`
     });
-    expect(errorBody.message).toMatch(/building|tòa nhà|contract|hợp đồng|phân công/i);
+    expect(errorBody.message).toMatch(/building|ta nh|contract|h?p d?ng|phn cng/i);
 
     const assignmentsResponse = await admin.get(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`, {
       failOnStatusCode: false
@@ -160,7 +160,7 @@ test.describe("Admin - API Staff @regression", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`
     });
-    expect(errorBody.message).toMatch(/customer|khách hàng|contract|hợp đồng|phân công/i);
+    expect(errorBody.message).toMatch(/customer|khch hng|contract|h?p d?ng|phn cng/i);
 
     const assignmentsResponse = await admin.get(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`, {
       failOnStatusCode: false
@@ -188,7 +188,7 @@ test.describe("Admin - API Staff @regression", () => {
         dataMode: "null"
       });
 
-      const staffRows = await MySqlDbClient.query<{
+      const staffRows = await TestDbRepository.query<{
         id: number;
         email: string;
         full_name: string;
@@ -208,8 +208,8 @@ test.describe("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicateUsernameError.message).toMatch(/username|tên đăng nhập|đăng nhập|tồn tại|trùng/i);
-      const duplicateUsernameRows = await MySqlDbClient.query<{ count: number }>(
+      expect(duplicateUsernameError.message).toMatch(/username|tn dang nh?p|dang nh?p|t?n t?i|trng/i);
+      const duplicateUsernameRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE username = ?",
         [String(payload.username)]
       );
@@ -227,8 +227,8 @@ test.describe("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicateEmailError.message).toMatch(/email|tồn tại|trùng/i);
-      const duplicateEmailRows = await MySqlDbClient.query<{ count: number }>(
+      expect(duplicateEmailError.message).toMatch(/email|t?n t?i|trng/i);
+      const duplicateEmailRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE email = ?",
         [String(payload.email)]
       );
@@ -246,8 +246,8 @@ test.describe("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicatePhoneError.message).toMatch(/phone|điện thoại|tồn tại|trùng/i);
-      const duplicatePhoneRows = await MySqlDbClient.query<{ count: number }>(
+      expect(duplicatePhoneError.message).toMatch(/phone|di?n tho?i|t?n t?i|trng/i);
+      const duplicatePhoneRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE phone = ?",
         [String(payload.phone)]
       );
@@ -332,7 +332,7 @@ test.describe("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/staff/${missingSmallId}/assignments/buildings`
       });
-      expect(assignMissingStaffError.message).toMatch(/staff|nhân viên|không tồn tại|không tìm thấy|not found/i);
+      expect(assignMissingStaffError.message).toMatch(/staff|nhn vin|khng t?n t?i|khng tm th?y|not found/i);
 
       const assignCustomerResponse = await admin.put(`/api/v1/admin/staff/${createdStaffId}/assignments/customers`, {
         failOnStatusCode: false,
@@ -352,9 +352,9 @@ test.describe("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/staff/${createdStaffId}`
       });
-      expect(deleteWhileAssignedError.message).toMatch(/assignment|phân công|contract|hợp đồng|bất động sản/i);
+      expect(deleteWhileAssignedError.message).toMatch(/assignment|phn cng|contract|h?p d?ng|b?t d?ng s?n/i);
 
-      const stillExistsRows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE id = ?", [createdStaffId]);
+      const stillExistsRows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE id = ?", [createdStaffId]);
       expect(Number(stillExistsRows[0]?.count ?? 0)).toBe(1);
 
       const missingDelete = await admin.delete(`/api/v1/admin/staff/${missingSmallId}`, {
@@ -365,7 +365,7 @@ test.describe("Admin - API Staff @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/staff/${missingSmallId}`
       });
-      expect(missingDeleteError.message).toMatch(/staff|nhân viên|không tồn tại|không tìm thấy|not found/i);
+      expect(missingDeleteError.message).toMatch(/staff|nhn vin|khng t?n t?i|khng tm th?y|not found/i);
 
       const clearBuildings = await admin.put(`/api/v1/admin/staff/${createdStaffId}/assignments/buildings`, {
         failOnStatusCode: false,
@@ -396,7 +396,7 @@ test.describe("Admin - API Staff @regression", () => {
         dataMode: "null"
       });
 
-      const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM staff WHERE id = ?", [createdStaffId]);
+      const deletedRows = await TestDbRepository.query<{ id: number }>("SELECT id FROM staff WHERE id = ?", [createdStaffId]);
       expect(deletedRows.length).toBe(0);
       createdStaffId = 0;
     } finally {

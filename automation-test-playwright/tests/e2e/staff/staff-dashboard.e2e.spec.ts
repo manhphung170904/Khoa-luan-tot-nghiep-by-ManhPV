@@ -2,16 +2,17 @@ import { expect, test } from "@fixtures/base.fixture";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { StaffDashboardPage } from "@pages/staff/StaffDashboardPage";
 import { loginAsTempUser } from "@data/profileTempUsers";
+import { NavigationPage } from "@pages/core/NavigationPage";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Staff - Dashboard @regression", () => {
+test.describe("Staff - Dashboard @regression @e2e", () => {
   let tempContract: TempContract | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {
     tempContract = await TempEntityHelper.taoContractTam(adminApi);
     await loginAsTempUser(page, tempContract.staff.username);
-    await page.goto("/staff/dashboard");
+    await new NavigationPage(page).open("/staff/dashboard");
   });
 
   test.afterEach(async ({ adminApi }) => {

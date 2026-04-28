@@ -49,7 +49,7 @@ export class AdminInvoiceListPage extends RoutedCrudListPage {
   }
 
   async deleteInvoice(invoiceId: number): Promise<void> {
-    await this.rowByInvoiceId(invoiceId).locator(".btn-delete").click();
+    await this.actionButton(this.rowByInvoiceId(invoiceId), "delete").click();
   }
 
   async filterByMonth(month: number): Promise<void> {
@@ -85,6 +85,6 @@ export class AdminInvoiceListPage extends RoutedCrudListPage {
   }
 
   async confirmSweetAlert(): Promise<void> {
-    await this.page.locator(".swal2-confirm").click();
+    await super.confirmSweetAlert();
   }
 }

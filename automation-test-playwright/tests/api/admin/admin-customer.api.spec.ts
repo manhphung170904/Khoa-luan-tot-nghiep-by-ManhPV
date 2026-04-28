@@ -1,11 +1,11 @@
 import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Customer @regression", () => {
+test.describe("Admin - API Customer @regression @api", () => {
   const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[CUS-001] - API Admin Customer - Authentication - Create Customer Without Login Rejection", async ({ request }) => {
@@ -31,9 +31,9 @@ test.describe("Admin - API Customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/staff|nhân viên/i);
+    expect(errorBody.message).toMatch(/staff|nhn vin/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [username]);
+    const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [username]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
@@ -50,9 +50,9 @@ test.describe("Admin - API Customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/username|đăng nhập|ít nhất|min/i);
+    expect(errorBody.message).toMatch(/username|dang nh?p|t nh?t|min/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [shortUsername]);
+    const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [shortUsername]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
@@ -69,9 +69,9 @@ test.describe("Admin - API Customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/password|mật khẩu|ít nhất|min/i);
+    expect(errorBody.message).toMatch(/password|m?t kh?u|t nh?t|min/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [username]);
+    const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE username = ?", [username]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
@@ -88,9 +88,9 @@ test.describe("Admin - API Customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/email|địa chỉ email|không hợp lệ|tối đa/i);
+    expect(errorBody.message).toMatch(/email|d?a ch? email|khng h?p l?|t?i da/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE email = ?", [oversizedEmail]);
+    const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE email = ?", [oversizedEmail]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
@@ -107,9 +107,9 @@ test.describe("Admin - API Customer @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/customers"
     });
-    expect(errorBody.message).toMatch(/phone|điện thoại|không hợp lệ/i);
+    expect(errorBody.message).toMatch(/phone|di?n tho?i|khng h?p l?/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE phone = ?", [invalidPhone]);
+    const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM customer WHERE phone = ?", [invalidPhone]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
@@ -129,7 +129,7 @@ test.describe("Admin - API Customer @regression", () => {
         dataMode: "null"
       });
 
-      const customerRows = await MySqlDbClient.query<{
+      const customerRows = await TestDbRepository.query<{
         id: number;
         email: string;
         full_name: string;
@@ -149,8 +149,8 @@ test.describe("Admin - API Customer @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/customers"
       });
-      expect(duplicateError.message).toMatch(/username|email|phone|tên đăng nhập|tồn tại|trùng/i);
-      const duplicateRows = await MySqlDbClient.query<{ count: number }>(
+      expect(duplicateError.message).toMatch(/username|email|phone|tn dang nh?p|t?n t?i|trng/i);
+      const duplicateRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM customer WHERE username = ? OR email = ? OR phone = ?",
         [String(customerPayload.username), String(customerPayload.email), String(customerPayload.phone)]
       );
@@ -179,9 +179,9 @@ test.describe("Admin - API Customer @regression", () => {
           code: "BAD_REQUEST",
           path: `/api/v1/admin/customers/${customerWithContract.customer.id}`
         });
-        expect(deleteWithContractError.message).toMatch(/contract|hợp đồng|không thể xóa khách hàng đang có hợp đồng liên quan/i);
+        expect(deleteWithContractError.message).toMatch(/contract|h?p d?ng|khng th? xa khch hng dang c h?p d?ng lin quan/i);
 
-        const stillExistsRows = await MySqlDbClient.query<{ count: number }>(
+        const stillExistsRows = await TestDbRepository.query<{ count: number }>(
           "SELECT COUNT(*) AS count FROM customer WHERE id = ?",
           [customerWithContract.customer.id]
         );
@@ -198,7 +198,7 @@ test.describe("Admin - API Customer @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/customers/${missingSmallId}`
       });
-      expect(missingDeleteError.message).toMatch(/customer|khách hàng|không tồn tại|không tìm thấy|not found/i);
+      expect(missingDeleteError.message).toMatch(/customer|khch hng|khng t?n t?i|khng tm th?y|not found/i);
 
       const deleteResponse = await admin.delete(`/api/v1/admin/customers/${createdCustomerId}`, {
         failOnStatusCode: false
@@ -209,7 +209,7 @@ test.describe("Admin - API Customer @regression", () => {
         dataMode: "null"
       });
 
-      const deletedRows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM customer WHERE id = ?", [createdCustomerId]);
+      const deletedRows = await TestDbRepository.query<{ id: number }>("SELECT id FROM customer WHERE id = ?", [createdCustomerId]);
       expect(deletedRows.length).toBe(0);
       createdCustomerId = 0;
     } finally {

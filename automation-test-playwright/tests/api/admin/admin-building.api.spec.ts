@@ -2,12 +2,12 @@ import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectObjectBody, expectPageBody, expectStatusExact } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiFileFixtures } from "@api/apiFileFixtures";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { cleanupUploadedFileByName } from "@helpers/UploadedFileCleanupHelper";
 
-test.describe("Admin - API Building @regression", () => {
+test.describe("Admin - API Building @regression @api", () => {
   const missingId = TestDataFactory.missingId;
   const missingSmallId = TestDataFactory.missingSmallId;
 
@@ -26,7 +26,7 @@ test.describe("Admin - API Building @regression", () => {
     staffIds: []
   }) as Record<string, unknown>;
 
-  test.describe("CRUD Building", () => {
+  test.describe("CRUD Building @api", () => {
     test("[BLD-001] - API Admin Building - Authentication - Create Building Without Login Rejection", async ({ request }) => {
       const response = await request.post("/api/v1/admin/buildings", {
         failOnStatusCode: false,
@@ -54,7 +54,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/name|tên bất động sản|district|quận|required|bắt buộc/i);
+      expect(errorBody.message).toMatch(/name|tn b?t d?ng s?n|district|qu?n|required|b?t bu?c/i);
     });
 
     test("[BLD-012] - API Admin Building - Coordinates - Missing Latitude and Longitude Validation", async ({ adminApi: admin }) => {
@@ -72,7 +72,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/latitude|longitude|tọa độ|required|bắt buộc/i);
+      expect(errorBody.message).toMatch(/latitude|longitude|t?a d?|required|b?t bu?c/i);
     });
 
     test("[BLD-013] - API Admin Building - Address Fields - Empty Ward and Street Validation", async ({ adminApi: admin }) => {
@@ -86,7 +86,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/ward|street|phường|đường|bắt buộc|không được để trống/i);
+      expect(errorBody.message).toMatch(/ward|street|phu?ng|du?ng|b?t bu?c|khng du?c d? tr?ng/i);
     });
 
     test("[BLD-014] - API Admin Building - Property Type - Unsupported Value Handling", async ({ adminApi: admin }) => {
@@ -114,7 +114,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings"
       });
-      expect(errorBody.message).toMatch(/floor|tầng|số tầng|>=\s*0|không âm|number/i);
+      expect(errorBody.message).toMatch(/floor|t?ng|s? t?ng|>=\s*0|khng m|number/i);
     });
 
     test("[BLD-018] - API Admin Building - Metadata - Filter Options Schema", async ({ adminApi: admin }) => {
@@ -185,7 +185,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/buildings/${missingId}`
       });
-      expect(errorBody.message).toMatch(/building|tòa nhà|bất động sản|không tồn tại|không tìm thấy|not found/i);
+      expect(errorBody.message).toMatch(/building|ta nh|b?t d?ng s?n|khng t?n t?i|khng tm th?y|not found/i);
     });
 
     test("[BLD-008] - API Admin Building - Update Building - Sold Building Update Restriction", async ({ adminApi: admin, cleanupRegistry }) => {
@@ -216,9 +216,9 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/buildings/${tempSaleContract.building.id}`
       });
-      expect(errorBody.message).toMatch(/sold|đã bán|sale contract|hợp đồng mua bán/i);
+      expect(errorBody.message).toMatch(/sold|d bn|sale contract|h?p d?ng mua bn/i);
 
-      const rows = await MySqlDbClient.query<{ name: string }>("SELECT name FROM building WHERE id = ?", [tempSaleContract.building.id]);
+      const rows = await TestDbRepository.query<{ name: string }>("SELECT name FROM building WHERE id = ?", [tempSaleContract.building.id]);
       expect(rows[0]?.name).toBe(tempSaleContract.building.name);
     });
 
@@ -235,9 +235,9 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/buildings/${tempContract.building.id}`
       });
-      expect(errorBody.message).toMatch(/hợp đồng|liên quan|contract/i);
+      expect(errorBody.message).toMatch(/h?p d?ng|lin quan|contract/i);
 
-      const rows = await MySqlDbClient.query<{ count: number }>("SELECT COUNT(*) AS count FROM building WHERE id = ?", [tempContract.building.id]);
+      const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM building WHERE id = ?", [tempContract.building.id]);
       expect(Number(rows[0]?.count ?? 0)).toBe(1);
     });
 
@@ -266,51 +266,58 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/buildings/${missingSmallId}`
       });
-      expect(errorBody.message).toMatch(/building|tòa nhà|bất động sản|không tồn tại|không tìm thấy|not found/i);
+      expect(errorBody.message).toMatch(/building|ta nh|b?t d?ng s?n|khng t?n t?i|khng tm th?y|not found/i);
     });
 
-    test.describe("Created Building Lifecycle", () => {
+    test.describe("Created Building Lifecycle @api", () => {
       test("[BLD-004] - API Admin Building - Create Building - Successful Creation and Database Persistence", async ({ adminApi: admin }) => {
         const payload = {
           ...validPayload,
           name: TestDataFactory.taoTenToaNha("Auto Test Building")
         } as Record<string, unknown>;
+        let buildingId = 0;
 
-        const response = await admin.post("/api/v1/admin/buildings", {
-          failOnStatusCode: false,
-          data: payload
-        });
+        try {
+          const response = await admin.post("/api/v1/admin/buildings", {
+            failOnStatusCode: false,
+            data: payload
+          });
 
-        await expectApiMessage(response, {
-          status: 200,
-          message: apiExpectedMessages.admin.buildings.create,
-          dataMode: "null"
-        });
+          await expectApiMessage(response, {
+            status: 200,
+            message: apiExpectedMessages.admin.buildings.create,
+            dataMode: "null"
+          });
 
-        const dbResult = await MySqlDbClient.query<{
-          id: number;
-          number_of_floor: number;
-          number_of_basement: number;
-          floor_area: number;
-          street: string;
-          ward: string;
-          property_type: string;
-          transaction_type: string;
-        }>(
-          "SELECT * FROM building WHERE name = ? ORDER BY id DESC LIMIT 1",
-          [String(payload.name)]
-        );
-        expect(dbResult.length).toBe(1);
-        expect(dbResult[0]!.number_of_floor).toBe(payload.numberOfFloor);
-        expect(dbResult[0]!.number_of_basement).toBe(payload.numberOfBasement);
-        expect(Number(dbResult[0]!.floor_area)).toBe(payload.floorArea);
-        expect(dbResult[0]!.street).toBe(payload.street);
-        expect(dbResult[0]!.ward).toBe(payload.ward);
-        expect(dbResult[0]!.property_type).toBe(payload.propertyType);
-        expect(dbResult[0]!.transaction_type).toBe(payload.transactionType);
-        await admin.delete(`/api/v1/admin/buildings/${dbResult[0]!.id}`, {
-          failOnStatusCode: false
-        });
+          const dbResult = await TestDbRepository.query<{
+            id: number;
+            number_of_floor: number;
+            number_of_basement: number;
+            floor_area: number;
+            street: string;
+            ward: string;
+            property_type: string;
+            transaction_type: string;
+          }>(
+            "SELECT * FROM building WHERE name = ? ORDER BY id DESC LIMIT 1",
+            [String(payload.name)]
+          );
+          expect(dbResult.length).toBe(1);
+          buildingId = dbResult[0]!.id;
+          expect(dbResult[0]!.number_of_floor).toBe(payload.numberOfFloor);
+          expect(dbResult[0]!.number_of_basement).toBe(payload.numberOfBasement);
+          expect(Number(dbResult[0]!.floor_area)).toBe(payload.floorArea);
+          expect(dbResult[0]!.street).toBe(payload.street);
+          expect(dbResult[0]!.ward).toBe(payload.ward);
+          expect(dbResult[0]!.property_type).toBe(payload.propertyType);
+          expect(dbResult[0]!.transaction_type).toBe(payload.transactionType);
+        } finally {
+          if (buildingId) {
+            await admin.delete(`/api/v1/admin/buildings/${buildingId}`, {
+              failOnStatusCode: false
+            });
+          }
+        }
       });
 
       test("[BLD-005] - API Admin Building - Listing - Newly Created Building Retrieval", async ({ adminApi: admin }) => {
@@ -331,7 +338,7 @@ test.describe("Admin - API Building @regression", () => {
             dataMode: "null"
           });
 
-          const dbResult = await MySqlDbClient.query<{ id: number }>(
+          const dbResult = await TestDbRepository.query<{ id: number }>(
             "SELECT id FROM building WHERE name = ? ORDER BY id DESC LIMIT 1",
             [String(payload.name)]
           );
@@ -377,7 +384,7 @@ test.describe("Admin - API Building @regression", () => {
             dataMode: "null"
           });
 
-          const createdRows = await MySqlDbClient.query<{ id: number }>(
+          const createdRows = await TestDbRepository.query<{ id: number }>(
             "SELECT id FROM building WHERE name = ? ORDER BY id DESC LIMIT 1",
             [String(payload.name)]
           );
@@ -401,7 +408,7 @@ test.describe("Admin - API Building @regression", () => {
             dataMode: "null"
           });
 
-          const dbResult = await MySqlDbClient.query<{ name: string; floor_area: number }>(
+          const dbResult = await TestDbRepository.query<{ name: string; floor_area: number }>(
             "SELECT name, floor_area FROM building WHERE id = ?",
             [buildingId]
           );
@@ -421,44 +428,55 @@ test.describe("Admin - API Building @regression", () => {
           ...validPayload,
           name: TestDataFactory.taoTenToaNha("Auto Test Building Delete")
         } as Record<string, unknown>;
+        let buildingId = 0;
+        let deleted = false;
 
-        const createResponse = await admin.post("/api/v1/admin/buildings", {
-          failOnStatusCode: false,
-          data: payload
-        });
-        await expectApiMessage(createResponse, {
-          status: 200,
-          message: apiExpectedMessages.admin.buildings.create,
-          dataMode: "null"
-        });
+        try {
+          const createResponse = await admin.post("/api/v1/admin/buildings", {
+            failOnStatusCode: false,
+            data: payload
+          });
+          await expectApiMessage(createResponse, {
+            status: 200,
+            message: apiExpectedMessages.admin.buildings.create,
+            dataMode: "null"
+          });
 
-        const createdRows = await MySqlDbClient.query<{ id: number }>(
-          "SELECT id FROM building WHERE name = ? ORDER BY id DESC LIMIT 1",
-          [String(payload.name)]
-        );
-        expect(createdRows.length).toBe(1);
-        const buildingId = createdRows[0]!.id;
+          const createdRows = await TestDbRepository.query<{ id: number }>(
+            "SELECT id FROM building WHERE name = ? ORDER BY id DESC LIMIT 1",
+            [String(payload.name)]
+          );
+          expect(createdRows.length).toBe(1);
+          buildingId = createdRows[0]!.id;
 
-        const response = await admin.delete(`/api/v1/admin/buildings/${buildingId}`, {
-          failOnStatusCode: false
-        });
+          const response = await admin.delete(`/api/v1/admin/buildings/${buildingId}`, {
+            failOnStatusCode: false
+          });
 
-        await expectApiMessage(response, {
-          status: 200,
-          message: apiExpectedMessages.admin.buildings.delete,
-          dataMode: "null"
-        });
+          await expectApiMessage(response, {
+            status: 200,
+            message: apiExpectedMessages.admin.buildings.delete,
+            dataMode: "null"
+          });
+          deleted = true;
 
-        const dbResult = await MySqlDbClient.query<{ id: number }>(
-          "SELECT id FROM building WHERE id = ?",
-          [buildingId]
-        );
-        expect(dbResult.length).toBe(0);
+          const dbResult = await TestDbRepository.query<{ id: number }>(
+            "SELECT id FROM building WHERE id = ?",
+            [buildingId]
+          );
+          expect(dbResult.length).toBe(0);
+        } finally {
+          if (buildingId && !deleted) {
+            await admin.delete(`/api/v1/admin/buildings/${buildingId}`, {
+              failOnStatusCode: false
+            });
+          }
+        }
       });
     });
   });
 
-  test.describe("Image Upload", () => {
+  test.describe("Image Upload @api", () => {
     test("[BLD-U01] - API Admin Building Image - Authentication - Upload Without Login Rejection", async ({ request }) => {
       const response = await request.post("/api/v1/admin/buildings/image", {
         failOnStatusCode: false,
@@ -487,7 +505,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
-      expect(errorBody.message).toMatch(/file|tệp|ảnh|empty|rỗng|chọn/i);
+      expect(errorBody.message).toMatch(/file|tep|anh|empty|rong|chon/i);
     });
 
     test("[BLD-U02] - API Admin Building Image - Media Type - Unsupported Format Validation", async ({ adminApi: admin }) => {
@@ -503,7 +521,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
-      expect(errorBody.message).toMatch(/image|mime|type|định dạng|tệp|jpg|png|webp|hỗ trợ/i);
+      expect(errorBody.message).toMatch(/image|mime|type|d?nh d?ng|t?p|jpg|png|webp|h? tr?/i);
     });
 
     test("[BLD-U07] - API Admin Building Image - File Extension - Mismatched Image Extension Validation", async ({ adminApi: admin }) => {
@@ -519,7 +537,7 @@ test.describe("Admin - API Building @regression", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/buildings/image"
       });
-      expect(errorBody.message).toMatch(/extension|file|jpg|jpeg|định dạng/i);
+      expect(errorBody.message).toMatch(/extension|file|jpg|jpeg|d?nh d?ng/i);
     });
 
     test("[BLD-U03] - API Admin Building Image - File Integrity - Corrupted JPG Acceptance Behavior", async ({ adminApi: admin }) => {

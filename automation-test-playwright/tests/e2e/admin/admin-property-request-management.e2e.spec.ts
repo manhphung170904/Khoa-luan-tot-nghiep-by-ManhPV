@@ -1,5 +1,6 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { CleanupHelper } from "@helpers/CleanupHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { AdminContractFormPage } from "@pages/admin/AdminContractFormPage";
@@ -14,7 +15,7 @@ import {
 } from "@data/profileTempUsers";
 import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
 
-test.describe("Admin - Property Request Management @regression", () => {
+test.describe("Admin - Property Request Management @regression @e2e", () => {
   let adminUser: TempStaffProfileUser | null = null;
   let scenario: PropertyRequestScenario | null = null;
   let createdContractId = 0;
@@ -23,7 +24,7 @@ test.describe("Admin - Property Request Management @regression", () => {
   test.beforeEach(async ({ page, adminApi }) => {
     adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
-    await page.goto("/admin/property-request/list");
+    await new NavigationPage(page).open("/admin/property-request/list");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -55,7 +56,7 @@ test.describe("Admin - Property Request Management @regression", () => {
     const listPage = new AdminPropertyRequestListPage(page);
     const detailPage = new AdminPropertyRequestDetailPage(page);
 
-    await page.goto("/admin/property-request/list");
+    await new NavigationPage(page).open("/admin/property-request/list");
     await listPage.expectLoaded();
     await listPage.filterByStatus("PENDING");
     await listPage.waitForTableData();
@@ -68,14 +69,14 @@ test.describe("Admin - Property Request Management @regression", () => {
     scenario = await createPropertyRequestScenario(playwright, "RENT");
     const detailPage = new AdminPropertyRequestDetailPage(page);
 
-    await page.goto(`/admin/property-request/${scenario.propertyRequestId}`);
+    await new NavigationPage(page).open(`/admin/property-request/${scenario.propertyRequestId}`);
     await detailPage.expectLoaded(scenario.propertyRequestId);
     await detailPage.expectPendingActionsVisible();
     await detailPage.rejectRequest("Rejected by Playwright E2E");
-    await expect(page.locator(".swal2-popup.swal2-show")).toBeVisible();
+    await detailPage.expectRejectAlertVisible();
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ status: string; admin_note: string }>(
+      const rows = await TestDbRepository.query<{ status: string; admin_note: string }>(
         "SELECT status, admin_note FROM property_request WHERE id = ?",
         [scenario!.propertyRequestId]
       );
@@ -88,13 +89,12 @@ test.describe("Admin - Property Request Management @regression", () => {
     const detailPage = new AdminPropertyRequestDetailPage(page);
     const contractFormPage = new AdminContractFormPage(page);
 
-    await page.goto(`/admin/property-request/${scenario.propertyRequestId}`);
+    await new NavigationPage(page).open(`/admin/property-request/${scenario.propertyRequestId}`);
     await detailPage.expectLoaded(scenario.propertyRequestId);
     await detailPage.expectCreateContractLink(scenario.propertyRequestId);
     await detailPage.openCreateContractLink(scenario.propertyRequestId);
     await contractFormPage.expectAddLoaded();
-    await expect(page.locator("[name='customerId_disabled']")).toHaveCount(1);
-    await expect(page.locator("[name='customerId']")).toHaveValue(String(scenario.customerId));
+    await detailPage.expectPrefilledCustomer(scenario.customerId);
   });
 
   test("[E2E-ADM-PRQ-004] - Admin Property Request Management - Buy Request Detail - Prefilled Sale Contract Form Navigation", async ({ page, playwright }) => {
@@ -102,13 +102,12 @@ test.describe("Admin - Property Request Management @regression", () => {
     const detailPage = new AdminPropertyRequestDetailPage(page);
     const saleFormPage = new AdminSaleContractFormPage(page);
 
-    await page.goto(`/admin/property-request/${scenario.propertyRequestId}`);
+    await new NavigationPage(page).open(`/admin/property-request/${scenario.propertyRequestId}`);
     await detailPage.expectLoaded(scenario.propertyRequestId);
     await detailPage.expectCreateSaleContractLink(scenario.propertyRequestId);
     await detailPage.openCreateSaleContractLink(scenario.propertyRequestId);
     await saleFormPage.expectAddLoaded();
-    await expect(page.locator("[name='customerId_disabled']")).toHaveCount(1);
-    await expect(page.locator("[name='customerId']")).toHaveValue(String(scenario.customerId));
+    await detailPage.expectPrefilledCustomer(scenario.customerId);
   });
 
   test("[E2E-ADM-PRQ-005] - Admin Property Request Management - Processed Result - Linked Contract Display for Approved Rent Request", async ({ page, playwright }) => {
@@ -125,7 +124,7 @@ test.describe("Admin - Property Request Management @regression", () => {
     });
     expect(createContractResponse.status()).toBe(200);
 
-    const contractRows = await MySqlDbClient.query<{ id: number }>(
+    const contractRows = await TestDbRepository.query<{ id: number }>(
       `
         SELECT id
         FROM contract
@@ -145,11 +144,11 @@ test.describe("Admin - Property Request Management @regression", () => {
     expect(approveResponse.status()).toBe(200);
 
     const detailPage = new AdminPropertyRequestDetailPage(page);
-    await page.goto(`/admin/property-request/${scenario.propertyRequestId}`);
+    await new NavigationPage(page).open(`/admin/property-request/${scenario.propertyRequestId}`);
     await detailPage.expectLoaded(scenario.propertyRequestId);
     await detailPage.expectProcessedContractLink(createdContractId);
 
-    const rows = await MySqlDbClient.query<{ status: string; contract_id: number | null }>(
+    const rows = await TestDbRepository.query<{ status: string; contract_id: number | null }>(
       "SELECT status, contract_id FROM property_request WHERE id = ?",
       [scenario.propertyRequestId]
     );
@@ -172,7 +171,7 @@ test.describe("Admin - Property Request Management @regression", () => {
     });
     expect(createSaleContractResponse.status()).toBe(200);
 
-    const saleRows = await MySqlDbClient.query<{ id: number }>(
+    const saleRows = await TestDbRepository.query<{ id: number }>(
       `
         SELECT id
         FROM sale_contract
@@ -192,11 +191,11 @@ test.describe("Admin - Property Request Management @regression", () => {
     expect(approveResponse.status()).toBe(200);
 
     const detailPage = new AdminPropertyRequestDetailPage(page);
-    await page.goto(`/admin/property-request/${scenario.propertyRequestId}`);
+    await new NavigationPage(page).open(`/admin/property-request/${scenario.propertyRequestId}`);
     await detailPage.expectLoaded(scenario.propertyRequestId);
     await detailPage.expectProcessedSaleContractLink(createdSaleContractId);
 
-    const rows = await MySqlDbClient.query<{ status: string; sale_contract_id: number | null }>(
+    const rows = await TestDbRepository.query<{ status: string; sale_contract_id: number | null }>(
       "SELECT status, sale_contract_id FROM property_request WHERE id = ?",
       [scenario.propertyRequestId]
     );

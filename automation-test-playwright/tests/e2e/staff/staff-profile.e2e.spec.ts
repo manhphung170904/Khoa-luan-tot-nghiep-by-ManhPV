@@ -1,6 +1,7 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { StaffProfilePage } from "@pages/staff/StaffProfilePage";
 import { AuthSessionHelper } from "@helpers/AuthSessionHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
@@ -16,13 +17,13 @@ function requireTempUser(tempUser: TempStaffProfileUser | null): TempStaffProfil
   return tempUser!;
 }
 
-test.describe("Staff - Profile @regression", () => {
+test.describe("Staff - Profile @regression @e2e", () => {
   let tempUser: TempStaffProfileUser | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {
     tempUser = await createTempStaffProfileUser(adminApi, "STAFF");
     await loginAsTempUser(page, tempUser.username, tempUser.password);
-    await page.goto("/staff/profile");
+    await new NavigationPage(page).open("/staff/profile");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -44,9 +45,9 @@ test.describe("Staff - Profile @regression", () => {
 
   test("[E2E-STF-PRO-002] - Staff Profile - Error Message - Error SweetAlert Display", async ({ page }) => {
     const profilePage = new StaffProfilePage(page);
-    await page.goto("/staff/profile?errorMessage=Cap%20nhat%20that%20bai");
+    await new NavigationPage(page).open("/staff/profile?errorMessage=Cap%20nhat%20that%20bai");
 
-    await profilePage.expectSweetAlertContains(/thất bại|that bai|error/i);
+    await profilePage.expectSweetAlertContains(/th?t b?i|that bai|error/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
@@ -58,14 +59,14 @@ test.describe("Staff - Profile @regression", () => {
 
     await profilePage.openUsernameModal();
     await profilePage.sendOtpFromModal("username");
-    await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
+    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_USERNAME");
     await profilePage.submitUsernameChange(nextUsername, otp);
-    await profilePage.expectSweetAlertContains(/thành công|thanh cong|tên đăng nhập|ten dang nhap/i);
+    await profilePage.expectSweetAlertContains(/thnh cng|thanh cong|tn dang nh?p|ten dang nhap/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [activeUser.id]);
+      const rows = await TestDbRepository.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [activeUser.id]);
       return rows[0]?.username ?? "";
     }).toBe(nextUsername);
   });
@@ -78,14 +79,14 @@ test.describe("Staff - Profile @regression", () => {
 
     await profilePage.openPhoneModal();
     await profilePage.sendOtpFromModal("phone");
-    await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
+    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PHONE");
     await profilePage.submitPhoneChange(newPhone, otp);
-    await profilePage.expectSweetAlertContains(/thành công|thanh cong|số điện thoại|so dien thoai/i);
+    await profilePage.expectSweetAlertContains(/thnh cng|thanh cong|s? di?n tho?i|so dien thoai/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [activeUser.id]);
+      const rows = await TestDbRepository.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [activeUser.id]);
       return rows[0]?.phone ?? "";
     }).toBe(newPhone);
   });
@@ -94,7 +95,7 @@ test.describe("Staff - Profile @regression", () => {
     const profilePage = new StaffProfilePage(page);
 
     await profilePage.submitPasswordChange("ValidPass1!", "DifferentPass1!", "000000");
-    await profilePage.expectSweetAlertContains(/không khớp|khong khop/i);
+    await profilePage.expectSweetAlertContains(/khng kh?p|khong khop/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
@@ -103,19 +104,19 @@ test.describe("Staff - Profile @regression", () => {
 
     const profilePage = new StaffProfilePage(page);
     const newPassword = "NewStaffPassword1!";
-    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [activeUser.id]);
+    const oldHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [activeUser.id]);
     const oldHash = oldHashRows[0]!.password;
 
     await profilePage.openPasswordModal();
     await profilePage.sendOtpFromModal("password");
-    await profilePage.expectSweetAlertContains(/OTP|gửi mã|gui ma/i);
+    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PASSWORD");
     await profilePage.submitPasswordChange(newPassword, newPassword, otp);
-    await profilePage.expectSweetAlertContains(/thành công|thanh cong|mật khẩu|mat khau/i);
+    await profilePage.expectSweetAlertContains(/thnh cng|thanh cong|m?t kh?u|mat khau/i);
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [activeUser.id]);
+      const rows = await TestDbRepository.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [activeUser.id]);
       return rows[0]?.password ?? "";
     }).not.toBe(oldHash);
 

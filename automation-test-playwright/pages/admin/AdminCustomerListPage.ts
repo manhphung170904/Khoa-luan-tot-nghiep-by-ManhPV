@@ -42,7 +42,7 @@ export class AdminCustomerListPage extends RoutedCrudListPage {
   }
 
   async deleteCustomer(customerText: string): Promise<void> {
-    await this.rowByCustomerName(customerText).locator(".btn-delete").click();
+    await this.actionButton(this.rowByCustomerName(customerText), "delete").click();
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {
@@ -50,6 +50,6 @@ export class AdminCustomerListPage extends RoutedCrudListPage {
   }
 
   async confirmSweetAlert(): Promise<void> {
-    await this.page.locator(".swal2-confirm").click();
+    await super.confirmSweetAlert();
   }
 }

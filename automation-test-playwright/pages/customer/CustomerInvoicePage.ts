@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { CustomerRoutedPage } from "../core/CustomerRoutedPage";
 import { OptionalActionHelper } from "@helpers/OptionalActionHelper";
+import { SweetAlertComponent } from "../components/SweetAlertComponent";
 
 export class CustomerInvoicePage extends CustomerRoutedPage {
   protected readonly path = "/customer/invoice/list";
@@ -10,6 +11,7 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
   readonly invoiceCards: Locator;
   readonly invoiceSummaries: Locator;
   readonly paymentButtons: Locator;
+  private readonly sweetAlert: SweetAlertComponent;
 
   constructor(page: Page) {
     super(page);
@@ -24,6 +26,7 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
       ".btn-payment",
       "[data-bs-target^='#paymentModal']"
     );
+    this.sweetAlert = new SweetAlertComponent(page);
   }
 
   async openFirstInvoiceSummary(): Promise<void> {
@@ -43,7 +46,7 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
   }
 
   async continueSweetAlertRedirect(): Promise<void> {
-    await this.page.locator(".swal2-confirm").click();
+    await this.sweetAlert.confirm();
   }
 
   async closeVisibleModal(): Promise<void> {
@@ -65,6 +68,10 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
     return (await this.visibleModal.innerText()).trim();
   }
 
+  async visibleModalLooseText(): Promise<string> {
+    return this.locatorLooseText(this.visibleModal);
+  }
+
   async expectEmptyState(): Promise<void> {
     await expect(this.emptyState).toContainText(/chưa có hóa đơn nào|chua co hoa don nao/i);
   }
@@ -76,5 +83,9 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
 
   async assertLoaded(): Promise<void> {
     await this.expectLoaded();
+  }
+
+  async expectPaymentSuccessAlert(): Promise<void> {
+    await this.sweetAlert.expectContains(/thanh toán thành công|thanh toan thanh cong|payment success|paysuccess/i);
   }
 }

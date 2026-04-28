@@ -60,7 +60,13 @@ export class CustomerTransactionHistoryPage extends RoutedCrudListPage {
   async expectDetailModalContains(text: string | RegExp): Promise<void> {
     const modal = this.page.locator(".modal.show");
     await expect(modal).toBeVisible();
-    await expect(modal).toContainText(text);
+    const modalText = await this.locatorLooseText(modal);
+    if (typeof text === "string") {
+      expect(modalText).toContain(this.normalizeLooseText(text));
+      return;
+    }
+
+    expect(modalText).toMatch(new RegExp(this.normalizeLooseText(text.source), text.flags.replace("g", "")));
   }
 
   async closeDetailModal(): Promise<void> {

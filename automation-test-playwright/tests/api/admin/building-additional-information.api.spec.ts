@@ -2,12 +2,12 @@ import { expect, test } from "@fixtures/api.fixture";
 import { ApiFileFixtures } from "@api/apiFileFixtures";
 import { expectApiErrorBody, expectApiMessage, expectArrayBody, expectObjectBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { cleanupUploadedFileByName } from "@helpers/UploadedFileCleanupHelper";
 
-test.describe("Admin - API Building Additional Information @extended", () => {
+test.describe("Admin - API Building Additional Information @extended @api", () => {
   const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[BAI-001] - API Admin Building Additional Information - CRUD Lifecycle - Legal Authority Amenity Supplier and Planning Map Flow", async ({
@@ -45,7 +45,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/building-additional-information/legal-authorities"
       });
-      expect(invalidAuthorityError.message).toMatch(/authority|name|tên|độ dài|max/i);
+      expect(invalidAuthorityError.message).toMatch(/authority|name|tn|d? di|max/i);
 
       const createLegalAuthority = await admin.post("/api/v1/admin/building-additional-information/legal-authorities", {
         failOnStatusCode: false,
@@ -98,7 +98,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       expect(updateLegalAuthorityBody.id).toBe(legalAuthorityId);
       expect(updateLegalAuthorityBody.authorityName).toBe("Auto Law Office Updated");
 
-      const legalAuthorityRows = await MySqlDbClient.query<{
+      const legalAuthorityRows = await TestDbRepository.query<{
         authority_name: string;
         authority_type: string;
       }>("SELECT authority_name, authority_type FROM legal_authority WHERE id = ?", [legalAuthorityId]);
@@ -111,7 +111,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       );
       expect(deleteLegalAuthority.status()).toBe(200);
       expect(await deleteLegalAuthority.text()).toBe("");
-      const deletedLegalAuthorityRows = await MySqlDbClient.query<{ count: number }>(
+      const deletedLegalAuthorityRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM legal_authority WHERE id = ?",
         [legalAuthorityId]
       );
@@ -160,7 +160,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       expect(updateAmenityBody.id).toBe(amenityId);
       expect(updateAmenityBody.name).toBe("Auto Test Park Updated");
 
-      const amenityRows = await MySqlDbClient.query<{ name: string; distance_meter: number }>(
+      const amenityRows = await TestDbRepository.query<{ name: string; distance_meter: number }>(
         "SELECT name, distance_meter FROM nearby_amenity WHERE id = ?",
         [amenityId]
       );
@@ -173,7 +173,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       );
       expect(deleteAmenity.status()).toBe(200);
       expect(await deleteAmenity.text()).toBe("");
-      const deletedAmenityRows = await MySqlDbClient.query<{ count: number }>(
+      const deletedAmenityRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM nearby_amenity WHERE id = ?",
         [amenityId]
       );
@@ -222,7 +222,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       expect(updateSupplierBody.id).toBe(supplierId);
       expect(updateSupplierBody.name).toBe("Auto Cleaning Co Updated");
 
-      const supplierRows = await MySqlDbClient.query<{ name: string }>("SELECT name FROM supplier WHERE id = ?", [supplierId]);
+      const supplierRows = await TestDbRepository.query<{ name: string }>("SELECT name FROM supplier WHERE id = ?", [supplierId]);
       expect(supplierRows[0]!.name).toBe("Auto Cleaning Co Updated");
 
       const deleteSupplier = await admin.delete(
@@ -231,7 +231,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       );
       expect(deleteSupplier.status()).toBe(200);
       expect(await deleteSupplier.text()).toBe("");
-      const deletedSupplierRows = await MySqlDbClient.query<{ count: number }>(
+      const deletedSupplierRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM supplier WHERE id = ?",
         [supplierId]
       );
@@ -288,7 +288,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       expect(updatePlanningMapBody.id).toBe(planningMapId);
       expect(updatePlanningMapBody.mapType).toBe("Planning Auto Updated");
 
-      const planningMapRows = await MySqlDbClient.query<{ map_type: string }>(
+      const planningMapRows = await TestDbRepository.query<{ map_type: string }>(
         "SELECT map_type FROM planning_map WHERE id = ?",
         [planningMapId]
       );
@@ -300,7 +300,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       );
       expect(deletePlanningMap.status()).toBe(200);
       expect(await deletePlanningMap.text()).toBe("");
-      const deletedPlanningMapRows = await MySqlDbClient.query<{ count: number }>(
+      const deletedPlanningMapRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM planning_map WHERE id = ?",
         [planningMapId]
       );
@@ -356,7 +356,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/planning-maps/image"
     });
-    expect(invalidMimeError.message).toMatch(/image|mime|type|định dạng|jpg|png|webp/i);
+    expect(invalidMimeError.message).toMatch(/image|mime|type|d?nh d?ng|jpg|png|webp/i);
 
     const invalidExtension = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -373,7 +373,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/building-additional-information/planning-maps/image"
     });
-    expect(invalidExtensionError.message).toMatch(/extension|jpg|jpeg|file|định dạng/i);
+    expect(invalidExtensionError.message).toMatch(/extension|jpg|jpeg|file|d?nh d?ng/i);
 
     const oversizedUpload = await admin.post("/api/v1/admin/building-additional-information/planning-maps/image", {
       failOnStatusCode: false,
@@ -423,7 +423,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/building-additional-information/legal-authorities/${missingSmallId}`
     });
-    expect(missingLegalAuthorityError.message).toMatch(/legal|authority|cơ quan pháp lý|không tìm thấy|not found/i);
+    expect(missingLegalAuthorityError.message).toMatch(/legal|authority|co quan php l|khng tm th?y|not found/i);
 
     const missingAmenity = await admin.delete(
       `/api/v1/admin/building-additional-information/nearby-amenities/${missingSmallId}`,
@@ -434,7 +434,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/building-additional-information/nearby-amenities/${missingSmallId}`
     });
-    expect(missingAmenityError.message).toMatch(/amenity|tiện ích|lân cận|không tìm thấy|not found/i);
+    expect(missingAmenityError.message).toMatch(/amenity|ti?n ch|ln c?n|khng tm th?y|not found/i);
 
     const missingSupplier = await admin.delete(`/api/v1/admin/building-additional-information/suppliers/${missingSmallId}`, {
       failOnStatusCode: false
@@ -444,7 +444,7 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/building-additional-information/suppliers/${missingSmallId}`
     });
-    expect(missingSupplierError.message).toMatch(/supplier|nhà cung cấp|không tìm thấy|not found/i);
+    expect(missingSupplierError.message).toMatch(/supplier|nh cung c?p|khng tm th?y|not found/i);
 
     const missingPlanningMap = await admin.delete(
       `/api/v1/admin/building-additional-information/planning-maps/${missingSmallId}`,
@@ -455,6 +455,6 @@ test.describe("Admin - API Building Additional Information @extended", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/building-additional-information/planning-maps/${missingSmallId}`
     });
-    expect(missingPlanningMapError.message).toMatch(/planning|map|bản đồ|quy hoạch|không tồn tại|không tìm thấy|not found/i);
+    expect(missingPlanningMapError.message).toMatch(/planning|map|b?n d?|quy ho?ch|khng t?n t?i|khng tm th?y|not found/i);
   });
 });

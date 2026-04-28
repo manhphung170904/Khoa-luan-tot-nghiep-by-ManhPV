@@ -5,7 +5,7 @@ import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiOtpAccessHelper } from "@api/apiOtpAccessHelper";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import {
   createAuthenticatedTempProfileScenario,
@@ -13,7 +13,7 @@ import {
   type TempProfileUser
 } from "@data/tempProfileScenario";
 
-test.describe("Customer - API Profile @api-write @otp @regression", () => {
+test.describe("Customer - API Profile @api-write @destructive @otp @regression", () => {
   let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let customerContext: APIRequestContext;
   let tempCustomer: TempProfileUser;
@@ -117,9 +117,9 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/username"
     });
-    expect(errorBody.message).toMatch(/username|đăng nhập|dang nhap|tài khoản|tai khoan|mật khẩu|mat khau/i);
+    expect(errorBody.message).toMatch(/username|dang nh?p|dang nhap|ti kho?n|tai khoan|m?t kh?u|mat khau/i);
 
-    const rows = await MySqlDbClient.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [tempCustomer.id]);
+    const rows = await TestDbRepository.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.username).toBe(originalUsername);
   });
 
@@ -138,7 +138,7 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
       dataMode: "null"
     });
 
-    const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM customer WHERE id = ?", [tempCustomer.id]);
+    const rows = await TestDbRepository.query<{ email: string }>("SELECT email FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.email).toBe(newEmail);
     tempCustomer.email = newEmail;
   });
@@ -157,9 +157,9 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/email"
     });
-    expect(errorBody.message).toMatch(/password|mật khẩu|mat khau|hiện tại|hien tai|không đúng|khong dung/i);
+    expect(errorBody.message).toMatch(/password|m?t kh?u|mat khau|hi?n t?i|hien tai|khng dng|khong dung/i);
 
-    const rows = await MySqlDbClient.query<{ email: string }>("SELECT email FROM customer WHERE id = ?", [tempCustomer.id]);
+    const rows = await TestDbRepository.query<{ email: string }>("SELECT email FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.email).toBe(originalEmail);
   });
 
@@ -181,7 +181,7 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
       dataMode: "null"
     });
 
-    const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempCustomer.id]);
+    const rows = await TestDbRepository.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.phone).toBe(newPhone);
     tempCustomer.phone = newPhone;
   });
@@ -200,14 +200,14 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/phone-number"
     });
-    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|hết hạn|het han/i);
+    expect(errorBody.message).toMatch(/otp|m|ma|xc th?c|xac thuc|h?t h?n|het han/i);
 
-    const rows = await MySqlDbClient.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempCustomer.id]);
+    const rows = await TestDbRepository.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(rows[0]!.phone).toBe(originalPhone);
   });
 
   test("[CUS-PRO-005] - API Customer Profile - Password - Successful Update with Valid OTP and DB Hash Change", async ({ playwright }) => {
-    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    const oldHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     const oldHash = oldHashRows[0]!.password;
 
     await sendOtp("PROFILE_PASSWORD");
@@ -229,7 +229,7 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
       dataMode: "null"
     });
 
-    const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    const newHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(newHashRows[0]!.password).not.toBe(oldHash);
     const otpRow = await ApiOtpHelper.latest(tempCustomer.email, "PROFILE_PASSWORD");
     expect(otpRow?.status).toBe("USED");
@@ -251,7 +251,7 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
   test("[CUS-PRO-006] - API Customer Profile - Password Confirmation - Mismatch Rejection", async () => {
     await sendOtp("PROFILE_PASSWORD");
     const otp = await ApiOtpAccessHelper.latestOtp(customerContext, tempCustomer.email, "PROFILE_PASSWORD");
-    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    const oldHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     const oldHash = oldHashRows[0]!.password;
 
     const response = await customerContext.put("/api/v1/customer/profile/password", {
@@ -268,14 +268,14 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/password"
     });
-    expect(errorBody.message).toMatch(/confirm|khớp|khop|xác nhận|xac nhan|mật khẩu xác nhận|mat khau xac nhan/i);
+    expect(errorBody.message).toMatch(/confirm|kh?p|khop|xc nh?n|xac nhan|m?t kh?u xc nh?n|mat khau xac nhan/i);
 
-    const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    const newHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(newHashRows[0]!.password).toBe(oldHash);
   });
 
   test("[CUS-PRO-007] - API Customer Profile - Password - Invalid OTP Rejection", async () => {
-    const oldHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    const oldHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     const oldHash = oldHashRows[0]!.password;
     const response = await customerContext.put("/api/v1/customer/profile/password", {
       failOnStatusCode: false,
@@ -291,9 +291,9 @@ test.describe("Customer - API Profile @api-write @otp @regression", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/customer/profile/password"
     });
-    expect(errorBody.message).toMatch(/otp|mã|ma|xác thực|xac thuc|không hợp lệ|khong hop le/i);
+    expect(errorBody.message).toMatch(/otp|m|ma|xc th?c|xac thuc|khng h?p l?|khong hop le/i);
 
-    const newHashRows = await MySqlDbClient.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
+    const newHashRows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [tempCustomer.id]);
     expect(newHashRows[0]!.password).toBe(oldHash);
   });
 });

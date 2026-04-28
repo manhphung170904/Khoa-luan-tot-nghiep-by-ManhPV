@@ -73,7 +73,7 @@ export class AdminContractListPage extends RoutedCrudListPage {
   }
 
   async deleteContract(text: string): Promise<void> {
-    await this.rowByContractText(text).locator(".btn-delete").click();
+    await this.actionButton(this.rowByContractText(text), "delete").click();
   }
 
   async updateStatuses(): Promise<void> {

@@ -1,5 +1,6 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { AdminCustomerDetailPage } from "@pages/admin/AdminCustomerDetailPage";
@@ -12,7 +13,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin - Customer Management @regression", () => {
+test.describe("Admin - Customer Management @regression @e2e", () => {
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupStaffIds = new Set<number>();
   const cleanupCustomerIds = new Set<number>();
@@ -20,7 +21,7 @@ test.describe("Admin - Customer Management @regression", () => {
   test.beforeEach(async ({ page, adminApi }) => {
     adminUser = await createTempStaffProfileUser(adminApi, "ADMIN");
     await loginAsTempUser(page, adminUser.username, adminUser.password);
-    await page.goto("/admin/customer/list");
+    await new NavigationPage(page).open("/admin/customer/list");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -48,7 +49,7 @@ test.describe("Admin - Customer Management @regression", () => {
       username: TestDataFactory.taoUsername("e2ecust")
     });
 
-    await page.goto("/admin/customer/list");
+    await new NavigationPage(page).open("/admin/customer/list");
     await listPage.openAddForm();
     await formPage.expectLoaded();
     await formPage.fillCustomerBasics({
@@ -60,16 +61,16 @@ test.describe("Admin - Customer Management @regression", () => {
     });
     await formPage.selectStaffIds([manager.id]);
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/them khach hang|thêm khách hàng|thành công|thanh cong|success/i);
+    await formPage.expectSweetAlertContains(/them khach hang|thm khch hng|thnh cng|thanh cong|success/i);
 
-    const rows = await MySqlDbClient.query<{ id: number }>(
+    const rows = await TestDbRepository.query<{ id: number }>(
       "SELECT id FROM customer WHERE username = ? LIMIT 1",
       [String(payload.username)]
     );
     expect(rows.length).toBe(1);
     cleanupCustomerIds.add(rows[0]!.id);
 
-    const assignments = await MySqlDbClient.query<{ count: number }>(
+    const assignments = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM assignment_customer WHERE staff_id = ? AND customer_id = ?",
       [manager.id, rows[0]!.id]
     );
@@ -85,7 +86,7 @@ test.describe("Admin - Customer Management @regression", () => {
     const listPage = new AdminCustomerListPage(page);
     const detailPage = new AdminCustomerDetailPage(page);
 
-    await page.goto(`/admin/customer/search?fullName=${encodeURIComponent(customer.fullName)}`);
+    await new NavigationPage(page).open(`/admin/customer/search?fullName=${encodeURIComponent(customer.fullName)}`);
     await listPage.expectLoaded();
     await listPage.waitForTableData();
     await expect(listPage.rowByCustomerName(customer.fullName)).toBeVisible();
@@ -99,7 +100,7 @@ test.describe("Admin - Customer Management @regression", () => {
       username: TestDataFactory.taoUsername("nostaff")
     });
 
-    await page.goto("/admin/customer/add");
+    await new NavigationPage(page).open("/admin/customer/add");
     await formPage.expectLoaded();
     await formPage.fillCustomerBasics({
       username: String(payload.username),
@@ -109,9 +110,9 @@ test.describe("Admin - Customer Management @regression", () => {
       email: String(payload.email)
     });
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/lỗi|loi|error|nhân viên|nhan vien/i);
+    await formPage.expectSweetAlertContains(/l?i|loi|error|nhn vin|nhan vien/i);
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM customer WHERE username = ? OR email = ?",
       [String(payload.username), String(payload.email)]
     );
@@ -124,14 +125,14 @@ test.describe("Admin - Customer Management @regression", () => {
     const customer = await TempEntityHelper.taoCustomerTam(adminApi, manager.id);
 
     const listPage = new AdminCustomerListPage(page);
-    await page.goto(`/admin/customer/search?fullName=${encodeURIComponent(customer.fullName)}`);
+    await new NavigationPage(page).open(`/admin/customer/search?fullName=${encodeURIComponent(customer.fullName)}`);
     await listPage.waitForTableData();
     await listPage.deleteCustomer(customer.fullName);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xoa khach hang|xóa khách hàng|thành công|thanh cong|success/i);
+    await listPage.expectSweetAlertContains(/xoa khach hang|xa khch hng|thnh cng|thanh cong|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM customer WHERE id = ?", [customer.id]);
+      const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM customer WHERE id = ?", [customer.id]);
       return rows.length;
     }).toBe(0);
   });

@@ -1,12 +1,13 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { CustomerTransactionHistoryPage } from "@pages/customer/CustomerTransactionHistoryPage";
 import { cleanupContractScenario, createManagedInvoiceForContract, createTempContractScenario } from "@data/invoiceTempData";
 import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
-test.describe("Customer - Transaction History @regression", () => {
+test.describe("Customer - Transaction History @regression @e2e", () => {
   let tempContract: TempContract | null = null;
   let invoiceId: number | null = null;
   let invoiceMonth = 0;
@@ -21,7 +22,7 @@ test.describe("Customer - Transaction History @regression", () => {
     invoiceMonth = invoice.month;
     invoiceYear = invoice.year;
 
-    await MySqlDbClient.execute(
+    await TestDbRepository.execute(
       `
         UPDATE invoice
         SET status = 'PAID',
@@ -33,11 +34,11 @@ test.describe("Customer - Transaction History @regression", () => {
       [`E2E-TX-${invoice.id}`, invoice.id]
     );
 
-    const rows = await MySqlDbClient.query<{ total_amount: number }>("SELECT total_amount FROM invoice WHERE id = ?", [invoice.id]);
+    const rows = await TestDbRepository.query<{ total_amount: number }>("SELECT total_amount FROM invoice WHERE id = ?", [invoice.id]);
     invoiceTotalAmount = Number(rows[0]?.total_amount ?? 0);
 
     await loginAsTempUser(page, tempContract.customer.username);
-    await page.goto("/customer/transaction/history");
+    await new NavigationPage(page).open("/customer/transaction/history");
   });
 
   test.afterEach(async ({ adminApi }) => {
@@ -59,10 +60,10 @@ test.describe("Customer - Transaction History @regression", () => {
 
     await transactionPage.openTransactionDetail(tempContract!.building.name);
     await transactionPage.expectDetailModalContains(tempContract!.building.name);
-    await transactionPage.expectDetailModalContains(`Mã hóa đơn: ${invoiceId}`);
+    await transactionPage.expectDetailModalContains(`Ma hoa don: ${invoiceId}`);
     await transactionPage.closeDetailModal();
 
-    const rows = await MySqlDbClient.query<{ status: string; payment_method: string; transaction_code: string }>(
+    const rows = await TestDbRepository.query<{ status: string; payment_method: string; transaction_code: string }>(
       "SELECT status, payment_method, transaction_code FROM invoice WHERE id = ?",
       [invoiceId]
     );
@@ -80,7 +81,7 @@ test.describe("Customer - Transaction History @regression", () => {
     await transactionPage.expectResultCountBanner(1);
     await expect(transactionPage.rowByBuildingName(tempContract!.building.name)).toBeVisible();
 
-    const rows = await MySqlDbClient.query<{ count: number }>(
+    const rows = await TestDbRepository.query<{ count: number }>(
       `
         SELECT COUNT(*) AS count
         FROM invoice

@@ -1,5 +1,6 @@
+import { NavigationPage } from "@pages/core/NavigationPage";
 import { expect, test } from "@fixtures/base.fixture";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { AdminBuildingDetailPage } from "@pages/admin/AdminBuildingDetailPage";
@@ -12,7 +13,7 @@ import {
   type AdminE2ESession
 } from "@data/e2eAdminScenario";
 
-test.describe("Admin - Building Management @regression", () => {
+test.describe("Admin - Building Management @regression @e2e", () => {
   let adminSession: AdminE2ESession | null = null;
   const cleanupBuildingIds = new Set<number>();
   const cleanupContracts: Array<Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>> = [];
@@ -35,7 +36,7 @@ test.describe("Admin - Building Management @regression", () => {
     const listPage = new AdminBuildingListPage(page);
     const detailPage = new AdminBuildingDetailPage(page);
 
-    await page.goto("/admin/building/list");
+    await new NavigationPage(page).open("/admin/building/list");
     await listPage.expectLoaded();
     await listPage.filterByName(tempBuilding.name);
     await listPage.filterByTransactionType(TestDataFactory.transactionType.rent);
@@ -53,7 +54,7 @@ test.describe("Admin - Building Management @regression", () => {
     const buildingName = TestDataFactory.taoTenToaNha("E2E Building");
     const taxCode = TestDataFactory.taoMaSo("TAX", 10);
 
-    await page.goto("/admin/building/list");
+    await new NavigationPage(page).open("/admin/building/list");
     await listPage.openAddForm();
     await formPage.expectAddLoaded();
     await formPage.setTransactionType(TestDataFactory.transactionType.rent);
@@ -84,7 +85,7 @@ test.describe("Admin - Building Management @regression", () => {
     await formPage.submit();
     await formPage.expectSweetAlertContains(/thanh cong|success/i);
 
-    const rows = await MySqlDbClient.query<{ id: number; transaction_type: string; floor_area: number; tax_code: string }>(
+    const rows = await TestDbRepository.query<{ id: number; transaction_type: string; floor_area: number; tax_code: string }>(
       `
         SELECT id, transaction_type, floor_area, tax_code
         FROM building
@@ -108,7 +109,7 @@ test.describe("Admin - Building Management @regression", () => {
     const formPage = new AdminBuildingFormPage(page);
     const updatedName = `${tempBuilding.name} Updated`;
 
-    await page.goto(`/admin/building/edit/${tempBuilding.id}`);
+    await new NavigationPage(page).open(`/admin/building/edit/${tempBuilding.id}`);
     await formPage.expectEditLoaded(tempBuilding.id);
     await formPage.fillCommonFields({
       name: updatedName,
@@ -128,7 +129,7 @@ test.describe("Admin - Building Management @regression", () => {
     await formPage.submit();
     await formPage.expectSweetAlertContains(/thanh cong|success/i);
 
-    const rows = await MySqlDbClient.query<{ name: string; floor_area: number; rent_price: number }>(
+    const rows = await TestDbRepository.query<{ name: string; floor_area: number; rent_price: number }>(
       "SELECT name, floor_area, rent_price FROM building WHERE id = ?",
       [tempBuilding.id]
     );
@@ -142,7 +143,7 @@ test.describe("Admin - Building Management @regression", () => {
     cleanupContracts.push(tempContract);
 
     const formPage = new AdminBuildingFormPage(page);
-    await page.goto(`/admin/building/edit/${tempContract.building.id}`);
+    await new NavigationPage(page).open(`/admin/building/edit/${tempContract.building.id}`);
     await formPage.expectEditLoaded(tempContract.building.id);
     await formPage.expectLockBanner();
   });
@@ -151,7 +152,7 @@ test.describe("Admin - Building Management @regression", () => {
     const tempBuilding = await TempEntityHelper.taoBuildingTam(adminApi, TestDataFactory.transactionType.rent);
 
     const listPage = new AdminBuildingListPage(page);
-    await page.goto("/admin/building/list");
+    await new NavigationPage(page).open("/admin/building/list");
     await listPage.filterByName(tempBuilding.name);
     await listPage.search();
     await listPage.waitForTableData();
@@ -160,7 +161,7 @@ test.describe("Admin - Building Management @regression", () => {
     await listPage.expectSweetAlertContains(/thanh cong|success/i);
 
     await expect.poll(async () => {
-      const rows = await MySqlDbClient.query<{ id: number }>("SELECT id FROM building WHERE id = ?", [tempBuilding.id]);
+      const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM building WHERE id = ?", [tempBuilding.id]);
       return rows.length;
     }).toBe(0);
   });

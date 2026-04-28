@@ -1,11 +1,11 @@
 import { expect, test } from "@fixtures/api.fixture";
 import { expectApiErrorBody, expectApiMessage, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
-import { MySqlDbClient } from "@db/MySqlDbClient";
+import { TestDbRepository } from "@db/repositories";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
-test.describe("Admin - API Property Request @regression", () => {
+test.describe("Admin - API Property Request @regression @api", () => {
   const missingId = TestDataFactory.missingId;
   test("[API-ADM-PRQ-001] - API Admin Property Request - Listing - Anonymous Access Rejection", async ({ anonymousApi }) => {
     const response = await anonymousApi.get("/api/v1/admin/property-requests?page=1&size=5", {
@@ -99,7 +99,7 @@ test.describe("Admin - API Property Request @regression", () => {
     expect(detail.status).toBe("REJECTED");
     expect(detail.adminNote).toBe("Contract data mismatch");
 
-    const rows = await MySqlDbClient.query<{ status: string; admin_note: string }>(
+    const rows = await TestDbRepository.query<{ status: string; admin_note: string }>(
       "SELECT status, admin_note FROM property_request WHERE id = ?",
       [scenario.propertyRequestId]
     );
@@ -125,7 +125,7 @@ test.describe("Admin - API Property Request @regression", () => {
       dataMode: "null"
     });
 
-    const contractRows = await MySqlDbClient.query<{ id: number }>(
+    const contractRows = await TestDbRepository.query<{ id: number }>(
       `
         SELECT id
         FROM contract
@@ -141,7 +141,7 @@ test.describe("Admin - API Property Request @regression", () => {
       await scenario.admin.delete(`/api/v1/admin/contracts/${contractId}`, { failOnStatusCode: false });
     });
     cleanupRegistry.addLabeled(`Delete approved property request ${scenario.propertyRequestId}`, async () => {
-      await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]);
+      await TestDbRepository.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]);
     });
 
     const approveResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/approve`, {
@@ -163,7 +163,7 @@ test.describe("Admin - API Property Request @regression", () => {
     expect(detail.status).toBe("APPROVED");
     expect(detail.contractId).toBe(contractId);
 
-    const rows = await MySqlDbClient.query<{ status: string; contract_id: number }>(
+    const rows = await TestDbRepository.query<{ status: string; contract_id: number }>(
       "SELECT status, contract_id FROM property_request WHERE id = ?",
       [scenario.propertyRequestId]
     );
@@ -176,7 +176,12 @@ test.describe("Admin - API Property Request @regression", () => {
     });
     const pendingBody = await expectObjectBody<{ pendingCount?: number }>(pendingResponse, 200, ["pendingCount"]);
     expect(typeof pendingBody.pendingCount).toBe("number");
-    expect(pendingBody.pendingCount).toBeGreaterThanOrEqual(0);
+
+    const pendingCountRows = await TestDbRepository.query<{ total: number }>(
+      "SELECT COUNT(*) AS total FROM property_request WHERE status = ?",
+      ["PENDING"]
+    );
+    expect(pendingBody.pendingCount).toBe(Number(pendingCountRows[0]?.total ?? 0));
   });
 
   test("[API-ADM-PRQ-007] - API Admin Property Request - Buy Request Approval - Linked Sale Contract Matching Approval @extended", async ({ playwright, cleanupRegistry }) => {
@@ -197,7 +202,7 @@ test.describe("Admin - API Property Request @regression", () => {
       dataMode: "null"
     });
 
-    const saleContractRows = await MySqlDbClient.query<{ id: number }>(
+    const saleContractRows = await TestDbRepository.query<{ id: number }>(
       `
         SELECT id
         FROM sale_contract
@@ -213,7 +218,7 @@ test.describe("Admin - API Property Request @regression", () => {
       await scenario.admin.delete(`/api/v1/admin/sale-contracts/${saleContractId}`, { failOnStatusCode: false });
     });
     cleanupRegistry.addLabeled(`Delete approved property request ${scenario.propertyRequestId}`, async () => {
-      await MySqlDbClient.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]);
+      await TestDbRepository.execute("DELETE FROM property_request WHERE id = ?", [scenario.propertyRequestId]);
     });
 
     const approveResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/approve`, {
@@ -235,7 +240,7 @@ test.describe("Admin - API Property Request @regression", () => {
     expect(detail.status).toBe("APPROVED");
     expect(detail.saleContractId).toBe(saleContractId);
 
-    const rows = await MySqlDbClient.query<{ status: string; sale_contract_id: number }>(
+    const rows = await TestDbRepository.query<{ status: string; sale_contract_id: number }>(
       "SELECT status, sale_contract_id FROM property_request WHERE id = ?",
       [scenario.propertyRequestId]
     );

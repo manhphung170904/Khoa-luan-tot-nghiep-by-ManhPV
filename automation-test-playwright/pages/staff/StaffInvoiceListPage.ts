@@ -33,6 +33,10 @@ export class StaffInvoiceListPage extends RoutedCrudListPage {
     return this.page.locator(".modal.show");
   }
 
+  async visibleModalLooseText(): Promise<string> {
+    return this.locatorLooseText(this.visibleModal());
+  }
+
   async waitForTableData(): Promise<void> {
     await expect(this.invoiceTableBody).toBeVisible();
     await expect(async () => {
@@ -85,12 +89,12 @@ export class StaffInvoiceListPage extends RoutedCrudListPage {
   }
 
   async openViewModal(invoiceId: number): Promise<void> {
-    await this.rowByInvoiceId(invoiceId).locator(".btn-view").click();
+    await this.actionButton(this.rowByInvoiceId(invoiceId), "view").click();
     await expect(this.visibleModal()).toBeVisible();
   }
 
   async openEditModal(invoiceId: number): Promise<void> {
-    await this.rowByInvoiceId(invoiceId).locator(".btn-edit").click();
+    await this.actionButton(this.rowByInvoiceId(invoiceId), "edit").click();
     await expect(this.visibleModal()).toBeVisible();
   }
 
@@ -118,7 +122,7 @@ export class StaffInvoiceListPage extends RoutedCrudListPage {
   }
 
   async deleteInvoice(invoiceId: number): Promise<void> {
-    await this.rowByInvoiceId(invoiceId).locator(".btn-delete").click();
+    await this.actionButton(this.rowByInvoiceId(invoiceId), "delete").click();
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {
@@ -126,6 +130,6 @@ export class StaffInvoiceListPage extends RoutedCrudListPage {
   }
 
   async confirmSweetAlert(): Promise<void> {
-    await this.page.locator(".swal2-confirm").click();
+    await super.confirmSweetAlert();
   }
 }

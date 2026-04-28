@@ -40,7 +40,7 @@ export class AdminStaffListPage extends RoutedCrudListPage {
   }
 
   async deleteStaff(text: string): Promise<void> {
-    await this.rowByStaffName(text).locator(".btn-delete").click();
+    await this.actionButton(this.rowByStaffName(text), "delete").click();
   }
 
   async waitForSearchTableData(): Promise<void> {
@@ -56,6 +56,6 @@ export class AdminStaffListPage extends RoutedCrudListPage {
   }
 
   async confirmSweetAlert(): Promise<void> {
-    await this.page.locator(".swal2-confirm").click();
+    await super.confirmSweetAlert();
   }
 }
