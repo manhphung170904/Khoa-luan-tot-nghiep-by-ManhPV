@@ -1,5 +1,5 @@
 import { expect, test } from "@fixtures/api.fixture";
-import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectApiMessage, expectLooseApiText, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
@@ -73,11 +73,8 @@ test.describe("Admin - API Invoice @regression @api", () => {
     });
   });
 
-  test("[INV-002] - API Admin Invoice - Invoice Month - Invalid Format Validation", async ({ adminApi: admin }) => {
-    const response = await admin.post("/api/v1/admin/invoices", {
-      failOnStatusCode: false,
-      data: { ...TestDataFactory.buildInvoicePayload(), month: "Muoi Hai" }
-    });
+  test("[INV-002] - API Admin Invoice - Invoice Month - Invalid Format Validation", async ({ invoiceApi }) => {
+    const response = await invoiceApi.createAsAdmin({ ...TestDataFactory.buildInvoicePayload(), month: "Muoi Hai" });
     const errorBody = await expectApiErrorBody<{ message?: string; errors?: Array<{ field?: string }> }>(response, {
       status: 400,
       code: "BAD_REQUEST",
@@ -86,28 +83,27 @@ test.describe("Admin - API Invoice @regression @api", () => {
     expect(errorBody.message).toMatch(/month|thang|integer/i);
   });
 
-  test("[INV-015] - API Admin Invoice - Invoice Month - Current Month Creation Restriction", async ({ adminApi: admin, cleanupRegistry }) => {
+  test("[INV-015] - API Admin Invoice - Invoice Month - Current Month Creation Restriction", async ({ adminApi: admin, invoiceApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     cleanupRegistry.addLabeled(`Delete contract scenario ${temp.id}`, () => TempEntityHelper.xoaContractTam(admin, temp));
     {
       const currentMonth = now.getMonth() + 1;
       const currentYear = now.getFullYear();
-      const response = await admin.post("/api/v1/admin/invoices", {
-        failOnStatusCode: false,
-        data: TestDataFactory.buildInvoicePayload({
+      const response = await invoiceApi.createAsAdmin(
+        TestDataFactory.buildInvoicePayload({
           contractId: temp.id,
           customerId: temp.customer.id,
           month: currentMonth,
           year: currentYear,
           dueDate: `${currentYear}-${String(currentMonth).padStart(2, "0")}-28`
         })
-      });
+      );
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/current|thang hien tai|lien truoc|invoice month/i);
+      expectLooseApiText(errorBody.message, /current|thang hien tai|lien truoc|invoice month/i);
 
       const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
@@ -117,67 +113,64 @@ test.describe("Admin - API Invoice @regression @api", () => {
     }
   });
 
-  test("[INV-003] - API Admin Invoice - Contract Reference - Nonexistent Contract Validation", async ({ adminApi: admin, cleanupRegistry }) => {
+  test("[INV-003] - API Admin Invoice - Contract Reference - Nonexistent Contract Validation", async ({ adminApi: admin, invoiceApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     cleanupRegistry.addLabeled(`Delete contract scenario ${temp.id}`, () => TempEntityHelper.xoaContractTam(admin, temp));
     {
-      const response = await admin.post("/api/v1/admin/invoices", {
-        failOnStatusCode: false,
-        data: TestDataFactory.buildInvoicePayload({
+      const response = await invoiceApi.createAsAdmin(
+        TestDataFactory.buildInvoicePayload({
           contractId: -1,
           customerId: temp.customer.id,
           dueDate
         })
-      });
+      );
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/contract|hop dong|khong tim thay/i);
+      expectLooseApiText(errorBody.message, /contract|hop dong|khong tim thay/i);
     }
   });
 
-  test("[INV-004] - API Admin Invoice - Customer Reference - Contract Customer Mismatch Validation", async ({ adminApi: admin, cleanupRegistry }) => {
+  test("[INV-004] - API Admin Invoice - Customer Reference - Contract Customer Mismatch Validation", async ({ adminApi: admin, invoiceApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     cleanupRegistry.addLabeled(`Delete contract scenario ${temp.id}`, () => TempEntityHelper.xoaContractTam(admin, temp));
     {
-      const response = await admin.post("/api/v1/admin/invoices", {
-        failOnStatusCode: false,
-        data: TestDataFactory.buildInvoicePayload({
+      const response = await invoiceApi.createAsAdmin(
+        TestDataFactory.buildInvoicePayload({
           contractId: temp.id,
           customerId: missingSmallId,
           dueDate
         })
-      });
+      );
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/customer|khach hang|khong khop|hop dong/i);
+      expectLooseApiText(errorBody.message, /customer|khach hang|khong khop|hop dong/i);
     }
   });
 
-  test("[INV-005] - API Admin Invoice - Due Date - Same Invoice Month Restriction", async ({ adminApi: admin, cleanupRegistry }) => {
+  test("[INV-005] - API Admin Invoice - Due Date - Same Invoice Month Restriction", async ({ adminApi: admin, invoiceApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     cleanupRegistry.addLabeled(`Delete contract scenario ${temp.id}`, () => TempEntityHelper.xoaContractTam(admin, temp));
     {
       const sameMonthDueDate = `${prevYear}-${String(prevMonth).padStart(2, "0")}-15`;
-      const response = await admin.post("/api/v1/admin/invoices", {
-        failOnStatusCode: false,
-        data: TestDataFactory.buildInvoicePayload({
+      const response = await invoiceApi.createAsAdmin(
+        TestDataFactory.buildInvoicePayload({
           contractId: temp.id,
           customerId: temp.customer.id,
           dueDate: sameMonthDueDate
         })
-      });
+      );
       const errorBody = await expectApiErrorBody<{ message?: string }>(response, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(errorBody.message).toMatch(/due|han thanh toan|ngay|sau thang lap hoa don/i);
+      expectLooseApiText(errorBody.message, /due|han thanh toan|ngay|sau thang lap hoa don/i);
 
       const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM invoice WHERE contract_id = ? AND month = ? AND year = ?",
@@ -187,19 +180,19 @@ test.describe("Admin - API Invoice @regression @api", () => {
     }
   });
 
-  test("[INV-016] - API Admin Invoice - Update Invoice - Nonexistent Invoice Rejection", async ({ adminApi: admin, cleanupRegistry }) => {
+  test("[INV-016] - API Admin Invoice - Update Invoice - Nonexistent Invoice Rejection", async ({ adminApi: admin, invoiceApi, cleanupRegistry }) => {
     const temp = await TempEntityHelper.taoContractTam(admin);
     cleanupRegistry.addLabeled(`Delete contract scenario ${temp.id}`, () => TempEntityHelper.xoaContractTam(admin, temp));
     {
-      const response = await admin.put(`/api/v1/admin/invoices/${missingSmallId}`, {
-        failOnStatusCode: false,
-        data: TestDataFactory.buildInvoicePayload({
+      const response = await invoiceApi.updateAsAdmin(
+        missingSmallId,
+        TestDataFactory.buildInvoicePayload({
           id: missingSmallId,
           contractId: temp.id,
           customerId: temp.customer.id,
           dueDate
         })
-      });
+      );
       await expectApiErrorBody(response, {
         status: 400,
         code: "BAD_REQUEST",
@@ -208,10 +201,8 @@ test.describe("Admin - API Invoice @regression @api", () => {
     }
   });
 
-  test("[INV-017] - API Admin Invoice - Delete Invoice - Nonexistent Invoice Rejection", async ({ adminApi: admin }) => {
-    const response = await admin.delete(`/api/v1/admin/invoices/${missingSmallId}`, {
-      failOnStatusCode: false
-    });
+  test("[INV-017] - API Admin Invoice - Delete Invoice - Nonexistent Invoice Rejection", async ({ invoiceApi }) => {
+    const response = await invoiceApi.deleteAsAdmin(missingSmallId);
     await expectApiErrorBody(response, {
       status: 400,
       code: "BAD_REQUEST",
@@ -219,7 +210,7 @@ test.describe("Admin - API Invoice @regression @api", () => {
     });
   });
 
-  test("[INV-018] - API Admin Invoice - Status Update - Overdue Invoice Status Marking", async ({ adminApi: admin }) => {
+  test("[INV-018] - API Admin Invoice - Status Update - Overdue Invoice Status Marking", async ({ adminApi: admin, invoiceApi }) => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     let createdInvoiceId = 0;
 
@@ -230,10 +221,7 @@ test.describe("Admin - API Invoice @regression @api", () => {
         dueDate: `${dueDateYear}-${String(dueDateMonth).padStart(2, "0")}-01`
       });
 
-      const createResponse = await admin.post("/api/v1/admin/invoices", {
-        failOnStatusCode: false,
-        data: overduePayload
-      });
+      const createResponse = await invoiceApi.createAsAdmin(overduePayload);
       await expectApiMessage(createResponse, {
         status: 200,
         message: apiExpectedMessages.admin.invoices.create,
@@ -254,9 +242,7 @@ test.describe("Admin - API Invoice @regression @api", () => {
       createdInvoiceId = invoiceRows[0]!.id;
       expect(invoiceRows[0]!.status).toBe(invoiceStatus.pending);
 
-      const statusUpdateResponse = await admin.put("/api/v1/admin/invoices/status", {
-        failOnStatusCode: false
-      });
+      const statusUpdateResponse = await invoiceApi.updateStatusAsAdmin();
       await expectApiMessage(statusUpdateResponse, {
         status: 200,
         message: apiExpectedMessages.admin.invoices.updateStatus,
@@ -270,13 +256,13 @@ test.describe("Admin - API Invoice @regression @api", () => {
       expect(overdueRows[0]!.status).toBe(invoiceStatus.overdue);
     } finally {
       if (createdInvoiceId) {
-        await admin.delete(`/api/v1/admin/invoices/${createdInvoiceId}`, { failOnStatusCode: false });
+        await invoiceApi.deleteAsAdmin(createdInvoiceId);
       }
       await TempEntityHelper.xoaContractTam(admin, tempContract);
     }
   });
 
-  test("[INV-006] - API Admin Invoice - Invoice Lifecycle - Create List Filter Update Confirm Payment and Delete Flow", async ({ adminApi: admin }) => {
+  test("[INV-006] - API Admin Invoice - Invoice Lifecycle - Create List Filter Update Confirm Payment and Delete Flow", async ({ adminApi: admin, invoiceApi }) => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     let createdInvoiceId = 0;
 
@@ -287,10 +273,7 @@ test.describe("Admin - API Invoice @regression @api", () => {
         dueDate
       });
 
-      const createResponse = await admin.post("/api/v1/admin/invoices", {
-        failOnStatusCode: false,
-        data: payload
-      });
+      const createResponse = await invoiceApi.createAsAdmin(payload);
       await expectApiMessage(createResponse, {
         status: 200,
         message: apiExpectedMessages.admin.invoices.create,
@@ -307,21 +290,15 @@ test.describe("Admin - API Invoice @regression @api", () => {
         waterNew: Number(payload.waterUsage)
       });
 
-      const duplicateResponse = await admin.post("/api/v1/admin/invoices", {
-        failOnStatusCode: false,
-        data: payload
-      });
+      const duplicateResponse = await invoiceApi.createAsAdmin(payload);
       const duplicateError = await expectApiErrorBody<{ message?: string }>(duplicateResponse, {
         status: 400,
         code: "BAD_REQUEST",
         path: "/api/v1/admin/invoices"
       });
-      expect(duplicateError.message).toMatch(/duplicate|ton tai|da co|trung|hoa don|thang|nam/i);
+      expectLooseApiText(duplicateError.message, /duplicate|ton tai|da co|trung|hoa don|thang|nam/i);
 
-      const listResponse = await admin.get("/api/v1/admin/invoices", {
-        failOnStatusCode: false,
-        params: { page: 1, size: 100, customerId: tempContract.customer.id }
-      });
+      const listResponse = await invoiceApi.listAsAdmin({ page: 1, size: 100, customerId: tempContract.customer.id });
       const listBody = await expectPageBody<{
         content?: Array<{ id: number; status?: string; month?: number; year?: number }>;
         totalElements?: number;
@@ -332,26 +309,20 @@ test.describe("Admin - API Invoice @regression @api", () => {
       expect(createdItem?.month).toBe(Number(payload.month));
       expect(createdItem?.year).toBe(Number(payload.year));
 
-      const filterResponse = await admin.get("/api/v1/admin/invoices", {
-        failOnStatusCode: false,
-        params: { page: 1, size: 100, month: Number(payload.month), customerId: tempContract.customer.id }
-      });
+      const filterResponse = await invoiceApi.listAsAdmin({ page: 1, size: 100, month: Number(payload.month), customerId: tempContract.customer.id });
       const filterBody = await expectPageBody<{
         content?: Array<{ id: number; month?: number; customer?: string }>;
         totalElements?: number;
       }>(filterResponse, { status: 200 });
       expect(filterBody.content?.some((item) => item.id === createdInvoiceId)).toBeTruthy();
 
-      const updateResponse = await admin.put(`/api/v1/admin/invoices/${createdInvoiceId}`, {
-        failOnStatusCode: false,
-        data: {
-          ...payload,
-          id: createdInvoiceId,
-          totalAmount: invoiceAmount.adminInvoiceUpdateTotal,
-          details: [],
-          electricityUsage: 22,
-          waterUsage: 11
-        }
+      const updateResponse = await invoiceApi.updateAsAdmin(createdInvoiceId, {
+        ...payload,
+        id: createdInvoiceId,
+        totalAmount: invoiceAmount.adminInvoiceUpdateTotal,
+        details: [],
+        electricityUsage: 22,
+        waterUsage: 11
       });
       await expectApiMessage(updateResponse, {
         status: 200,
@@ -370,9 +341,7 @@ test.describe("Admin - API Invoice @regression @api", () => {
         waterNew: 11
       });
 
-      const confirmResponse = await admin.post(`/api/v1/admin/invoices/${createdInvoiceId}/confirm`, {
-        failOnStatusCode: false
-      });
+      const confirmResponse = await invoiceApi.confirmAsAdmin(createdInvoiceId);
       await expectApiMessage(confirmResponse, {
         status: 200,
         message: apiExpectedMessages.admin.invoices.confirm,
@@ -382,29 +351,24 @@ test.describe("Admin - API Invoice @regression @api", () => {
       const paidRows = await TestDbRepository.query<{ status: string }>("SELECT status FROM invoice WHERE id = ?", [createdInvoiceId]);
       expect(paidRows[0]!.status).toBe(invoiceStatus.paid);
 
-      const missingConfirm = await admin.post(`/api/v1/admin/invoices/${missingSmallId}/confirm`, {
-        failOnStatusCode: false
-      });
+      const missingConfirm = await invoiceApi.confirmAsAdmin(missingSmallId);
       await expectApiErrorBody(missingConfirm, {
         status: 400,
         code: "BAD_REQUEST",
         path: `/api/v1/admin/invoices/${missingSmallId}/confirm`
       });
 
-      const updatePaidResponse = await admin.put(`/api/v1/admin/invoices/${createdInvoiceId}`, {
-        failOnStatusCode: false,
-        data: {
-          ...payload,
-          id: createdInvoiceId,
-          totalAmount: invoiceAmount.adminInvoiceRejectedUpdateTotal
-        }
+      const updatePaidResponse = await invoiceApi.updateAsAdmin(createdInvoiceId, {
+        ...payload,
+        id: createdInvoiceId,
+        totalAmount: invoiceAmount.adminInvoiceRejectedUpdateTotal
       });
       const updatePaidError = await expectApiErrorBody<{ message?: string }>(updatePaidResponse, {
         status: 400,
         code: "BAD_REQUEST",
         path: `/api/v1/admin/invoices/${createdInvoiceId}`
       });
-      expect(updatePaidError.message).toMatch(/paid|da thanh toan|khong the cap nhat|dang cho xu ly/i);
+      expectLooseApiText(updatePaidError.message, /paid|da thanh toan|khong the cap nhat|dang cho xu ly/i);
 
       const unchangedRows = await TestDbRepository.query<{ total_amount: number; status: string }>(
         "SELECT total_amount, status FROM invoice WHERE id = ?",
@@ -413,18 +377,14 @@ test.describe("Admin - API Invoice @regression @api", () => {
       expect(Number(unchangedRows[0]!.total_amount)).toBe(invoiceAmount.adminInvoiceUpdateTotal);
       expect(unchangedRows[0]!.status).toBe(invoiceStatus.paid);
 
-      const statusUpdateResponse = await admin.put("/api/v1/admin/invoices/status", {
-        failOnStatusCode: false
-      });
+      const statusUpdateResponse = await invoiceApi.updateStatusAsAdmin();
       await expectApiMessage(statusUpdateResponse, {
         status: 200,
         message: apiExpectedMessages.admin.invoices.updateStatus,
         dataMode: "null"
       });
 
-      const deleteResponse = await admin.delete(`/api/v1/admin/invoices/${createdInvoiceId}`, {
-        failOnStatusCode: false
-      });
+      const deleteResponse = await invoiceApi.deleteAsAdmin(createdInvoiceId);
       await expectApiMessage(deleteResponse, {
         status: 200,
         message: apiExpectedMessages.admin.invoices.delete,
@@ -442,7 +402,7 @@ test.describe("Admin - API Invoice @regression @api", () => {
       createdInvoiceId = 0;
     } finally {
       if (createdInvoiceId) {
-        await admin.delete(`/api/v1/admin/invoices/${createdInvoiceId}`, { failOnStatusCode: false });
+        await invoiceApi.deleteAsAdmin(createdInvoiceId);
       }
       await TempEntityHelper.xoaContractTam(admin, tempContract);
     }

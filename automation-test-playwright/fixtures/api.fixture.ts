@@ -1,61 +1,15 @@
 import { test as base, expect } from "@playwright/test";
-import type { APIRequestContext, APIResponse, TestInfo } from "@playwright/test";
+import type { APIRequestContext, APIResponse } from "@playwright/test";
 import { ApiSessionHelper } from "@api/apiSessionHelper";
 import { attachApiResponse, type ApiDebugAttachmentOptions } from "@api/apiContractUtils";
 import { AdminBuildingApiClient, AdminCustomerApiClient, AuthApiClient, InvoiceApiClient, ProfileApiClient } from "@api/clients";
 import { env } from "@config/env";
 import { MySqlDbClient } from "@db/MySqlDbClient";
+import { ApiCleanupRegistry } from "./support/ApiCleanupRegistry";
+import { annotateTestMetadata } from "./support/TestMetadataAnnotator";
+import { attachFailedRunResponses, trackApiContext, type TrackedApiResponse } from "./support/ApiDebugTracker";
 
-type CleanupAction = () => Promise<void> | void;
-type CleanupTask = CleanupAction | { label: string; action: CleanupAction };
-
-export class ApiCleanupRegistry {
-  private readonly tasks: CleanupTask[] = [];
-
-  add(task: CleanupTask): void {
-    this.tasks.push(task);
-  }
-
-  addLabeled(label: string, action: CleanupAction): void {
-    this.add({ label, action });
-  }
-
-  addAll(tasks: CleanupTask[]): void {
-    tasks.forEach((task) => this.add(task));
-  }
-
-  async flush(): Promise<void> {
-    const errors: unknown[] = [];
-
-    while (this.tasks.length > 0) {
-      const task = this.tasks.pop();
-      if (!task) {
-        continue;
-      }
-
-      try {
-        await this.runTask(task);
-      } catch (error) {
-        errors.push(error);
-        const label = typeof task === "function" ? "anonymous cleanup task" : task.label;
-        console.warn(`[API Cleanup Warning] ${label} failed:`, error);
-      }
-    }
-
-    if (errors.length > 0) {
-      throw new AggregateError(errors, `${errors.length} API cleanup task(s) failed.`);
-    }
-  }
-
-  private async runTask(task: CleanupTask): Promise<void> {
-    if (typeof task === "function") {
-      await task();
-      return;
-    }
-
-    await task.action();
-  }
-}
+export { ApiCleanupRegistry };
 
 type ApiFixtures = {
   adminApi: APIRequestContext;
@@ -73,129 +27,6 @@ type ApiFixtures = {
   cleanupRegistry: ApiCleanupRegistry;
   testMetadata: void;
 };
-
-type TestMetadata = {
-  testId?: string;
-  layer?: "API" | "E2E" | "UI" | "UNKNOWN";
-  actor?: string;
-  feature?: string;
-};
-
-type TrackedApiResponse = {
-  label: string;
-  response: APIResponse;
-  request: ApiDebugAttachmentOptions["request"];
-};
-
-const trackedApiMethods = new Set(["delete", "fetch", "get", "head", "patch", "post", "put"]);
-const sensitiveOptionKeys = new Set(["authorization", "cookie", "password", "token", "accesstoken", "refreshtoken"]);
-
-function sanitizeApiRequestValue(value: unknown, depth = 0): unknown {
-  if (depth > 4) {
-    return "[MaxDepth]";
-  }
-
-  if (Buffer.isBuffer(value)) {
-    return `[Buffer length=${value.length}]`;
-  }
-
-  if (typeof value === "string") {
-    return value.length > 2000 ? `${value.slice(0, 2000)}...` : value;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => sanitizeApiRequestValue(item, depth + 1));
-  }
-
-  if (!value || typeof value !== "object") {
-    return value;
-  }
-
-  return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>).map(([key, item]) => [
-      key,
-      sensitiveOptionKeys.has(key.toLowerCase()) ? "[redacted]" : sanitizeApiRequestValue(item, depth + 1)
-    ])
-  );
-}
-
-function trackApiContext(context: APIRequestContext, label: string, responses: TrackedApiResponse[]): APIRequestContext {
-  return new Proxy(context, {
-    get(target, property, receiver) {
-      const value = Reflect.get(target, property, receiver);
-      if (typeof property !== "string" || !trackedApiMethods.has(property) || typeof value !== "function") {
-        return typeof value === "function" ? value.bind(target) : value;
-      }
-
-      return async (...args: unknown[]) => {
-        const response = await value.apply(target, args);
-        responses.push({
-          label: `${label}-${property}`,
-          response,
-          request: {
-            actor: label,
-            method: property.toUpperCase(),
-            path: typeof args[0] === "string" ? args[0] : String(args[0]),
-            options: sanitizeApiRequestValue(args[1])
-          }
-        });
-        if (responses.length > 20) {
-          responses.shift();
-        }
-
-        return response;
-      };
-    }
-  }) as APIRequestContext;
-}
-
-async function attachFailedRunResponses(testInfo: TestInfo, responses: TrackedApiResponse[]): Promise<void> {
-  if (!testInfo.status || testInfo.status === testInfo.expectedStatus) {
-    return;
-  }
-
-  const recentResponses = responses.slice(-10);
-  await Promise.all(
-    recentResponses.map((item, index) =>
-      attachApiResponse(testInfo, item.response, {
-        name: `${String(index + 1).padStart(2, "0")}-${item.label}-${item.response.status()}`,
-        request: item.request
-      })
-    )
-  );
-}
-
-function parseTestMetadata(title: string): TestMetadata {
-  const testId = title.match(/^\[([^\]]+)\]/)?.[1];
-  const normalizedTitle = title.replace(/^\[[^\]]+\]\s*-\s*/, "");
-  const segments = normalizedTitle.split(" - ").map((item) => item.trim()).filter(Boolean);
-  const layerMatch = normalizedTitle.match(/\b(API|E2E|UI)\b/i)?.[1]?.toUpperCase();
-
-  return {
-    testId,
-    layer: layerMatch === "API" || layerMatch === "E2E" || layerMatch === "UI" ? layerMatch : "UNKNOWN",
-    actor: segments[0]?.replace(/^(API|E2E|UI)\s+/i, ""),
-    feature: segments[1]
-  };
-}
-
-function annotateTestMetadata(testInfo: TestInfo): void {
-  const metadata = parseTestMetadata(testInfo.title);
-  const annotations = [
-    ["testId", metadata.testId],
-    ["layer", metadata.layer],
-    ["actor", metadata.actor],
-    ["feature", metadata.feature]
-  ] as const;
-
-  for (const [type, description] of annotations) {
-    if (!description) {
-      continue;
-    }
-
-    testInfo.annotations.push({ type, description });
-  }
-}
 
 export const test = base.extend<ApiFixtures>({
   testMetadata: [

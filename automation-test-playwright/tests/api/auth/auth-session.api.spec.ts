@@ -1,5 +1,5 @@
 import { expect, test } from "@fixtures/api.fixture";
-import { expectApiErrorBody, expectApiMessage, expectObjectBody } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectApiMessage, expectLooseApiText, expectObjectBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { ApiOtpHelper } from "@api/apiOtpHelper";
 import { env } from "@config/env";
@@ -93,9 +93,7 @@ test.describe("Auth - API REST Session @regression @api", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/auth/login"
     });
-    expect(errorBody.message).toMatch(
-      /credential|username|password|tn dang nh?p|m?t kh?u|sai ti kho?n ho?c m?t kh?u|dang nh?p|khng dng/i
-    );
+    expectLooseApiText(errorBody.message, /credential|username|password|ten dang nhap|mat khau|sai tai khoan hoac mat khau|dang nhap|khong dung/i);
   });
 
   test("[API-AUTH-REST-SEC-001] - API Auth Session - Me Endpoint - Anonymous Access Rejection @smoke", async ({ anonymousApi }) => {

@@ -7,7 +7,7 @@ import { env } from "@config/env";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Payment - API QR Payment @api-write @destructive @regression", () => {
+test.describe("Payment - API QR Payment @api @api-write @destructive @regression", () => {
   test.describe.configure({ mode: "serial" });
 
   let adminContext: APIRequestContext;

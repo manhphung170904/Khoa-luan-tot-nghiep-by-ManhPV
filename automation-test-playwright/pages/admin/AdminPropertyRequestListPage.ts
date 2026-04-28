@@ -1,13 +1,16 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { TableComponent } from "../components/TableComponent";
 import { RoutedCrudListPage } from "../core/RoutedCrudListPage";
 
 export class AdminPropertyRequestListPage extends RoutedCrudListPage {
   protected readonly path = "/admin/property-request/list";
   readonly tableBody: Locator;
+  private readonly table: TableComponent;
 
   constructor(page: Page) {
     super(page);
     this.tableBody = this.page.locator("#requestTableBody");
+    this.table = new TableComponent(page, "#requestTableBody");
   }
 
   async expectLoaded(): Promise<void> {
@@ -16,11 +19,7 @@ export class AdminPropertyRequestListPage extends RoutedCrudListPage {
   }
 
   async waitForTableData(): Promise<void> {
-    await expect(async () => {
-      const hasRows = (await this.page.locator("#requestTableBody tr").count()) > 0;
-      const hasEmpty = await this.page.locator(".empty-state").isVisible().catch(() => false);
-      expect(hasRows || hasEmpty).toBeTruthy();
-    }).toPass();
+    await this.table.waitForDataOrEmpty();
   }
 
   async filterByStatus(status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED" | ""): Promise<void> {

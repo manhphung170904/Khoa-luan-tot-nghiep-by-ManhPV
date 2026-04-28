@@ -47,7 +47,7 @@ test.describe("Admin - Profile @regression @e2e", () => {
     const profilePage = new AdminProfilePage(page);
     await new NavigationPage(page).open("/admin/profile?successMessage=Cap%20nhat%20thanh%20cong");
 
-    await profilePage.expectSweetAlertContains(/c?p nh?t thnh cng|cap nhat thanh cong|thnh cng|thanh cong/i);
+    await profilePage.expectSweetAlertContains(/cap nhat thanh cong|thanh cong/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
@@ -64,7 +64,7 @@ test.describe("Admin - Profile @regression @e2e", () => {
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_USERNAME");
     await profilePage.submitUsernameChange(nextUsername, otp);
-    await profilePage.expectSweetAlertContains(/thnh cng|thanh cong|tn dang nh?p|ten dang nhap/i);
+    await profilePage.expectSweetAlertContains(/thanh cong|ten dang nhap/i);
     await expect.poll(async () => {
       const rows = await TestDbRepository.query<{ username: string }>("SELECT username FROM staff WHERE id = ?", [activeUser.id]);
       return rows[0]?.username ?? "";
@@ -84,7 +84,7 @@ test.describe("Admin - Profile @regression @e2e", () => {
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PHONE");
     await profilePage.submitPhoneChange(newPhone, otp);
-    await profilePage.expectSweetAlertContains(/thnh cng|thanh cong|s? di?n tho?i|so dien thoai/i);
+    await profilePage.expectSweetAlertContains(/thanh cong|so dien thoai/i);
     await expect.poll(async () => {
       const rows = await TestDbRepository.query<{ phone: string }>("SELECT phone FROM staff WHERE id = ?", [activeUser.id]);
       return rows[0]?.phone ?? "";
@@ -95,7 +95,7 @@ test.describe("Admin - Profile @regression @e2e", () => {
     const profilePage = new AdminProfilePage(page);
 
     await profilePage.submitPasswordChange("ValidPass1!", "DifferentPass1!", "000000");
-    await profilePage.expectSweetAlertContains(/khng kh?p|khong khop/i);
+    await profilePage.expectSweetAlertContains(/khong khop/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
@@ -114,7 +114,7 @@ test.describe("Admin - Profile @regression @e2e", () => {
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PASSWORD");
     await profilePage.submitPasswordChange(newPassword, newPassword, otp);
-    await profilePage.expectSweetAlertContains(/thnh cng|thanh cong|m?t kh?u|mat khau/i);
+    await profilePage.expectSweetAlertContains(/thanh cong|mat khau/i);
     await expect.poll(async () => {
       const rows = await TestDbRepository.query<{ password: string }>("SELECT password FROM staff WHERE id = ?", [activeUser.id]);
       return rows[0]?.password ?? "";

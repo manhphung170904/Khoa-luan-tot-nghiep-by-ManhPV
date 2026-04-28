@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { TableComponent } from "../components/TableComponent";
 import { RoutedCrudListPage } from "../core/RoutedCrudListPage";
 
 export class AdminInvoiceListPage extends RoutedCrudListPage {
@@ -6,12 +7,14 @@ export class AdminInvoiceListPage extends RoutedCrudListPage {
   readonly addInvoiceButton: Locator;
   readonly updateStatusesButton: Locator;
   readonly invoiceTableBody: Locator;
+  private readonly table: TableComponent;
 
   constructor(page: Page) {
     super(page);
     this.addInvoiceButton = this.page.locator(".btn-hd-primary");
     this.updateStatusesButton = this.page.locator(".btn-hd-green");
     this.invoiceTableBody = this.page.locator("#invoiceTableBody");
+    this.table = new TableComponent(page, "#invoiceTableBody");
   }
 
   async expectLoaded(): Promise<void> {
@@ -29,11 +32,7 @@ export class AdminInvoiceListPage extends RoutedCrudListPage {
 
   async waitForTableData(): Promise<void> {
     await expect(this.invoiceTableBody).toBeVisible();
-    await expect(async () => {
-      const hasRows = (await this.page.locator("#invoiceTableBody tr").count()) > 0;
-      const hasEmptyState = await this.page.locator(".empty-state").isVisible().catch(() => false);
-      expect(hasRows || hasEmptyState).toBeTruthy();
-    }).toPass();
+    await this.table.waitForDataOrEmpty();
   }
 
   async openAddForm(): Promise<void> {

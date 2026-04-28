@@ -1,5 +1,5 @@
 import { expect, test } from "@fixtures/api.fixture";
-import { expectApiErrorBody, expectApiMessage, expectArrayBody } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectApiMessage, expectArrayBody, expectLooseApiText } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { createAnonymousContext } from "@api/adminApiUtils";
 import { TestDbRepository } from "@db/repositories";
@@ -77,7 +77,7 @@ test.describe("Customer - API Property Request @regression @api", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/customer/property-requests"
     });
-    expect(errorBody.message).toMatch(/pending|t?n t?i|yu c?u|dang ch? x? l/i);
+    expectLooseApiText(errorBody.message, /pending|ton tai|yeu cau|dang cho xu ly/i);
 
     const duplicateRows = await TestDbRepository.query<{ count: number }>(
         `

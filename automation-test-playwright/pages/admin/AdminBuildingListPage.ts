@@ -1,15 +1,18 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { TableComponent } from "../components/TableComponent";
 import { RoutedCrudListPage } from "../core/RoutedCrudListPage";
 
 export class AdminBuildingListPage extends RoutedCrudListPage {
   protected readonly path = "/admin/building/list";
   readonly addButton: Locator;
   readonly tableBody: Locator;
+  private readonly table: TableComponent;
 
   constructor(page: Page) {
     super(page);
     this.addButton = this.page.locator(".btn-add");
     this.tableBody = this.page.locator("#buildingTableBody");
+    this.table = new TableComponent(page, "#buildingTableBody");
   }
 
   async expectLoaded(): Promise<void> {
@@ -18,11 +21,7 @@ export class AdminBuildingListPage extends RoutedCrudListPage {
   }
 
   async waitForTableData(): Promise<void> {
-    await expect(async () => {
-      const hasRows = (await this.page.locator("#buildingTableBody tr").count()) > 0;
-      const hasEmpty = await this.page.locator(".empty-state").isVisible().catch(() => false);
-      expect(hasRows || hasEmpty).toBeTruthy();
-    }).toPass();
+    await this.table.waitForDataOrEmpty();
   }
 
   async openAddForm(): Promise<void> {
@@ -58,7 +57,7 @@ export class AdminBuildingListPage extends RoutedCrudListPage {
   }
 
   rowByBuildingName(name: string): Locator {
-    return this.firstVisible(this.page.locator("#buildingTableBody tr").filter({ hasText: name }));
+    return this.table.rowByText(name);
   }
 
   async openDetail(name: string): Promise<void> {

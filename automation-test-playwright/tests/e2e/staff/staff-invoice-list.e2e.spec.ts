@@ -129,7 +129,7 @@ test.describe("Staff - Invoice List @regression @e2e", () => {
       waterUsage: 7
     });
     await invoicePage.submitAddInvoice();
-    await invoicePage.expectSweetAlertContains(/l?i|loi|d t?n t?i|da ton tai|error/i);
+    await invoicePage.expectSweetAlertContains(/loi|da ton tai|error/i);
 
     const rows = await TestDbRepository.query<{ count: number }>(
       `

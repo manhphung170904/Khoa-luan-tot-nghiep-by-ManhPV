@@ -20,6 +20,28 @@ test.describe("Admin - API Building Additional Information @extended @api", () =
     let amenityId = 0;
     let supplierId = 0;
     let planningMapId = 0;
+    const legalAuthorityPayload = {
+      authorityName: `Auto Notary Office ${TestDataFactory.taoHauToDuyNhat("legal")}`,
+      address: "123 Test Street",
+      phone: TestDataFactory.taoSoDienThoai(),
+      email: TestDataFactory.taoEmail("legal-authority")
+    };
+    const updatedLegalAuthorityPayload = {
+      authorityName: `Auto Law Office Updated ${TestDataFactory.taoHauToDuyNhat("legal")}`,
+      address: "456 Update Street",
+      phone: TestDataFactory.taoSoDienThoai(),
+      email: TestDataFactory.taoEmail("legal-authority-updated")
+    };
+    const supplierPayload = {
+      name: `Auto Cleaning Co ${TestDataFactory.taoHauToDuyNhat("supplier")}`,
+      phone: TestDataFactory.taoSoDienThoai(),
+      email: TestDataFactory.taoEmail("supplier")
+    };
+    const updatedSupplierPayload = {
+      name: `Auto Cleaning Co Updated ${TestDataFactory.taoHauToDuyNhat("supplier")}`,
+      phone: TestDataFactory.taoSoDienThoai(),
+      email: TestDataFactory.taoEmail("supplier-updated")
+    };
 
     try {
       const anonymousLegalAuthority = await request.post("/api/v1/admin/building-additional-information/legal-authorities", {
@@ -51,11 +73,11 @@ test.describe("Admin - API Building Additional Information @extended @api", () =
         failOnStatusCode: false,
         data: {
           buildingId: tempBuilding.id,
-          authorityName: "Auto Notary Office",
+          authorityName: legalAuthorityPayload.authorityName,
           authorityType: "NOTARY",
-          address: "123 Test Street",
-          phone: "0123456789",
-          email: "contact@notary-auto.com",
+          address: legalAuthorityPayload.address,
+          phone: legalAuthorityPayload.phone,
+          email: legalAuthorityPayload.email,
           note: "Auto test"
         }
       });
@@ -65,7 +87,7 @@ test.describe("Admin - API Building Additional Information @extended @api", () =
         ["id", "authorityName", "buildingId"]
       );
       legalAuthorityId = legalAuthorityBody.id;
-      expect(legalAuthorityBody.authorityName).toBe("Auto Notary Office");
+      expect(legalAuthorityBody.authorityName).toBe(legalAuthorityPayload.authorityName);
       expect(legalAuthorityBody.buildingId).toBe(tempBuilding.id);
 
       const listLegalAuthorities = await admin.get(
@@ -73,7 +95,7 @@ test.describe("Admin - API Building Additional Information @extended @api", () =
         { failOnStatusCode: false }
       );
       const legalAuthorityList = await expectArrayBody<{ id: number; authorityName?: string }>(listLegalAuthorities, 200);
-      expect(legalAuthorityList.some((item) => item.id === legalAuthorityId && item.authorityName === "Auto Notary Office")).toBeTruthy();
+      expect(legalAuthorityList.some((item) => item.id === legalAuthorityId && item.authorityName === legalAuthorityPayload.authorityName)).toBeTruthy();
 
       const updateLegalAuthority = await admin.put(
         `/api/v1/admin/building-additional-information/legal-authorities/${legalAuthorityId}`,
@@ -81,11 +103,11 @@ test.describe("Admin - API Building Additional Information @extended @api", () =
           failOnStatusCode: false,
           data: {
             buildingId: tempBuilding.id,
-            authorityName: "Auto Law Office Updated",
+            authorityName: updatedLegalAuthorityPayload.authorityName,
             authorityType: "LAW_FIRM",
-            address: "456 Update Street",
-            phone: "0987654321",
-            email: "updated@notary.com",
+            address: updatedLegalAuthorityPayload.address,
+            phone: updatedLegalAuthorityPayload.phone,
+            email: updatedLegalAuthorityPayload.email,
             note: "Updated"
           }
         }
@@ -96,13 +118,13 @@ test.describe("Admin - API Building Additional Information @extended @api", () =
         ["id", "authorityName"]
       );
       expect(updateLegalAuthorityBody.id).toBe(legalAuthorityId);
-      expect(updateLegalAuthorityBody.authorityName).toBe("Auto Law Office Updated");
+      expect(updateLegalAuthorityBody.authorityName).toBe(updatedLegalAuthorityPayload.authorityName);
 
       const legalAuthorityRows = await TestDbRepository.query<{
         authority_name: string;
         authority_type: string;
       }>("SELECT authority_name, authority_type FROM legal_authority WHERE id = ?", [legalAuthorityId]);
-      expect(legalAuthorityRows[0]!.authority_name).toBe("Auto Law Office Updated");
+      expect(legalAuthorityRows[0]!.authority_name).toBe(updatedLegalAuthorityPayload.authorityName);
       expect(legalAuthorityRows[0]!.authority_type).toBe("LAW_FIRM");
 
       const deleteLegalAuthority = await admin.delete(
@@ -184,17 +206,17 @@ test.describe("Admin - API Building Additional Information @extended @api", () =
         failOnStatusCode: false,
         data: {
           buildingId: tempBuilding.id,
-          name: "Auto Cleaning Co",
+          name: supplierPayload.name,
           serviceType: "CLEANING",
-          phone: "0901234567",
-          email: "clean@auto.com",
+          phone: supplierPayload.phone,
+          email: supplierPayload.email,
           address: "1A Test Street",
           note: "Auto test"
         }
       });
       const supplierBody = await expectObjectBody<{ id: number; name?: string }>(createSupplier, 200, ["id", "name"]);
       supplierId = supplierBody.id;
-      expect(supplierBody.name).toBe("Auto Cleaning Co");
+      expect(supplierBody.name).toBe(supplierPayload.name);
 
       const listSuppliers = await admin.get(
         `/api/v1/admin/building-additional-information/suppliers/${tempBuilding.id}`,
@@ -209,10 +231,10 @@ test.describe("Admin - API Building Additional Information @extended @api", () =
           failOnStatusCode: false,
           data: {
             buildingId: tempBuilding.id,
-            name: "Auto Cleaning Co Updated",
+            name: updatedSupplierPayload.name,
             serviceType: "CLEANING",
-            phone: "0909999999",
-            email: "vip@auto.com",
+            phone: updatedSupplierPayload.phone,
+            email: updatedSupplierPayload.email,
             address: "2B Update Street",
             note: "Updated"
           }
@@ -220,10 +242,10 @@ test.describe("Admin - API Building Additional Information @extended @api", () =
       );
       const updateSupplierBody = await expectObjectBody<{ id?: number; name?: string }>(updateSupplier, 200, ["id", "name"]);
       expect(updateSupplierBody.id).toBe(supplierId);
-      expect(updateSupplierBody.name).toBe("Auto Cleaning Co Updated");
+      expect(updateSupplierBody.name).toBe(updatedSupplierPayload.name);
 
       const supplierRows = await TestDbRepository.query<{ name: string }>("SELECT name FROM supplier WHERE id = ?", [supplierId]);
-      expect(supplierRows[0]!.name).toBe("Auto Cleaning Co Updated");
+      expect(supplierRows[0]!.name).toBe(updatedSupplierPayload.name);
 
       const deleteSupplier = await admin.delete(
         `/api/v1/admin/building-additional-information/suppliers/${supplierId}`,

@@ -1,4 +1,5 @@
 import { expect, type Locator } from "@playwright/test";
+import { TableComponent } from "../components/TableComponent";
 import { StaffRoutedPage } from "../core/StaffRoutedPage";
 
 export class StaffSaleContractListPage extends StaffRoutedPage {
@@ -7,6 +8,7 @@ export class StaffSaleContractListPage extends StaffRoutedPage {
   private readonly filterForm = this.page.locator("#filterForm");
   private readonly tableBody = this.page.locator("#saleContractTableBody");
   private readonly pagination = this.page.locator("#pagination");
+  private readonly table = new TableComponent(this.page, "#saleContractTableBody");
 
   async expectLoaded(): Promise<void> {
     await expect(this.page).toHaveURL(/\/staff\/sale-contracts/);
@@ -16,11 +18,7 @@ export class StaffSaleContractListPage extends StaffRoutedPage {
 
   async waitForTableData(): Promise<void> {
     await expect(this.tableBody).toBeVisible();
-    await expect(async () => {
-      const rows = await this.tableBody.locator("tr").count();
-      const hasEmpty = await this.page.locator(".empty-state").isVisible().catch(() => false);
-      expect(rows > 0 || hasEmpty).toBeTruthy();
-    }).toPass();
+    await this.table.waitForDataOrEmpty();
   }
 
   async filterByCustomerId(customerId: number | string): Promise<void> {
@@ -44,7 +42,7 @@ export class StaffSaleContractListPage extends StaffRoutedPage {
   }
 
   rowByBuildingName(buildingName: string): Locator {
-    return this.firstVisible(this.tableBody.locator("tr").filter({ hasText: buildingName }));
+    return this.table.rowByText(buildingName);
   }
 
   async expectRowVisible(buildingName: string): Promise<void> {
@@ -68,7 +66,7 @@ export class StaffSaleContractListPage extends StaffRoutedPage {
   }
 
   async expectEmptyState(): Promise<void> {
-    await expect(this.tableBody).toContainText(/không có dữ liệu|khong co du lieu/i);
+    await expect.poll(() => this.locatorLooseText(this.tableBody)).toMatch(/khong co du lieu/i);
   }
 
   async expectPaginationVisible(): Promise<void> {

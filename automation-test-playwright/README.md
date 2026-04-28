@@ -90,11 +90,18 @@ npm run test
 ```
 
 ## 5.1. Che do an toan du lieu
-- Mac dinh framework dang o che do an toan, khong chay cac test co the xoa hoac sua du lieu that.
-- Cac test API co nguy co pha du lieu nhu `delete`, `doi username`, `doi email`, `doi password`, `gan lai assignment` se bi `skip` neu khong bat co rieng.
-- Chi bat che do nay khi dang o moi truong test rieng, khong dung cho tai khoan that.
+- Cac test co nguy co sua/xoa du lieu duoc gan tag `@destructive`.
+- Dung cac lenh `:safe` hoac `test:ci` de loai bo `@destructive` khi chay tren CI hoac moi truong khong duoc phep ghi du lieu.
+- Chi chay `@destructive` khi dang o moi truong test rieng, khong dung cho tai khoan that.
 
-Bat che do pha du lieu co chu y:
+Chay an toan:
+```bash
+npm run test:safe
+npm run test:api:safe
+npm run test:regression:safe
+```
+
+Chay destructive co chu y:
 ```bash
 npm run test:api:destructive
 ```
@@ -102,8 +109,10 @@ npm run test:api:destructive
 Cac lenh thuong dung:
 ```bash
 npm run test:api
+npm run test:api:safe
 npm run test:e2e
 npm run test:regression
+npm run test:regression:safe
 npm run test:smoke
 npm run test:ci
 npm run report:open

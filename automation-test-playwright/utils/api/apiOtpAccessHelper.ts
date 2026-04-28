@@ -11,6 +11,7 @@ type OtpHookPayload = {
 
 export class ApiOtpAccessHelper {
   private static readonly fallbackPinnedOtp = "246810";
+  private static readonly pollingIntervalMs = 250;
 
   private static hookPath(email: string, purpose: string): string {
     const params = new URLSearchParams({
@@ -29,34 +30,40 @@ export class ApiOtpAccessHelper {
   }
 
   static async latestOtp(context: APIRequestContext, email: string, purpose: string): Promise<string> {
-    if (env.testSupportOtpToken) {
-      const response = await context.get(this.hookPath(email, purpose), {
-        failOnStatusCode: false,
-        headers: this.hookHeaders()
-      });
+    const deadline = Date.now() + env.expectTimeout;
 
-      if (response.status() === 200) {
-        try {
-          const body = (await response.json()) as OtpHookPayload;
-          if (body.otp) {
-            return body.otp;
+    while (Date.now() <= deadline) {
+      if (env.testSupportOtpToken) {
+        const response = await context.get(this.hookPath(email, purpose), {
+          failOnStatusCode: false,
+          headers: this.hookHeaders()
+        });
+
+        if (response.status() === 200) {
+          try {
+            const body = (await response.json()) as OtpHookPayload;
+            if (body.otp) {
+              return body.otp;
+            }
+          } catch {
+            // Some environments may return an HTML error page behind the same status.
+            // Fall through to DB pinning so API tests stay deterministic.
           }
-        } catch {
-          // Some environments may return an HTML error page behind the same status.
-          // Fall through to DB pinning so API tests stay deterministic.
         }
       }
+
+      const latest = await ApiOtpHelper.latest(email, purpose);
+      if (latest) {
+        await ApiOtpHelper.setLatestPendingOtp(email, purpose, this.fallbackPinnedOtp);
+        return this.fallbackPinnedOtp;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, this.pollingIntervalMs));
     }
 
-    const latest = await ApiOtpHelper.latest(email, purpose);
-    if (!latest) {
-      throw new Error(
-        `Khong doc duoc OTP qua test hook va cung khong tim thay OTP trong DB cho ${email}/${purpose}.`
-      );
-    }
-
-    await ApiOtpHelper.setLatestPendingOtp(email, purpose, this.fallbackPinnedOtp);
-    return this.fallbackPinnedOtp;
+    throw new Error(
+      `Khong doc duoc OTP qua test hook va cung khong tim thay OTP trong DB cho ${email}/${purpose}.`
+    );
   }
 
   static async expireLatestOtp(context: APIRequestContext, email: string, purpose: string): Promise<void> {

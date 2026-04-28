@@ -61,7 +61,7 @@ test.describe("Admin - Customer Management @regression @e2e", () => {
     });
     await formPage.selectStaffIds([manager.id]);
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/them khach hang|thm khch hng|thnh cng|thanh cong|success/i);
+    await formPage.expectSweetAlertContains(/them khach hang|thanh cong|success/i);
 
     const rows = await TestDbRepository.query<{ id: number }>(
       "SELECT id FROM customer WHERE username = ? LIMIT 1",
@@ -110,7 +110,7 @@ test.describe("Admin - Customer Management @regression @e2e", () => {
       email: String(payload.email)
     });
     await formPage.submit();
-    await formPage.expectSweetAlertContains(/l?i|loi|error|nhn vin|nhan vien/i);
+    await formPage.expectSweetAlertContains(/loi|error|nhan vien/i);
 
     const rows = await TestDbRepository.query<{ count: number }>(
       "SELECT COUNT(*) AS count FROM customer WHERE username = ? OR email = ?",
@@ -129,7 +129,7 @@ test.describe("Admin - Customer Management @regression @e2e", () => {
     await listPage.waitForTableData();
     await listPage.deleteCustomer(customer.fullName);
     await listPage.confirmSweetAlert();
-    await listPage.expectSweetAlertContains(/xoa khach hang|xa khch hng|thnh cng|thanh cong|success/i);
+    await listPage.expectSweetAlertContains(/xoa khach hang|thanh cong|success/i);
 
     await expect.poll(async () => {
       const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM customer WHERE id = ?", [customer.id]);

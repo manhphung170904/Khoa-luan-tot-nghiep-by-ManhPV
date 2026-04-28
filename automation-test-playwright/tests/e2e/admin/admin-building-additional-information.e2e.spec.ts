@@ -84,13 +84,15 @@ test.describe("Admin - Building Additional Information @regression @e2e", () => 
     const additionalInfoPage = new AdminBuildingAdditionalInfoPage(page);
     const authorityName = `E2E Legal ${TestDataFactory.taoMaDuyNhat("legal")}`;
     const updatedName = `${authorityName} Updated`;
+    const legalEmail = TestDataFactory.taoEmail("legal-e2e");
+    const updatedLegalEmail = TestDataFactory.taoEmail("legal-updated");
 
     await additionalInfoPage.expectLoaded(buildingName);
     await additionalInfoPage.addLegalAuthority({
       authorityName,
       authorityType: "NOTARY",
-      phone: "0901234567",
-      email: "legal-e2e@example.com",
+      phone: TestDataFactory.taoSoDienThoai(),
+      email: legalEmail,
       address: "123 Test Street",
       note: "Created by E2E"
     });
@@ -105,8 +107,8 @@ test.describe("Admin - Building Additional Information @regression @e2e", () => 
     await additionalInfoPage.editLegalAuthority(authorityName, {
       authorityName: updatedName,
       authorityType: "LAW_FIRM",
-      phone: "0909999999",
-      email: "legal-updated@example.com"
+      phone: TestDataFactory.taoSoDienThoai(),
+      email: updatedLegalEmail
     });
     await additionalInfoPage.expectLegalAuthorityVisible(updatedName);
 
@@ -123,12 +125,13 @@ test.describe("Admin - Building Additional Information @regression @e2e", () => 
     const additionalInfoPage = new AdminBuildingAdditionalInfoPage(page);
     const amenityName = `E2E Park ${TestDataFactory.taoMaDuyNhat("park")}`;
     const supplierName = `E2E Supplier ${TestDataFactory.taoMaDuyNhat("supplier")}`;
+    const supplierEmail = TestDataFactory.taoEmail("supplier-e2e");
 
     await additionalInfoPage.expectLoaded(buildingName);
     await additionalInfoPage.addSupplier({
       name: "Invalid Supplier",
       serviceType: "CLEANING",
-      phone: "0901234567",
+      phone: TestDataFactory.taoSoDienThoai(),
       email: "invalid-email"
     });
     await additionalInfoPage.expectValidationPopupContains(/Email/i);
@@ -160,8 +163,8 @@ test.describe("Admin - Building Additional Information @regression @e2e", () => 
     await additionalInfoPage.addSupplier({
       name: supplierName,
       serviceType: "CLEANING",
-      phone: "0901234567",
-      email: "supplier-e2e@example.com",
+      phone: TestDataFactory.taoSoDienThoai(),
+      email: supplierEmail,
       address: "789 Supplier Street",
       note: "Managed by E2E"
     });
@@ -178,7 +181,7 @@ test.describe("Admin - Building Additional Information @regression @e2e", () => 
     );
     expect(createdSupplierRows[0]?.name).toBe(supplierName);
     expect(createdSupplierRows[0]?.service_type).toBe("CLEANING");
-    expect(createdSupplierRows[0]?.email).toBe("supplier-e2e@example.com");
+    expect(createdSupplierRows[0]?.email).toBe(supplierEmail);
 
     await additionalInfoPage.expectCounterValue("amenity", 1);
     await additionalInfoPage.expectCounterValue("supplier", 1);

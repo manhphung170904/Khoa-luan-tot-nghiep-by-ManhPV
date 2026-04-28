@@ -33,7 +33,7 @@ test.describe("Auth - Login @regression @e2e", () => {
     await loginPage.assertLoaded();
     await loginPage.login("unknown-user", "wrong-password");
     await page.waitForURL(/\/login\?errorMessage=/);
-    await loginPage.expectPopupContains(/đăng nhập thất bại|dang nhap that bai|sai tài khoản hoặc mật khẩu|sai tai khoan hoac mat khau|tài khoản không tồn tại|tai khoan khong ton tai|login failed/i);
+    await loginPage.expectPopupContains(/dang nhap that bai|sai tai khoan hoac mat khau|tai khoan khong ton tai|login failed/i);
   });
 
   test("[E2E-AUTH-LOGIN-003] - Auth Login - Login Submission - Valid Local Customer Redirect", async ({ page, adminApi }) => {

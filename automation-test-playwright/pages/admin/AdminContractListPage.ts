@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { TableComponent } from "../components/TableComponent";
 import { RoutedCrudListPage } from "../core/RoutedCrudListPage";
 
 export class AdminContractListPage extends RoutedCrudListPage {
@@ -6,12 +7,14 @@ export class AdminContractListPage extends RoutedCrudListPage {
   readonly addButton: Locator;
   readonly updateStatusesButton: Locator;
   readonly tableBody: Locator;
+  private readonly table: TableComponent;
 
   constructor(page: Page) {
     super(page);
     this.addButton = this.page.locator(".btn-add");
     this.updateStatusesButton = this.page.locator(".btn-update-status");
     this.tableBody = this.page.locator("#contractTableBody");
+    this.table = new TableComponent(page, "#contractTableBody");
   }
 
   async expectLoaded(): Promise<void> {
@@ -20,11 +23,7 @@ export class AdminContractListPage extends RoutedCrudListPage {
   }
 
   async waitForTableData(): Promise<void> {
-    await expect(async () => {
-      const hasRows = (await this.page.locator("#contractTableBody tr").count()) > 0;
-      const hasEmpty = await this.page.locator(".empty-state").isVisible().catch(() => false);
-      expect(hasRows || hasEmpty).toBeTruthy();
-    }).toPass();
+    await this.table.waitForDataOrEmpty();
   }
 
   async openAddForm(): Promise<void> {
@@ -57,7 +56,7 @@ export class AdminContractListPage extends RoutedCrudListPage {
   }
 
   rowByContractText(text: string): Locator {
-    return this.firstVisible(this.page.locator("#contractTableBody tr").filter({ hasText: text }));
+    return this.table.rowByText(text);
   }
 
   async submitFilters(): Promise<void> {

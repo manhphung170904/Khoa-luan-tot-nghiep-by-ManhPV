@@ -69,24 +69,27 @@ export abstract class ProfilePageBase extends BasePage {
 
   async submitUsernameChange(newUsername: string, otp: string): Promise<void> {
     const modal = await this.profileModals.open("username");
+    await this.sweetAlert.confirmIfPresent();
     await modal.locator('[name="newUsername"]').fill(newUsername);
     await modal.locator("#usernameOtp").fill(otp);
-    await modal.getByRole("button", { name: /xác nhận|xac nhan/i }).click();
+    await this.firstVisible(modal.locator("button.btn-primary, button[type='submit']")).click();
   }
 
   async submitPhoneChange(newPhoneNumber: string, otp: string): Promise<void> {
     const modal = await this.profileModals.open("phone");
+    await this.sweetAlert.confirmIfPresent();
     await modal.locator('[name="newPhoneNumber"]').fill(newPhoneNumber);
     await modal.locator("#phoneOtp").fill(otp);
-    await modal.getByRole("button", { name: /xác nhận|xac nhan/i }).click();
+    await this.firstVisible(modal.locator("button.btn-primary, button[type='submit']")).click();
   }
 
   async submitPasswordChange(newPassword: string, confirmPassword: string, otp: string): Promise<void> {
     const modal = await this.profileModals.open("password");
+    await this.sweetAlert.confirmIfPresent();
     await modal.locator('[name="newPassword"]').fill(newPassword);
     await modal.locator('[name="confirmPassword"]').fill(confirmPassword);
     await modal.locator("#passwordOtp").fill(otp);
-    await modal.getByRole("button", { name: /xác nhận|xac nhan/i }).click();
+    await this.firstVisible(modal.locator("button.btn-primary, button[type='submit']")).click();
   }
 
   async waitForSweetAlert(): Promise<void> {

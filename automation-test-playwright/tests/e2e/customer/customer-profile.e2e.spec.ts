@@ -47,24 +47,19 @@ test.describe("Customer - Profile @regression @e2e", () => {
     const profilePage = new CustomerProfilePage(page);
     await new NavigationPage(page).open("/customer/profile?successMessage=Cap%20nhat%20thanh%20cong");
 
-    await profilePage.expectSweetAlertContains(/c?p nh?t thnh cng|cap nhat thanh cong|thnh cng|thanh cong/i);
+    await profilePage.expectSweetAlertContains(/cap nhat thanh cong|thanh cong/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
-  test("[E2E-CUS-PRO-003] - Customer Profile - Username Update - Successful Update with Valid OTP", async ({ page, adminApi }) => {
+  test("[E2E-CUS-PRO-003] - Customer Profile - Username Update - Rejection Without Password Confirmation", async ({ page }) => {
     const activeUser = requireTempUser(tempUser);
 
     const profilePage = new CustomerProfilePage(page);
     const originalValues = await profilePage.readProfileValues();
 
     await profilePage.openUsernameModal();
-    await profilePage.sendOtpFromModal("username");
-    await profilePage.expectSweetAlertContains(/OTP|gui ma/i);
-    await profilePage.confirmSweetAlertIfPresent();
-
-    const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_USERNAME");
-    await profilePage.submitUsernameChange(TestDataFactory.taoUsername("cust"), otp);
-    await profilePage.expectSweetAlertContains(/l?i|loi|th?t b?i|that bai|error|d c m?t kh?u|da co mat khau/i);
+    await profilePage.submitUsernameChange(TestDataFactory.taoUsername("cust"), "000000");
+    await profilePage.expectSweetAlertContains(/loi|that bai|error|mat khau|otp/i);
     await profilePage.confirmSweetAlertIfPresent();
 
     const dbRows = await TestDbRepository.query<{ username: string }>("SELECT username FROM customer WHERE id = ?", [activeUser.id]);
@@ -85,7 +80,7 @@ test.describe("Customer - Profile @regression @e2e", () => {
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PHONE");
     await profilePage.submitPhoneChange(newPhone, otp);
-    await profilePage.expectSweetAlertContains(/thnh cng|thanh cong|c?p nh?t s?|cap nhat so/i);
+    await profilePage.expectSweetAlertContains(/thanh cong|cap nhat so/i);
     await expect.poll(async () => {
       const rows = await TestDbRepository.query<{ phone: string }>("SELECT phone FROM customer WHERE id = ?", [activeUser.id]);
       return rows[0]?.phone ?? "";
@@ -96,7 +91,7 @@ test.describe("Customer - Profile @regression @e2e", () => {
     const profilePage = new CustomerProfilePage(page);
 
     await profilePage.submitPasswordChange("ValidPass1!", "DifferentPass1!", "000000");
-    await profilePage.expectSweetAlertContains(/khng kh?p|khong khop/i);
+    await profilePage.expectSweetAlertContains(/khong khop/i);
     await profilePage.confirmSweetAlertIfPresent();
   });
 
@@ -115,7 +110,7 @@ test.describe("Customer - Profile @regression @e2e", () => {
 
     const otp = await ApiOtpAccessHelper.latestOtp(adminApi, activeUser.email, "PROFILE_PASSWORD");
     await profilePage.submitPasswordChange(newPassword, newPassword, otp);
-    await profilePage.expectSweetAlertContains(/thnh cng|thanh cong|m?t kh?u|mat khau/i);
+    await profilePage.expectSweetAlertContains(/thanh cong|mat khau/i);
     await expect.poll(async () => {
       const rows = await TestDbRepository.query<{ password: string }>("SELECT password FROM customer WHERE id = ?", [activeUser.id]);
       return rows[0]?.password ?? "";

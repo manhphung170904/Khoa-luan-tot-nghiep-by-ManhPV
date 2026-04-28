@@ -1,11 +1,15 @@
 ﻿import { expect, type Locator, type Page } from "@playwright/test";
 import { env } from "@config/env";
+import { TextNormalizeHelper } from "@helpers/TextNormalizeHelper";
+import { SweetAlertComponent } from "../components/SweetAlertComponent";
 
 export class BasePage {
   protected readonly page: Page;
+  protected readonly sweetAlertComponent: SweetAlertComponent;
 
   constructor(page: Page) {
     this.page = page;
+    this.sweetAlertComponent = new SweetAlertComponent(page);
   }
 
   async visit(path: string): Promise<void> {
@@ -111,43 +115,7 @@ export class BasePage {
   }
 
   protected normalizeLooseText(value: string): string {
-    const repaired = value
-      .replace(/Ã³/g, "ó")
-      .replace(/Ã²/g, "ò")
-      .replace(/Ã¡/g, "á")
-      .replace(/Ã /g, "à")
-      .replace(/Ã¢/g, "â")
-      .replace(/Ãª/g, "ê")
-      .replace(/Ã´/g, "ô")
-      .replace(/Æ¡/g, "ơ")
-      .replace(/Æ°/g, "ư")
-      .replace(/Ä‘/g, "đ")
-      .replace(/áº¿/g, "ế")
-      .replace(/á»‡/g, "ệ")
-      .replace(/á»‹/g, "ị")
-      .replace(/á»/g, "ỏ")
-      .replace(/á»“/g, "ồ")
-      .replace(/á»£/g, "ợ")
-      .replace(/á»¯/g, "ữ")
-      .replace(/á»­/g, "ử")
-      .replace(/á»™/g, "ộ")
-      .replace(/áº¥/g, "ấ")
-      .replace(/áº¡/g, "ạ")
-      .replace(/á»ƒ/g, "ể")
-      .replace(/á»‰/g, "ỉ")
-      .replace(/á»§/g, "ủ")
-      .replace(/áº£/g, "ả")
-      .replace(/á»±/g, "ự")
-      .replace(/á»Ÿ/g, "ở");
-
-    return repaired
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      .replace(/đ/g, "d")
-      .replace(/Đ/g, "D")
-      .replace(/\s+/g, " ")
-      .trim()
-      .toLowerCase();
+    return TextNormalizeHelper.normalizeLooseText(value);
   }
 
   async locatorLooseText(locator: Locator): Promise<string> {
@@ -168,54 +136,20 @@ export class BasePage {
   }
 
   async expectSweetAlertContainsText(text: string | RegExp): Promise<void> {
-    const popup = this.toastPopup();
-    await expect(popup).toBeVisible();
-    await expect(async () => {
-      const normalizedText = this.normalizeLooseText((await popup.textContent()) ?? "");
-      expect(normalizedText).not.toMatch(/dang xu ly|vui long doi|processing|please wait/i);
-    }).toPass({ timeout: env.expectTimeout });
-
-    await expect(async () => {
-      const rawText = ((await popup.textContent()) ?? "").trim();
-      const normalizedText = this.normalizeLooseText(rawText);
-      if (typeof text === "string") {
-        expect(rawText.includes(text) || normalizedText.includes(this.normalizeLooseText(text))).toBeTruthy();
-        return;
-      }
-
-      const normalizedPattern = new RegExp(this.normalizeLooseText(text.source), text.flags.replace("g", ""));
-      expect(text.test(rawText) || normalizedPattern.test(normalizedText)).toBeTruthy();
-    }).toPass({ timeout: env.expectTimeout });
+    await this.sweetAlertComponent.expectContainsLoose(text);
   }
 
   async confirmSweetAlert(): Promise<void> {
-    const popup = this.toastPopup();
-    await expect(popup).toBeVisible();
-    await this.page.locator(".swal2-confirm").filter({ visible: true }).first()
-      .or(this.page.getByRole("button", { name: /ok|đồng ý|dong y|xác nhận|xac nhan|confirm|yes/i }))
-      .first()
-      .click();
+    await this.sweetAlertComponent.expectVisible();
+    await this.sweetAlertComponent.confirm();
   }
 
   async cancelSweetAlert(): Promise<void> {
-    const popup = this.toastPopup();
-    await expect(popup).toBeVisible();
-    await this.page.locator(".swal2-cancel").filter({ visible: true }).first()
-      .or(this.page.getByRole("button", { name: /hủy|huy|cancel|no/i }))
-      .first()
-      .click();
+    await this.sweetAlertComponent.expectVisible();
+    await this.sweetAlertComponent.cancel();
   }
 
   async dismissSweetAlertIfPresent(): Promise<void> {
-    const popup = this.toastPopup();
-    if (!(await popup.count())) {
-      return;
-    }
-
-    const confirmButton = this.page.getByRole("button", { name: /ok|đồng ý|dong y|xác nhận|xac nhan|confirm|yes/i });
-    if (await confirmButton.count()) {
-      await confirmButton.click();
-      await expect(popup).toBeHidden();
-    }
+    await this.sweetAlertComponent.confirmIfPresent();
   }
 }

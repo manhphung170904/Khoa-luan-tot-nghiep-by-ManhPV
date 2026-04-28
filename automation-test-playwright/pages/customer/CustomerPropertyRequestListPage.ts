@@ -56,6 +56,8 @@ export class CustomerPropertyRequestListPage extends CustomerShellPage {
   }
 
   async expectEmptyState(): Promise<void> {
-    await expect(this.requestList).toContainText(/ChÆ°a cÃ³ yÃªu cáº§u nÃ o/i);
+    await expect(async () => {
+      expect(await this.locatorLooseText(this.requestList)).toMatch(/chua co yeu cau nao/i);
+    }).toPass();
   }
 }

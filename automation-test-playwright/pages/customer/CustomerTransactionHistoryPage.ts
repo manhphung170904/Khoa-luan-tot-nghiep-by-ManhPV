@@ -76,7 +76,7 @@ export class CustomerTransactionHistoryPage extends RoutedCrudListPage {
   }
 
   async expectEmptyState(): Promise<void> {
-    await expect(this.transactionTableBody).toContainText(/không có giao dịch nào|khong co giao dich nao/i);
+    await expect.poll(() => this.locatorLooseText(this.transactionTableBody)).toMatch(/khong co giao dich nao/i);
   }
 
   async expectPaginationHidden(): Promise<void> {

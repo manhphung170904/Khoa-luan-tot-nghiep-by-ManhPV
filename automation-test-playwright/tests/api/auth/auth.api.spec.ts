@@ -15,7 +15,7 @@ type AuthUser = {
   fullName: string;
 };
 
-test.describe("Auth - API Web Flow @api-write @destructive @otp @regression", () => {
+test.describe("Auth - API Web Flow @api @api-write @destructive @otp @regression", () => {
   test.describe.configure({ mode: "serial" });
 
   let validLocalEmail = "";
@@ -153,9 +153,11 @@ test.describe("Auth - API Web Flow @api-write @destructive @otp @regression", ()
 
   test.describe("Auth - API Registration and Database Verification @api", () => {
     test("[API-TC-004] - API Authentication - Registration OTP - OTP Generation and Pending Verification Persistence", async ({
-      request
+      request,
+      cleanupRegistry
     }) => {
       const user = buildAuthUser("testuser_auth_pending");
+      cleanupRegistry.addLabeled(`Cleanup auth registration OTP ${user.email}`, () => cleanupAuthUser(user));
       const response = await request.post("/auth/register/send-code", {
         form: { email: user.email },
         failOnStatusCode: false,
@@ -170,13 +172,14 @@ test.describe("Auth - API Web Flow @api-write @destructive @otp @regression", ()
       expect(latest).not.toBeNull();
       expect(latest?.status).toBe("PENDING");
 
-      await cleanupAuthUser(user);
     });
 
     test("[API-TC-005] - API Authentication - Registration OTP - Official Test Hook Verification @extended", async ({
-      request
+      request,
+      cleanupRegistry
     }) => {
       const user = buildAuthUser("testuser_auth_verify");
+      cleanupRegistry.addLabeled(`Cleanup auth registration OTP ${user.email}`, () => cleanupAuthUser(user));
       const sendResponse = await request.post("/auth/register/send-code", {
         form: { email: user.email },
         failOnStatusCode: false,
@@ -201,13 +204,14 @@ test.describe("Auth - API Web Flow @api-write @destructive @otp @regression", ()
       expect(ticketMatch).not.toBeNull();
       expect(ticketMatch?.[1] ?? "").not.toBe("");
 
-      await cleanupAuthUser(user);
     });
 
     test("[API-TC-006] - API Authentication - Registration - Successful Registration and Customer Persistence", async ({
-      request
+      request,
+      cleanupRegistry
     }) => {
       const user = buildAuthUser("testuser_auth_complete");
+      cleanupRegistry.addLabeled(`Cleanup auth registered user ${user.email}`, () => cleanupAuthUser(user));
       const registrationTicket = await issueRegistrationTicket(request, user.email);
 
       const response = await request.post("/auth/register/complete", {
@@ -234,11 +238,11 @@ test.describe("Auth - API Web Flow @api-write @destructive @otp @regression", ()
       );
       expect(createdRows.length).toBe(1);
 
-      await cleanupAuthUser(user);
     });
 
     test("[API-TC-007] - API Authentication - Registration - Password Confirmation Mismatch Rejection", async ({
-      request
+      request,
+      cleanupRegistry
     }) => {
       const isolatedUser: AuthUser = {
         username: TestDataFactory.taoUsername("testuserauthmismatch"),
@@ -246,6 +250,7 @@ test.describe("Auth - API Web Flow @api-write @destructive @otp @regression", ()
         email: TestDataFactory.taoEmail("testauth-mismatch"),
         fullName: "Bot Testing"
       };
+      cleanupRegistry.addLabeled(`Cleanup auth mismatch user ${isolatedUser.email}`, () => cleanupAuthUser(isolatedUser));
       const mismatchTicket = await issueRegistrationTicket(request, isolatedUser.email);
 
       const response = await request.post("/auth/register/complete", {
@@ -271,7 +276,6 @@ test.describe("Auth - API Web Flow @api-write @destructive @otp @regression", ()
       );
       expect(Number(createdRows[0]?.count ?? 0)).toBe(0);
 
-      await TestDbRepository.execute("DELETE FROM email_verification WHERE email = ?", [isolatedUser.email]);
     });
   });
 
@@ -336,9 +340,11 @@ test.describe("Auth - API Web Flow @api-write @destructive @otp @regression", ()
     });
 
     test("[API-TC-011] - API Authentication - Password Reset - Successful Reset and Login Data Update", async ({
-      request
+      request,
+      cleanupRegistry
     }) => {
       const user = buildAuthUser("testuser_auth_reset");
+      cleanupRegistry.addLabeled(`Cleanup auth reset user ${user.email}`, () => cleanupAuthUser(user));
       await ensureUserRegistered(request, user);
       const nextPassword = "Password@456";
 
@@ -382,7 +388,6 @@ test.describe("Auth - API Web Flow @api-write @destructive @otp @regression", ()
       expectStatusExact(newLogin, 302, "New password login should redirect to success");
       expect(newLogin.headers().location).toContain("/login-success");
 
-      await cleanupAuthUser(user);
     });
   });
 

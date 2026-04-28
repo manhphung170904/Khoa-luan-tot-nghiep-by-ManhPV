@@ -19,7 +19,7 @@ type ExistingIdentity = {
   phone: string;
 };
 
-test.describe("Admin - API Profile @api-write @destructive @otp @regression", () => {
+test.describe("Admin - API Profile @api @api-write @destructive @otp @regression", () => {
   let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let tempAdminContext: APIRequestContext;
   let tempAdmin: TempProfileUser;
@@ -70,7 +70,7 @@ test.describe("Admin - API Profile @api-write @destructive @otp @regression", ()
     const response = await request.put("/api/v1/admin/profile/email", {
       failOnStatusCode: false,
       data: {
-        newEmail: "hacked@example.com",
+        newEmail: TestDataFactory.taoEmail("admin-noauth"),
         password: "wrong-password"
       }
     });
@@ -86,7 +86,7 @@ test.describe("Admin - API Profile @api-write @destructive @otp @regression", ()
     const response = await request.put("/api/v1/admin/profile/username", {
       failOnStatusCode: false,
       data: {
-        newUsername: "admin_hacked",
+        newUsername: TestDataFactory.taoUsername("admin-noauth"),
         otp: "000000"
       }
     });
@@ -120,7 +120,7 @@ test.describe("Admin - API Profile @api-write @destructive @otp @regression", ()
     const response = await request.put("/api/v1/admin/profile/phone-number", {
       failOnStatusCode: false,
       data: {
-        newPhoneNumber: "0900000000",
+        newPhoneNumber: TestDataFactory.taoSoDienThoai(),
         otp: "000000"
       }
     });

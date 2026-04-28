@@ -13,7 +13,7 @@ import {
   type TempProfileUser
 } from "@data/tempProfileScenario";
 
-test.describe("Customer - API Profile @api-write @destructive @otp @regression", () => {
+test.describe("Customer - API Profile @api @api-write @destructive @otp @regression", () => {
   let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let customerContext: APIRequestContext;
   let tempCustomer: TempProfileUser;
@@ -46,7 +46,7 @@ test.describe("Customer - API Profile @api-write @destructive @otp @regression",
     const usernameResponse = await request.put("/api/v1/customer/profile/username", {
       failOnStatusCode: false,
       data: {
-        newUsername: "customer_hacked",
+        newUsername: TestDataFactory.taoUsername("customer-noauth"),
         otp: "000000"
       }
     });
@@ -59,7 +59,7 @@ test.describe("Customer - API Profile @api-write @destructive @otp @regression",
     const emailResponse = await request.put("/api/v1/customer/profile/email", {
       failOnStatusCode: false,
       data: {
-        newEmail: "hacked@example.com",
+        newEmail: TestDataFactory.taoEmail("customer-noauth"),
         password: "wrong-password"
       }
     });

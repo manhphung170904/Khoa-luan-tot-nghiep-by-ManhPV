@@ -5,7 +5,7 @@ import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Contract @api-write @destructive @regression", () => {
+test.describe("Admin - API Contract @api @api-write @destructive @regression", () => {
   const missingId = TestDataFactory.missingId;
   const missingSmallId = TestDataFactory.missingSmallId;
 

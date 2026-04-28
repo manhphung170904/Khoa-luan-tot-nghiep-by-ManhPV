@@ -13,7 +13,7 @@ import {
   type TempProfileUser
 } from "@data/tempProfileScenario";
 
-test.describe("Staff - API Profile @api-write @destructive @otp @regression", () => {
+test.describe("Staff - API Profile @api @api-write @destructive @otp @regression", () => {
   let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let staffContext: APIRequestContext;
   let tempStaff: TempProfileUser;
@@ -46,7 +46,7 @@ test.describe("Staff - API Profile @api-write @destructive @otp @regression", ()
     const usernameResponse = await request.put("/api/v1/staff/profile/username", {
       failOnStatusCode: false,
       data: {
-        newUsername: "staff_hacked",
+        newUsername: TestDataFactory.taoUsername("staff-noauth"),
         otp: "000000"
       }
     });
@@ -59,7 +59,7 @@ test.describe("Staff - API Profile @api-write @destructive @otp @regression", ()
     const emailResponse = await request.put("/api/v1/staff/profile/email", {
       failOnStatusCode: false,
       data: {
-        newEmail: "hacked@example.com",
+        newEmail: TestDataFactory.taoEmail("staff-noauth"),
         password: "wrong-password"
       }
     });
@@ -72,7 +72,7 @@ test.describe("Staff - API Profile @api-write @destructive @otp @regression", ()
     const phoneResponse = await request.put("/api/v1/staff/profile/phone-number", {
       failOnStatusCode: false,
       data: {
-        newPhoneNumber: "0900000000",
+        newPhoneNumber: TestDataFactory.taoSoDienThoai(),
         otp: "000000"
       }
     });

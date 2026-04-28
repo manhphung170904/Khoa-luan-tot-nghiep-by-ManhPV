@@ -38,6 +38,6 @@ export class ProfileModalComponent {
   }
 
   async sendOtp(kind: ProfileModalKind): Promise<void> {
-    await this.modal(kind).getByRole("button", { name: /gửi mã|gui ma|otp/i }).click();
+    await this.modal(kind).locator(".btn-send-otp, [data-action='send-otp'], button:has-text('OTP'), button:has-text('Gửi mã')").filter({ visible: true }).first().click();
   }
 }

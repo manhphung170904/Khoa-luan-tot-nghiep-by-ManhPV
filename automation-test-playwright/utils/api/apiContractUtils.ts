@@ -1,4 +1,5 @@
 import { expect, type APIResponse, type TestInfo } from "@playwright/test";
+import { TextNormalizeHelper } from "@helpers/TextNormalizeHelper";
 
 export type ApiCoverageStatus = "covered" | "partial" | "missing" | "defect-driven";
 export type EndpointKind = "readonly" | "mutation" | "upload" | "otp-auth" | "background-trigger";
@@ -32,6 +33,16 @@ export type ExpectedPageBody = {
   status: number;
   requiredPageKeys?: boolean;
 };
+
+export function expectLooseApiText(value: string | undefined, expected: RegExp | string): void {
+  const normalizedValue = TextNormalizeHelper.normalizeLooseText(value ?? "");
+  if (typeof expected === "string") {
+    expect(normalizedValue).toContain(TextNormalizeHelper.normalizeLooseText(expected));
+    return;
+  }
+
+  expect(normalizedValue).toMatch(expected);
+}
 
 export function expectStatusExact(response: APIResponse, expected: number, context: string): void {
   const contentType = response.headers()["content-type"] ?? "unknown content-type";

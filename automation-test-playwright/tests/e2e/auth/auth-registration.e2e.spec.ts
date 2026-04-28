@@ -17,11 +17,10 @@ type RegistrationUser = {
 };
 
 function buildRegistrationUser(prefix: string): RegistrationUser {
-  const unique = TestDataFactory.taoUsername(prefix);
   return {
-    email: `${unique}@example.com`,
+    email: TestDataFactory.taoEmail(prefix),
     fullName: "E2E Register User",
-    username: unique,
+    username: TestDataFactory.taoUsername(prefix),
     password: "Password@123"
   };
 }

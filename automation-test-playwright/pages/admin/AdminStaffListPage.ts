@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { TableComponent } from "../components/TableComponent";
 import { RoutedCrudListPage } from "../core/RoutedCrudListPage";
 
 export class AdminStaffListPage extends RoutedCrudListPage {
@@ -6,12 +7,14 @@ export class AdminStaffListPage extends RoutedCrudListPage {
   readonly addButton: Locator;
   readonly adminTableBody: Locator;
   readonly staffTableBody: Locator;
+  private readonly staffTable: TableComponent;
 
   constructor(page: Page) {
     super(page);
     this.addButton = this.page.locator(".btn-hd-add, .btn-add");
     this.adminTableBody = this.page.locator("#adminTableBody");
     this.staffTableBody = this.page.locator("#staffTableBody");
+    this.staffTable = new TableComponent(page, "#staffTableBody");
   }
 
   async expectLoaded(): Promise<void> {
@@ -44,11 +47,7 @@ export class AdminStaffListPage extends RoutedCrudListPage {
   }
 
   async waitForSearchTableData(): Promise<void> {
-    await expect(async () => {
-      const hasRows = (await this.page.locator("#staffTableBody tr").count()) > 0;
-      const hasEmpty = await this.page.locator(".empty-state").isVisible().catch(() => false);
-      expect(hasRows || hasEmpty).toBeTruthy();
-    }).toPass();
+    await this.staffTable.waitForDataOrEmpty();
   }
 
   async expectSweetAlertContains(text: string | RegExp): Promise<void> {

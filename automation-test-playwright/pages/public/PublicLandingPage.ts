@@ -137,7 +137,7 @@ export class PublicLandingPage extends BasePage {
         const cards = await this.buildingCards.count();
         const emptyVisible = await this.emptyState.isVisible().catch(() => false);
         const summary = (await this.totalBuilding.textContent())?.trim() ?? "";
-        return cards > 0 || emptyVisible || /Tìm thấy|Tim thay/i.test(summary);
+        return cards > 0 || emptyVisible || /tim thay/i.test(this.normalizeLooseText(summary));
       })
       .toBeTruthy();
   }
@@ -206,7 +206,7 @@ export class PublicLandingPage extends BasePage {
 
   async expectDetailModalVisible(buildingName?: string): Promise<void> {
     await expect(this.detailModal).toBeVisible();
-    await expect(this.detailModalTitle).toContainText(/Thông Tin Bất Động Sản/i);
+    await expect.poll(() => this.locatorLooseText(this.detailModalTitle)).toMatch(/thong tin bat dong san/i);
     if (buildingName) {
       await expect(this.detailModalBody).toContainText(buildingName);
     }
@@ -223,7 +223,7 @@ export class PublicLandingPage extends BasePage {
 
   async expectEmptyState(): Promise<void> {
     await expect(this.emptyState).toBeVisible();
-    await expect(this.emptyState).toContainText(/Không tìm thấy bất động sản/i);
+    await expect.poll(() => this.locatorLooseText(this.emptyState)).toMatch(/khong tim thay bat dong san/i);
   }
 
   async expectHasResults(): Promise<void> {

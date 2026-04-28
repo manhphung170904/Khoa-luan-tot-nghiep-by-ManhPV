@@ -50,7 +50,7 @@ test.describe("Customer - Property Request @regression @e2e", () => {
     await requestPage.expectLoaded();
     await requestPage.cancelRequest(scenario!.propertyRequestId);
     await requestPage.confirmSweetAlert();
-    await requestPage.expectSweetAlertContainsText(/thnh cng|thanh cong|d h?y yu c?u|da huy yeu cau|success/i);
+    await requestPage.expectSweetAlertContainsText(/thanh cong|da huy yeu cau|success/i);
 
     await page.reload();
     await requestPage.expectLoaded();

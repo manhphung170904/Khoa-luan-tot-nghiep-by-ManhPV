@@ -2,7 +2,7 @@ import { expect, test } from "@fixtures/api.fixture";
 import { expectArrayBody, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
 import { TestDbRepository } from "@db/repositories";
 
-test.describe("Public - API Building @api-read @regression", () => {
+test.describe("Public - API Building @api @api-read @regression", () => {
   test.describe("GET /api/v1/public/buildings @api", () => {
     test("[API-TC-026] - API Public Building - Search - Database Matched Search Results @smoke", async ({
       anonymousApi

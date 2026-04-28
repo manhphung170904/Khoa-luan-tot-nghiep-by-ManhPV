@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { TableComponent } from "../components/TableComponent";
 import { RoutedCrudListPage } from "../core/RoutedCrudListPage";
 
 export class StaffInvoiceListPage extends RoutedCrudListPage {
@@ -8,6 +9,7 @@ export class StaffInvoiceListPage extends RoutedCrudListPage {
   readonly addInvoiceModal: Locator;
   readonly addInvoiceForm: Locator;
   readonly emptyState: Locator;
+  private readonly table: TableComponent;
 
   constructor(page: Page) {
     super(page);
@@ -16,6 +18,7 @@ export class StaffInvoiceListPage extends RoutedCrudListPage {
     this.addInvoiceModal = this.page.locator("#addInvoiceModal");
     this.addInvoiceForm = this.page.locator("#addInvoiceForm");
     this.emptyState = this.page.locator(".empty-state");
+    this.table = new TableComponent(page, "#invoiceTableBody");
   }
 
   async expectLoaded(): Promise<void> {
@@ -39,11 +42,7 @@ export class StaffInvoiceListPage extends RoutedCrudListPage {
 
   async waitForTableData(): Promise<void> {
     await expect(this.invoiceTableBody).toBeVisible();
-    await expect(async () => {
-      const rows = await this.page.locator("#invoiceTableBody tr").count();
-      const emptyVisible = await this.emptyState.isVisible().catch(() => false);
-      expect(rows > 0 || emptyVisible).toBeTruthy();
-    }).toPass();
+    await this.table.waitForDataOrEmpty();
   }
 
   async openAddInvoiceModal(): Promise<void> {
@@ -118,7 +117,12 @@ export class StaffInvoiceListPage extends RoutedCrudListPage {
   }
 
   async saveVisibleEditForm(): Promise<void> {
-    await this.visibleModal().getByRole("button", { name: /lưu thay đổi/i }).click();
+    const modal = this.visibleModal();
+    await this.firstVisible(
+      modal
+        .getByRole("button", { name: /lưu thay đổi|luu thay doi|save/i })
+        .or(modal.locator("button.btn-save, button[form^='editInvoiceForm']"))
+    ).click();
   }
 
   async deleteInvoice(invoiceId: number): Promise<void> {

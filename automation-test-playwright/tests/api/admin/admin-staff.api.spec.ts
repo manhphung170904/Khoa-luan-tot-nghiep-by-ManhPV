@@ -1,5 +1,5 @@
 import { expect, test } from "@fixtures/api.fixture";
-import { expectApiErrorBody, expectApiMessage, expectArrayBody, expectPageBody } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectApiMessage, expectArrayBody, expectLooseApiText, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
@@ -31,7 +31,7 @@ test.describe("Admin - API Staff @regression @api", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/username|dang nh?p|t nh?t|min/i);
+    expectLooseApiText(errorBody.message, /username|dang nhap|it nhat|min/i);
 
     const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [shortUsername]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -48,7 +48,7 @@ test.describe("Admin - API Staff @regression @api", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/password|m?t kh?u|t nh?t|min/i);
+    expectLooseApiText(errorBody.message, /password|mat khau|it nhat|min/i);
 
     const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [username]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -65,7 +65,7 @@ test.describe("Admin - API Staff @regression @api", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/phone|di?n tho?i|khng h?p l?|invalid/i);
+    expectLooseApiText(errorBody.message, /phone|dien thoai|khong hop le|invalid/i);
 
     const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE phone = ?", [invalidPhone]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -82,7 +82,7 @@ test.describe("Admin - API Staff @regression @api", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/full.?name|h? tn|t?i da|max|k t?/i);
+    expectLooseApiText(errorBody.message, /full.?name|ho ten|toi da|max|ky tu/i);
   });
 
   test("[STF-015] - API Admin Staff - Username - Minimum Length Boundary Acceptance", async ({ adminApi: admin }) => {
@@ -119,7 +119,7 @@ test.describe("Admin - API Staff @regression @api", () => {
       code: "BAD_REQUEST",
       path: "/api/v1/admin/staff"
     });
-    expect(errorBody.message).toMatch(/username|dang nh?p|t?i da|max|d? di/i);
+    expectLooseApiText(errorBody.message, /username|dang nhap|toi da|max|do dai/i);
 
     const rows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE username = ?", [longUsername]);
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
@@ -138,7 +138,7 @@ test.describe("Admin - API Staff @regression @api", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`
     });
-    expect(errorBody.message).toMatch(/building|ta nh|contract|h?p d?ng|phn cng/i);
+    expectLooseApiText(errorBody.message, /building|toa nha|contract|hop dong|phan cong/i);
 
     const assignmentsResponse = await admin.get(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/buildings`, {
       failOnStatusCode: false
@@ -160,7 +160,7 @@ test.describe("Admin - API Staff @regression @api", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`
     });
-    expect(errorBody.message).toMatch(/customer|khch hng|contract|h?p d?ng|phn cng/i);
+    expectLooseApiText(errorBody.message, /customer|khach hang|contract|hop dong|phan cong/i);
 
     const assignmentsResponse = await admin.get(`/api/v1/admin/staff/${tempContract.staff.id}/assignments/customers`, {
       failOnStatusCode: false
@@ -208,7 +208,7 @@ test.describe("Admin - API Staff @regression @api", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicateUsernameError.message).toMatch(/username|tn dang nh?p|dang nh?p|t?n t?i|trng/i);
+      expectLooseApiText(duplicateUsernameError.message, /username|ten dang nhap|dang nhap|ton tai|trung/i);
       const duplicateUsernameRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE username = ?",
         [String(payload.username)]
@@ -227,7 +227,7 @@ test.describe("Admin - API Staff @regression @api", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicateEmailError.message).toMatch(/email|t?n t?i|trng/i);
+      expectLooseApiText(duplicateEmailError.message, /email|ton tai|trung/i);
       const duplicateEmailRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE email = ?",
         [String(payload.email)]
@@ -246,7 +246,7 @@ test.describe("Admin - API Staff @regression @api", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/staff"
       });
-      expect(duplicatePhoneError.message).toMatch(/phone|di?n tho?i|t?n t?i|trng/i);
+      expectLooseApiText(duplicatePhoneError.message, /phone|dien thoai|ton tai|trung/i);
       const duplicatePhoneRows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM staff WHERE phone = ?",
         [String(payload.phone)]
@@ -332,7 +332,7 @@ test.describe("Admin - API Staff @regression @api", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/staff/${missingSmallId}/assignments/buildings`
       });
-      expect(assignMissingStaffError.message).toMatch(/staff|nhn vin|khng t?n t?i|khng tm th?y|not found/i);
+      expectLooseApiText(assignMissingStaffError.message, /staff|nhan vien|khong ton tai|khong tim thay|not found/i);
 
       const assignCustomerResponse = await admin.put(`/api/v1/admin/staff/${createdStaffId}/assignments/customers`, {
         failOnStatusCode: false,
@@ -352,7 +352,7 @@ test.describe("Admin - API Staff @regression @api", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/staff/${createdStaffId}`
       });
-      expect(deleteWhileAssignedError.message).toMatch(/assignment|phn cng|contract|h?p d?ng|b?t d?ng s?n/i);
+      expectLooseApiText(deleteWhileAssignedError.message, /assignment|phan cong|contract|hop dong|bat dong san/i);
 
       const stillExistsRows = await TestDbRepository.query<{ count: number }>("SELECT COUNT(*) AS count FROM staff WHERE id = ?", [createdStaffId]);
       expect(Number(stillExistsRows[0]?.count ?? 0)).toBe(1);
@@ -365,7 +365,7 @@ test.describe("Admin - API Staff @regression @api", () => {
         code: "BAD_REQUEST",
         path: `/api/v1/admin/staff/${missingSmallId}`
       });
-      expect(missingDeleteError.message).toMatch(/staff|nhn vin|khng t?n t?i|khng tm th?y|not found/i);
+      expectLooseApiText(missingDeleteError.message, /staff|nhan vien|khong ton tai|khong tim thay|not found/i);
 
       const clearBuildings = await admin.put(`/api/v1/admin/staff/${createdStaffId}/assignments/buildings`, {
         failOnStatusCode: false,

@@ -15,7 +15,7 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
 
   constructor(page: Page) {
     super(page);
-    this.emptyState = this.firstVisible(this.page.getByText(/chưa có hóa đơn nào|chua co hoa don nao/i));
+    this.emptyState = this.firstVisible(this.anyLocator('[data-testid="customer-invoice-empty"]', ".empty-state"));
     this.statsValues = this.page.locator(".stat-value");
     this.visibleModal = this.page.locator(".modal.show");
     this.invoiceCards = this.anyLocator('[data-testid="customer-invoice-card"]', ".invoice-card");
@@ -73,7 +73,8 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
   }
 
   async expectEmptyState(): Promise<void> {
-    await expect(this.emptyState).toContainText(/chưa có hóa đơn nào|chua co hoa don nao/i);
+    await expect(this.emptyState).toBeVisible();
+    await expect.poll(() => this.locatorLooseText(this.emptyState)).toMatch(/chua co hoa don nao/i);
   }
 
   async expectLoaded(): Promise<void> {
@@ -86,6 +87,6 @@ export class CustomerInvoicePage extends CustomerRoutedPage {
   }
 
   async expectPaymentSuccessAlert(): Promise<void> {
-    await this.sweetAlert.expectContains(/thanh toán thành công|thanh toan thanh cong|payment success|paysuccess/i);
+    await this.sweetAlert.expectContainsLoose("thanh toan thanh cong");
   }
 }

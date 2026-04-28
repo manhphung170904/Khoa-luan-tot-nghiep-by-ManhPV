@@ -1,5 +1,5 @@
 import { expect, test } from "@fixtures/api.fixture";
-import { expectApiErrorBody, expectApiMessage, expectPageBody } from "@api/apiContractUtils";
+import { expectApiErrorBody, expectApiMessage, expectLooseApiText, expectPageBody } from "@api/apiContractUtils";
 import { apiExpectedMessages } from "@api/apiExpectedMessages";
 import { TestDbRepository } from "@db/repositories";
 import { TempEntityCleanupService } from "@helpers/TempEntityCleanupService";
@@ -62,7 +62,7 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
       data: invalidPayload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/building|b?t d?ng s?n|ta nh|vui lng ch?n/i);
+    expectLooseApiText(errorBody.message, /building|bat dong san|toa nha|vui long chon/i);
   });
 
   test("[SC-011] - API Admin Sale Contract - Customer Reference - Missing Customer Validation", async ({ adminApi: admin }) => {
@@ -73,7 +73,7 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
       data: invalidPayload
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/customer|khch hng|vui lng ch?n/i);
+    expectLooseApiText(errorBody.message, /customer|khach hang|vui long chon/i);
   });
 
   test("[SC-003] - API Admin Sale Contract - Building Reference - Nonexistent Building Validation", async ({ adminApi: admin, cleanupRegistry }) => {
@@ -95,7 +95,7 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
         })
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/building|ta nh|b?t d?ng s?n|khng tm th?y|not found/i);
+    expectLooseApiText(errorBody.message, /building|toa nha|bat dong san|khong tim thay|not found/i);
 
     const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
@@ -227,7 +227,7 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
         })
     });
     const errorBody = await expectApiErrorBody<{ message?: string }>(response, { status: 400, code: "BAD_REQUEST", path: "/api/v1/admin/sale-contracts" });
-    expect(errorBody.message).toMatch(/sale|bn|mua bn|transaction|giao d?ch|khng ph?i lo?i mua bn/i);
+    expectLooseApiText(errorBody.message, /sale|ban|mua ban|transaction|giao dich|khong phai loai mua ban/i);
 
     const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ? AND customer_id = ? AND staff_id = ?",
@@ -252,7 +252,7 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
         code: "BAD_REQUEST",
         path: "/api/v1/admin/sale-contracts"
     });
-    expect(errorBody.message).toMatch(/sold|d (du?c )?bn|sale contract|h?p d?ng mua bn/i);
+    expectLooseApiText(errorBody.message, /sold|da (duoc )?ban|sale contract|hop dong mua ban/i);
 
     const rows = await TestDbRepository.query<{ count: number }>(
         "SELECT COUNT(*) AS count FROM sale_contract WHERE building_id = ?",
@@ -412,7 +412,7 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
       code: "BAD_REQUEST",
       path: `/api/v1/admin/sale-contracts/${missingId}`
     });
-    expect(errorBody.message).toMatch(/sale contract|h?p d?ng mua bn|khng tm th?y|khng t?n t?i|not found/i);
+    expectLooseApiText(errorBody.message, /sale contract|hop dong mua ban|khong tim thay|khong ton tai|not found/i);
   });
 
   test("[SC-018] - API Admin Sale Contract - Delete Sale Contract - Nonexistent ID Rejection", async ({ adminApi: admin }) => {

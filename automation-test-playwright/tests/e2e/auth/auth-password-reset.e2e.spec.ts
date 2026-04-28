@@ -90,6 +90,6 @@ test.describe("Auth - Password Reset @regression @e2e", () => {
 
     await resetPage.expectLoaded(tempUser!.email);
     await resetPage.resetPassword("123456", "Password@456", "Mismatch@456");
-    await resetPage.expectPopupContains(/mat khau khong khop|m?t kh?u khng kh?p|khong khop/i);
+    await resetPage.expectPopupContains(/mat khau khong khop|khong khop/i);
   });
 });
