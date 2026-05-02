@@ -68,7 +68,7 @@ async function completeRegistrationFlow(
   await page.waitForURL(/\/customer\/home/);
 }
 
-test.describe("Auth - Registration @regression @e2e", () => {
+test.describe("Auth - Registration @regression", () => {
   test.afterEach(async () => {
   });
 

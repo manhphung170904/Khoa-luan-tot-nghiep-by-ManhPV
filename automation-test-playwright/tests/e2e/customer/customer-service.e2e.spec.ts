@@ -8,7 +8,7 @@ import {
 } from "@data/profileTempUsers";
 import { NavigationPage } from "@pages/core/NavigationPage";
 
-test.describe("Customer - Service @regression @e2e", () => {
+test.describe("Customer - Service @regression", () => {
   let tempUser: TempCustomerProfileUser | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {

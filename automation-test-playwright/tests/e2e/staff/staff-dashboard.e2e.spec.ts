@@ -6,7 +6,7 @@ import { NavigationPage } from "@pages/core/NavigationPage";
 
 type TempContract = Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>;
 
-test.describe("Staff - Dashboard @regression @e2e", () => {
+test.describe("Staff - Dashboard @regression", () => {
   let tempContract: TempContract | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {

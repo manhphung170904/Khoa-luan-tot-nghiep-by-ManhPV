@@ -15,7 +15,7 @@ import {
 } from "@data/profileTempUsers";
 import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
 
-test.describe("Admin - Property Request Management @regression @e2e", () => {
+test.describe("Admin - Property Request Management @regression", () => {
   let adminUser: TempStaffProfileUser | null = null;
   let scenario: PropertyRequestScenario | null = null;
   let createdContractId = 0;

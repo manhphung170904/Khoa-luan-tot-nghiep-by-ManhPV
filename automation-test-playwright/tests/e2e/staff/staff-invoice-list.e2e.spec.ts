@@ -24,7 +24,7 @@ function nextMonthDueDate(month: number, year: number, day = 20): string {
   return `${dueYear}-${String(dueMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-test.describe("Staff - Invoice List @regression @e2e", () => {
+test.describe("Staff - Invoice List @regression", () => {
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
 

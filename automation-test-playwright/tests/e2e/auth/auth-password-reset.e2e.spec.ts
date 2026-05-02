@@ -10,7 +10,7 @@ import {
   type TempCustomerProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Auth - Password Reset @regression @e2e", () => {
+test.describe("Auth - Password Reset @regression", () => {
   let tempUser: TempCustomerProfileUser | null = null;
 
   test.beforeEach(async ({ adminApi }) => {

@@ -7,7 +7,7 @@ import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { cleanupUploadedFileByName } from "@helpers/UploadedFileCleanupHelper";
 
-test.describe("Admin - API Building Additional Information @extended @api", () => {
+test.describe("Admin - API Building Additional Information @regression", () => {
   const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[BAI-001] - API Admin Building Additional Information - CRUD Lifecycle - Legal Authority Amenity Supplier and Planning Map Flow", async ({

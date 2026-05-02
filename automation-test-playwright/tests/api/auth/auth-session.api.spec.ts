@@ -18,7 +18,7 @@ const scenarios: RoleScenario[] = [
   { role: "customer", expectedRoleCode: "CUSTOMER" }
 ];
 
-test.describe("Auth - API REST Session @regression @api", () => {
+test.describe("Auth - API REST Session @regression", () => {
   for (const scenario of scenarios) {
     test(`[API-AUTH-REST-${scenario.expectedRoleCode}] - API Auth Session - Session Flow - Login Me and Logout with Session Cookie @smoke`, async ({
       anonymousApi

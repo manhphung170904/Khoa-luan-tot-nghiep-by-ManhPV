@@ -32,7 +32,7 @@ function nextMonthDueDate(month: number, year: number, day = 20): string {
   return `${dueYear}-${String(dueMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-test.describe("Admin - Invoice Management @regression @e2e", () => {
+test.describe("Admin - Invoice Management @regression", () => {
   let adminUser: TempStaffProfileUser | null = null;
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
@@ -210,7 +210,8 @@ test.describe("Admin - Invoice Management @regression @e2e", () => {
     createdInvoices = createdInvoices.filter((item) => item.id !== invoice.id);
   });
 
-  test("[E2E-ADM-INV-007] - Admin Invoice Management - Status Update - Overdue Status Refresh from List", async ({ page, adminApi }) => {
+  // The UI action calls a global status refresh endpoint, so it is not safe for shared regression data.
+  test.skip("[E2E-ADM-INV-007] - Admin Invoice Management - Status Update - Overdue Status Refresh from List", async ({ page, adminApi }) => {
     const activeContract = requireContract(contract);
 
     const invoice = await createManagedInvoiceForContract(adminApi, activeContract);

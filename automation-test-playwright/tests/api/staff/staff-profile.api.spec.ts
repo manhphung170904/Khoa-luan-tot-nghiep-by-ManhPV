@@ -13,7 +13,7 @@ import {
   type TempProfileUser
 } from "@data/tempProfileScenario";
 
-test.describe("Staff - API Profile @api @api-write @destructive @otp @regression", () => {
+test.describe("Staff - API Profile @regression", () => {
   let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let staffContext: APIRequestContext;
   let tempStaff: TempProfileUser;

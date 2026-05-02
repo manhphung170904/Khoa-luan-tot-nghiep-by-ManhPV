@@ -8,7 +8,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin - Report @regression @e2e", () => {
+test.describe("Admin - Report @regression", () => {
   let adminUser: TempStaffProfileUser | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {

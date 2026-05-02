@@ -7,7 +7,7 @@ import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempContract = Awaited<ReturnType<typeof createTempContractScenario>>;
 
-test.describe("Customer - Transaction History @regression @e2e", () => {
+test.describe("Customer - Transaction History @regression", () => {
   let tempContract: TempContract | null = null;
   let invoiceId: number | null = null;
   let invoiceMonth = 0;

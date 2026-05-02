@@ -6,7 +6,9 @@ import { TestDbRepository } from "@db/repositories";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
-test.describe("Customer - API Property Request @regression @api", () => {
+test.describe("Customer - API Property Request @regression", () => {
+  const missingSmallId = TestDataFactory.missingSmallId;
+
   test.afterAll(async () => {
   });
 
@@ -16,7 +18,7 @@ test.describe("Customer - API Property Request @regression @api", () => {
       const response = await context.post("/api/v1/customer/property-requests", {
         failOnStatusCode: false,
         maxRedirects: 0,
-        data: TestDataFactory.buildPropertyRequestPayload()
+        data: TestDataFactory.buildPropertyRequestPayload({ buildingId: missingSmallId })
       });
 
       await expectApiErrorBody(response, {
@@ -64,7 +66,7 @@ test.describe("Customer - API Property Request @regression @api", () => {
     expect(createdRequest?.requestType).toBe("RENT");
   });
 
-  test("[API-CUS-PRQ-004] - API Customer Property Request - Pending Request - Duplicate Submission Rejection @extended", async ({ playwright, cleanupRegistry }) => {
+  test("[API-CUS-PRQ-004] - API Customer Property Request - Pending Request - Duplicate Submission Rejection", async ({ playwright, cleanupRegistry }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT", cleanupRegistry);
     const duplicateResponse = await scenario.customer.post("/api/v1/customer/property-requests", {
         failOnStatusCode: false,

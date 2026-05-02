@@ -15,7 +15,7 @@ type AuthUser = {
   fullName: string;
 };
 
-test.describe("Auth - API Web Flow @api @api-write @destructive @otp @regression", () => {
+test.describe("Auth - API Web Flow @regression", () => {
   test.describe.configure({ mode: "serial" });
 
   let validLocalEmail = "";
@@ -106,7 +106,7 @@ test.describe("Auth - API Web Flow @api @api-write @destructive @otp @regression
     expect(response.headers().location).toContain("/login-success");
   }
 
-  test.describe("Auth - API Login and Authentication @api", () => {
+  test.describe("Auth - API Login and Authentication", () => {
     test("[API-TC-001] - API Authentication - Login - Valid Credentials Return JWT Cookie and Redirect @smoke", async ({
       request
     }) => {
@@ -151,7 +151,7 @@ test.describe("Auth - API Web Flow @api @api-write @destructive @otp @regression
     });
   });
 
-  test.describe("Auth - API Registration and Database Verification @api", () => {
+  test.describe("Auth - API Registration and Database Verification", () => {
     test("[API-TC-004] - API Authentication - Registration OTP - OTP Generation and Pending Verification Persistence", async ({
       request,
       cleanupRegistry
@@ -174,7 +174,7 @@ test.describe("Auth - API Web Flow @api @api-write @destructive @otp @regression
 
     });
 
-    test("[API-TC-005] - API Authentication - Registration OTP - Official Test Hook Verification @extended", async ({
+    test("[API-TC-005] - API Authentication - Registration OTP - Official Test Hook Verification", async ({
       request,
       cleanupRegistry
     }) => {
@@ -279,7 +279,7 @@ test.describe("Auth - API Web Flow @api @api-write @destructive @otp @regression
     });
   });
 
-  test.describe("Auth - API Forgot Password and Reset @api", () => {
+  test.describe("Auth - API Forgot Password and Reset", () => {
     test("[API-TC-008] - API Authentication - Forgot Password - OTP Generation and Database Persistence", async ({
       request
     }) => {
@@ -310,7 +310,7 @@ test.describe("Auth - API Web Flow @api @api-write @destructive @otp @regression
       }
     });
 
-    test("[API-TC-009] - API Authentication - Password Reset - Invalid OTP Rejection @extended", async ({ request }) => {
+    test("[API-TC-009] - API Authentication - Password Reset - Invalid OTP Rejection", async ({ request }) => {
       expect(validLocalEmail).toBeTruthy();
       const baselineVerificationId = await ApiOtpHelper.latestVerificationId(validLocalEmail, "RESET_PASSWORD");
       try {
@@ -391,7 +391,7 @@ test.describe("Auth - API Web Flow @api @api-write @destructive @otp @regression
     });
   });
 
-  test.describe("Auth - API Logout @api", () => {
+  test.describe("Auth - API Logout", () => {
     test("[API-TC-010] - API Authentication - Logout - Authentication Cookie Clearance and Login Redirect @smoke", async ({
       request
     }) => {

@@ -5,7 +5,7 @@ import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Invoice @regression @api", () => {
+test.describe("Admin - API Invoice @regression", () => {
   const missingSmallId = TestDataFactory.missingSmallId;
   const invoiceStatus = TestDataFactory.invoiceStatus;
   const invoiceAmount = TestDataFactory.testAmount;
@@ -64,7 +64,10 @@ test.describe("Admin - API Invoice @regression @api", () => {
   test("[INV-001] - API Admin Invoice - Authentication - Create Invoice Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/invoices", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildInvoicePayload()
+      data: TestDataFactory.buildInvoicePayload({
+        contractId: missingSmallId,
+        customerId: missingSmallId
+      })
     });
     await expectApiErrorBody(response, {
       status: 401,
@@ -74,7 +77,13 @@ test.describe("Admin - API Invoice @regression @api", () => {
   });
 
   test("[INV-002] - API Admin Invoice - Invoice Month - Invalid Format Validation", async ({ invoiceApi }) => {
-    const response = await invoiceApi.createAsAdmin({ ...TestDataFactory.buildInvoicePayload(), month: "Muoi Hai" });
+    const response = await invoiceApi.createAsAdmin({
+      ...TestDataFactory.buildInvoicePayload({
+        contractId: missingSmallId,
+        customerId: missingSmallId
+      }),
+      month: "Muoi Hai"
+    });
     const errorBody = await expectApiErrorBody<{ message?: string; errors?: Array<{ field?: string }> }>(response, {
       status: 400,
       code: "BAD_REQUEST",
@@ -210,7 +219,8 @@ test.describe("Admin - API Invoice @regression @api", () => {
     });
   });
 
-  test("[INV-018] - API Admin Invoice - Status Update - Overdue Invoice Status Marking", async ({ adminApi: admin, invoiceApi }) => {
+  // The status refresh endpoint updates every overdue pending invoice in the database.
+  test.skip("[INV-018] - API Admin Invoice - Status Update - Overdue Invoice Status Marking", async ({ adminApi: admin, invoiceApi }) => {
     const tempContract = await TempEntityHelper.taoContractTam(admin);
     let createdInvoiceId = 0;
 
@@ -376,13 +386,6 @@ test.describe("Admin - API Invoice @regression @api", () => {
       );
       expect(Number(unchangedRows[0]!.total_amount)).toBe(invoiceAmount.adminInvoiceUpdateTotal);
       expect(unchangedRows[0]!.status).toBe(invoiceStatus.paid);
-
-      const statusUpdateResponse = await invoiceApi.updateStatusAsAdmin();
-      await expectApiMessage(statusUpdateResponse, {
-        status: 200,
-        message: apiExpectedMessages.admin.invoices.updateStatus,
-        dataMode: "null"
-      });
 
       const deleteResponse = await invoiceApi.deleteAsAdmin(createdInvoiceId);
       await expectApiMessage(deleteResponse, {

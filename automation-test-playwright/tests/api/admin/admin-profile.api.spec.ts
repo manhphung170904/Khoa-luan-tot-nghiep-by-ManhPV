@@ -19,7 +19,7 @@ type ExistingIdentity = {
   phone: string;
 };
 
-test.describe("Admin - API Profile @api @api-write @destructive @otp @regression", () => {
+test.describe("Admin - API Profile @regression", () => {
   let profileScenario: AuthenticatedTempProfileScenario | undefined;
   let tempAdminContext: APIRequestContext;
   let tempAdmin: TempProfileUser;

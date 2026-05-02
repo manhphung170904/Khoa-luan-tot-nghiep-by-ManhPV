@@ -2,8 +2,8 @@ import { expect, test } from "@fixtures/api.fixture";
 import { expectArrayBody, expectObjectBody, expectPageBody } from "@api/apiContractUtils";
 import { TestDbRepository } from "@db/repositories";
 
-test.describe("Public - API Building @api @api-read @regression", () => {
-  test.describe("GET /api/v1/public/buildings @api", () => {
+test.describe("Public - API Building @regression", () => {
+  test.describe("GET /api/v1/public/buildings", () => {
     test("[API-TC-026] - API Public Building - Search - Database Matched Search Results @smoke", async ({
       anonymousApi
     }) => {
@@ -44,7 +44,7 @@ test.describe("Public - API Building @api @api-read @regression", () => {
       }
     });
 
-    test("[API-TC-027] - API Public Building - Property Type Filter - Invalid Value Returns Empty Result @extended", async ({
+    test("[API-TC-027] - API Public Building - Property Type Filter - Invalid Value Returns Empty Result", async ({
       anonymousApi
     }) => {
       const response = await anonymousApi.get("/api/v1/public/buildings", {

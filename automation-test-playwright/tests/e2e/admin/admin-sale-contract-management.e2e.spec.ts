@@ -18,7 +18,7 @@ type TempCustomer = Awaited<ReturnType<typeof TempEntityHelper.taoCustomerTam>>;
 type TempBuilding = Awaited<ReturnType<typeof TempEntityHelper.taoBuildingTam>>;
 type TempSaleContract = Awaited<ReturnType<typeof TempEntityHelper.taoSaleContractTam>>;
 
-test.describe("Admin - Sale Contract Management @regression @e2e", () => {
+test.describe("Admin - Sale Contract Management @regression", () => {
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupSaleContractIds = new Set<number>();
   const cleanupCustomerIds = new Set<number>();

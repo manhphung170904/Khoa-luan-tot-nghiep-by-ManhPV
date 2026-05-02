@@ -5,7 +5,7 @@ import { TestDbRepository } from "@db/repositories";
 import { cleanupStaffInvoiceById, createStaffInvoiceScenario } from "@data/staffInvoiceScenario";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Staff - API Invoice @regression @api", () => {
+test.describe("Staff - API Invoice @regression", () => {
   test("[API-STF-INV-001] - API Staff Invoice - Authentication - Anonymous Create Access Rejection", async ({ playwright, anonymousApi, cleanupRegistry }) => {
     const scenario = await createStaffInvoiceScenario(playwright, cleanupRegistry);
 

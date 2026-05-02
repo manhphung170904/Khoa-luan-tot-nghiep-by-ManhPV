@@ -18,7 +18,7 @@ function requireContract(contract: TempContract | null): TempContract {
   return contract!;
 }
 
-test.describe("Customer - Invoice Payment @regression @e2e", () => {
+test.describe("Customer - Invoice Payment @regression", () => {
   let contract: TempContract | null = null;
   let createdInvoices: TempInvoiceRecord[] = [];
 

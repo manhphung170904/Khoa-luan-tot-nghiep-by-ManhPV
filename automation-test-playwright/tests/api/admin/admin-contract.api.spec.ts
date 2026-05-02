@@ -5,14 +5,18 @@ import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Contract @api @api-write @destructive @regression", () => {
+test.describe("Admin - API Contract @regression", () => {
   const missingId = TestDataFactory.missingId;
   const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[CTR-001] - API Admin Contract - Authentication - Create Contract Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildContractPayload()
+      data: TestDataFactory.buildContractPayload({
+        customerId: missingSmallId,
+        buildingId: missingSmallId,
+        staffId: missingSmallId
+      })
     });
     await expectApiErrorBody(response, {
       status: 401,
@@ -21,8 +25,16 @@ test.describe("Admin - API Contract @api @api-write @destructive @regression", (
     });
   });
 
-  test("[CTR-002] - API Admin Contract - Rent Price - Negative Value Validation", async ({ adminApi }) => {
-    const payload = TestDataFactory.buildContractPayload({ rentPrice: -5 });
+  test("[CTR-002] - API Admin Contract - Rent Price - Negative Value Validation", async ({ adminApi, cleanupRegistry }) => {
+    const temp = await TempEntityHelper.taoContractTam(adminApi);
+    cleanupRegistry.addLabeled(`Delete contract scenario ${temp.id}`, () => TempEntityHelper.xoaContractTam(adminApi, temp));
+
+    const payload = TestDataFactory.buildContractPayload({
+      customerId: temp.customer.id,
+      buildingId: temp.building.id,
+      staffId: temp.staff.id,
+      rentPrice: -5
+    });
     const response = await adminApi.post("/api/v1/admin/contracts", {
       failOnStatusCode: false,
       data: payload
@@ -225,7 +237,7 @@ test.describe("Admin - API Contract @api @api-write @destructive @regression", (
     expect(errorBody.message).toMatch(/contract|h?p d?ng|khng t?n t?i|khng tm th?y|not found/i);
   });
 
-  test("[CTR-006] - API Admin Contract - Contract Lifecycle - Create List Filter Update Status Update and Delete Flow", async ({
+  test("[CTR-006] - API Admin Contract - Contract Lifecycle - Create List Filter Update and Delete Flow", async ({
     adminApi,
     cleanupRegistry
   }) => {
@@ -324,15 +336,6 @@ test.describe("Admin - API Contract @api @api-write @destructive @regression", (
       );
       expect(Number(updatedRows[0]!.rent_price)).toBe(30.5);
       expect(updatedRows[0]!.status).toBe("EXPIRED");
-
-      const statusUpdateResponse = await adminApi.put("/api/v1/admin/contracts/status", {
-        failOnStatusCode: false
-      });
-      await expectApiMessage(statusUpdateResponse, {
-        status: 200,
-        message: apiExpectedMessages.admin.contracts.updateStatus,
-        dataMode: "null"
-      });
 
       const missingDelete = await adminApi.delete(`/api/v1/admin/contracts/${missingSmallId}`, {
         failOnStatusCode: false

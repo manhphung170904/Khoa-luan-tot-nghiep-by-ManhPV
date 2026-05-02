@@ -31,6 +31,7 @@ Muc tieu cua repository:
 |       `-- playwright.yml
 |-- automation-test-playwright/
 |   |-- config/
+|   |-- docs/
 |   |-- fixtures/
 |   |-- pages/
 |   |-- test-data/
@@ -152,4 +153,7 @@ Tren GitHub Actions, cac bao cao duoc upload tai muc Artifacts cua tung workflow
 
 - `moonNest-main/README.md`: huong dan chay ung dung MoonNest.
 - `automation-test-playwright/README.md`: huong dan su dung framework Playwright.
-- `automation-test-playwright/docs/`: tai lieu kien truc, reporting va coverage.
+- `automation-test-playwright/docs/framework-overview.md`: tong quan kien truc framework.
+- `automation-test-playwright/docs/test-strategy.md`: chien luoc kiem thu va pham vi bao phu.
+- `automation-test-playwright/docs/execution-reporting-ci.md`: cach chay test, report va CI.
+- `automation-test-playwright/docs/thesis-evaluation-checklist.md`: checklist danh gia cho khoa luan.

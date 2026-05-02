@@ -15,7 +15,7 @@ const readOnlyModules: ReadonlyModule[] = [
   { id: "API-STF-READ-005", name: "Invoice", path: "/api/v1/staff/invoices?page=1&size=5" }
 ];
 
-test.describe("Staff - API Read-Only @regression @api", () => {
+test.describe("Staff - API Read-Only @regression", () => {
   for (const module of readOnlyModules) {
     test(`[${module.id}] - API Staff Read-Only - Authentication - Anonymous Access Rejection @smoke`, async ({ anonymousApi }) => {
       const response = await anonymousApi.get(module.path, { failOnStatusCode: false, maxRedirects: 0 });
@@ -47,7 +47,7 @@ test.describe("Staff - API Read-Only @regression @api", () => {
       }
     });
 
-    test(`[${module.id}] - API Staff Read-Only - Write Path - Unsupported Synthetic Write Rejection @extended`, async ({ staffApi }) => {
+    test(`[${module.id}] - API Staff Read-Only - Write Path - Unsupported Synthetic Write Rejection`, async ({ staffApi }) => {
       const response = await staffApi.post(`${module.path}/add`, {
         failOnStatusCode: false,
         maxRedirects: 0,

@@ -7,7 +7,7 @@ import { CustomerPropertyRequestListPage } from "@pages/customer/CustomerPropert
 import { createPropertyRequestScenario, type PropertyRequestScenario } from "@data/propertyRequestScenario";
 import { loginAsTempUser } from "@data/profileTempUsers";
 
-test.describe("Customer - Property Request @regression @e2e", () => {
+test.describe("Customer - Property Request @regression", () => {
   let scenario: PropertyRequestScenario | null = null;
   let createdContractId = 0;
 

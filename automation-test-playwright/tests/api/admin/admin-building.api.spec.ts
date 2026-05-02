@@ -8,7 +8,7 @@ import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { cleanupUploadedFileByName } from "@helpers/UploadedFileCleanupHelper";
 
-test.describe("Admin - API Building @regression @api", () => {
+test.describe("Admin - API Building @regression", () => {
   const missingId = TestDataFactory.missingId;
   const missingSmallId = TestDataFactory.missingSmallId;
 
@@ -27,7 +27,7 @@ test.describe("Admin - API Building @regression @api", () => {
     staffIds: []
   }) as Record<string, unknown>;
 
-  test.describe("CRUD Building @api", () => {
+  test.describe("CRUD Building", () => {
     test("[BLD-001] - API Admin Building - Authentication - Create Building Without Login Rejection", async ({ request }) => {
       const response = await request.post("/api/v1/admin/buildings", {
         failOnStatusCode: false,
@@ -235,7 +235,7 @@ test.describe("Admin - API Building @regression @api", () => {
       expectLooseApiText(errorBody.message, /building|toa nha|bat dong san|khong ton tai|khong tim thay|not found/i);
     });
 
-    test.describe("Created Building Lifecycle @api", () => {
+    test.describe("Created Building Lifecycle", () => {
       test("[BLD-004] - API Admin Building - Create Building - Successful Creation and Database Persistence", async ({ adminBuildingApi }) => {
         const payload = {
           ...validPayload,
@@ -414,7 +414,7 @@ test.describe("Admin - API Building @regression @api", () => {
     });
   });
 
-  test.describe("Image Upload @api", () => {
+  test.describe("Image Upload", () => {
     test("[BLD-U01] - API Admin Building Image - Authentication - Upload Without Login Rejection", async ({ request }) => {
       const response = await request.post("/api/v1/admin/buildings/image", {
         failOnStatusCode: false,

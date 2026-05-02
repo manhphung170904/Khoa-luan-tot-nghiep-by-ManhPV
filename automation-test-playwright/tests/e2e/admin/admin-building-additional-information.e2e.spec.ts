@@ -31,7 +31,7 @@ async function deleteAdditionalRecord(adminApi: APIRequestContext, type: Additio
   });
 }
 
-test.describe("Admin - Building Additional Information @regression @e2e", () => {
+test.describe("Admin - Building Additional Information @regression", () => {
   let adminUser: TempStaffProfileUser | null = null;
   let buildingId: number | null = null;
   let buildingName = "";

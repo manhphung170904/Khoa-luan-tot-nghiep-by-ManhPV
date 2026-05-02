@@ -1,48 +1,42 @@
-# Framework Playwright cho MoonNest
+# MoonNest Playwright Automation Framework
 
-## 1. Muc tieu
-Day la framework kiem thu tu dong bang Playwright + TypeScript duoc tach rieng cho he thong MoonNest. Framework duoc thiet ke de dung cho du an that te va trinh bay trong luan van tot nghiep, nen uu tien:
-- cau truc ro rang
-- tai su dung cao
-- de bao tri
-- de mo rong theo module va theo loai test
+Framework nay dung Playwright + TypeScript de kiem thu tu dong he thong MoonNest. Muc tieu chinh la kiem thu API, kiem thu giao dien E2E, tao bao cao ket qua va cung cap bang chung ky thuat cho khoa luan tot nghiep.
 
-## 2. Cau truc thu muc hien tai
+## 1. Muc Tieu
+
+- Xay dung framework automation test co cau truc ro rang.
+- Tach rieng test layer, page layer, fixture, helper va test data.
+- Ho tro kiem thu API va E2E tren cac vai tro admin, staff, customer va public user.
+- Co co che tao va don du lieu test an toan.
+- Co report HTML, JUnit, screenshot, video va trace khi loi.
+- Co the chay local va tren GitHub Actions CI.
+
+## 2. Cau Truc Thu Muc
 
 ```text
-repo-root/
-|-- .github/
-|   `-- workflows/
-|-- automation-test-playwright/
-|       `-- playwright.yml
+automation-test-playwright/
 |-- config/
 |   |-- env.ts
 |   |-- global-setup.ts
 |   `-- global-teardown.ts
 |-- docs/
-|   |-- api-coverage-matrix.md
-|   |-- architecture.md
-|   |-- huong-dan-framework.md
-|   `-- playwright-reporting.md
-|-- .runtime/
+|   |-- framework-overview.md
+|   |-- test-strategy.md
+|   |-- execution-reporting-ci.md
+|   `-- thesis-evaluation-checklist.md
 |-- fixtures/
 |   |-- api.fixture.ts
-|   `-- base.fixture.ts
+|   |-- base.fixture.ts
+|   `-- support/
 |-- pages/
 |   |-- admin/
 |   |-- auth/
+|   |-- components/
 |   |-- core/
 |   |-- customer/
 |   |-- public/
 |   `-- staff/
 |-- test-data/
-|   |-- files/
-|   |-- environments/
-|   |-- invoiceTempData.ts
-|   |-- profileTempUsers.ts
-|   |-- propertyRequestScenario.ts
-|   |-- staffInvoiceScenario.ts
-|   `-- tempProfileScenario.ts
 |-- tests/
 |   |-- api/
 |   `-- e2e/
@@ -56,86 +50,89 @@ repo-root/
 `-- tsconfig.json
 ```
 
-## 3. Y nghia tung nhom thu muc
-- `pages/`: chua Page Object Model theo module nghiep vu.
-- `pages/core/`: chua BasePage, shell page, routed page, CRUD base page.
-- `tests/api/`: test endpoint va response.
-- `tests/e2e/`: test hanh trinh nguoi dung dau cuoi.
-- `fixtures/`: Playwright fixture dung chung cho API va E2E.
-- `utils/helpers/`: helper dung chung cho session, cleanup, bootstrap data, va utility phu tro.
-- `utils/api/`: helper API, endpoint catalog, contract utility.
-- `utils/db/`: ket noi va truy van DB phuc vu xac minh du lieu.
-- `test-data/`: file fixture, data theo moi truong va helper/scenario du lieu dung chung cho test.
-- `config/`: cau hinh moi truong, retry, setup/teardown.
-- `.runtime/`: luu ket qua chay, screenshot, trace, video, HTML report, JUnit report.
+## 3. Thanh Phan Chinh
 
-## 4. Nhung thanh phan da du cho mot framework day du
-- Phan tach test theo 2 nhom chinh: API va E2E.
-- POM theo module nghiep vu.
-- Helper chung cho session, cleanup, va bootstrap du lieu test.
-- Fixture chung cho API va E2E de tai su dung context/session.
-- Co `global setup / teardown`.
-- Co config moi truong `local / dev / test / staging`.
-- Co retry theo nhom test.
-- Co report HTML, JUnit, screenshot, video, trace.
-- Co workflow CI bang GitHub Actions.
-- Co tai lieu van hanh bang tieng Viet.
+- `tests/api/`: kiem thu endpoint, status code, body contract, authorization va business rule.
+- `tests/e2e/`: kiem thu luong nguoi dung tren giao dien.
+- `pages/`: Page Object Model theo man hinh va module nghiep vu.
+- `fixtures/`: khoi tao API context theo role, page object dung chung, metadata va cleanup registry.
+- `utils/api/`: API client, helper session, assertion response va endpoint catalog.
+- `utils/db/`: truy van MySQL de xac minh va don du lieu test.
+- `utils/helpers/`: tao du lieu dong, quan ly session, cleanup file upload va helper dung chung.
+- `test-data/`: data theo moi truong va scenario dung lai trong test.
+- `config/`: cau hinh moi truong, global setup, global teardown va runtime path.
+- `.runtime/`: output sinh ra khi chay test, khong commit vao repository.
 
-## 5. Lenh su dung chinh
-```bash
+## 4. Quy Mo Kiem Thu Hien Tai
+
+- Khoang 50 spec file.
+- Khoang 174 API test.
+- Khoang 123 E2E test.
+- Cac nhom test chinh: admin, staff, customer, auth, public, payment.
+- Cac tag su dung trong test title chi gom `@smoke` va `@regression`.
+
+## 5. Cai Dat Va Chay Test
+
+```powershell
+cd automation-test-playwright
 npm install
 npx playwright install chromium
 npm run typecheck
-npm run test
 ```
 
-## 5.1. Che do an toan du lieu
-- Cac test co nguy co sua/xoa du lieu duoc gan tag `@destructive`.
-- Dung cac lenh `:safe` hoac `test:ci` de loai bo `@destructive` khi chay tren CI hoac moi truong khong duoc phep ghi du lieu.
-- Chi chay `@destructive` khi dang o moi truong test rieng, khong dung cho tai khoan that.
+Chay cac bo test thuong dung:
 
-Chay an toan:
-```bash
-npm run test:safe
-npm run test:api:safe
-npm run test:regression:safe
-```
-
-Chay destructive co chu y:
-```bash
-npm run test:api:destructive
-```
-
-Cac lenh thuong dung:
-```bash
+```powershell
 npm run test:api
-npm run test:api:safe
 npm run test:e2e
-npm run test:regression
-npm run test:regression:safe
 npm run test:smoke
+npm run test:regression
 npm run test:ci
+```
+
+Tren Windows, neu PowerShell chan `npm` do Execution Policy, co the dung:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run test:ci
+```
+
+## 6. Che Do An Toan Du Lieu
+
+Framework khong dung tag rieng cho destructive/safe test. An toan du lieu duoc quan ly bang moi truong test rieng, `TestDataFactory`, `runToken`, cleanup registry va `global-teardown.ts`.
+
+Khong chay automation test tren database that hoac tai khoan that. Cac test co tao/sua/xoa du lieu phai tao du lieu dong co `runToken` va co co che cleanup.
+
+## 7. Bao Cao
+
+Ket qua test duoc luu tai:
+
+```text
+.runtime/playwright-report
+.runtime/test-results
+.runtime/junit
+```
+
+Mo HTML report:
+
+```powershell
 npm run report:open
 ```
 
-## 6. Luong session va fixture
-Framework hien uu tien fixture de cap `adminApi`, `staffApi`, `customerApi`, `anonymousApi` cho API suite va page fixture thuc su dang duoc dung nhu `publicPage` cho E2E suite. Cach nay giup test dung chung logic dang nhap, cleanup, va mo rong framework ma khong phai lap lai `newContext()` trong tung file.
+Khi test loi, framework co the luu screenshot, video, trace va API response debug attachment tuy theo project/cau hinh.
 
-## 7. Quy uoc quan trong
-- Moi test case phai giu `Test ID` va `Test Name`.
-- Moi page object chi nen dai dien cho mot man hinh hoac mot khu vuc chuc nang ro rang.
-- Uu tien locator theo thu tu: `data-testid -> id -> name -> fallback`.
-- Test API/E2E phai co tag lop `@api` hoac `@e2e`; test mutation/destructive phai gan `@destructive`.
-- Test data dong phai duoc tao qua `TestDataFactory` de co `runToken` trong ten/email/username.
-- Khong viet logic nghiep vu vao POM.
-- Khong hard-code du lieu moi trong test neu co the dua vao `test-data/` hoac `TestDataFactory`.
+## 8. Quy Uoc Viet Test
 
-## 8. Gia tri cho luan van
-Framework nay the hien duoc:
-- cach thiet ke framework tu dong hoa co cau truc
-- cach tach biet test layer va page layer
-- chien luoc regression va E2E
-- bao cao ket qua chay test va kha nang mo rong sau nay
+- Moi test case nen co Test ID trong title, vi du `[API-TC-001]`.
+- Chi su dung hai tag trong title: `@smoke` va `@regression`.
+- API/E2E duoc phan loai bang thu muc `tests/api`, `tests/e2e` va Playwright project, khong can tag rieng.
+- Test data dong nen tao qua `TestDataFactory`.
+- Page object chi chua thao tac giao dien va locator, khong chua business assertion phuc tap.
+- Uu tien locator on dinh: `data-testid`, `id`, `name`, sau do moi dung fallback text/CSS.
 
-Tai lieu kien truc xem them trong `docs/architecture.md`.
-Tai lieu chi tiet xem them trong `docs/huong-dan-framework.md`.
+## 9. Tai Lieu Trong Docs
+
+- `docs/framework-overview.md`: kien truc framework va vai tro tung thanh phan.
+- `docs/test-strategy.md`: chien luoc test, pham vi bao phu va quy uoc tag.
+- `docs/execution-reporting-ci.md`: cach chay test, doc report va luong CI.
+- `docs/thesis-evaluation-checklist.md`: checklist danh gia muc do san sang cho khoa luan.

@@ -10,7 +10,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin - Dashboard @regression @e2e", () => {
+test.describe("Admin - Dashboard @regression", () => {
   let adminUser: TempStaffProfileUser | null = null;
   let tempBuildingId: number | null = null;
   let tempBuildingName = "";

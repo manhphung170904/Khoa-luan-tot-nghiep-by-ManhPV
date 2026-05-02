@@ -87,7 +87,7 @@ const normalizeExpectedText = (value: string): string =>
     .replace(/Đ/g, "D")
     .toLowerCase();
 
-test.describe("Public - Building Browsing @regression @e2e", () => {
+test.describe("Public - Building Browsing @regression", () => {
   test.beforeEach(async ({ publicPage }) => {
     await publicPage.open();
     await publicPage.expectResultsLoaded();

@@ -17,7 +17,7 @@ function requireTempUser(tempUser: TempStaffProfileUser | null): TempStaffProfil
   return tempUser!;
 }
 
-test.describe("Staff - Profile @regression @e2e", () => {
+test.describe("Staff - Profile @regression", () => {
   let tempUser: TempStaffProfileUser | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {

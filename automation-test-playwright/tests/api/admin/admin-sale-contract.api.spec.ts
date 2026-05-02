@@ -6,14 +6,18 @@ import { TempEntityCleanupService } from "@helpers/TempEntityCleanupService";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Sale Contract @regression @api", () => {
+test.describe("Admin - API Sale Contract @regression", () => {
   const missingId = TestDataFactory.missingId;
   const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[SC-001] - API Admin Sale Contract - Authentication - Create Sale Contract Without Login Rejection", async ({ request }) => {
     const response = await request.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
-      data: TestDataFactory.buildSaleContractPayload()
+      data: TestDataFactory.buildSaleContractPayload({
+        buildingId: missingSmallId,
+        customerId: missingSmallId,
+        staffId: missingSmallId
+      })
     });
     await expectApiErrorBody(response, {
       status: 401,
@@ -22,8 +26,28 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
     });
   });
 
-  test("[SC-002] - API Admin Sale Contract - Sale Price - Zero Value Validation", async ({ adminApi: admin }) => {
-    const payload = TestDataFactory.buildSaleContractPayload({ salePrice: 0 });
+  test("[SC-002] - API Admin Sale Contract - Sale Price - Zero Value Validation", async ({ adminApi: admin, cleanupRegistry }) => {
+    const tempStaff = await TempEntityHelper.taoStaffTam(admin);
+    const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
+    const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
+    await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
+    await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
+    );
+
+    const payload = TestDataFactory.buildSaleContractPayload({
+      buildingId: tempBuilding.id,
+      customerId: tempCustomer.id,
+      staffId: tempStaff.id,
+      salePrice: 0
+    });
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
       data: payload
@@ -38,8 +62,28 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
     expect(Number(rows[0]?.count ?? 0)).toBe(0);
   });
 
-  test("[SC-012] - API Admin Sale Contract - Sale Price - Negative Value Validation", async ({ adminApi: admin }) => {
-    const payload = TestDataFactory.buildSaleContractPayload({ salePrice: -1 });
+  test("[SC-012] - API Admin Sale Contract - Sale Price - Negative Value Validation", async ({ adminApi: admin, cleanupRegistry }) => {
+    const tempStaff = await TempEntityHelper.taoStaffTam(admin);
+    const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
+    const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
+    await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
+    await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
+    );
+
+    const payload = TestDataFactory.buildSaleContractPayload({
+      buildingId: tempBuilding.id,
+      customerId: tempCustomer.id,
+      staffId: tempStaff.id,
+      salePrice: -1
+    });
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
       data: payload
@@ -55,7 +99,11 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
   });
 
   test("[SC-010] - API Admin Sale Contract - Building Reference - Missing Building Validation", async ({ adminApi: admin }) => {
-    const invalidPayload = TestDataFactory.buildSaleContractPayload() as Record<string, unknown>;
+    const invalidPayload = TestDataFactory.buildSaleContractPayload({
+      buildingId: missingSmallId,
+      customerId: missingSmallId,
+      staffId: missingSmallId
+    }) as Record<string, unknown>;
     delete invalidPayload.buildingId;
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
@@ -66,7 +114,11 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
   });
 
   test("[SC-011] - API Admin Sale Contract - Customer Reference - Missing Customer Validation", async ({ adminApi: admin }) => {
-    const invalidPayload = TestDataFactory.buildSaleContractPayload() as Record<string, unknown>;
+    const invalidPayload = TestDataFactory.buildSaleContractPayload({
+      buildingId: missingSmallId,
+      customerId: missingSmallId,
+      staffId: missingSmallId
+    }) as Record<string, unknown>;
     delete invalidPayload.customerId;
     const response = await admin.post("/api/v1/admin/sale-contracts", {
       failOnStatusCode: false,
@@ -396,13 +448,28 @@ test.describe("Admin - API Sale Contract @regression @api", () => {
     createdSaleContractId = 0;
   });
 
-  test("[SC-017] - API Admin Sale Contract - Update Sale Contract - Nonexistent ID Rejection", async ({ adminApi: admin }) => {
+  test("[SC-017] - API Admin Sale Contract - Update Sale Contract - Nonexistent ID Rejection", async ({ adminApi: admin, cleanupRegistry }) => {
+    const tempStaff = await TempEntityHelper.taoStaffTam(admin);
+    const tempBuilding = await TempEntityHelper.taoBuildingTam(admin, "FOR_SALE");
+    const tempCustomer = await TempEntityHelper.taoCustomerTam(admin, tempStaff.id);
+    await TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, [tempBuilding.id]);
+    await TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, [tempCustomer.id]);
+    cleanupRegistry.addLabeled(`Delete staff ${tempStaff.id}`, () => TempEntityHelper.xoaStaffTam(admin, tempStaff.id));
+    cleanupRegistry.addLabeled(`Delete building ${tempBuilding.id}`, () => TempEntityHelper.xoaBuildingTam(admin, tempBuilding.id));
+    cleanupRegistry.addLabeled(`Delete customer ${tempCustomer.id}`, () => TempEntityHelper.xoaCustomerTam(admin, tempCustomer.id));
+    cleanupRegistry.addLabeled(`Reset building assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongBuilding(admin, tempStaff.id, []))
+    );
+    cleanupRegistry.addLabeled(`Reset customer assignments for staff ${tempStaff.id}`, () =>
+      TempEntityCleanupService.safe(() => TempEntityHelper.capNhatPhanCongCustomer(admin, tempStaff.id, []))
+    );
+
     const response = await admin.put(`/api/v1/admin/sale-contracts/${missingId}`, {
       failOnStatusCode: false,
       data: TestDataFactory.buildSaleContractPayload({
-        buildingId: 1,
-        customerId: 1,
-        staffId: 1,
+        buildingId: tempBuilding.id,
+        customerId: tempCustomer.id,
+        staffId: tempStaff.id,
         transferDate: "2026-06-16"
       })
     });

@@ -13,7 +13,7 @@ import {
   type TempStaffProfileUser
 } from "@data/profileTempUsers";
 
-test.describe("Admin - Staff Management @regression @e2e", () => {
+test.describe("Admin - Staff Management @regression", () => {
   let adminUser: TempStaffProfileUser | null = null;
   const cleanupStaffIds = new Set<number>();
   const cleanupBuildingIds = new Set<number>();

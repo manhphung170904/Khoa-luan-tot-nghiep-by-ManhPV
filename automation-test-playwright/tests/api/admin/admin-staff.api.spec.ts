@@ -5,7 +5,7 @@ import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Staff @regression @api", () => {
+test.describe("Admin - API Staff @regression", () => {
   const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[STF-001] - API Admin Staff - Authentication - Create Staff Without Login Rejection", async ({ request }) => {
@@ -87,25 +87,32 @@ test.describe("Admin - API Staff @regression @api", () => {
 
   test("[STF-015] - API Admin Staff - Username - Minimum Length Boundary Acceptance", async ({ adminApi: admin }) => {
     const username = TestDataFactory.taoUsername("ab").slice(0, 4);
+    let createdStaffId = 0;
     const payload = TestDataFactory.buildAdminStaffPayload({
       username,
       email: TestDataFactory.taoEmail("pw-staff-bnd4"),
       phone: TestDataFactory.taoSoDienThoai()
     });
 
-    const response = await admin.post("/api/v1/admin/staff", {
-      failOnStatusCode: false,
-      data: payload
-    });
-    await expectApiMessage(response, {
-      status: 200,
-      message: apiExpectedMessages.admin.staff.create,
-      dataMode: "null"
-    });
+    try {
+      const response = await admin.post("/api/v1/admin/staff", {
+        failOnStatusCode: false,
+        data: payload
+      });
+      await expectApiMessage(response, {
+        status: 200,
+        message: apiExpectedMessages.admin.staff.create,
+        dataMode: "null"
+      });
 
-    const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM staff WHERE username = ? LIMIT 1", [username]);
-    expect(rows[0]?.id).toBeTruthy();
-    await admin.delete(`/api/v1/admin/staff/${rows[0]!.id}`, { failOnStatusCode: false });
+      const rows = await TestDbRepository.query<{ id: number }>("SELECT id FROM staff WHERE username = ? LIMIT 1", [username]);
+      expect(rows[0]?.id).toBeTruthy();
+      createdStaffId = rows[0]!.id;
+    } finally {
+      if (createdStaffId) {
+        await admin.delete(`/api/v1/admin/staff/${createdStaffId}`, { failOnStatusCode: false });
+      }
+    }
   });
 
   test("[STF-016] - API Admin Staff - Username - Maximum Length Validation", async ({ adminApi: admin }) => {

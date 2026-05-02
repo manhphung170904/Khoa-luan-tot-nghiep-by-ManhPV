@@ -13,7 +13,7 @@ import {
   type AdminE2ESession
 } from "@data/e2eAdminScenario";
 
-test.describe("Admin - Building Management @regression @e2e", () => {
+test.describe("Admin - Building Management @regression", () => {
   let adminSession: AdminE2ESession | null = null;
   const cleanupBuildingIds = new Set<number>();
   const cleanupContracts: Array<Awaited<ReturnType<typeof TempEntityHelper.taoContractTam>>> = [];

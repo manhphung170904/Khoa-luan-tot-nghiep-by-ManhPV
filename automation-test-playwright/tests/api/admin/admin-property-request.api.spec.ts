@@ -5,7 +5,7 @@ import { TestDbRepository } from "@db/repositories";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 import { createPropertyRequestScenario } from "@data/propertyRequestScenario";
 
-test.describe("Admin - API Property Request @regression @api", () => {
+test.describe("Admin - API Property Request @regression", () => {
   const missingId = TestDataFactory.missingId;
   test("[API-ADM-PRQ-001] - API Admin Property Request - Listing - Anonymous Access Rejection", async ({ anonymousApi }) => {
     const response = await anonymousApi.get("/api/v1/admin/property-requests?page=1&size=5", {
@@ -29,7 +29,7 @@ test.describe("Admin - API Property Request @regression @api", () => {
     expect(payload.content?.some((item) => item.id === scenario.propertyRequestId && item.status === "PENDING")).toBeTruthy();
   });
 
-  test("[API-ADM-PRQ-003] - API Admin Property Request - Rent Request Detail - Contract Autofill Data Retrieval @extended", async ({ playwright, cleanupRegistry }) => {
+  test("[API-ADM-PRQ-003] - API Admin Property Request - Rent Request Detail - Contract Autofill Data Retrieval", async ({ playwright, cleanupRegistry }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT", cleanupRegistry);
     const detailResponse = await scenario.admin.get(`/api/v1/admin/property-requests/${scenario.propertyRequestId}`, {
       failOnStatusCode: false,
@@ -62,7 +62,7 @@ test.describe("Admin - API Property Request @regression @api", () => {
     expect(typeof contractData.rentArea).toBe("number");
   });
 
-  test("[API-ADM-PRQ-004] - API Admin Property Request - Buy Request Detail - Sale Contract Autofill Data Retrieval @extended", async ({ playwright, cleanupRegistry }) => {
+  test("[API-ADM-PRQ-004] - API Admin Property Request - Buy Request Detail - Sale Contract Autofill Data Retrieval", async ({ playwright, cleanupRegistry }) => {
     const scenario = await createPropertyRequestScenario(playwright, "BUY", cleanupRegistry);
     const response = await scenario.admin.get(
       `/api/v1/admin/property-requests/${scenario.propertyRequestId}/sale-contract-data`,
@@ -78,7 +78,7 @@ test.describe("Admin - API Property Request @regression @api", () => {
     expect(typeof payload.salePrice).toBe("number");
   });
 
-  test("[API-ADM-PRQ-005] - API Admin Property Request - Pending Request Status - Rejection with Status Update @extended", async ({ playwright, cleanupRegistry }) => {
+  test("[API-ADM-PRQ-005] - API Admin Property Request - Pending Request Status - Rejection with Status Update", async ({ playwright, cleanupRegistry }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT", cleanupRegistry);
     const rejectResponse = await scenario.admin.post(`/api/v1/admin/property-requests/${scenario.propertyRequestId}/reject`, {
       failOnStatusCode: false,
@@ -107,7 +107,7 @@ test.describe("Admin - API Property Request @regression @api", () => {
     expect(rows[0]?.admin_note).toBe("Contract data mismatch");
   });
 
-  test("[API-ADM-PRQ-006] - API Admin Property Request - Rent Request Approval - Linked Contract Matching Approval @extended", async ({ playwright, cleanupRegistry }) => {
+  test("[API-ADM-PRQ-006] - API Admin Property Request - Rent Request Approval - Linked Contract Matching Approval", async ({ playwright, cleanupRegistry }) => {
     const scenario = await createPropertyRequestScenario(playwright, "RENT", cleanupRegistry);
     let contractId = 0;
 
@@ -184,7 +184,7 @@ test.describe("Admin - API Property Request @regression @api", () => {
     expect(pendingBody.pendingCount).toBe(Number(pendingCountRows[0]?.total ?? 0));
   });
 
-  test("[API-ADM-PRQ-007] - API Admin Property Request - Buy Request Approval - Linked Sale Contract Matching Approval @extended", async ({ playwright, cleanupRegistry }) => {
+  test("[API-ADM-PRQ-007] - API Admin Property Request - Buy Request Approval - Linked Sale Contract Matching Approval", async ({ playwright, cleanupRegistry }) => {
     const scenario = await createPropertyRequestScenario(playwright, "BUY", cleanupRegistry);
     let saleContractId = 0;
 
@@ -248,7 +248,7 @@ test.describe("Admin - API Property Request @regression @api", () => {
     expect(rows[0]?.sale_contract_id).toBe(saleContractId);
   });
 
-  test("[API-ADM-PRQ-008] - API Admin Property Request - Request ID - Nonexistent Request 400 Response @extended", async ({ adminApi }) => {
+  test("[API-ADM-PRQ-008] - API Admin Property Request - Request ID - Nonexistent Request 400 Response", async ({ adminApi }) => {
     const response = await adminApi.get(`/api/v1/admin/property-requests/${missingId}`, {
       failOnStatusCode: false,
       maxRedirects: 0

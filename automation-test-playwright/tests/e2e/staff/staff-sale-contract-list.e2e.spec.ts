@@ -7,7 +7,7 @@ import { loginAsTempUser } from "@data/profileTempUsers";
 
 type TempSaleContract = Awaited<ReturnType<typeof TempEntityHelper.taoSaleContractTam>>;
 
-test.describe("Staff - Sale Contract List @regression @e2e", () => {
+test.describe("Staff - Sale Contract List @regression", () => {
   let tempSaleContract: TempSaleContract | null = null;
 
   test.beforeEach(async ({ page, adminApi }) => {

@@ -5,7 +5,7 @@ import { TestDbRepository } from "@db/repositories";
 import { TempEntityHelper } from "@helpers/TempEntityHelper";
 import { TestDataFactory } from "@helpers/TestDataFactory";
 
-test.describe("Admin - API Customer @regression @api", () => {
+test.describe("Admin - API Customer @regression", () => {
   const missingSmallId = TestDataFactory.missingSmallId;
 
   test("[CUS-001] - API Admin Customer - Authentication - Create Customer Without Login Rejection", async ({ request }) => {
